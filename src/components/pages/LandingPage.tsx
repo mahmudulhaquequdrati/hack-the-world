@@ -296,7 +296,7 @@ const LandingPage = () => {
           <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="space-y-4">
-                <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-green-400">
+                <h1 className="text-5xl  font-bold leading-tight text-green-400">
                   {typedText}
                   <span className="terminal-cursor">|</span>
                 </h1>
@@ -374,10 +374,21 @@ const LandingPage = () => {
               </Card>
 
               {/* Floating Code Snippets */}
-              <div className="absolute -top-4 -right-4 bg-black/80 border border-green-400/50 rounded p-2 text-xs">
-                <div className="text-green-400">/* Exploit code */</div>
-                <div className="text-green-300">
-                  function findVulnerability() checkSystem();
+              <div className="absolute -top-8 -right-6 bg-black/80 border border-green-400/50 rounded p-2 text-xs w-60">
+                <div className="text-green-400 pb-1">/* System Stats */</div>
+                <div className="flex flex-col space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-green-300">CPU Usage:</span>
+                    <span className="text-green-200 font-bold">23%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-green-300">Memory:</span>
+                    <span className="text-green-200 font-bold">3.2 GB</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-green-300">Active Users:</span>
+                    <span className="text-green-200 font-bold">5</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -442,7 +453,7 @@ const LandingPage = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Live Terminal */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-4">
               <Card className="bg-black/90 border-green-400 h-96">
                 <CardHeader className="flex flex-row items-center space-y-0 pb-2">
                   <div className="flex space-x-2">
@@ -482,19 +493,51 @@ const LandingPage = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Cachey Challenge - Interactive Prompt */}
+              <Card className="bg-black/80 border-green-400/40 flex-1 flex flex-col justify-between animate-fade-in">
+                <CardHeader>
+                  <CardTitle className="text-green-400 text-sm flex items-center">
+                    <Target className="w-4 h-4 mr-2" />
+                    Cachey Challenge
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-green-300/90 text-base mb-3">
+                    <span className="font-semibold">Challenge:</span> Can you
+                    spot the vulnerability?
+                  </div>
+                  <div className="bg-black/60 border border-green-400/20 rounded p-3 font-mono text-xs text-green-200 mb-2">
+                    <span className="text-green-400">$</span>{" "}
+                    <span>curl http://vulnerable.site/login?user=admin'--</span>
+                  </div>
+                  <div className="text-xs text-green-300/70 mb-2">
+                    What type of attack is being attempted here?
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="border-green-400/60 text-green-300 hover:bg-green-400/10 w-full"
+                    onClick={() =>
+                      alert("Correct! This is a classic SQL Injection attempt.")
+                    }
+                  >
+                    Reveal Answer
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Stats & Games Panel */}
-            <div className="space-y-6">
+            <div className="space-y-3">
               {/* Threat Intelligence */}
-              <Card className="bg-black/50 border-green-400/30">
+              <Card className="bg-black/50 border-green-400/50">
                 <CardHeader>
                   <CardTitle className="text-green-400 text-sm flex items-center">
                     <TrendingUp className="w-4 h-4 mr-2" />
                     Threat Intelligence
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-2">
                   {liveStats.map((stat, index) => (
                     <div
                       key={index}
@@ -519,34 +562,6 @@ const LandingPage = () => {
                       </div>
                     </div>
                   ))}
-                </CardContent>
-              </Card>
-
-              {/* System Status */}
-              <Card className="bg-black/50 border-green-400/30">
-                <CardHeader>
-                  <CardTitle className="text-green-400 text-sm flex items-center">
-                    <Shield className="w-4 h-4 mr-2" />
-                    System Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-green-300">Firewall</span>
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-green-300">IDS/IPS</span>
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-green-300">Honeypot</span>
-                    <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-green-300">VPN Tunnel</span>
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                  </div>
                 </CardContent>
               </Card>
 

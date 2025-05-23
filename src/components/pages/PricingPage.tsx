@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  ArrowLeft,
   Check,
   Code,
   Globe,
@@ -162,15 +161,6 @@ const PricingPage = () => {
       <section className="pt-32 pb-20 px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <Button
-              variant="ghost"
-              onClick={() => navigate(-1)}
-              className="mb-6 text-green-400 hover:text-green-300"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-
             <Badge className="bg-green-400/20 text-green-400 border-green-400 mb-6">
               Pricing Plans
             </Badge>

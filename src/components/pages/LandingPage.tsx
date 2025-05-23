@@ -1,38 +1,34 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Terminal, 
-  Shield, 
-  Users, 
-  Eye, 
-  Lock, 
-  Zap, 
-  Target, 
-  Code,
-  ChevronRight,
-  Play,
-  BookOpen,
-  Award,
-  TrendingUp,
+import { Header } from "@/components/header.tsx";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
   Activity,
   AlertTriangle,
+  Award,
+  BookOpen,
   CheckCircle,
-  Clock
-} from 'lucide-react';
-import {Header} from "@/components/header.tsx"
+  ChevronRight,
+  Eye,
+  Lock,
+  Shield,
+  Target,
+  Terminal,
+  TrendingUp,
+  Users,
+  Zap,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const [typedText, setTypedText] = useState('');
+  const [typedText, setTypedText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [currentCommand, setCurrentCommand] = useState(0);
   const [gameScore, setGameScore] = useState(0);
-  const [activeGame, setActiveGame] = useState('cipher');
+  const [activeGame, setActiveGame] = useState("cipher");
   const fullText = "Welcome to CyberSec Academy";
 
   const commands = [
@@ -55,14 +51,14 @@ const LandingPage = () => {
     "msf6 exploit(multi/handler) > set payload windows/meterpreter/reverse_tcp",
     "msf6 exploit(multi/handler) > exploit",
     "[*] Meterpreter session 1 opened",
-    "$ clear"
+    "$ clear",
   ];
 
   useEffect(() => {
     if (currentIndex < fullText.length) {
       const timeout = setTimeout(() => {
-        setTypedText(prev => prev + fullText[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
+        setTypedText((prev) => prev + fullText[currentIndex]);
+        setCurrentIndex((prev) => prev + 1);
       }, 100);
       return () => clearTimeout(timeout);
     }
@@ -75,8 +71,8 @@ const LandingPage = () => {
           setTerminalLines([]);
           setCurrentCommand(0);
         } else {
-          setTerminalLines(prev => [...prev, commands[currentCommand]]);
-          setCurrentCommand(prev => prev + 1);
+          setTerminalLines((prev) => [...prev, commands[currentCommand]]);
+          setCurrentCommand((prev) => prev + 1);
         }
       }
     }, 1500);
@@ -88,41 +84,62 @@ const LandingPage = () => {
     {
       icon: Terminal,
       title: "Linux Terminal Mastery",
-      description: "Master command-line operations with our interactive terminal simulator",
-      color: "text-green-400"
+      description:
+        "Master command-line operations with our interactive terminal simulator",
+      color: "text-green-400",
     },
     {
       icon: Shield,
       title: "Web Security Testing",
       description: "Practice ethical hacking on vulnerable web applications",
-      color: "text-blue-400"
+      color: "text-blue-400",
     },
     {
       icon: Users,
       title: "Social Engineering",
       description: "Learn psychological manipulation techniques and defenses",
-      color: "text-red-400"
+      color: "text-red-400",
     },
     {
       icon: Eye,
       title: "OSINT Gathering",
       description: "Open source intelligence collection and analysis",
-      color: "text-purple-400"
-    }
+      color: "text-purple-400",
+    },
   ];
 
   const stats = [
     { label: "Active Hackers", value: "10,247", icon: Users },
     { label: "Vulnerabilities Found", value: "50,892", icon: Target },
     { label: "Skills Mastered", value: "1,337", icon: Award },
-    { label: "Success Rate", value: "94.7%", icon: TrendingUp }
+    { label: "Success Rate", value: "94.7%", icon: TrendingUp },
   ];
 
   const liveStats = [
-    { label: "Active Sessions", value: "1,247", trend: "+12%", color: "text-green-400" },
-    { label: "Threats Detected", value: "89", trend: "+5%", color: "text-red-400" },
-    { label: "Systems Scanned", value: "15,432", trend: "+8%", color: "text-blue-400" },
-    { label: "Vulnerabilities", value: "23", trend: "-2%", color: "text-yellow-400" }
+    {
+      label: "Active Sessions",
+      value: "1,247",
+      trend: "+12%",
+      color: "text-green-400",
+    },
+    {
+      label: "Threats Detected",
+      value: "89",
+      trend: "+5%",
+      color: "text-red-400",
+    },
+    {
+      label: "Systems Scanned",
+      value: "15,432",
+      trend: "+8%",
+      color: "text-blue-400",
+    },
+    {
+      label: "Vulnerabilities",
+      value: "23",
+      trend: "-2%",
+      color: "text-yellow-400",
+    },
   ];
 
   const CipherGame = () => {
@@ -133,7 +150,7 @@ const LandingPage = () => {
     const checkAnswer = () => {
       if (answer.toLowerCase() === "hello world") {
         setSolved(true);
-        setGameScore(prev => prev + 100);
+        setGameScore((prev) => prev + 100);
       }
     };
 
@@ -141,7 +158,9 @@ const LandingPage = () => {
       <div className="space-y-3">
         <div className="text-green-400 font-bold text-sm">CIPHER CHALLENGE</div>
         <div className="bg-black/80 p-3 rounded border border-green-400/30">
-          <div className="text-green-300 font-mono text-sm mb-2">Decode this Caesar cipher (shift 3):</div>
+          <div className="text-green-300 font-mono text-sm mb-2">
+            Decode this Caesar cipher (shift 3):
+          </div>
           <div className="text-green-400 font-mono text-lg">{cipher}</div>
         </div>
         <input
@@ -152,8 +171,8 @@ const LandingPage = () => {
           className="w-full bg-black border border-green-400/30 text-green-400 p-2 text-sm rounded"
           disabled={solved}
         />
-        <Button 
-          size="sm" 
+        <Button
+          size="sm"
           onClick={checkAnswer}
           disabled={solved}
           className="w-full bg-green-400 text-black hover:bg-green-300"
@@ -172,7 +191,7 @@ const LandingPage = () => {
     const checkHash = () => {
       if (guess.toLowerCase() === "hello") {
         setCracked(true);
-        setGameScore(prev => prev + 150);
+        setGameScore((prev) => prev + 150);
       }
     };
 
@@ -180,7 +199,9 @@ const LandingPage = () => {
       <div className="space-y-3">
         <div className="text-red-400 font-bold text-sm">HASH CRACKER</div>
         <div className="bg-black/80 p-3 rounded border border-red-400/30">
-          <div className="text-red-300 font-mono text-sm mb-2">Crack this MD5 hash:</div>
+          <div className="text-red-300 font-mono text-sm mb-2">
+            Crack this MD5 hash:
+          </div>
           <div className="text-red-400 font-mono text-xs break-all">{hash}</div>
         </div>
         <input
@@ -191,8 +212,8 @@ const LandingPage = () => {
           className="w-full bg-black border border-red-400/30 text-red-400 p-2 text-sm rounded"
           disabled={cracked}
         />
-        <Button 
-          size="sm" 
+        <Button
+          size="sm"
           onClick={checkHash}
           disabled={cracked}
           className="w-full bg-red-400 text-black hover:bg-red-300"
@@ -210,11 +231,11 @@ const LandingPage = () => {
 
     const scanPort = (port: number) => {
       if (scannedPorts.includes(port)) return;
-      
+
       setScanning(true);
       setTimeout(() => {
-        setScannedPorts(prev => [...prev, port]);
-        setGameScore(prev => prev + 25);
+        setScannedPorts((prev) => [...prev, port]);
+        setGameScore((prev) => prev + 25);
         setScanning(false);
       }, 1000);
     };
@@ -223,17 +244,19 @@ const LandingPage = () => {
       <div className="space-y-3">
         <div className="text-blue-400 font-bold text-sm">PORT SCANNER</div>
         <div className="bg-black/80 p-3 rounded border border-blue-400/30">
-          <div className="text-blue-300 font-mono text-sm mb-2">Scan target: 192.168.1.100</div>
+          <div className="text-blue-300 font-mono text-sm mb-2">
+            Scan target: 192.168.1.100
+          </div>
           <div className="grid grid-cols-3 gap-2">
-            {ports.map(port => (
+            {ports.map((port) => (
               <button
                 key={port}
                 onClick={() => scanPort(port)}
                 disabled={scanning || scannedPorts.includes(port)}
                 className={`p-2 text-xs rounded border ${
-                  scannedPorts.includes(port) 
-                    ? 'bg-green-400/20 border-green-400 text-green-400' 
-                    : 'border-blue-400/30 text-blue-400 hover:bg-blue-400/10'
+                  scannedPorts.includes(port)
+                    ? "bg-green-400/20 border-green-400 text-green-400"
+                    : "border-blue-400/30 text-blue-400 hover:bg-blue-400/10"
                 }`}
               >
                 {scannedPorts.includes(port) ? `${port} OPEN` : `Port ${port}`}
@@ -250,11 +273,11 @@ const LandingPage = () => {
 
   const renderGame = () => {
     switch (activeGame) {
-      case 'cipher':
+      case "cipher":
         return <CipherGame />;
-      case 'hash':
+      case "hash":
         return <HashCrackGame />;
-      case 'portscan':
+      case "portscan":
         return <PortScanGame />;
       default:
         return <CipherGame />;
@@ -266,7 +289,7 @@ const LandingPage = () => {
       {/* Hero Section */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Navigation */}
-    		<Header navigate={navigate} />
+        <Header navigate={navigate} />
 
         {/* Hero Content */}
         <div className="flex-1 flex items-center justify-center px-6">
@@ -278,23 +301,26 @@ const LandingPage = () => {
                   <span className="terminal-cursor">|</span>
                 </h1>
                 <p className="text-xl text-green-300/80 max-w-lg">
-                  Master the art of ethical hacking with our immersive, hands-on cybersecurity training platform.
+                  Master the art of ethical hacking with our immersive, hands-on
+                  cybersecurity training platform.
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-4">
-                <Button 
-                  size="lg" 
-                  className="bg-green-400 text-black hover:bg-green-300 hacker-btn font-bold"
-                  onClick={() => navigate('/dashboard')}
+              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
+                <Button
+                  size="lg"
+                  className="bg-green-400 text-black hover:bg-green-300 font-medium"
+                  onClick={() => navigate("/dashboard")}
                 >
-                  <Play className="w-5 h-5 mr-2" />
-                  Begin Training
+                  <Zap className="w-5 h-5 mr-2" />
+                  Start Your Journey
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-green-400 text-green-400 hover:bg-green-400/10 hacker-btn"
+
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  className="border-2 text-green-400 hover:bg-green-400/10 font-medium"
+                  onClick={() => navigate("/courses")}
                 >
                   <BookOpen className="w-5 h-5 mr-2" />
                   View Courses
@@ -304,8 +330,12 @@ const LandingPage = () => {
               <div className="flex items-center space-x-6">
                 {stats.map((stat, index) => (
                   <div key={index} className="text-center">
-                    <div className="text-2xl font-bold text-green-400">{stat.value}</div>
-                    <div className="text-sm text-green-300/60">{stat.label}</div>
+                    <div className="text-2xl font-bold text-green-400">
+                      {stat.value}
+                    </div>
+                    <div className="text-sm text-green-300/60">
+                      {stat.label}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -323,22 +353,32 @@ const LandingPage = () => {
                   <div className="ml-4 text-green-400 text-sm">Terminal</div>
                 </CardHeader>
                 <CardContent className="font-mono text-sm space-y-2">
-                  <div className="text-green-400">$ nmap -sV --script vuln 10.10.10.10</div>
+                  <div className="text-green-400">
+                    $ nmap -sV --script vuln 10.10.10.10
+                  </div>
                   <div className="text-green-300">Starting Nmap scan...</div>
                   <div className="text-green-300">Scanning target...</div>
-                  <div className="text-green-300">Discovered open port 22/tcp</div>
-                  <div className="text-green-300">Discovered open port 80/tcp</div>
-                  <div className="text-red-400">Discovered vulnerability: CVE-2021-44228</div>
-                  <div className="text-green-400">$ <span className="terminal-cursor">|</span></div>
+                  <div className="text-green-300">
+                    Discovered open port 22/tcp
+                  </div>
+                  <div className="text-green-300">
+                    Discovered open port 80/tcp
+                  </div>
+                  <div className="text-red-400">
+                    Discovered vulnerability: CVE-2021-44228
+                  </div>
+                  <div className="text-green-400">
+                    $ <span className="terminal-cursor">|</span>
+                  </div>
                 </CardContent>
               </Card>
 
               {/* Floating Code Snippets */}
               <div className="absolute -top-4 -right-4 bg-black/80 border border-green-400/50 rounded p-2 text-xs">
                 <div className="text-green-400">/* Exploit code */</div>
-                <div className="text-green-300">function findVulnerability()  checkSystem();</div>
-              
-             
+                <div className="text-green-300">
+                  function findVulnerability() checkSystem();
+                </div>
               </div>
             </div>
           </div>
@@ -349,16 +389,27 @@ const LandingPage = () => {
       <section className="py-20 px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4 text-green-400">Training Modules</h2>
-            <p className="text-green-300/80 text-lg">Master cybersecurity through hands-on practice</p>
+            <h2 className="text-4xl font-bold mb-4 text-green-400">
+              Training Modules
+            </h2>
+            <p className="text-green-300/80 text-lg">
+              Master cybersecurity through hands-on practice
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
-              <Card key={index} className="bg-black/50 border-green-400/30 hover:border-green-400 transition-all duration-300 group cursor-pointer">
+              <Card
+                key={index}
+                className="bg-black/50 border-green-400/30 hover:border-green-400 transition-all duration-300 group cursor-pointer"
+              >
                 <CardHeader>
-                  <feature.icon className={`w-12 h-12 ${feature.color} group-hover:scale-110 transition-transform`} />
-                  <CardTitle className="text-green-400">{feature.title}</CardTitle>
+                  <feature.icon
+                    className={`w-12 h-12 ${feature.color} group-hover:scale-110 transition-transform`}
+                  />
+                  <CardTitle className="text-green-400">
+                    {feature.title}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-green-300/70">{feature.description}</p>
@@ -374,15 +425,18 @@ const LandingPage = () => {
       </section>
 
       {/* Interactive Demo Section */}
-      <section className="py-20 px-6 bg-gradient-to-b from-black to-green-900/10 relative z-10">
+      <section className="pt-20 pb-10 px-6 bg-gradient-to-b from-black to-green-900/10 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <Badge className="bg-green-400/20 text-green-400 border-green-400 mb-4">
               Live Cyber Range
             </Badge>
-            <h2 className="text-4xl font-bold text-green-400 mb-4">Real-Time Hacking Simulation</h2>
+            <h2 className="text-4xl font-bold text-green-400 mb-4">
+              Real-Time Hacking Simulation
+            </h2>
             <p className="text-green-300/80 text-lg">
-              Experience live penetration testing, solve security challenges, and monitor cyber threats in real-time
+              Experience live penetration testing, solve security challenges,
+              and monitor cyber threats in real-time
             </p>
           </div>
 
@@ -404,20 +458,27 @@ const LandingPage = () => {
                 <CardContent className="font-mono text-sm h-full overflow-y-auto">
                   <div className="space-y-1">
                     {terminalLines.map((line, index) => (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className={`${
-                          line.startsWith('$') ? 'text-green-400' :
-                          line.includes('CRITICAL') || line.includes('SUCCESS') ? 'text-red-400' :
-                          line.includes('open') || line.includes('up') ? 'text-green-300' :
-                          line.includes('msf6') ? 'text-purple-400' :
-                          'text-green-300/80'
+                          line.startsWith("$")
+                            ? "text-green-400"
+                            : line.includes("CRITICAL") ||
+                              line.includes("SUCCESS")
+                            ? "text-red-400"
+                            : line.includes("open") || line.includes("up")
+                            ? "text-green-300"
+                            : line.includes("msf6")
+                            ? "text-purple-400"
+                            : "text-green-300/80"
                         }`}
                       >
                         {line}
                       </div>
                     ))}
-                    <div className="text-green-400">$ <span className="terminal-cursor">|</span></div>
+                    <div className="text-green-400">
+                      $ <span className="terminal-cursor">|</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -425,7 +486,7 @@ const LandingPage = () => {
 
             {/* Stats & Games Panel */}
             <div className="space-y-6">
-              {/* Live Stats */}
+              {/* Threat Intelligence */}
               <Card className="bg-black/50 border-green-400/30">
                 <CardHeader>
                   <CardTitle className="text-green-400 text-sm flex items-center">
@@ -435,47 +496,29 @@ const LandingPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {liveStats.map((stat, index) => (
-                    <div key={index} className="flex justify-between items-center">
+                    <div
+                      key={index}
+                      className="flex justify-between items-center"
+                    >
                       <div>
-                        <div className="text-xs text-green-300/70">{stat.label}</div>
-                        <div className={`text-sm font-bold ${stat.color}`}>{stat.value}</div>
+                        <div className="text-xs text-green-300/70">
+                          {stat.label}
+                        </div>
+                        <div className={`text-sm font-bold ${stat.color}`}>
+                          {stat.value}
+                        </div>
                       </div>
-                      <div className={`text-xs ${stat.trend.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                      <div
+                        className={`text-xs ${
+                          stat.trend.startsWith("+")
+                            ? "text-green-400"
+                            : "text-red-400"
+                        }`}
+                      >
                         {stat.trend}
                       </div>
                     </div>
                   ))}
-                </CardContent>
-              </Card>
-
-              {/* Security Games */}
-              <Card className="bg-black/50 border-green-400/30">
-                <CardHeader>
-                  <CardTitle className="text-green-400 text-sm flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Target className="w-4 h-4 mr-2" />
-                      Hacker Challenges
-                    </div>
-                    <div className="text-green-400 font-mono">Score: {gameScore}</div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex space-x-1">
-                    {['cipher', 'hash', 'portscan'].map((game) => (
-                      <button
-                        key={game}
-                        onClick={() => setActiveGame(game)}
-                        className={`px-2 py-1 text-xs rounded border ${
-                          activeGame === game 
-                            ? 'bg-green-400/20 border-green-400 text-green-400' 
-                            : 'border-green-400/30 text-green-400/70 hover:text-green-400'
-                        }`}
-                      >
-                        {game.toUpperCase()}
-                      </button>
-                    ))}
-                  </div>
-                  {renderGame()}
                 </CardContent>
               </Card>
 
@@ -506,16 +549,57 @@ const LandingPage = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Hacker Challenges leading to Live Penetration Testing */}
+              <Card className="bg-black/50 border-green-400/30">
+                <CardHeader>
+                  <CardTitle className="text-green-400 text-sm flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Target className="w-4 h-4 mr-2" />
+                      Hacker Challenges
+                    </div>
+                    <div className="text-green-400 font-mono">
+                      Score: {gameScore}
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex space-x-1">
+                    {["cipher", "hash", "portscan"].map((game) => (
+                      <button
+                        key={game}
+                        onClick={() => setActiveGame(game)}
+                        className={`px-2 py-1 text-xs rounded border ${
+                          activeGame === game
+                            ? "bg-green-400/20 border-green-400 text-green-400"
+                            : "border-green-400/30 text-green-400/70 hover:text-green-400"
+                        }`}
+                      >
+                        {game.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                  {renderGame()}
+                  <Button
+                    size="sm"
+                    className="w-full bg-red-400 text-black hover:bg-red-300 font-medium mt-4"
+                    onClick={() => navigate("/terminal-lab")}
+                  >
+                    <Activity className="w-4 h-4 mr-2" />
+                    Live Penetration Testing
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
           <div className="text-center mt-8">
-            <Button 
-              size="lg" 
-              className="bg-green-400 text-black hover:bg-green-300 hacker-btn"
-              onClick={() => navigate('/dashboard')}
+            <Button
+              size="lg"
+              className="bg-green-400 text-black hover:bg-green-300 font-medium"
+              onClick={() => navigate("/dashboard")}
             >
-              <Play className="w-5 h-5 mr-2" />
+              <Target className="w-5 h-5 mr-2" />
               Enter Cyber Range
             </Button>
           </div>
@@ -523,25 +607,29 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 relative z-10">
+      <section className="pb-20 px-6 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6 text-green-400">Ready to become a cyber warrior?</h2>
+          <h2 className="text-4xl font-bold mb-6 text-green-400">
+            Ready to become a cyber warrior?
+          </h2>
           <p className="text-green-300/80 text-lg mb-8">
-            Join thousands of ethical hackers who have mastered cybersecurity through our platform.
+            Join thousands of ethical hackers who have mastered cybersecurity
+            through our platform.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              className="bg-green-400 text-black hover:bg-green-300 hacker-btn"
-              onClick={() => navigate('/dashboard')}
+            <Button
+              size="lg"
+              className="bg-green-400 text-black hover:bg-green-300 font-medium"
+              onClick={() => navigate("/dashboard")}
             >
               <Zap className="w-5 h-5 mr-2" />
               Start Your Journey
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-green-400 text-green-400 hover:bg-green-400/10 hacker-btn"
+            <Button
+              size="lg"
+              variant="ghost"
+              className="border-2 text-green-400 hover:bg-green-400/10 font-medium"
+              onClick={() => navigate("/pricing")}
             >
               <Lock className="w-5 h-5 mr-2" />
               View Pricing

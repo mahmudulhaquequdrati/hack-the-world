@@ -313,7 +313,7 @@ const LandingPage = () => {
                 <Button
                   size="lg"
                   className="bg-green-400 text-black hover:bg-green-300 font-medium"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/overview")}
                 >
                   <Zap className="w-5 h-5 mr-2" />
                   Start Your Journey
@@ -323,10 +323,10 @@ const LandingPage = () => {
                   size="lg"
                   variant="ghost"
                   className="border-2 text-green-400 hover:bg-green-400/10 font-medium"
-                  onClick={() => navigate("/courses")}
+                  onClick={() => navigate("/demo")}
                 >
                   <BookOpen className="w-5 h-5 mr-2" />
-                  View Courses
+                  How Platform Works
                 </Button>
               </div>
 
@@ -601,7 +601,7 @@ const LandingPage = () => {
                   <Button
                     size="sm"
                     className="w-full bg-red-400 text-black hover:bg-red-300 font-medium mt-4"
-                    onClick={() => navigate("/terminal-lab")}
+                    onClick={() => navigate("/overview")}
                   >
                     <Activity className="w-4 h-4 mr-2" />
                     Live Penetration Testing
@@ -615,7 +615,7 @@ const LandingPage = () => {
             <Button
               size="lg"
               className="bg-green-400 text-black hover:bg-green-300 font-medium"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/overview")}
             >
               <Target className="w-5 h-5 mr-2" />
               Enter Cyber Range
@@ -638,7 +638,7 @@ const LandingPage = () => {
             <Button
               size="lg"
               className="bg-green-400 text-black hover:bg-green-300 font-medium"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/overview")}
             >
               <Zap className="w-5 h-5 mr-2" />
               Start Your Journey

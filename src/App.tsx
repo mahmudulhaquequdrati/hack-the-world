@@ -1,10 +1,11 @@
 import MatrixRain from "@/components/effects/MatrixRain";
 import CourseDetailPage from "@/components/pages/CourseDetailPage";
-import CoursesPage from "@/components/pages/CoursesPage";
+import CyberSecOverview from "@/components/pages/CyberSecOverview";
 import Dashboard from "@/components/pages/Dashboard";
 import EnrolledCoursePage from "@/components/pages/EnrolledCoursePage";
 import LandingPage from "@/components/pages/LandingPage";
 import LoginPage from "@/components/pages/LoginPage";
+import PlatformDemo from "@/components/pages/PlatformDemo";
 import PricingPage from "@/components/pages/PricingPage";
 import SignupPage from "@/components/pages/SignupPage";
 import SocialEngLab from "@/components/pages/SocialEngLab";
@@ -25,7 +26,8 @@ function App() {
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/courses" element={<CoursesPage />} />
+            <Route path="/overview" element={<CyberSecOverview />} />
+            <Route path="/demo" element={<PlatformDemo />} />
             <Route path="/course/:courseId" element={<CourseDetailPage />} />
             <Route path="/learn/:courseId" element={<EnrolledCoursePage />} />
             <Route path="/terminal-lab" element={<TerminalLab />} />

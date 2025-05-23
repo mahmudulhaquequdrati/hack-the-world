@@ -29,7 +29,7 @@ const LandingPage = () => {
   const [currentCommand, setCurrentCommand] = useState(0);
   const [gameScore, setGameScore] = useState(0);
   const [activeGame, setActiveGame] = useState("cipher");
-  const fullText = "Welcome to CyberSec Academy";
+  const fullText = "Welcome to CyberSec Training Academy";
 
   const commands = [
     "$ nmap -sS 192.168.1.0/24",
@@ -301,8 +301,8 @@ const LandingPage = () => {
                   <span className="terminal-cursor">|</span>
                 </h1>
                 <p className="text-xl text-green-300/80 max-w-lg">
-                  Master the art of ethical hacking with our immersive, hands-on
-                  cybersecurity training platform.
+                  The world's shortest cybersecurity training platform—get
+                  skilled, fast.
                 </p>
               </div>
 

@@ -23,6 +23,7 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react';
+import {Header} from "@/components/header.tsx"
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -265,27 +266,7 @@ const LandingPage = () => {
       {/* Hero Section */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Navigation */}
-        <nav className="flex justify-between items-center p-6 border-b border-green-400/20">
-          <div className="flex items-center space-x-2">
-            <Terminal className="w-8 h-8 text-green-400" />
-            <span className="text-xl font-bold text-green-400">CyberSec Academy</span>
-          </div>
-          <div className="flex space-x-4">
-            <Button 
-              variant="ghost" 
-              className="text-green-400 hover:bg-green-400/10 hacker-btn"
-              onClick={() => navigate('/dashboard')}
-            >
-              Login
-            </Button>
-            <Button 
-              className="bg-green-400 text-black hover:bg-green-300 hacker-btn font-bold"
-              onClick={() => navigate('/dashboard')}
-            >
-              Start Hacking
-            </Button>
-          </div>
-        </nav>
+    		<Header navigate={navigate} />
 
         {/* Hero Content */}
         <div className="flex-1 flex items-center justify-center px-6">
@@ -355,9 +336,9 @@ const LandingPage = () => {
               {/* Floating Code Snippets */}
               <div className="absolute -top-4 -right-4 bg-black/80 border border-green-400/50 rounded p-2 text-xs">
                 <div className="text-green-400">/* Exploit code */</div>
-                <div className="text-green-300">function findVulnerability() </div>
-                <div className="text-green-300">  return checkSystem();</div>
-                <div className="text-green-300"></div>
+                <div className="text-green-300">function findVulnerability()  checkSystem();</div>
+              
+             
               </div>
             </div>
           </div>

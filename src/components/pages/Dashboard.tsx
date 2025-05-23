@@ -21,6 +21,7 @@ import {
   Zap,
   Eye
 } from 'lucide-react';
+import { Header } from '@/components/header';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -36,7 +37,8 @@ const Dashboard = () => {
       duration: '4 hours',
       icon: Terminal,
       color: 'text-green-400',
-      status: 'in-progress'
+      status: 'in-progress',
+      enrolled: true
     },
     {
       id: 'web-security',
@@ -47,7 +49,8 @@ const Dashboard = () => {
       duration: '8 hours',
       icon: Shield,
       color: 'text-blue-400',
-      status: 'in-progress'
+      status: 'in-progress',
+      enrolled: true
     },
     {
       id: 'social-engineering',
@@ -58,7 +61,8 @@ const Dashboard = () => {
       duration: '6 hours',
       icon: Users,
       color: 'text-red-400',
-      status: 'locked'
+      status: 'locked',
+      enrolled: false
     },
     {
       id: 'osint',
@@ -69,7 +73,8 @@ const Dashboard = () => {
       duration: '5 hours',
       icon: Eye,
       color: 'text-purple-400',
-      status: 'completed'
+      status: 'completed',
+      enrolled: true
     }
   ];
 
@@ -114,9 +119,21 @@ const Dashboard = () => {
     { label: 'Streak', value: '12 days', icon: Zap, color: 'text-purple-400' }
   ];
 
+  const handleCourseClick = (course: any) => {
+    if (course.enrolled) {
+      // Navigate to enrolled course learning environment
+      navigate(`/learn/${course.id}`);
+    } else {
+      // Navigate to course detail page for enrollment
+      navigate(`/course/${course.id}`);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black text-green-400 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-black text-green-400">
+      <Header navigate={navigate} />
+      
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -126,9 +143,9 @@ const Dashboard = () => {
           <Button 
             variant="outline" 
             className="border-green-400 text-green-400 hover:bg-green-400/10"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/courses')}
           >
-            Exit System
+            Browse All Courses
           </Button>
         </div>
 
@@ -156,7 +173,7 @@ const Dashboard = () => {
               Overview
             </TabsTrigger>
             <TabsTrigger value="courses" className="data-[state=active]:bg-green-400/20 data-[state=active]:text-green-400">
-              Courses
+              My Courses
             </TabsTrigger>
             <TabsTrigger value="labs" className="data-[state=active]:bg-green-400/20 data-[state=active]:text-green-400">
               Labs
@@ -232,7 +249,8 @@ const Dashboard = () => {
           <TabsContent value="courses" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {courses.map((course) => (
-                <Card key={course.id} className="bg-black/50 border-green-400/30 hover:border-green-400 transition-all group">
+                <Card key={course.id} className="bg-black/50 border-green-400/30 hover:border-green-400 transition-all group cursor-pointer"
+                      onClick={() => handleCourseClick(course)}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
@@ -256,6 +274,11 @@ const Dashboard = () => {
                         {course.difficulty}
                       </Badge>
                       <span className="text-green-300/70">{course.duration}</span>
+                      {course.enrolled && (
+                        <Badge className="bg-green-400/20 text-green-400 border-green-400">
+                          Enrolled
+                        </Badge>
+                      )}
                     </div>
                     
                     <div className="space-y-2">
@@ -269,10 +292,12 @@ const Dashboard = () => {
                     <Button 
                       className="w-full bg-green-400 text-black hover:bg-green-300"
                       disabled={course.status === 'locked'}
-                      onClick={() => navigate(`/course/${course.id}`)}
                     >
-                      {course.status === 'completed' ? 'Review' : 
-                       course.status === 'locked' ? 'Locked' : 'Continue'}
+                      {course.enrolled ? (
+                        course.status === 'completed' ? 'Review Course' : 'Continue Learning'
+                      ) : (
+                        course.status === 'locked' ? 'Locked' : 'Enroll Now'
+                      )}
                     </Button>
                   </CardContent>
                 </Card>

@@ -4,10 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Activity,
-  AlertTriangle,
   Award,
   BookOpen,
-  CheckCircle,
   ChevronRight,
   Eye,
   Lock,
@@ -21,6 +19,29 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const commands = [
+  "$ nmap -sS 192.168.1.0/24",
+  "Scanning 256 hosts...",
+  "Host 192.168.1.1 is up (0.001s latency)",
+  "Host 192.168.1.15 is up (0.002s latency)",
+  "22/tcp open ssh",
+  "80/tcp open http",
+  "443/tcp open https",
+  "$ sqlmap -u 'http://target.com/login'",
+  "Testing parameter 'username'...",
+  "[CRITICAL] SQL injection vulnerability found!",
+  "$ hydra -l admin -P passwords.txt ssh://target",
+  "Attempting password brute force...",
+  "[SUCCESS] Password found: admin123",
+  "$ msfconsole",
+  "Starting Metasploit Framework...",
+  "msf6 > use exploit/multi/handler",
+  "msf6 exploit(multi/handler) > set payload windows/meterpreter/reverse_tcp",
+  "msf6 exploit(multi/handler) > exploit",
+  "[*] Meterpreter session 1 opened",
+  "$ clear",
+];
+
 const LandingPage = () => {
   const navigate = useNavigate();
   const [typedText, setTypedText] = useState("");
@@ -30,29 +51,6 @@ const LandingPage = () => {
   const [gameScore, setGameScore] = useState(0);
   const [activeGame, setActiveGame] = useState("cipher");
   const fullText = "Welcome to CyberSec Training Academy";
-
-  const commands = [
-    "$ nmap -sS 192.168.1.0/24",
-    "Scanning 256 hosts...",
-    "Host 192.168.1.1 is up (0.001s latency)",
-    "Host 192.168.1.15 is up (0.002s latency)",
-    "22/tcp open ssh",
-    "80/tcp open http",
-    "443/tcp open https",
-    "$ sqlmap -u 'http://target.com/login'",
-    "Testing parameter 'username'...",
-    "[CRITICAL] SQL injection vulnerability found!",
-    "$ hydra -l admin -P passwords.txt ssh://target",
-    "Attempting password brute force...",
-    "[SUCCESS] Password found: admin123",
-    "$ msfconsole",
-    "Starting Metasploit Framework...",
-    "msf6 > use exploit/multi/handler",
-    "msf6 exploit(multi/handler) > set payload windows/meterpreter/reverse_tcp",
-    "msf6 exploit(multi/handler) > exploit",
-    "[*] Meterpreter session 1 opened",
-    "$ clear",
-  ];
 
   useEffect(() => {
     if (currentIndex < fullText.length) {
@@ -78,7 +76,7 @@ const LandingPage = () => {
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [currentCommand, commands]);
+  }, [currentCommand]);
 
   const features = [
     {
@@ -143,9 +141,14 @@ const LandingPage = () => {
   ];
 
   const CipherGame = () => {
-    const [cipher, setCipher] = useState("KHOOR ZRUOG");
+    const [cipher, setCipher] = useState("");
+
     const [answer, setAnswer] = useState("");
     const [solved, setSolved] = useState(false);
+
+    useEffect(() => {
+      setCipher("KHOOR ZRUOG");
+    }, []);
 
     const checkAnswer = () => {
       if (answer.toLowerCase() === "hello world") {

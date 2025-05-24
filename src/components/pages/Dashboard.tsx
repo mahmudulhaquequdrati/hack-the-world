@@ -676,9 +676,17 @@ const Dashboard = () => {
 
   const handleModuleClick = (module: Module) => {
     if (module.enrolled) {
-      navigate(module.enrollPath);
+      navigate(module.enrollPath, {
+        state: {
+          from: "dashboard",
+        },
+      });
     } else {
-      navigate(module.path);
+      navigate(module.path, {
+        state: {
+          from: "dashboard",
+        },
+      });
     }
   };
 
@@ -844,7 +852,7 @@ const Dashboard = () => {
                     className="bg-green-400 text-black hover:bg-green-300 font-mono text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(module.path);
+                      navigate(module.enrollPath);
                     }}
                   >
                     <Play className="w-3 h-3 mr-1" />
@@ -857,7 +865,11 @@ const Dashboard = () => {
                     className="border-green-400/50 text-green-400 font-mono text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(module.path);
+                      navigate(module.path, {
+                        state: {
+                          from: "dashboard",
+                        },
+                      });
                     }}
                   >
                     <Plus className="w-3 h-3 mr-1" />
@@ -988,7 +1000,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-black text-green-400">
       <Header navigate={navigate} />
 
-      <div className="max-w-7xl mx-auto py-10 space-y-6">
+      <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>

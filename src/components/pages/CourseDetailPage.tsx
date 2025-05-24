@@ -24,10 +24,14 @@ import {
   Zap,
 } from "lucide-react";
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 const CourseDetailPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from;
+  console.log(from);
+
   const { courseId } = useParams();
   const [activeTab, setActiveTab] = useState("overview");
   const [enrollmentStatus, setEnrollmentStatus] = useState("not-enrolled");
@@ -955,15 +959,27 @@ const CourseDetailPage = () => {
 
       <div className="pb-20 pt-5 px-6">
         <div className="w-full px-4 mx-auto">
-          {/* Back Button */}
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/overview")}
-            className="mb-4 text-green-400 hover:bg-green-400/10 text-sm !px-0 "
-          >
-            <ArrowLeft className="w-4 h-4 " />
-            BACK_TO_OVERVIEW
-          </Button>
+          <div className="flex items-center gap-4">
+            {from === "dashboard" ? (
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/dashboard")}
+                className="mb-4 text-green-400 hover:bg-green-400/10 text-sm !px-0 "
+              >
+                <ArrowLeft className="w-4 h-4 " />
+                DASHBOARD
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/overview")}
+                className="mb-4 text-green-400 hover:bg-green-400/10 text-sm !px-0 "
+              >
+                <ArrowLeft className="w-4 h-4 " />
+                BACK_TO_OVERVIEW
+              </Button>
+            )}
+          </div>
 
           {/* Hero Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">

@@ -1,8 +1,6 @@
 import { Header } from "@/components/header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Activity,
@@ -13,13 +11,16 @@ import {
   Download,
   FileText,
   Globe,
+  Lock,
   Network,
   Play,
   Shield,
   Star,
+  Target,
   Terminal,
   Trophy,
   Users,
+  Video,
   Zap,
 } from "lucide-react";
 import { useState } from "react";
@@ -31,1615 +32,877 @@ const CourseDetailPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [enrollmentStatus, setEnrollmentStatus] = useState("not-enrolled");
 
-  // Cybersecurity modules data
-  const moduleData = {
-    foundations: {
-      title: "Cybersecurity Foundations",
-      description:
-        "Essential concepts, terminology, and security principles that form the backbone of cybersecurity knowledge.",
-      category: "Fundamentals",
-      difficulty: "Beginner",
-      duration: "2-3 weeks",
-      lessons: 15,
-      rating: 4.9,
-      students: 8420,
-      price: "Free",
-      icon: Shield,
-      color: "text-blue-400",
-      bgColor: "bg-blue-400/10",
-      borderColor: "border-blue-400/30",
-      progress: 85,
-      labsCount: 5,
-      gamesCount: 3,
-      assetsCount: 12,
-      enrollPath: "/learn/foundations",
+  // Helper function to create generic course data
+  const createGenericCourse = (
+    title: string,
+    description: string,
+    category: string,
+    difficulty: string,
+    duration: string,
+    icon: React.ComponentType<{ className?: string }>,
+    color: string
+  ) => {
+    const baseColor = color.replace("text-", "");
+    return {
+      title,
+      description,
+      category,
+      difficulty,
+      duration,
+      lessons:
+        difficulty === "Beginner"
+          ? 10
+          : difficulty === "Intermediate"
+          ? 16
+          : 24,
+      rating: 4.5 + Math.random() * 0.4,
+      students: Math.floor(Math.random() * 5000) + 2000,
+      price:
+        difficulty === "Beginner"
+          ? "Free"
+          : difficulty === "Intermediate"
+          ? "$49"
+          : "$99",
+      icon,
+      color,
+      bgColor: `bg-${baseColor}-400/10`,
+      borderColor: `border-${baseColor}-400/30`,
+      progress: Math.floor(Math.random() * 100),
+      labsCount:
+        difficulty === "Beginner" ? 5 : difficulty === "Intermediate" ? 8 : 12,
+      gamesCount:
+        difficulty === "Beginner" ? 3 : difficulty === "Intermediate" ? 5 : 8,
+      assetsCount:
+        difficulty === "Beginner"
+          ? 12
+          : difficulty === "Intermediate"
+          ? 18
+          : 25,
+      enrollPath: `/learn/${title
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/&/g, "")
+        .replace(/[^\w-]/g, "")}`,
       skills: [
-        "CIA Triad",
-        "Risk Assessment",
-        "Compliance",
-        "Security Frameworks",
-        "Threat Modeling",
-        "Security Policies",
-      ],
-      prerequisites: "None - Perfect for beginners",
-      certification: true,
-      instructor: {
-        name: "Dr. Sarah Chen",
-        title: "Chief Security Officer",
-        avatar:
-          "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150",
-        experience: "15+ years in cybersecurity",
-      },
-      curriculum: [
-        {
-          title: "Introduction to Cybersecurity",
-          lessons: 4,
-          duration: "1h 30min",
-          topics: [
-            "What is Cybersecurity",
-            "Threat Landscape",
-            "Security Principles",
-            "CIA Triad",
-          ],
-          completed: true,
-        },
-        {
-          title: "Risk Management",
-          lessons: 3,
-          duration: "1h 15min",
-          topics: ["Risk Assessment", "Risk Analysis", "Risk Mitigation"],
-          completed: true,
-        },
-        {
-          title: "Security Frameworks",
-          lessons: 4,
-          duration: "2h",
-          topics: ["NIST Framework", "ISO 27001", "COBIT", "SOX Compliance"],
-          completed: false,
-        },
-        {
-          title: "Security Policies & Governance",
-          lessons: 4,
-          duration: "1h 45min",
-          topics: [
-            "Policy Development",
-            "Governance",
-            "Compliance",
-            "Auditing",
-          ],
-          completed: false,
-        },
-      ],
-      learningOutcomes: [
-        "Understand core cybersecurity principles",
-        "Implement risk assessment methodologies",
-        "Apply security frameworks effectively",
-        "Develop comprehensive security policies",
-        "Navigate compliance requirements",
-        "Design threat modeling strategies",
-      ],
-      labs: [
-        {
-          name: "Risk Assessment Simulation",
-          description: "Hands-on risk assessment of a fictional company",
-          difficulty: "Beginner",
-          duration: "45 min",
-          skills: ["Risk Analysis", "Documentation"],
-        },
-        {
-          name: "Policy Development Workshop",
-          description: "Create security policies for different scenarios",
-          difficulty: "Beginner",
-          duration: "60 min",
-          skills: ["Policy Writing", "Compliance"],
-        },
-        {
-          name: "Framework Implementation",
-          description: "Apply NIST Framework to a real scenario",
-          difficulty: "Intermediate",
-          duration: "90 min",
-          skills: ["NIST Framework", "Implementation"],
-        },
-        {
-          name: "Threat Modeling Exercise",
-          description: "Model threats for a web application",
-          difficulty: "Intermediate",
-          duration: "75 min",
-          skills: ["Threat Modeling", "Analysis"],
-        },
-        {
-          name: "Compliance Audit Simulation",
-          description: "Conduct a mock compliance audit",
-          difficulty: "Advanced",
-          duration: "120 min",
-          skills: ["Auditing", "Compliance"],
-        },
-      ],
-      games: [
-        {
-          name: "Security Policy Builder",
-          description: "Interactive game to build security policies",
-          points: 100,
-          type: "Strategy",
-        },
-        {
-          name: "Risk Matrix Challenge",
-          description: "Calculate and prioritize security risks",
-          points: 150,
-          type: "Puzzle",
-        },
-        {
-          name: "Compliance Quest",
-          description: "Navigate compliance requirements and regulations",
-          points: 200,
-          type: "Adventure",
-        },
-      ],
-      assets: [
-        { name: "CIA Triad Reference Guide", type: "PDF", size: "2.1 MB" },
-        { name: "Risk Assessment Template", type: "Excel", size: "1.5 MB" },
-        { name: "NIST Framework Checklist", type: "PDF", size: "850 KB" },
-        { name: "Security Policy Templates", type: "Word", size: "3.2 MB" },
-        { name: "Threat Modeling Toolkit", type: "ZIP", size: "12.8 MB" },
-        {
-          name: "Compliance Frameworks Comparison",
-          type: "PDF",
-          size: "4.1 MB",
-        },
-        {
-          name: "Security Governance Best Practices",
-          type: "PDF",
-          size: "2.8 MB",
-        },
-        { name: "Risk Register Template", type: "Excel", size: "1.2 MB" },
-        {
-          name: "Security Awareness Training Materials",
-          type: "ZIP",
-          size: "45.3 MB",
-        },
-        {
-          name: "Incident Response Plan Template",
-          type: "Word",
-          size: "2.4 MB",
-        },
-        { name: "Security Metrics Dashboard", type: "Excel", size: "3.7 MB" },
-        {
-          name: "Regulatory Compliance Checklist",
-          type: "PDF",
-          size: "1.9 MB",
-        },
-      ],
-    },
-    linux: {
-      title: "Linux Command Line Mastery",
-      description:
-        "Master the terminal, file systems, and command-line tools essential for cybersecurity professionals.",
-      category: "System Administration",
-      difficulty: "Beginner",
-      duration: "3-4 weeks",
-      lessons: 20,
-      rating: 4.8,
-      students: 12340,
-      price: "Free",
-      icon: Terminal,
-      color: "text-green-400",
-      bgColor: "bg-green-400/10",
-      borderColor: "border-green-400/30",
-      progress: 70,
-      labsCount: 8,
-      gamesCount: 4,
-      assetsCount: 18,
-      enrollPath: "/learn/linux",
-      skills: [
-        "Command Line",
-        "File Systems",
-        "Process Management",
-        "Shell Scripting",
-        "User Management",
-        "Log Analysis",
-      ],
-      prerequisites: "Cybersecurity Foundations",
-      certification: true,
-      instructor: {
-        name: "Marcus Rodriguez",
-        title: "Senior Linux Administrator",
-        avatar:
-          "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150",
-        experience: "12+ years in Linux administration",
-      },
-      curriculum: [
-        {
-          title: "Linux Fundamentals",
-          lessons: 5,
-          duration: "2h",
-          topics: [
-            "Linux History",
-            "Distributions",
-            "File System Hierarchy",
-            "Basic Commands",
-          ],
-          completed: true,
-        },
-        {
-          title: "File Operations & Permissions",
-          lessons: 5,
-          duration: "2h 30min",
-          topics: ["File Management", "Permissions", "Ownership", "ACLs"],
-          completed: true,
-        },
-        {
-          title: "Process & Service Management",
-          lessons: 4,
-          duration: "1h 45min",
-          topics: ["Process Control", "Systemd", "Cron Jobs", "Log Management"],
-          completed: false,
-        },
-        {
-          title: "Network & Security Tools",
-          lessons: 6,
-          duration: "3h",
-          topics: ["Network Commands", "SSH", "Firewall", "Security Hardening"],
-          completed: false,
-        },
-      ],
-      learningOutcomes: [
-        "Navigate Linux systems with confidence",
-        "Manage files, users, and permissions",
-        "Monitor and control system processes",
-        "Write effective shell scripts",
-        "Configure network services securely",
-        "Analyze system logs for security events",
-      ],
-      labs: [
-        {
-          name: "Terminal Navigation Challenge",
-          description: "Master file system navigation and basic commands",
-          difficulty: "Beginner",
-          duration: "30 min",
-          skills: ["Navigation", "File Operations"],
-        },
-        {
-          name: "Permission Puzzle",
-          description: "Configure complex file permissions and ownership",
-          difficulty: "Beginner",
-          duration: "45 min",
-          skills: ["Permissions", "Security"],
-        },
-        {
-          name: "Process Management Lab",
-          description: "Monitor, control, and troubleshoot system processes",
-          difficulty: "Intermediate",
-          duration: "60 min",
-          skills: ["Process Control", "Troubleshooting"],
-        },
-        {
-          name: "Shell Scripting Workshop",
-          description: "Create automation scripts for common tasks",
-          difficulty: "Intermediate",
-          duration: "90 min",
-          skills: ["Scripting", "Automation"],
-        },
-        {
-          name: "System Hardening Exercise",
-          description: "Secure a Linux system against common threats",
-          difficulty: "Advanced",
-          duration: "120 min",
-          skills: ["Security", "Hardening"],
-        },
-        {
-          name: "Log Analysis Challenge",
-          description: "Analyze system logs to identify security incidents",
-          difficulty: "Advanced",
-          duration: "75 min",
-          skills: ["Log Analysis", "Incident Response"],
-        },
-        {
-          name: "Network Configuration Lab",
-          description: "Configure network services and firewall rules",
-          difficulty: "Advanced",
-          duration: "105 min",
-          skills: ["Networking", "Security"],
-        },
-        {
-          name: "Forensics Simulation",
-          description: "Conduct digital forensics on a compromised system",
-          difficulty: "Expert",
-          duration: "150 min",
-          skills: ["Forensics", "Investigation"],
-        },
-      ],
-      games: [
-        {
-          name: "Command Line Race",
-          description: "Speed challenge for common Linux commands",
-          points: 100,
-          type: "Speed",
-        },
-        {
-          name: "Permission Puzzle Master",
-          description: "Solve complex file permission scenarios",
-          points: 150,
-          type: "Puzzle",
-        },
-        {
-          name: "Script Builder Challenge",
-          description: "Build automation scripts to solve problems",
-          points: 200,
-          type: "Creation",
-        },
-        {
-          name: "System Admin Simulator",
-          description: "Manage a virtual data center",
-          points: 300,
-          type: "Simulation",
-        },
-      ],
-      assets: [
-        { name: "Linux Command Reference Sheet", type: "PDF", size: "1.8 MB" },
-        { name: "File Permission Calculator", type: "HTML", size: "245 KB" },
-        { name: "Shell Scripting Templates", type: "ZIP", size: "2.4 MB" },
-        { name: "System Hardening Checklist", type: "PDF", size: "1.1 MB" },
-        { name: "Log Analysis Tools Collection", type: "ZIP", size: "15.2 MB" },
-        { name: "Network Configuration Examples", type: "TXT", size: "890 KB" },
-        { name: "Cron Job Generator", type: "HTML", size: "156 KB" },
-        { name: "Linux Security Best Practices", type: "PDF", size: "3.4 MB" },
-        { name: "Process Monitoring Scripts", type: "ZIP", size: "1.7 MB" },
-        { name: "SSH Configuration Guide", type: "PDF", size: "2.2 MB" },
-        { name: "Firewall Rules Templates", type: "TXT", size: "445 KB" },
-        {
-          name: "System Performance Tuning Guide",
-          type: "PDF",
-          size: "4.1 MB",
-        },
-        { name: "Backup and Recovery Scripts", type: "ZIP", size: "3.8 MB" },
-        { name: "Linux Forensics Toolkit", type: "ZIP", size: "28.6 MB" },
-        { name: "Package Management Cheat Sheet", type: "PDF", size: "675 KB" },
-        { name: "Service Configuration Examples", type: "ZIP", size: "5.2 MB" },
-        { name: "Troubleshooting Flowcharts", type: "PDF", size: "2.9 MB" },
-        { name: "Advanced Bash Techniques", type: "PDF", size: "3.6 MB" },
-      ],
-    },
-    networking: {
-      title: "Network Security & Analysis",
-      description:
-        "Understand network protocols, scanning, and monitoring essential for cybersecurity.",
-      category: "Network Security",
-      difficulty: "Intermediate",
-      duration: "4-5 weeks",
-      lessons: 25,
-      rating: 4.7,
-      students: 9850,
-      price: "$29",
-      icon: Network,
-      color: "text-purple-400",
-      bgColor: "bg-purple-400/10",
-      borderColor: "border-purple-400/30",
-      progress: 45,
-      labsCount: 12,
-      gamesCount: 6,
-      assetsCount: 25,
-      enrollPath: "/learn/networking",
-      skills: [
-        "TCP/IP",
-        "Wireshark",
-        "Port Scanning",
-        "Network Defense",
-        "Packet Analysis",
-        "Network Forensics",
-      ],
-      prerequisites: "Cybersecurity Foundations, Linux Command Line Mastery",
-      certification: true,
-      instructor: {
-        name: "Dr. Emily Watson",
-        title: "Network Security Specialist",
-        avatar:
-          "https://images.pexels.com/photos/2381069/pexels-photo-2381069.jpeg?auto=compress&cs=tinysrgb&w=150",
-        experience: "10+ years in network security",
-      },
-      curriculum: [
-        {
-          title: "Network Fundamentals",
-          lessons: 6,
-          duration: "3h",
-          topics: ["OSI Model", "TCP/IP Stack", "Subnetting", "Routing"],
-          completed: true,
-        },
-        {
-          title: "Network Scanning & Reconnaissance",
-          lessons: 7,
-          duration: "3h 30min",
-          topics: [
-            "Port Scanning",
-            "Network Discovery",
-            "Banner Grabbing",
-            "OS Fingerprinting",
-          ],
-          completed: false,
-        },
-        {
-          title: "Packet Analysis & Monitoring",
-          lessons: 6,
-          duration: "3h",
-          topics: [
-            "Wireshark",
-            "tcpdump",
-            "Network Forensics",
-            "Protocol Analysis",
-          ],
-          completed: false,
-        },
-        {
-          title: "Network Defense & Security",
-          lessons: 6,
-          duration: "2h 45min",
-          topics: ["Firewalls", "IDS/IPS", "VPNs", "Network Segmentation"],
-          completed: false,
-        },
-      ],
-      learningOutcomes: [
-        "Understand network protocols deeply",
-        "Perform network reconnaissance and scanning",
-        "Analyze network traffic with Wireshark",
-        "Implement network security controls",
-        "Detect and respond to network attacks",
-        "Design secure network architectures",
-      ],
-      labs: [
-        {
-          name: "Network Topology Discovery",
-          description: "Map network infrastructure",
-          difficulty: "Beginner",
-          duration: "45 min",
-          skills: ["Network Discovery", "Mapping"],
-        },
-        {
-          name: "Port Scanning Workshop",
-          description: "Master Nmap and scanning techniques",
-          difficulty: "Beginner",
-          duration: "60 min",
-          skills: ["Port Scanning", "Reconnaissance"],
-        },
-        {
-          name: "Wireshark Deep Dive",
-          description: "Advanced packet analysis techniques",
-          difficulty: "Intermediate",
-          duration: "90 min",
-          skills: ["Packet Analysis", "Troubleshooting"],
-        },
-        {
-          name: "Network Attack Simulation",
-          description: "Detect and analyze network attacks",
-          difficulty: "Intermediate",
-          duration: "120 min",
-          skills: ["Attack Detection", "Analysis"],
-        },
-        {
-          name: "Firewall Configuration Lab",
-          description: "Configure and test firewall rules",
-          difficulty: "Intermediate",
-          duration: "75 min",
-          skills: ["Firewall", "Security"],
-        },
-        {
-          name: "IDS/IPS Deployment",
-          description: "Deploy and tune intrusion detection systems",
-          difficulty: "Advanced",
-          duration: "135 min",
-          skills: ["IDS/IPS", "Monitoring"],
-        },
-        {
-          name: "VPN Security Assessment",
-          description: "Assess VPN configurations for security",
-          difficulty: "Advanced",
-          duration: "105 min",
-          skills: ["VPN", "Assessment"],
-        },
-        {
-          name: "Network Forensics Investigation",
-          description: "Investigate a network security incident",
-          difficulty: "Advanced",
-          duration: "180 min",
-          skills: ["Forensics", "Investigation"],
-        },
-        {
-          name: "Wireless Security Testing",
-          description: "Test wireless network security",
-          difficulty: "Advanced",
-          duration: "150 min",
-          skills: ["Wireless", "Testing"],
-        },
-        {
-          name: "Network Penetration Testing",
-          description: "Conduct comprehensive network pentest",
-          difficulty: "Expert",
-          duration: "240 min",
-          skills: ["Penetration Testing", "Assessment"],
-        },
-        {
-          name: "SCADA Network Security",
-          description: "Secure industrial control systems",
-          difficulty: "Expert",
-          duration: "165 min",
-          skills: ["SCADA", "Industrial Security"],
-        },
-        {
-          name: "Cloud Network Security",
-          description: "Secure cloud network architectures",
-          difficulty: "Expert",
-          duration: "195 min",
-          skills: ["Cloud Security", "Architecture"],
-        },
-      ],
-      games: [
-        {
-          name: "Network Detective",
-          description: "Solve network mysteries using packet analysis",
-          points: 150,
-          type: "Detective",
-        },
-        {
-          name: "Firewall Fortress",
-          description: "Build impenetrable network defenses",
-          points: 200,
-          type: "Strategy",
-        },
-        {
-          name: "Packet Puzzle Master",
-          description: "Decode complex network communications",
-          points: 175,
-          type: "Puzzle",
-        },
-        {
-          name: "Network Scanner Pro",
-          description: "Master network reconnaissance techniques",
-          points: 125,
-          type: "Skill",
-        },
-        {
-          name: "Protocol Stack Challenge",
-          description: "Navigate the OSI model layers",
-          points: 100,
-          type: "Educational",
-        },
-        {
-          name: "Cyber Defense Command",
-          description: "Command a network security operations center",
-          points: 300,
-          type: "Simulation",
-        },
-      ],
-      assets: [
-        { name: "Network Protocol Reference", type: "PDF", size: "5.2 MB" },
-        { name: "Wireshark Filter Cheat Sheet", type: "PDF", size: "890 KB" },
-        { name: "Nmap Command Reference", type: "PDF", size: "1.4 MB" },
-        { name: "Network Security Checklist", type: "PDF", size: "2.1 MB" },
-        { name: "Firewall Rules Templates", type: "TXT", size: "675 KB" },
-        { name: "IDS/IPS Signature Database", type: "ZIP", size: "25.3 MB" },
-        { name: "Network Diagram Templates", type: "ZIP", size: "3.8 MB" },
-        { name: "Packet Capture Samples", type: "ZIP", size: "45.6 MB" },
-        { name: "Network Troubleshooting Guide", type: "PDF", size: "4.3 MB" },
-        { name: "VPN Configuration Examples", type: "ZIP", size: "2.7 MB" },
-        { name: "Wireless Security Tools", type: "ZIP", size: "18.9 MB" },
-        { name: "Network Monitoring Scripts", type: "ZIP", size: "3.2 MB" },
-        { name: "Subnetting Calculator", type: "HTML", size: "234 KB" },
-        { name: "Network Discovery Tools", type: "ZIP", size: "12.5 MB" },
-        { name: "Protocol Analyzers Collection", type: "ZIP", size: "67.8 MB" },
-        { name: "Network Security Policies", type: "ZIP", size: "4.1 MB" },
-        { name: "Incident Response Playbooks", type: "PDF", size: "6.7 MB" },
-        { name: "Network Architecture Patterns", type: "PDF", size: "8.3 MB" },
-        { name: "Cloud Networking Guide", type: "PDF", size: "5.9 MB" },
-        { name: "IoT Security Framework", type: "PDF", size: "3.4 MB" },
-        { name: "Network Forensics Toolkit", type: "ZIP", size: "89.2 MB" },
-        {
-          name: "Security Orchestration Templates",
-          type: "ZIP",
-          size: "7.6 MB",
-        },
-        {
-          name: "Network Performance Baselines",
-          type: "Excel",
-          size: "2.8 MB",
-        },
-        { name: "Threat Intelligence Feeds", type: "JSON", size: "12.1 MB" },
-        { name: "Zero Trust Architecture Guide", type: "PDF", size: "4.5 MB" },
-      ],
-    },
-    "web-security": {
-      title: "Web Application Security",
-      description:
-        "Discover and exploit web vulnerabilities ethically using industry-standard tools and techniques.",
-      category: "Web Security",
-      difficulty: "Intermediate",
-      duration: "5-6 weeks",
-      lessons: 30,
-      rating: 4.9,
-      students: 11200,
-      price: "$39",
-      icon: Globe,
-      color: "text-red-400",
-      bgColor: "bg-red-400/10",
-      borderColor: "border-red-400/30",
-      progress: 30,
-      labsCount: 15,
-      gamesCount: 8,
-      assetsCount: 30,
-      enrollPath: "/learn/web-security",
-      skills: [
-        "OWASP Top 10",
-        "SQL Injection",
-        "XSS",
-        "Authentication Bypass",
-        "Burp Suite",
-        "Web Penetration Testing",
-      ],
-      prerequisites: "Cybersecurity Foundations, Network Security & Analysis",
-      certification: true,
-      instructor: {
-        name: "Jake Thompson",
-        title: "Senior Web Security Researcher",
-        avatar:
-          "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150",
-        experience: "8+ years in web application security",
-      },
-      curriculum: [
-        {
-          title: "Web Security Fundamentals",
-          lessons: 8,
-          duration: "4h",
-          topics: [
-            "Web Architecture",
-            "HTTP/HTTPS",
-            "OWASP Top 10",
-            "Common Vulnerabilities",
-          ],
-          completed: true,
-        },
-        {
-          title: "Injection Attacks",
-          lessons: 8,
-          duration: "4h 30min",
-          topics: [
-            "SQL Injection",
-            "NoSQL Injection",
-            "Command Injection",
-            "LDAP Injection",
-          ],
-          completed: false,
-        },
-        {
-          title: "Cross-Site Attacks",
-          lessons: 7,
-          duration: "3h 45min",
-          topics: ["XSS Variants", "CSRF", "Clickjacking", "DOM Manipulation"],
-          completed: false,
-        },
-        {
-          title: "Advanced Web Attacks",
-          lessons: 7,
-          duration: "4h 15min",
-          topics: ["XXE", "SSRF", "Deserialization", "Authentication Bypass"],
-          completed: false,
-        },
-      ],
-      learningOutcomes: [
-        "Master OWASP Top 10 vulnerabilities",
-        "Perform advanced SQL injection attacks",
-        "Execute comprehensive XSS exploitation",
-        "Use Burp Suite professionally",
-        "Conduct web application penetration testing",
-        "Implement secure coding practices",
-      ],
-      labs: [
-        {
-          name: "DVWA Fundamentals",
-          description: "Practice on Damn Vulnerable Web Application",
-          difficulty: "Beginner",
-          duration: "60 min",
-          skills: ["Basic Web Attacks", "Tool Usage"],
-        },
-        {
-          name: "SQL Injection Mastery",
-          description: "Advanced SQL injection techniques",
-          difficulty: "Intermediate",
-          duration: "90 min",
-          skills: ["SQL Injection", "Database Exploitation"],
-        },
-        {
-          name: "XSS Laboratory",
-          description: "Comprehensive cross-site scripting practice",
-          difficulty: "Intermediate",
-          duration: "75 min",
-          skills: ["XSS", "Client-side Attacks"],
-        },
-        {
-          name: "Authentication Bypass Workshop",
-          description: "Break authentication mechanisms",
-          difficulty: "Intermediate",
-          duration: "105 min",
-          skills: ["Authentication", "Session Management"],
-        },
-        {
-          name: "Burp Suite Mastery",
-          description: "Advanced Burp Suite techniques",
-          difficulty: "Advanced",
-          duration: "120 min",
-          skills: ["Burp Suite", "Web Testing"],
-        },
-        {
-          name: "API Security Testing",
-          description: "Test REST and GraphQL APIs",
-          difficulty: "Advanced",
-          duration: "135 min",
-          skills: ["API Security", "Testing"],
-        },
-        {
-          name: "Business Logic Flaws",
-          description: "Identify and exploit business logic issues",
-          difficulty: "Advanced",
-          duration: "150 min",
-          skills: ["Logic Flaws", "Analysis"],
-        },
-        {
-          name: "File Upload Exploitation",
-          description: "Exploit file upload vulnerabilities",
-          difficulty: "Advanced",
-          duration: "90 min",
-          skills: ["File Upload", "Exploitation"],
-        },
-        {
-          name: "SSRF & XXE Workshop",
-          description: "Server-side request forgery and XML attacks",
-          difficulty: "Advanced",
-          duration: "165 min",
-          skills: ["SSRF", "XXE"],
-        },
-        {
-          name: "Web Application Firewall Bypass",
-          description: "Bypass WAF protections",
-          difficulty: "Expert",
-          duration: "180 min",
-          skills: ["WAF Bypass", "Evasion"],
-        },
-        {
-          name: "Full Web Penetration Test",
-          description: "Comprehensive web application assessment",
-          difficulty: "Expert",
-          duration: "300 min",
-          skills: ["Penetration Testing", "Reporting"],
-        },
-        {
-          name: "Mobile Web Security",
-          description: "Test mobile web applications",
-          difficulty: "Expert",
-          duration: "195 min",
-          skills: ["Mobile Security", "Web Testing"],
-        },
-        {
-          name: "Cloud Web Application Security",
-          description: "Secure cloud-hosted web applications",
-          difficulty: "Expert",
-          duration: "210 min",
-          skills: ["Cloud Security", "Web Applications"],
-        },
-        {
-          name: "DevSecOps Integration",
-          description: "Integrate security into CI/CD pipelines",
-          difficulty: "Expert",
-          duration: "240 min",
-          skills: ["DevSecOps", "Automation"],
-        },
-        {
-          name: "Zero-Day Discovery Simulation",
-          description: "Discover new vulnerabilities",
-          difficulty: "Expert",
-          duration: "360 min",
-          skills: ["Research", "Discovery"],
-        },
-      ],
-      games: [
-        {
-          name: "SQL Injection Champion",
-          description: "Master SQL injection challenges",
-          points: 200,
-          type: "Challenge",
-        },
-        {
-          name: "XSS Hunter",
-          description: "Find and exploit XSS vulnerabilities",
-          points: 175,
-          type: "Hunt",
-        },
-        {
-          name: "Web App Fortress Breaker",
-          description: "Break through web defenses",
-          points: 250,
-          type: "Strategy",
-        },
-        {
-          name: "Burp Suite Ninja",
-          description: "Master professional web testing tools",
-          points: 225,
-          type: "Skill",
-        },
-        {
-          name: "OWASP Top 10 Master",
-          description: "Conquer all OWASP vulnerabilities",
-          points: 300,
-          type: "Comprehensive",
-        },
-        {
-          name: "Bug Bounty Simulator",
-          description: "Hunt bugs like a professional",
-          points: 400,
-          type: "Simulation",
-        },
-        {
-          name: "API Attack Academy",
-          description: "Master API security testing",
-          points: 275,
-          type: "Specialized",
-        },
-        {
-          name: "Web Pentest Pro",
-          description: "Conduct professional penetration tests",
-          points: 500,
-          type: "Professional",
-        },
-      ],
-      assets: [
-        { name: "OWASP Top 10 Guide 2023", type: "PDF", size: "3.4 MB" },
-        { name: "SQL Injection Cheat Sheet", type: "PDF", size: "1.8 MB" },
-        { name: "XSS Payload Collection", type: "TXT", size: "2.3 MB" },
-        { name: "Burp Suite Extensions Pack", type: "ZIP", size: "15.7 MB" },
-        { name: "Web Security Testing Checklist", type: "PDF", size: "2.6 MB" },
-        {
-          name: "Vulnerable Web Applications Collection",
-          type: "ZIP",
-          size: "125.4 MB",
-        },
-        {
-          name: "Authentication Bypass Techniques",
-          type: "PDF",
-          size: "4.1 MB",
-        },
-        { name: "Web Shell Collection", type: "ZIP", size: "8.9 MB" },
-        { name: "HTTP Request Templates", type: "ZIP", size: "1.2 MB" },
-        { name: "API Testing Tools", type: "ZIP", size: "22.6 MB" },
-        { name: "Secure Coding Guidelines", type: "PDF", size: "5.8 MB" },
-        { name: "Web Vulnerability Scanners", type: "ZIP", size: "89.3 MB" },
-        { name: "Business Logic Testing Guide", type: "PDF", size: "3.7 MB" },
-        { name: "Mobile Web Testing Tools", type: "ZIP", size: "34.5 MB" },
-        { name: "WAF Bypass Techniques", type: "PDF", size: "6.2 MB" },
-        { name: "Web Forensics Toolkit", type: "ZIP", size: "45.8 MB" },
-        { name: "CSRF Protection Patterns", type: "PDF", size: "2.1 MB" },
-        { name: "File Upload Security Guide", type: "PDF", size: "3.3 MB" },
-        {
-          name: "Session Management Best Practices",
-          type: "PDF",
-          size: "2.9 MB",
-        },
-        { name: "Web Application Firewall Rules", type: "ZIP", size: "7.4 MB" },
-        { name: "HTTPS/TLS Configuration Guide", type: "PDF", size: "4.6 MB" },
-        { name: "Client-side Security Controls", type: "PDF", size: "3.2 MB" },
-        { name: "Web Security Headers Reference", type: "PDF", size: "1.5 MB" },
-        {
-          name: "Penetration Testing Report Templates",
-          type: "ZIP",
-          size: "5.1 MB",
-        },
-        { name: "DevSecOps Integration Guide", type: "PDF", size: "6.8 MB" },
-        { name: "Bug Bounty Hunting Methodology", type: "PDF", size: "4.9 MB" },
-        { name: "Web3 Security Fundamentals", type: "PDF", size: "7.3 MB" },
-        { name: "GraphQL Security Testing", type: "PDF", size: "3.8 MB" },
-        {
-          name: "Microservices Security Patterns",
-          type: "PDF",
-          size: "5.4 MB",
-        },
-        { name: "Container Web Security", type: "PDF", size: "4.2 MB" },
-      ],
-    },
-    "social-engineering": {
-      title: "Social Engineering & OSINT",
-      description:
-        "Human psychology, information gathering, and awareness - the human element of cybersecurity.",
-      category: "Social Engineering",
-      difficulty: "Intermediate",
-      duration: "3-4 weeks",
-      lessons: 18,
-      rating: 4.6,
-      students: 7890,
-      price: "$25",
-      icon: Users,
-      color: "text-yellow-400",
-      bgColor: "bg-yellow-400/10",
-      borderColor: "border-yellow-400/30",
-      progress: 15,
-      labsCount: 10,
-      gamesCount: 5,
-      assetsCount: 20,
-      enrollPath: "/learn/social-engineering",
-      skills: [
-        "OSINT Techniques",
-        "Phishing",
-        "Social Psychology",
-        "Defense Strategies",
-        "Information Gathering",
-        "Human Hacking",
-      ],
-      prerequisites: "Cybersecurity Foundations",
-      certification: true,
-      instructor: {
-        name: "Dr. Alex Rivera",
-        title: "Social Engineering Specialist",
-        avatar:
-          "https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=150",
-        experience: "9+ years in social engineering research",
-      },
-      curriculum: [
-        {
-          title: "Introduction to Social Engineering",
-          lessons: 4,
-          duration: "2h",
-          topics: [
-            "Psychology Basics",
-            "Attack Vectors",
-            "Human Vulnerabilities",
-            "Ethics",
-          ],
-          completed: true,
-        },
-        {
-          title: "OSINT & Information Gathering",
-          lessons: 6,
-          duration: "3h 15min",
-          topics: [
-            "OSINT Fundamentals",
-            "Search Techniques",
-            "Social Media Intelligence",
-            "Data Correlation",
-          ],
-          completed: false,
-        },
-        {
-          title: "Phishing & Pretexting",
-          lessons: 4,
-          duration: "2h 30min",
-          topics: [
-            "Email Phishing",
-            "Vishing",
-            "Smishing",
-            "Pretexting Scenarios",
-          ],
-          completed: false,
-        },
-        {
-          title: "Defense & Awareness",
-          lessons: 4,
-          duration: "2h 15min",
-          topics: [
-            "Awareness Training",
-            "Defense Strategies",
-            "Security Culture",
-            "Incident Response",
-          ],
-          completed: false,
-        },
-      ],
-      learningOutcomes: [
-        "Master OSINT investigation techniques",
-        "Understand human psychological vulnerabilities",
-        "Develop effective phishing campaigns (ethically)",
-        "Build comprehensive security awareness programs",
-        "Implement social engineering defenses",
-        "Conduct responsible disclosure and education",
-      ],
-      labs: [
-        {
-          name: "OSINT Investigation Challenge",
-          description: "Gather intelligence on fictional targets",
-          difficulty: "Beginner",
-          duration: "90 min",
-          skills: ["OSINT", "Investigation"],
-        },
-        {
-          name: "Social Media Intelligence",
-          description: "Extract information from social platforms",
-          difficulty: "Beginner",
-          duration: "75 min",
-          skills: ["Social Media", "Intelligence"],
-        },
-        {
-          name: "Phishing Email Analysis",
-          description: "Analyze real phishing campaigns",
-          difficulty: "Intermediate",
-          duration: "60 min",
-          skills: ["Email Analysis", "Detection"],
-        },
-        {
-          name: "Pretext Development Workshop",
-          description: "Create convincing social engineering pretexts",
-          difficulty: "Intermediate",
-          duration: "105 min",
-          skills: ["Pretexting", "Psychology"],
-        },
-        {
-          name: "Vishing Campaign Simulation",
-          description: "Conduct ethical voice phishing exercises",
-          difficulty: "Advanced",
-          duration: "120 min",
-          skills: ["Vishing", "Voice Communication"],
-        },
-        {
-          name: "Physical Security Assessment",
-          description: "Test physical security through social engineering",
-          difficulty: "Advanced",
-          duration: "180 min",
-          skills: ["Physical Security", "Assessment"],
-        },
-        {
-          name: "Awareness Training Development",
-          description: "Create effective security awareness programs",
-          difficulty: "Advanced",
-          duration: "150 min",
-          skills: ["Training Development", "Education"],
-        },
-        {
-          name: "Incident Response Simulation",
-          description: "Respond to social engineering attacks",
-          difficulty: "Advanced",
-          duration: "135 min",
-          skills: ["Incident Response", "Management"],
-        },
-        {
-          name: "Advanced OSINT Techniques",
-          description: "Master advanced information gathering",
-          difficulty: "Expert",
-          duration: "240 min",
-          skills: ["Advanced OSINT", "Correlation"],
-        },
-        {
-          name: "Comprehensive SE Assessment",
-          description: "Full social engineering penetration test",
-          difficulty: "Expert",
-          duration: "300 min",
-          skills: ["Comprehensive Assessment", "Reporting"],
-        },
-      ],
-      games: [
-        {
-          name: "OSINT Detective",
-          description: "Solve mysteries using open source intelligence",
-          points: 150,
-          type: "Investigation",
-        },
-        {
-          name: "Phishing Defense Master",
-          description: "Identify and block phishing attempts",
-          points: 125,
-          type: "Defense",
-        },
-        {
-          name: "Social Engineer Simulator",
-          description: "Practice ethical social engineering",
-          points: 200,
-          type: "Simulation",
-        },
-        {
-          name: "Human Psychology Challenge",
-          description: "Understand psychological manipulation",
-          points: 175,
-          type: "Psychology",
-        },
-        {
-          name: "Awareness Training Builder",
-          description: "Create effective training programs",
-          points: 250,
-          type: "Creation",
-        },
-      ],
-      assets: [
-        { name: "OSINT Framework Guide", type: "PDF", size: "4.3 MB" },
-        { name: "Social Engineering Toolkit", type: "ZIP", size: "25.6 MB" },
-        { name: "Phishing Email Templates", type: "ZIP", size: "3.1 MB" },
-        { name: "Psychology of Persuasion Guide", type: "PDF", size: "2.8 MB" },
-        { name: "OSINT Tools Collection", type: "ZIP", size: "67.9 MB" },
-        {
-          name: "Social Media Investigation Guide",
-          type: "PDF",
-          size: "3.7 MB",
-        },
-        { name: "Pretext Scenarios Database", type: "PDF", size: "5.2 MB" },
-        { name: "Awareness Training Materials", type: "ZIP", size: "89.4 MB" },
-        { name: "Phishing Detection Checklist", type: "PDF", size: "1.4 MB" },
-        { name: "HUMINT Collection Techniques", type: "PDF", size: "6.1 MB" },
-        {
-          name: "Social Engineering Defense Playbook",
-          type: "PDF",
-          size: "4.9 MB",
-        },
-        {
-          name: "Digital Footprint Analysis Tools",
-          type: "ZIP",
-          size: "12.8 MB",
-        },
-        { name: "Behavioral Analysis Framework", type: "PDF", size: "3.3 MB" },
-        { name: "Crisis Communication Templates", type: "ZIP", size: "2.7 MB" },
-        {
-          name: "Physical Security Assessment Guide",
-          type: "PDF",
-          size: "5.8 MB",
-        },
-        {
-          name: "Insider Threat Detection Methods",
-          type: "PDF",
-          size: "4.1 MB",
-        },
-        {
-          name: "Cultural Intelligence Framework",
-          type: "PDF",
-          size: "2.9 MB",
-        },
-        { name: "Ethical Hacking Guidelines", type: "PDF", size: "3.6 MB" },
-        { name: "Information Warfare Tactics", type: "PDF", size: "7.2 MB" },
-        { name: "Cognitive Security Measures", type: "PDF", size: "4.4 MB" },
-      ],
-    },
-    "advanced-exploitation": {
-      title: "Advanced Penetration Testing",
-      description:
-        "Advanced attack techniques and post-exploitation for expert-level cybersecurity professionals.",
-      category: "Advanced Security",
-      difficulty: "Advanced",
-      duration: "6-8 weeks",
-      lessons: 35,
-      rating: 4.8,
-      students: 3240,
-      price: "$99",
-      icon: Activity,
-      color: "text-orange-400",
-      bgColor: "bg-orange-400/10",
-      borderColor: "border-orange-400/30",
-      progress: 0,
-      labsCount: 20,
-      gamesCount: 12,
-      assetsCount: 45,
-      enrollPath: "/learn/advanced-exploitation",
-      skills: [
-        "Buffer Overflows",
-        "Privilege Escalation",
-        "Lateral Movement",
-        "Persistence",
-        "Advanced Evasion",
-        "Red Team Operations",
+        "Coming Soon",
+        "In Development",
+        "Advanced Topics",
+        "Hands-on Practice",
       ],
       prerequisites:
-        "Linux Command Line Mastery, Network Security & Analysis, Web Application Security",
+        difficulty === "Beginner"
+          ? "None"
+          : "Previous cybersecurity courses recommended",
       certification: true,
       instructor: {
-        name: "David Chen",
-        title: "Principal Security Consultant",
+        name: "Expert Instructor",
+        title: "Cybersecurity Specialist",
         avatar:
-          "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150",
-        experience: "15+ years in advanced penetration testing",
+          "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150",
+        experience: "10+ years in cybersecurity",
       },
       curriculum: [
         {
-          title: "Advanced Exploitation Fundamentals",
-          lessons: 8,
-          duration: "5h",
-          topics: [
-            "Exploit Development",
-            "Memory Corruption",
-            "Return-oriented Programming",
-            "ASLR/DEP Bypass",
-          ],
+          title: "Course Introduction",
+          lessons: 3,
+          duration: "1h 30min",
+          topics: ["Overview", "Objectives", "Prerequisites"],
           completed: false,
         },
         {
-          title: "Post-Exploitation Techniques",
-          lessons: 9,
-          duration: "6h",
-          topics: [
-            "Privilege Escalation",
-            "Lateral Movement",
-            "Persistence Mechanisms",
-            "Data Exfiltration",
-          ],
+          title: "Core Concepts",
+          lessons: 4,
+          duration: "2h",
+          topics: ["Fundamentals", "Best Practices", "Tools"],
           completed: false,
         },
         {
-          title: "Evasion & Anti-Forensics",
-          lessons: 8,
-          duration: "4h 30min",
-          topics: [
-            "AV Evasion",
-            "Traffic Obfuscation",
-            "Log Evasion",
-            "Anti-Forensics",
-          ],
-          completed: false,
-        },
-        {
-          title: "Red Team Operations",
-          lessons: 10,
-          duration: "7h",
-          topics: [
-            "Campaign Planning",
-            "C2 Infrastructure",
-            "Team Coordination",
-            "Objective Achievement",
-          ],
+          title: "Practical Applications",
+          lessons: 5,
+          duration: "2h 30min",
+          topics: ["Hands-on Labs", "Case Studies", "Real-world Scenarios"],
           completed: false,
         },
       ],
       learningOutcomes: [
-        "Develop custom exploits for buffer overflows",
-        "Master advanced privilege escalation techniques",
-        "Implement persistent access mechanisms",
-        "Conduct sophisticated lateral movement",
-        "Evade modern security controls",
-        "Plan and execute red team operations",
+        {
+          title: "Understand core concepts and principles",
+          description:
+            "Master fundamental concepts, industry best practices, and essential methodologies used in this specialized cybersecurity domain.",
+          skills: ["Core Concepts", "Best Practices", "Methodologies"],
+        },
+        {
+          title: "Apply practical techniques and tools",
+          description:
+            "Gain hands-on experience with industry-standard tools, techniques, and technologies through guided exercises and real-world scenarios.",
+          skills: ["Practical Application", "Tool Usage", "Technical Skills"],
+        },
+        {
+          title: "Implement security best practices",
+          description:
+            "Learn to implement and maintain security controls, policies, and procedures following industry standards and organizational requirements.",
+          skills: ["Implementation", "Security Controls", "Policy Management"],
+        },
+        {
+          title: "Analyze real-world scenarios",
+          description:
+            "Develop analytical skills to assess, investigate, and respond to realistic cybersecurity challenges and threat scenarios.",
+          skills: ["Analysis", "Investigation", "Problem Solving"],
+        },
+        {
+          title: "Develop professional skills",
+          description:
+            "Build essential professional competencies including communication, documentation, and collaboration skills required in cybersecurity roles.",
+          skills: ["Communication", "Documentation", "Teamwork"],
+        },
+        {
+          title: "Earn industry certification",
+          description:
+            "Prepare for relevant industry certifications and demonstrate mastery of key concepts through comprehensive assessments.",
+          skills: ["Certification Prep", "Assessment", "Knowledge Validation"],
+        },
       ],
       labs: [
         {
-          name: "Buffer Overflow Workshop",
-          description: "Develop working buffer overflow exploits",
-          difficulty: "Advanced",
-          duration: "180 min",
-          skills: ["Exploit Development", "Assembly"],
+          name: "Introduction Lab",
+          description: "Get familiar with the course tools and environment",
+          difficulty,
+          duration: "45 min",
+          skills: ["Tools", "Environment"],
         },
         {
-          name: "Privilege Escalation Lab",
-          description: "Escalate privileges on hardened systems",
-          difficulty: "Advanced",
-          duration: "150 min",
-          skills: ["Privilege Escalation", "Enumeration"],
-        },
-        {
-          name: "Lateral Movement Simulation",
-          description: "Move through enterprise networks",
-          difficulty: "Advanced",
-          duration: "240 min",
-          skills: ["Lateral Movement", "Network Navigation"],
-        },
-        {
-          name: "Persistence Mechanisms",
-          description: "Maintain access across reboots",
-          difficulty: "Advanced",
-          duration: "165 min",
-          skills: ["Persistence", "Stealth"],
-        },
-        {
-          name: "AV Evasion Workshop",
-          description: "Bypass modern antivirus solutions",
-          difficulty: "Expert",
-          duration: "210 min",
-          skills: ["AV Evasion", "Obfuscation"],
-        },
-        {
-          name: "C2 Infrastructure Setup",
-          description: "Build command and control infrastructure",
-          difficulty: "Expert",
-          duration: "300 min",
-          skills: ["C2", "Infrastructure"],
-        },
-        {
-          name: "Advanced Payloads",
-          description: "Create sophisticated attack payloads",
-          difficulty: "Expert",
-          duration: "195 min",
-          skills: ["Payload Development", "Evasion"],
-        },
-        {
-          name: "Memory Forensics Evasion",
-          description: "Evade memory analysis tools",
-          difficulty: "Expert",
-          duration: "180 min",
-          skills: ["Memory Evasion", "Anti-Forensics"],
-        },
-        {
-          name: "Kernel Exploitation",
-          description: "Exploit kernel-level vulnerabilities",
-          difficulty: "Expert",
-          duration: "360 min",
-          skills: ["Kernel Exploitation", "System Internals"],
-        },
-        {
-          name: "Cloud Infrastructure Attack",
-          description: "Attack cloud environments",
-          difficulty: "Expert",
-          duration: "270 min",
-          skills: ["Cloud Attacks", "Infrastructure"],
-        },
-        {
-          name: "Mobile Device Exploitation",
-          description: "Exploit mobile platforms",
-          difficulty: "Expert",
-          duration: "225 min",
-          skills: ["Mobile Exploitation", "Platform Security"],
-        },
-        {
-          name: "IoT Device Hacking",
-          description: "Hack Internet of Things devices",
-          difficulty: "Expert",
-          duration: "240 min",
-          skills: ["IoT Security", "Embedded Systems"],
-        },
-        {
-          name: "Zero-Day Development",
-          description: "Develop original zero-day exploits",
-          difficulty: "Master",
-          duration: "480 min",
-          skills: ["Zero-Day Research", "Vulnerability Discovery"],
-        },
-        {
-          name: "Advanced Persistent Threat Simulation",
-          description: "Simulate nation-state level attacks",
-          difficulty: "Master",
-          duration: "600 min",
-          skills: ["APT Simulation", "Strategic Operations"],
-        },
-        {
-          name: "Red Team Campaign",
-          description: "Plan and execute full red team engagement",
-          difficulty: "Master",
-          duration: "720 min",
-          skills: ["Red Team Operations", "Campaign Management"],
-        },
-        {
-          name: "Purple Team Collaboration",
-          description: "Work with blue team for defense improvement",
-          difficulty: "Master",
-          duration: "360 min",
-          skills: ["Purple Team", "Collaborative Security"],
-        },
-        {
-          name: "Threat Hunting Evasion",
-          description: "Evade advanced threat hunting techniques",
-          difficulty: "Master",
-          duration: "300 min",
-          skills: ["Threat Hunting Evasion", "Advanced Stealth"],
-        },
-        {
-          name: "AI/ML Security Testing",
-          description: "Test AI and machine learning systems",
-          difficulty: "Master",
-          duration: "420 min",
-          skills: ["AI Security", "ML Exploitation"],
-        },
-        {
-          name: "Blockchain Security Assessment",
-          description: "Assess blockchain and DeFi security",
-          difficulty: "Master",
-          duration: "390 min",
-          skills: ["Blockchain Security", "DeFi Testing"],
-        },
-        {
-          name: "Quantum Computing Implications",
-          description: "Understand quantum threats to cryptography",
-          difficulty: "Master",
-          duration: "240 min",
-          skills: ["Quantum Security", "Cryptographic Futures"],
+          name: "Practical Workshop",
+          description: "Apply concepts in hands-on scenarios",
+          difficulty,
+          duration: "90 min",
+          skills: ["Practice", "Application"],
         },
       ],
       games: [
         {
-          name: "Exploit Developer Challenge",
-          description: "Create working exploits for vulnerabilities",
-          points: 400,
-          type: "Development",
+          name: "Knowledge Challenge",
+          description: "Test your understanding",
+          points: 100,
+          type: "Quiz",
         },
         {
-          name: "Red Team Commander",
-          description: "Lead red team operations",
-          points: 500,
-          type: "Strategy",
-        },
-        {
-          name: "Stealth Master",
-          description: "Achieve objectives without detection",
-          points: 350,
-          type: "Stealth",
-        },
-        {
-          name: "Advanced Persistence Pro",
-          description: "Maintain access through advanced techniques",
-          points: 300,
-          type: "Technical",
-        },
-        {
-          name: "Evasion Specialist",
-          description: "Bypass all security controls",
-          points: 450,
-          type: "Evasion",
-        },
-        {
-          name: "Zero-Day Hunter",
-          description: "Discover new vulnerabilities",
-          points: 600,
-          type: "Research",
-        },
-        {
-          name: "APT Simulator",
-          description: "Simulate advanced persistent threats",
-          points: 750,
+          name: "Scenario Simulator",
+          description: "Practice real-world scenarios",
+          points: 150,
           type: "Simulation",
-        },
-        {
-          name: "Cyber Warfare Academy",
-          description: "Master nation-state level techniques",
-          points: 1000,
-          type: "Advanced Simulation",
-        },
-        {
-          name: "Purple Team Coordinator",
-          description: "Balance offense and defense",
-          points: 550,
-          type: "Collaboration",
-        },
-        {
-          name: "Next-Gen Threat Lab",
-          description: "Explore emerging threat vectors",
-          points: 800,
-          type: "Innovation",
-        },
-        {
-          name: "Quantum Security Pioneer",
-          description: "Prepare for quantum computing era",
-          points: 900,
-          type: "Future Tech",
-        },
-        {
-          name: "Ultimate Pentest Master",
-          description: "The most comprehensive security challenge",
-          points: 1500,
-          type: "Master Challenge",
         },
       ],
       assets: [
-        {
-          name: "Exploit Development Framework",
-          type: "ZIP",
-          size: "125.8 MB",
-        },
-        { name: "Shellcode Library", type: "ZIP", size: "45.3 MB" },
-        { name: "Privilege Escalation Exploits", type: "ZIP", size: "89.7 MB" },
-        { name: "Persistence Techniques Guide", type: "PDF", size: "8.9 MB" },
-        { name: "AV Evasion Toolkit", type: "ZIP", size: "234.6 MB" },
-        { name: "C2 Framework Collection", type: "ZIP", size: "456.2 MB" },
-        { name: "Red Team Playbooks", type: "PDF", size: "15.7 MB" },
-        { name: "Advanced Payload Generator", type: "ZIP", size: "67.4 MB" },
-        { name: "Memory Exploitation Tools", type: "ZIP", size: "98.3 MB" },
-        { name: "Kernel Exploitation Suite", type: "ZIP", size: "178.9 MB" },
-        { name: "Cloud Attack Tools", type: "ZIP", size: "134.5 MB" },
-        {
-          name: "Mobile Exploitation Framework",
-          type: "ZIP",
-          size: "256.7 MB",
-        },
-        { name: "IoT Hacking Toolkit", type: "ZIP", size: "89.2 MB" },
-        { name: "Zero-Day Research Methodology", type: "PDF", size: "12.4 MB" },
-        { name: "APT Simulation Framework", type: "ZIP", size: "345.8 MB" },
-        {
-          name: "Purple Team Collaboration Guide",
-          type: "PDF",
-          size: "9.6 MB",
-        },
-        {
-          name: "Threat Hunting Evasion Techniques",
-          type: "PDF",
-          size: "7.8 MB",
-        },
-        { name: "AI/ML Security Testing Tools", type: "ZIP", size: "167.3 MB" },
-        { name: "Blockchain Security Toolkit", type: "ZIP", size: "78.9 MB" },
-        {
-          name: "Quantum Cryptography Resources",
-          type: "PDF",
-          size: "11.2 MB",
-        },
-        {
-          name: "Advanced Forensics Anti-Tools",
-          type: "ZIP",
-          size: "123.7 MB",
-        },
-        {
-          name: "Social Engineering for Red Teams",
-          type: "PDF",
-          size: "6.8 MB",
-        },
-        {
-          name: "Physical Security Bypass Tools",
-          type: "ZIP",
-          size: "45.1 MB",
-        },
-        { name: "Network Pivoting Techniques", type: "PDF", size: "5.4 MB" },
-        { name: "Data Exfiltration Methods", type: "PDF", size: "4.9 MB" },
-        { name: "Incident Response Evasion", type: "PDF", size: "6.7 MB" },
-        { name: "Advanced Covert Channels", type: "PDF", size: "8.3 MB" },
-        { name: "Operational Security Guide", type: "PDF", size: "7.1 MB" },
-        {
-          name: "Intelligence Gathering Automation",
-          type: "ZIP",
-          size: "89.6 MB",
-        },
-        { name: "Custom Malware Development", type: "ZIP", size: "234.9 MB" },
-        {
-          name: "Steganography and Hiding Techniques",
-          type: "ZIP",
-          size: "56.8 MB",
-        },
-        {
-          name: "Advanced Reconnaissance Tools",
-          type: "ZIP",
-          size: "145.7 MB",
-        },
-        { name: "Post-Exploitation Automation", type: "ZIP", size: "178.4 MB" },
-        { name: "Red Team Infrastructure Guide", type: "PDF", size: "13.9 MB" },
-        {
-          name: "Advanced Persistent Threat Toolkit",
-          type: "ZIP",
-          size: "567.8 MB",
-        },
-        {
-          name: "Cyber Warfare Simulation Platform",
-          type: "ZIP",
-          size: "789.3 MB",
-        },
-        { name: "Nation-State TTPs Database", type: "JSON", size: "45.6 MB" },
-        {
-          name: "Future Threat Vectors Research",
-          type: "PDF",
-          size: "16.8 MB",
-        },
-        {
-          name: "Quantum-Safe Security Measures",
-          type: "PDF",
-          size: "14.2 MB",
-        },
-        {
-          name: "Next-Generation Exploitation Techniques",
-          type: "PDF",
-          size: "18.7 MB",
-        },
-        {
-          name: "Advanced Security Research Methodology",
-          type: "PDF",
-          size: "12.3 MB",
-        },
-        { name: "Cutting-Edge Defense Evasion", type: "ZIP", size: "345.2 MB" },
-        {
-          name: "Elite Penetration Testing Framework",
-          type: "ZIP",
-          size: "456.9 MB",
-        },
-        {
-          name: "Master-Level Security Assessment Tools",
-          type: "ZIP",
-          size: "678.4 MB",
-        },
-        { name: "Ultimate Red Team Arsenal", type: "ZIP", size: "1.2 GB" },
+        { name: "Course Reference Guide", type: "PDF", size: "2.5 MB" },
+        { name: "Tools and Resources", type: "ZIP", size: "5.2 MB" },
+        { name: "Additional Reading", type: "PDF", size: "1.8 MB" },
       ],
-    },
+    };
   };
+
+  // Helper function to generate course data for all courses
+  const generateCourseData = () => {
+    return {
+      // BEGINNER PHASE
+      foundations: {
+        title: "Cybersecurity Fundamentals",
+        description:
+          "Essential concepts, terminology, and security principles that form the backbone of cybersecurity knowledge.",
+        category: "Fundamentals",
+        difficulty: "Beginner",
+        duration: "2-3 weeks",
+        lessons: 15,
+        rating: 4.9,
+        students: 8420,
+        price: "Free",
+        icon: Shield,
+        color: "text-blue-400",
+        bgColor: "bg-blue-400/10",
+        borderColor: "border-blue-400/30",
+        progress: 85,
+        labsCount: 5,
+        gamesCount: 3,
+        assetsCount: 12,
+        enrollPath: "/learn/foundations",
+        skills: [
+          "CIA Triad",
+          "Risk Assessment",
+          "Compliance",
+          "Security Frameworks",
+        ],
+        prerequisites: "None - Perfect for beginners",
+        certification: true,
+        instructor: {
+          name: "Dr. Sarah Chen",
+          title: "Chief Security Officer",
+          avatar:
+            "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150",
+          experience: "15+ years in cybersecurity",
+        },
+        curriculum: [
+          {
+            title: "Introduction to Cybersecurity",
+            lessons: 4,
+            duration: "1h 30min",
+            topics: [
+              "What is Cybersecurity",
+              "Threat Landscape",
+              "Security Principles",
+              "CIA Triad",
+            ],
+            completed: true,
+          },
+          {
+            title: "Risk Management",
+            lessons: 3,
+            duration: "1h 15min",
+            topics: ["Risk Assessment", "Risk Analysis", "Risk Mitigation"],
+            completed: true,
+          },
+          {
+            title: "Security Frameworks",
+            lessons: 4,
+            duration: "2h",
+            topics: ["NIST Framework", "ISO 27001", "COBIT", "SOX Compliance"],
+            completed: false,
+          },
+          {
+            title: "Security Policies & Governance",
+            lessons: 4,
+            duration: "1h 45min",
+            topics: [
+              "Policy Development",
+              "Governance",
+              "Compliance",
+              "Auditing",
+            ],
+            completed: false,
+          },
+        ],
+        learningOutcomes: [
+          {
+            title: "Understand core cybersecurity principles",
+            description:
+              "Master the fundamental concepts of information security including the CIA triad (Confidentiality, Integrity, Availability), defense in depth strategies, and basic security principles that form the foundation of all cybersecurity practices.",
+            skills: ["CIA Triad", "Security Principles", "Defense in Depth"],
+          },
+          {
+            title: "Implement risk assessment methodologies",
+            description:
+              "Learn to identify, analyze, and evaluate security risks using industry-standard frameworks. Develop skills in quantitative and qualitative risk analysis, risk calculation, and risk mitigation strategies.",
+            skills: ["Risk Assessment", "Risk Analysis", "Risk Mitigation"],
+          },
+          {
+            title: "Apply security frameworks effectively",
+            description:
+              "Gain practical experience with major security frameworks including NIST Cybersecurity Framework, ISO 27001, and COBIT. Learn how to map organizational needs to framework requirements and implement controls.",
+            skills: [
+              "NIST Framework",
+              "ISO 27001",
+              "COBIT",
+              "Control Implementation",
+            ],
+          },
+          {
+            title: "Develop comprehensive security policies",
+            description:
+              "Create effective security policies and procedures that align with business objectives. Learn policy development lifecycle, stakeholder engagement, and how to ensure policy compliance and enforcement.",
+            skills: [
+              "Policy Development",
+              "Governance",
+              "Compliance Management",
+            ],
+          },
+          {
+            title: "Navigate compliance requirements",
+            description:
+              "Understand major compliance frameworks such as SOX, HIPAA, GDPR, and PCI-DSS. Learn how to conduct compliance assessments, maintain audit trails, and prepare for regulatory audits.",
+            skills: [
+              "Regulatory Compliance",
+              "Audit Preparation",
+              "Documentation",
+            ],
+          },
+          {
+            title: "Design threat modeling strategies",
+            description:
+              "Master threat modeling methodologies like STRIDE and PASTA. Learn to identify threats, assess attack vectors, and design appropriate security controls to mitigate identified risks.",
+            skills: ["Threat Modeling", "STRIDE", "Attack Vector Analysis"],
+          },
+        ],
+        labs: [
+          {
+            name: "Risk Assessment Simulation",
+            description: "Hands-on risk assessment of a fictional company",
+            difficulty: "Beginner",
+            duration: "45 min",
+            skills: ["Risk Analysis", "Documentation"],
+          },
+          {
+            name: "Policy Development Workshop",
+            description: "Create security policies for different scenarios",
+            difficulty: "Beginner",
+            duration: "60 min",
+            skills: ["Policy Writing", "Compliance"],
+          },
+          {
+            name: "Framework Implementation",
+            description: "Apply NIST Framework to a real scenario",
+            difficulty: "Intermediate",
+            duration: "90 min",
+            skills: ["NIST Framework", "Implementation"],
+          },
+          {
+            name: "Threat Modeling Exercise",
+            description: "Model threats for a web application",
+            difficulty: "Intermediate",
+            duration: "75 min",
+            skills: ["Threat Modeling", "Analysis"],
+          },
+          {
+            name: "Compliance Audit Simulation",
+            description: "Conduct a mock compliance audit",
+            difficulty: "Advanced",
+            duration: "120 min",
+            skills: ["Auditing", "Compliance"],
+          },
+        ],
+        games: [
+          {
+            name: "Security Policy Builder",
+            description: "Interactive game to build security policies",
+            points: 100,
+            type: "Strategy",
+          },
+          {
+            name: "Risk Matrix Challenge",
+            description: "Calculate and prioritize security risks",
+            points: 150,
+            type: "Puzzle",
+          },
+          {
+            name: "Compliance Quest",
+            description: "Navigate compliance requirements and regulations",
+            points: 200,
+            type: "Adventure",
+          },
+        ],
+        assets: [
+          { name: "CIA Triad Reference Guide", type: "PDF", size: "2.1 MB" },
+          { name: "Risk Assessment Template", type: "Excel", size: "1.5 MB" },
+          { name: "NIST Framework Checklist", type: "PDF", size: "850 KB" },
+          { name: "Security Policy Templates", type: "Word", size: "3.2 MB" },
+          { name: "Threat Modeling Toolkit", type: "ZIP", size: "12.8 MB" },
+          {
+            name: "Compliance Frameworks Comparison",
+            type: "PDF",
+            size: "4.1 MB",
+          },
+          {
+            name: "Security Governance Best Practices",
+            type: "PDF",
+            size: "2.8 MB",
+          },
+          { name: "Risk Register Template", type: "Excel", size: "1.2 MB" },
+          {
+            name: "Security Awareness Training Materials",
+            type: "ZIP",
+            size: "45.3 MB",
+          },
+        ],
+      },
+
+      "linux-basics": {
+        title: "Linux Command Line Basics",
+        description:
+          "Master the terminal and basic command-line operations essential for cybersecurity.",
+        category: "System Administration",
+        difficulty: "Beginner",
+        duration: "2-3 weeks",
+        lessons: 12,
+        rating: 4.8,
+        students: 7250,
+        price: "Free",
+        icon: Terminal,
+        color: "text-green-400",
+        bgColor: "bg-green-400/10",
+        borderColor: "border-green-400/30",
+        progress: 70,
+        labsCount: 8,
+        gamesCount: 4,
+        assetsCount: 18,
+        enrollPath: "/learn/linux-basics",
+        skills: [
+          "Basic Commands",
+          "File Navigation",
+          "Text Processing",
+          "Permissions",
+        ],
+        prerequisites: "None",
+        certification: true,
+        instructor: {
+          name: "Alex Rodriguez",
+          title: "Senior Systems Administrator",
+          avatar:
+            "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150",
+          experience: "12+ years in Linux administration",
+        },
+        curriculum: [
+          {
+            title: "Getting Started with Linux",
+            lessons: 3,
+            duration: "1h",
+            topics: ["Linux History", "Distributions", "Terminal Basics"],
+            completed: true,
+          },
+          {
+            title: "File System Navigation",
+            lessons: 4,
+            duration: "1h 30min",
+            topics: [
+              "Directory Structure",
+              "Navigation Commands",
+              "File Operations",
+            ],
+            completed: true,
+          },
+          {
+            title: "Text Processing & Permissions",
+            lessons: 3,
+            duration: "1h 15min",
+            topics: ["Text Editors", "File Permissions", "Ownership"],
+            completed: false,
+          },
+          {
+            title: "Process Management",
+            lessons: 2,
+            duration: "45min",
+            topics: ["Process Control", "Job Management"],
+            completed: false,
+          },
+        ],
+        learningOutcomes: [
+          {
+            title: "Navigate Linux file system efficiently",
+            description:
+              "Master the Linux directory structure, learn essential navigation commands like cd, ls, pwd, and understand relative vs absolute paths. Develop proficiency in finding files and directories using find, locate, and which commands.",
+            skills: [
+              "File System Navigation",
+              "Directory Structure",
+              "Path Management",
+            ],
+          },
+          {
+            title: "Understand file permissions and ownership",
+            description:
+              "Learn the Linux permission system including read, write, and execute permissions for user, group, and others. Master chmod, chown, and chgrp commands, and understand special permissions like sticky bits and setuid.",
+            skills: ["File Permissions", "Ownership", "Access Control"],
+          },
+          {
+            title: "Use essential command-line tools",
+            description:
+              "Become proficient with core Linux utilities including grep, awk, sed, sort, uniq, and cut for text processing. Learn file manipulation commands like cp, mv, rm, and archive tools like tar and gzip.",
+            skills: [
+              "Command Line Tools",
+              "Text Processing",
+              "File Manipulation",
+            ],
+          },
+          {
+            title: "Manage processes and jobs",
+            description:
+              "Understand process lifecycle, learn to monitor running processes with ps, top, and htop. Master job control including foreground/background processes, and learn to terminate processes safely.",
+            skills: ["Process Management", "Job Control", "System Monitoring"],
+          },
+          {
+            title: "Edit files using terminal editors",
+            description:
+              "Gain proficiency in vi/vim and nano text editors. Learn basic editing commands, search and replace functionality, and how to efficiently edit configuration files from the command line.",
+            skills: ["Text Editors", "Vi/Vim", "File Editing"],
+          },
+          {
+            title: "Automate tasks with basic scripting",
+            description:
+              "Introduction to bash scripting fundamentals including variables, loops, and conditional statements. Learn to create simple automation scripts and understand shell scripting best practices.",
+            skills: ["Bash Scripting", "Automation", "Shell Programming"],
+          },
+        ],
+        labs: [
+          {
+            name: "Basic Commands Lab",
+            description: "Practice essential Linux commands",
+            difficulty: "Beginner",
+            duration: "30 min",
+            skills: ["Commands", "Navigation"],
+          },
+          {
+            name: "File Permissions Workshop",
+            description: "Master file permissions and ownership",
+            difficulty: "Beginner",
+            duration: "45 min",
+            skills: ["Permissions", "Security"],
+          },
+          {
+            name: "Text Processing Challenge",
+            description: "Process text files using Linux tools",
+            difficulty: "Intermediate",
+            duration: "60 min",
+            skills: ["Text Processing", "Filtering"],
+          },
+        ],
+        games: [
+          {
+            name: "Command Line Quest",
+            description: "Adventure through the Linux filesystem",
+            points: 120,
+            type: "Adventure",
+          },
+          {
+            name: "Permission Puzzle",
+            description: "Solve file permission challenges",
+            points: 80,
+            type: "Puzzle",
+          },
+        ],
+        assets: [
+          { name: "Linux Command Cheat Sheet", type: "PDF", size: "1.2 MB" },
+          { name: "File System Reference", type: "PDF", size: "2.1 MB" },
+          { name: "Permission Calculator", type: "Tool", size: "500 KB" },
+        ],
+      },
+
+      "networking-basics": {
+        title: "Networking Fundamentals",
+        description:
+          "Understanding network protocols and basic concepts essential for cybersecurity.",
+        category: "Networking",
+        difficulty: "Beginner",
+        duration: "3-4 weeks",
+        lessons: 16,
+        rating: 4.7,
+        students: 6850,
+        price: "Free",
+        icon: Network,
+        color: "text-purple-400",
+        bgColor: "bg-purple-400/10",
+        borderColor: "border-purple-400/30",
+        progress: 60,
+        labsCount: 10,
+        gamesCount: 5,
+        assetsCount: 20,
+        enrollPath: "/learn/networking-basics",
+        skills: ["TCP/IP", "OSI Model", "DNS", "Basic Protocols"],
+        prerequisites: "Basic computer knowledge",
+        certification: true,
+        instructor: {
+          name: "Maya Patel",
+          title: "Network Security Engineer",
+          avatar:
+            "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150",
+          experience: "10+ years in network security",
+        },
+        curriculum: [
+          {
+            title: "Network Fundamentals",
+            lessons: 4,
+            duration: "2h",
+            topics: ["Network Types", "Topologies", "Components"],
+            completed: true,
+          },
+          {
+            title: "OSI Model Deep Dive",
+            lessons: 4,
+            duration: "2h 15min",
+            topics: ["7 Layers", "Protocols", "Data Flow"],
+            completed: true,
+          },
+          {
+            title: "TCP/IP Protocol Suite",
+            lessons: 4,
+            duration: "2h 30min",
+            topics: ["IP Addressing", "Routing", "Subnetting"],
+            completed: false,
+          },
+          {
+            title: "Network Services",
+            lessons: 4,
+            duration: "1h 45min",
+            topics: ["DNS", "DHCP", "NAT"],
+            completed: false,
+          },
+        ],
+        learningOutcomes: [
+          {
+            title: "Understand network fundamentals",
+            description:
+              "Master core networking concepts including network types (LAN, WAN, MAN), topologies (star, ring, mesh), and essential network components like routers, switches, and hubs. Learn how data flows through networks.",
+            skills: ["Network Types", "Topologies", "Network Components"],
+          },
+          {
+            title: "Master the OSI model",
+            description:
+              "Gain deep understanding of all seven OSI layers, their functions, and how protocols operate at each layer. Learn to troubleshoot network issues using the layered approach and understand data encapsulation.",
+            skills: ["OSI Model", "Layer Functions", "Protocol Mapping"],
+          },
+          {
+            title: "Configure TCP/IP networks",
+            description:
+              "Learn IP addressing fundamentals including IPv4 and IPv6, subnetting, VLSM, and CIDR notation. Master routing concepts, default gateways, and understand how packets are routed across networks.",
+            skills: ["IP Addressing", "Subnetting", "Routing"],
+          },
+          {
+            title: "Implement network services",
+            description:
+              "Configure and manage essential network services including DNS for name resolution, DHCP for automatic IP assignment, and NAT for address translation. Understand how these services interact.",
+            skills: ["DNS", "DHCP", "NAT", "Network Services"],
+          },
+          {
+            title: "Troubleshoot network issues",
+            description:
+              "Develop systematic troubleshooting skills using tools like ping, traceroute, netstat, and packet analyzers. Learn to identify and resolve common network problems including connectivity and performance issues.",
+            skills: [
+              "Network Troubleshooting",
+              "Diagnostic Tools",
+              "Problem Resolution",
+            ],
+          },
+          {
+            title: "Design secure network architectures",
+            description:
+              "Learn network security fundamentals including firewalls, VLANs, and network segmentation. Understand secure network design principles and how to implement defense in depth strategies.",
+            skills: [
+              "Network Security",
+              "Architecture Design",
+              "Defense in Depth",
+            ],
+          },
+        ],
+        labs: [
+          {
+            name: "Network Configuration Lab",
+            description: "Set up and configure network devices",
+            difficulty: "Beginner",
+            duration: "60 min",
+            skills: ["Configuration", "Protocols"],
+          },
+          {
+            name: "Packet Analysis Workshop",
+            description: "Analyze network packets",
+            difficulty: "Intermediate",
+            duration: "75 min",
+            skills: ["Analysis", "Troubleshooting"],
+          },
+        ],
+        games: [
+          {
+            name: "Network Builder",
+            description: "Build and configure networks",
+            points: 150,
+            type: "Strategy",
+          },
+          {
+            name: "Protocol Stack Challenge",
+            description: "Match protocols to OSI layers",
+            points: 100,
+            type: "Puzzle",
+          },
+        ],
+        assets: [
+          { name: "OSI Model Reference", type: "PDF", size: "1.8 MB" },
+          { name: "TCP/IP Guide", type: "PDF", size: "3.2 MB" },
+          {
+            name: "Network Troubleshooting Toolkit",
+            type: "ZIP",
+            size: "8.5 MB",
+          },
+        ],
+      },
+
+      // For all other courses, provide a generic template that shows the course exists
+      "web-security-intro": createGenericCourse(
+        "Introduction to Web Security",
+        "Basic web application security concepts and common vulnerabilities",
+        "Web Security",
+        "Beginner",
+        "2-3 weeks",
+        Shield,
+        "text-cyan-400"
+      ),
+      "digital-forensics-basics": createGenericCourse(
+        "Digital Forensics Basics",
+        "Introduction to digital evidence and investigation techniques",
+        "Digital Forensics",
+        "Beginner",
+        "2-3 weeks",
+        BookOpen,
+        "text-yellow-400"
+      ),
+      "security-awareness": createGenericCourse(
+        "Security Awareness & Policies",
+        "Understanding security policies, compliance, and human factors",
+        "Human Security",
+        "Beginner",
+        "1-2 weeks",
+        Users,
+        "text-orange-400"
+      ),
+
+      // Intermediate courses
+      "advanced-networking": createGenericCourse(
+        "Advanced Network Security",
+        "Network monitoring, intrusion detection, and security protocols",
+        "Network Security",
+        "Intermediate",
+        "4-5 weeks",
+        Network,
+        "text-purple-400"
+      ),
+      "web-application-security": createGenericCourse(
+        "Web Application Security",
+        "Advanced web vulnerabilities and exploitation techniques",
+        "Web Security",
+        "Intermediate",
+        "5-6 weeks",
+        Globe,
+        "text-red-400"
+      ),
+      "social-engineering-osint": createGenericCourse(
+        "Social Engineering & OSINT",
+        "Human psychology, information gathering, and awareness",
+        "Social Engineering",
+        "Intermediate",
+        "3-4 weeks",
+        Users,
+        "text-yellow-400"
+      ),
+      "incident-response": createGenericCourse(
+        "Incident Response & Management",
+        "Responding to security incidents and managing cyber crises",
+        "Incident Response",
+        "Intermediate",
+        "4-5 weeks",
+        Shield,
+        "text-green-400"
+      ),
+      "cryptography-pki": createGenericCourse(
+        "Cryptography & PKI",
+        "Encryption, digital signatures, and public key infrastructure",
+        "Cryptography",
+        "Intermediate",
+        "4-5 weeks",
+        Lock,
+        "text-blue-400"
+      ),
+      "vulnerability-assessment": createGenericCourse(
+        "Vulnerability Assessment & Scanning",
+        "Identifying and assessing security weaknesses in systems",
+        "Vulnerability Assessment",
+        "Intermediate",
+        "3-4 weeks",
+        Target,
+        "text-cyan-400"
+      ),
+      "mobile-security": createGenericCourse(
+        "Mobile Security",
+        "iOS and Android security, mobile app testing",
+        "Mobile Security",
+        "Intermediate",
+        "3-4 weeks",
+        Globe,
+        "text-pink-400"
+      ),
+
+      // Advanced courses
+      "advanced-penetration-testing": createGenericCourse(
+        "Advanced Penetration Testing",
+        "Advanced attack techniques and post-exploitation",
+        "Penetration Testing",
+        "Advanced",
+        "6-8 weeks",
+        Activity,
+        "text-orange-400"
+      ),
+      "malware-analysis": createGenericCourse(
+        "Malware Analysis & Reverse Engineering",
+        "Analyzing malicious software and reverse engineering techniques",
+        "Malware Analysis",
+        "Advanced",
+        "6-8 weeks",
+        Terminal,
+        "text-red-400"
+      ),
+      "red-team-operations": createGenericCourse(
+        "Red Team Operations",
+        "Advanced adversarial simulation and tactics",
+        "Red Team",
+        "Advanced",
+        "8-10 weeks",
+        Target,
+        "text-red-600"
+      ),
+      "cloud-security-architecture": createGenericCourse(
+        "Cloud Security Architecture",
+        "Securing cloud environments and infrastructure",
+        "Cloud Security",
+        "Advanced",
+        "5-6 weeks",
+        Globe,
+        "text-blue-400"
+      ),
+      "iot-security": createGenericCourse(
+        "IoT Security",
+        "Internet of Things security and embedded systems",
+        "IoT Security",
+        "Advanced",
+        "4-5 weeks",
+        Network,
+        "text-purple-400"
+      ),
+      "advanced-forensics": createGenericCourse(
+        "Advanced Digital Forensics",
+        "Advanced investigation techniques and specialized tools",
+        "Digital Forensics",
+        "Advanced",
+        "6-7 weeks",
+        BookOpen,
+        "text-yellow-400"
+      ),
+      "threat-hunting": createGenericCourse(
+        "Threat Hunting",
+        "Proactive threat detection and hunting methodologies",
+        "Threat Hunting",
+        "Advanced",
+        "5-6 weeks",
+        Target,
+        "text-green-400"
+      ),
+    };
+  };
+
+  // Use the generated course data
+  const moduleData = generateCourseData();
 
   const module = moduleData[courseId as keyof typeof moduleData];
 
+  // Handle case where course is not found
   if (!module) {
     return (
-      <div className="min-h-screen bg-black text-green-400 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Module Not Found</h1>
-          <p className="text-green-300/80 mb-8">
-            The requested cybersecurity module doesn't exist.
-          </p>
-          <Button
-            onClick={() => navigate("/overview")}
-            className="bg-green-400 text-black hover:bg-green-300"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Overview
-          </Button>
+      <div className="min-h-screen bg-black text-green-400 relative">
+        <Header navigate={navigate} />
+        <div className="pt-20 px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl font-bold mb-4">Course Not Found</h1>
+            <p className="text-green-300/70 mb-8">
+              The course you're looking for doesn't exist.
+            </p>
+            <Button
+              onClick={() => navigate("/overview")}
+              className="bg-green-400 text-black hover:bg-green-300"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Overview
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -1703,441 +966,696 @@ const CourseDetailPage = () => {
           </Button>
 
           {/* Hero Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
-            <div className="lg:col-span-3">
-              <div className="flex items-center space-x-4 mb-4">
-                <div
-                  className={`w-16 h-16 ${module.bgColor} ${module.borderColor} border-2 rounded-full flex items-center justify-center`}
-                >
-                  <module.icon className={`w-8 h-8 ${module.color}`} />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-green-400 mb-2">
-                    {module.title}
-                  </h1>
-                  <div className="flex items-center space-x-4">
-                    <Badge className={getDifficultyColor(module.difficulty)}>
-                      {module.difficulty}
-                    </Badge>
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                      <span className="text-sm">{module.rating}</span>
-                    </div>
-                    <span className="text-sm text-green-300/70">
-                      {module.students.toLocaleString()} students
-                    </span>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            {/* Main Course Info */}
+            <div className="lg:col-span-2">
+              {/* Terminal-style header */}
+              <div className="bg-black border-2 border-green-400/50 rounded-lg p-6 mb-6 relative overflow-hidden">
+                {/* Terminal header bar */}
+                <div className="flex items-center justify-between mb-4 pb-4 border-b border-green-400/30">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  <div className="text-green-400/60 text-xs font-mono">
+                    cybersec-academy/course/{courseId}
                   </div>
                 </div>
+
+                {/* Course header */}
+                <div className="flex items-start space-x-6 mb-6">
+                  <div className="relative">
+                    <div
+                      className={`w-20 h-20 ${module.bgColor} border-2 ${module.borderColor} rounded-lg flex items-center justify-center relative`}
+                    >
+                      <module.icon className={`w-10 h-10 ${module.color}`} />
+                      {/* Glitch effect */}
+                      <div className="absolute inset-0 border-2 border-green-400/20 rounded-lg animate-pulse"></div>
+                    </div>
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <h1 className="text-4xl font-bold text-green-400 font-mono tracking-tight">
+                        {module.title}
+                      </h1>
+                    </div>
+
+                    <div className="flex items-center space-x-4 mb-4">
+                      <Badge
+                        className={`${getDifficultyColor(
+                          module.difficulty
+                        )} font-mono text-xs px-3 py-1`}
+                      >
+                        /{module.difficulty.toUpperCase()}
+                      </Badge>
+                      <div className="flex items-center space-x-1 text-yellow-400">
+                        <Star className="w-4 h-4 fill-current" />
+                        <span className="text-sm font-mono">
+                          {module.rating}
+                        </span>
+                      </div>
+                      <span className="text-sm text-green-300/70 font-mono">
+                        {module.students.toLocaleString()} enrolled
+                      </span>
+                    </div>
+
+                    <p className="text-green-300/90 leading-relaxed text-lg mb-6">
+                      {module.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Skills terminal output */}
+                <div className="bg-black/40 border border-green-400/20 rounded p-4">
+                  <div className="text-green-400/60 text-xs mb-2 font-mono">
+                    $ course --list-skills
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {module.skills.map((skill, index) => (
+                      <div
+                        key={index}
+                        className="bg-green-400/10 border border-green-400/30 rounded text-green-400 text-sm font-mono"
+                      >
+                        #{skill.toLowerCase().replace(/\s+/g, "_")}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Scan line effect */}
+                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-green-400/50 to-transparent animate-pulse"></div>
               </div>
 
-              <p className="text-green-300/80 mb-4">{module.description}</p>
-
-              <div className="grid grid-cols-4 gap-4 mb-4">
-                <div className="text-center">
-                  <div className={`text-xl font-bold ${module.color}`}>
+              {/* Course Features Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="bg-black border-2 border-green-400/30 rounded-lg p-6 text-center relative overflow-hidden hover:border-green-400/60 transition-all duration-300">
+                  <div className="absolute top-2 left-2 text-green-400/30 text-xs font-mono">
+                    [01]
+                  </div>
+                  <BookOpen className="w-8 h-8 text-green-400 mx-auto mb-3" />
+                  <div className="text-2xl font-bold text-green-400 mb-1 font-mono">
                     {module.lessons}
                   </div>
-                  <div className="text-xs text-green-300/70">Lessons</div>
+                  <div className="text-sm text-green-300/70 uppercase tracking-wider font-mono">
+                    Video Lessons
+                  </div>
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-green-400/20"></div>
                 </div>
-                <div className="text-center">
-                  <div className={`text-xl font-bold ${module.color}`}>
+
+                <div className="bg-black border-2 border-yellow-400/30 rounded-lg p-6 text-center relative overflow-hidden hover:border-yellow-400/60 transition-all duration-300">
+                  <div className="absolute top-2 left-2 text-yellow-400/30 text-xs font-mono">
+                    [02]
+                  </div>
+                  <Zap className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
+                  <div className="text-2xl font-bold text-yellow-400 mb-1 font-mono">
                     {module.labsCount}
                   </div>
-                  <div className="text-xs text-green-300/70">Labs</div>
+                  <div className="text-sm text-green-300/70 uppercase tracking-wider font-mono">
+                    Hands-on Labs
+                  </div>
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-yellow-400/20"></div>
                 </div>
-                <div className="text-center">
-                  <div className={`text-xl font-bold ${module.color}`}>
+
+                <div className="bg-black border-2 border-red-400/30 rounded-lg p-6 text-center relative overflow-hidden hover:border-red-400/60 transition-all duration-300">
+                  <div className="absolute top-2 left-2 text-red-400/30 text-xs font-mono">
+                    [03]
+                  </div>
+                  <Activity className="w-8 h-8 text-red-400 mx-auto mb-3" />
+                  <div className="text-2xl font-bold text-red-400 mb-1 font-mono">
                     {module.gamesCount}
                   </div>
-                  <div className="text-xs text-green-300/70">Games</div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-xl font-bold ${module.color}`}>
-                    {module.assetsCount}
+                  <div className="text-sm text-green-300/70 uppercase tracking-wider font-mono">
+                    Interactive Games
                   </div>
-                  <div className="text-xs text-green-300/70">Assets</div>
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-red-400/20"></div>
                 </div>
-              </div>
-
-              {/* Skills */}
-              <div>
-                <h3 className="text-lg font-semibold mb-3 text-green-400">
-                  What You'll Learn:
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {module.skills.map((skill, index) => (
-                    <Badge
-                      key={index}
-                      variant="outline"
-                      className="border-green-400/30 text-green-400"
-                    >
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              {/* Course Highlights */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <Card className="bg-black/50 border-green-400/30">
-                  <CardContent className="p-4 text-center">
-                    <BookOpen className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                    <div className="text-xl font-bold text-green-400 mb-1">
-                      {module.lessons}
-                    </div>
-                    <div className="text-xs text-green-300/70">
-                      Video Lessons
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-black/50 border-green-400/30">
-                  <CardContent className="p-4 text-center">
-                    <Zap className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-                    <div className="text-xl font-bold text-yellow-400 mb-1">
-                      {module.labsCount}
-                    </div>
-                    <div className="text-xs text-green-300/70">
-                      Hands-on Labs
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-black/50 border-green-400/30">
-                  <CardContent className="p-4 text-center">
-                    <Activity className="w-6 h-6 text-red-400 mx-auto mb-2" />
-                    <div className="text-xl font-bold text-red-400 mb-1">
-                      {module.gamesCount}
-                    </div>
-                    <div className="text-xs text-green-300/70">
-                      Interactive Games
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-4 lg:col-span-2">
-              {/* Course Info */}
-              <Card className="bg-black/50 border-green-400/30">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-green-400 text-lg">
-                    Course Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 pt-0">
+            <div className="space-y-6">
+              {/* Course Info Terminal */}
+              <div className="bg-black border-2 border-green-400/50 rounded-lg overflow-hidden">
+                {/* Terminal header */}
+                <div className="bg-green-400/10 border-b border-green-400/30 px-4 py-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-green-300/70">Duration:</span>
-                    <span className="text-green-400">{module.duration}</span>
+                    <div className="text-green-400 font-mono text-sm font-bold">
+                      COURSE.INFO
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <div className="text-green-400/60 text-xs font-mono">
+                        ACTIVE
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
+                </div>
+
+                <div className="p-6 space-y-2 font-mono text-sm">
+                  <div className="flex items-center justify-between border-b border-green-400/20 pb-2">
+                    <span className="text-green-300/70">Duration:</span>
+                    <span className="text-green-400 font-bold">
+                      {module.duration}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-green-400/20 pb-2">
                     <span className="text-green-300/70">Price:</span>
-                    <span className={`font-bold ${module.color}`}>
+                    <span className={`font-bold ${module.color} text-lg`}>
                       {module.price}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between border-b border-green-400/20 pb-2">
                     <span className="text-green-300/70">Category:</span>
                     <span className="text-green-400">{module.category}</span>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between border-b border-green-400/20 pb-2">
                     <span className="text-green-300/70">Certificate:</span>
                     <span className="text-green-400">
-                      {module.certification ? "Yes" : "No"}
+                      {module.certification ? "✓ YES" : "✗ NO"}
                     </span>
                   </div>
-                  <div className="pt-2 border-t border-green-400/20">
-                    <span className="text-green-300/70 text-sm">
-                      Prerequisites:
-                    </span>
-                    <p className="text-green-400 text-sm mt-1">
+
+                  <div className="bg-black/60 border border-green-400/20 rounded p-3 mt-4">
+                    <div className="text-green-400/60 text-xs mb-1">
+                      PREREQUISITES:
+                    </div>
+                    <p className="text-green-400 text-sm leading-relaxed">
                       {module.prerequisites}
                     </p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              {/* Progress */}
+              {/* Progress Terminal */}
               {module.progress > 0 && (
-                <Card className="bg-black/50 border-green-400/30 gap-1.5">
-                  <CardHeader className="">
-                    <CardTitle className="text-green-400 text-lg ">
-                      Your Progress
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-green-300/70">Completed:</span>
-                      <span className="text-green-400 font-bold">
+                <div className="bg-black border-2 border-blue-400/50 rounded-lg overflow-hidden">
+                  <div className="bg-blue-400/10 border-b border-blue-400/30 px-4 py-2">
+                    <div className="text-blue-400 font-mono text-sm font-bold">
+                      PROGRESS.LOG
+                    </div>
+                  </div>
+
+                  <div className="p-6 font-mono">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-green-300/70">Completion:</span>
+                      <span className="text-blue-400 font-bold text-lg">
                         {module.progress}%
                       </span>
                     </div>
-                    <Progress
-                      value={module.progress}
-                      className="h-3 bg-black border border-green-400/30"
-                    />
-                  </CardContent>
-                </Card>
+
+                    {/* Custom progress bar */}
+                    <div className="bg-black border border-green-400/30 rounded h-4 relative overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-green-400/60 to-blue-400/60 relative"
+                        style={{ width: `${module.progress}%` }}
+                      >
+                        <div className="absolute inset-0 bg-green-400/20 animate-pulse"></div>
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center text-xs font-mono text-green-400">
+                        {module.progress}% COMPLETE
+                      </div>
+                    </div>
+
+                    {/* Progress details */}
+                    <div className="mt-4 space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-green-300/60">Lessons:</span>
+                        <span className="text-green-400">
+                          {Math.floor((module.progress / 100) * module.lessons)}
+                          /{module.lessons}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-green-300/60">Labs:</span>
+                        <span className="text-yellow-400">
+                          {Math.floor(
+                            (module.progress / 100) * module.labsCount
+                          )}
+                          /{module.labsCount}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-green-300/60">Games:</span>
+                        <span className="text-red-400">
+                          {Math.floor(
+                            (module.progress / 100) * module.gamesCount
+                          )}
+                          /{module.gamesCount}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
+
+              {/* Instructor Info */}
+              {/* <div className="bg-black border-2 border-purple-400/50 rounded-lg overflow-hidden">
+                <div className="bg-purple-400/10 border-b border-purple-400/30 px-4 py-2">
+                  <div className="text-purple-400 font-mono text-sm font-bold">
+                    INSTRUCTOR.DATA
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="w-12 h-12 bg-purple-400/20 border border-purple-400/30 rounded-lg flex items-center justify-center">
+                      <Users className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <div>
+                      <div className="text-green-400 font-bold font-mono">
+                        {module.instructor.name}
+                      </div>
+                      <div className="text-green-300/70 text-sm">
+                        {module.instructor.title}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-green-300/80 text-sm font-mono">
+                    {module.instructor.experience}
+                  </div>
+                </div>
+              </div> */}
             </div>
           </div>
 
           {/* Enrollment Button */}
-          <div className="mb-6">
-            <Button
-              onClick={handleEnrollment}
-              size="lg"
-              className="w-full bg-green-400 text-black hover:bg-green-300 font-medium"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              {enrollmentStatus === "not-enrolled"
-                ? "Start Learning Now"
-                : "Continue Course"}
-            </Button>
+          <div className="mb-12">
+            <div className="bg-black border-2 border-green-400/50 rounded-lg p-2 relative overflow-hidden">
+              <Button
+                onClick={handleEnrollment}
+                size="lg"
+                className="w-full bg-gradient-to-r from-green-400 to-green-300 text-black hover:from-green-300 hover:to-green-200 font-mono font-bold text-lg py-6 relative overflow-hidden group"
+              >
+                <div className="absolute inset-0 bg-green-400/20 group-hover:bg-green-400/30 transition-all duration-300"></div>
+                <div className="relative flex items-center justify-center space-x-3">
+                  <Play className="w-6 h-6" />
+                  <span>
+                    {enrollmentStatus === "not-enrolled"
+                      ? "> INITIALIZE_LEARNING_PROTOCOL"
+                      : "> CONTINUE_MISSION"}
+                  </span>
+                </div>
+              </Button>
+
+              {/* Button glow effect */}
+              <div className="absolute inset-0 border-2 border-green-400/20 rounded-lg animate-pulse pointer-events-none"></div>
+            </div>
           </div>
 
           {/* Tabs Section */}
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-5 bg-black/50 border-green-400/30">
-              <TabsTrigger
-                value="overview"
-                className="data-[state=active]:bg-green-400 data-[state=active]:text-black"
-              >
-                Overview
-              </TabsTrigger>
-              <TabsTrigger
-                value="curriculum"
-                className="data-[state=active]:bg-green-400 data-[state=active]:text-black"
-              >
-                Curriculum
-              </TabsTrigger>
-              <TabsTrigger
-                value="labs"
-                className="data-[state=active]:bg-green-400 data-[state=active]:text-black"
-              >
-                Labs
-              </TabsTrigger>
-              <TabsTrigger
-                value="games"
-                className="data-[state=active]:bg-green-400 data-[state=active]:text-black"
-              >
-                Games
-              </TabsTrigger>
-              <TabsTrigger
-                value="assets"
-                className="data-[state=active]:bg-green-400 data-[state=active]:text-black"
-              >
-                Assets
-              </TabsTrigger>
-            </TabsList>
+          <div className="bg-black border-2 border-green-400/50 rounded-lg overflow-hidden">
+            {/* Terminal-style tab header */}
+            <div className="bg-green-400/10 border-b border-green-400/30 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="text-green-400 font-mono text-lg font-bold">
+                  COURSE.MODULES
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <div className="text-green-400/60 text-xs font-mono">
+                    INTERACTIVE
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="mt-4">
-              <div className="space-y-6">
-                {/* Learning Outcomes */}
-                <Card className="bg-black/50 border-green-400/30">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-green-400 flex items-center">
-                      <Trophy className="w-5 h-5 mr-2" />
-                      Learning Outcomes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="grid gap-2">
-                      {module.learningOutcomes.map((outcome, index) => (
-                        <div key={index} className="flex items-start space-x-3">
-                          <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                          <span className="text-green-300/80 text-sm">
-                            {outcome}
-                          </span>
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <div className="bg-black/60 border-b border-green-400/20 px-6 py-2">
+                <TabsList className="grid w-full grid-cols-5 bg-transparent border-0 gap-2">
+                  <TabsTrigger
+                    value="overview"
+                    className="bg-black/60 border border-green-400/30 text-green-400 font-mono text-sm data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:border-green-400 hover:bg-green-400/10 transition-all duration-300"
+                  >
+                    OVERVIEW
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="curriculum"
+                    className="bg-black/60 border border-green-400/30 text-green-400 font-mono text-sm data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:border-green-400 hover:bg-green-400/10 transition-all duration-300"
+                  >
+                    CURRICULUM
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="labs"
+                    className="bg-black/60 border border-green-400/30 text-green-400 font-mono text-sm data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:border-green-400 hover:bg-green-400/10 transition-all duration-300"
+                  >
+                    LABS
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="games"
+                    className="bg-black/60 border border-green-400/30 text-green-400 font-mono text-sm data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:border-green-400 hover:bg-green-400/10 transition-all duration-300"
+                  >
+                    GAMES
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="assets"
+                    className="bg-black/60 border border-green-400/30 text-green-400 font-mono text-sm data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:border-green-400 hover:bg-green-400/10 transition-all duration-300"
+                  >
+                    ASSETS
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <div className="p-6">
+                {/* Overview Tab */}
+                <TabsContent value="overview" className="mt-0">
+                  <div className="space-y-6">
+                    {/* Learning Outcomes */}
+                    <div className="bg-black/40 border border-green-400/30 rounded-lg overflow-hidden">
+                      <div className="bg-green-400/10 border-b border-green-400/20 px-4 py-3">
+                        <div className="text-green-400 font-mono text-sm font-bold flex items-center">
+                          <Trophy className="w-4 h-4 mr-2" />
+                          LEARNING.OBJECTIVES
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <div className="grid gap-6">
+                          {module.learningOutcomes.map((outcome, index) => (
+                            <div
+                              key={index}
+                              className="bg-black/30 border border-green-400/20 rounded-lg overflow-hidden hover:border-green-400/40 transition-all duration-300"
+                            >
+                              {/* Header with title */}
+                              <div className="flex items-start space-x-4 p-4 border-b border-green-400/20">
+                                <div className="text-green-400/60 font-mono text-xs mt-1">
+                                  [{(index + 1).toString().padStart(2, "0")}]
+                                </div>
+                                <div className="flex items-start space-x-3 flex-1">
+                                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                                  <span className="text-green-300 text-base font-semibold leading-relaxed font-mono">
+                                    {typeof outcome === "string"
+                                      ? outcome
+                                      : outcome.title}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Description and skills (only for detailed outcomes) */}
+                              {typeof outcome !== "string" && (
+                                <div className="p-4 space-y-4">
+                                  <p className="text-green-300/80 text-sm leading-relaxed">
+                                    {outcome.description}
+                                  </p>
+
+                                  {/* Skills tags */}
+                                  <div className="flex flex-wrap gap-2">
+                                    <div className="text-green-400/60 text-xs font-mono mr-2 mt-1">
+                                      Skills:
+                                    </div>
+                                    {outcome.skills.map((skill, skillIndex) => (
+                                      <div
+                                        key={skillIndex}
+                                        className="bg-blue-400/10 border border-blue-400/30 rounded px-2 py-1 text-xs text-blue-400 font-mono"
+                                      >
+                                        #
+                                        {skill
+                                          .toLowerCase()
+                                          .replace(/\s+/g, "_")}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* Curriculum Tab */}
+                <TabsContent value="curriculum" className="mt-0">
+                  <div className="bg-black/40 border border-green-400/30 rounded-lg overflow-hidden">
+                    {/* File explorer header */}
+                    <div className="bg-green-400/10 border-b border-green-400/20 px-4 py-3">
+                      <div className="text-green-400 font-mono text-sm font-bold flex items-center">
+                        <div className="text-green-400/60 mr-2">📁</div>
+                        /course/curriculum/
+                      </div>
+                    </div>
+
+                    {/* Folder structure */}
+                    <div className="p-4 font-mono text-sm">
+                      {module.curriculum.map((section, index) => (
+                        <div key={index} className="mb-3">
+                          {/* Folder line */}
+                          <div className="flex items-center space-x-3 py-2 hover:bg-green-400/5 transition-colors">
+                            <div className="flex items-center space-x-2 flex-1">
+                              <span className="text-green-400/60">
+                                {section.completed ? "📂" : "📁"}
+                              </span>
+                              <span className="text-green-400 flex-1">
+                                {section.title}
+                              </span>
+                              <span className="text-green-300/60 text-xs">
+                                {section.lessons} files
+                              </span>
+                              <span className="text-green-300/60 text-xs">
+                                {section.duration}
+                              </span>
+                              {section.completed && (
+                                <span className="text-green-400 text-xs">
+                                  ✓
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Files in folder */}
+                          <div className="ml-6 space-y-1">
+                            {section.topics.map((topic, topicIndex) => (
+                              <div
+                                key={topicIndex}
+                                className="flex items-center space-x-2 py-1 text-green-300/70 hover:bg-green-400/5 transition-colors"
+                              >
+                                <span className="text-green-400/40">├─</span>
+                                <span className="text-blue-400/50">
+                                  <Video className="w-5 h-5" />
+                                </span>
+                                <span className="text-sm">{topic}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
 
-            {/* Curriculum Tab */}
-            <TabsContent value="curriculum" className="mt-4">
-              <div className="space-y-3">
-                {module.curriculum.map((section, index) => (
-                  <Card key={index} className="bg-black/50 border-green-400/30">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-green-400 flex items-center">
-                          <div className="w-6 h-6 rounded-full bg-green-400/20 border border-green-400 flex items-center justify-center mr-3">
-                            <span className="text-xs font-bold">
-                              {index + 1}
-                            </span>
+                      {/* Footer info */}
+                      <div className="border-t border-green-400/20 pt-3 mt-4">
+                        <div className="text-green-400/60 text-xs">
+                          Total: {module.curriculum.length} folders,{" "}
+                          {module.curriculum.reduce(
+                            (acc, section) => acc + section.topics.length,
+                            0
+                          )}{" "}
+                          files
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* Labs Tab */}
+                <TabsContent value="labs" className="mt-0">
+                  <div className="grid gap-4">
+                    {module.labs.map((lab, index) => (
+                      <div
+                        key={index}
+                        className="bg-black/40 border border-green-400/30 rounded-lg overflow-hidden hover:border-green-400/60 transition-all duration-300"
+                      >
+                        <div className="bg-yellow-400/10 border-b border-yellow-400/20 px-4 py-3">
+                          <div className="flex items-center justify-between">
+                            <div className="text-yellow-400 font-mono text-sm font-bold flex items-center">
+                              <div className="w-6 h-6 rounded bg-yellow-400/20 border border-yellow-400 flex items-center justify-center mr-3">
+                                <span className="text-xs font-bold">
+                                  {(index + 1).toString().padStart(2, "0")}
+                                </span>
+                              </div>
+                              {lab.name.toUpperCase()}
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <div
+                                className={`px-2 py-1 rounded text-xs font-mono ${getDifficultyColor(
+                                  lab.difficulty
+                                )}`}
+                              >
+                                {lab.difficulty.toUpperCase()}
+                              </div>
+                              <div className="flex items-center space-x-1 text-xs text-green-300/70 font-mono">
+                                <Clock className="w-3 h-3" />
+                                <span>{lab.duration}</span>
+                              </div>
+                            </div>
                           </div>
-                          {section.title}
-                        </CardTitle>
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center space-x-1 text-xs text-green-300/70">
-                            <BookOpen className="w-3 h-3" />
-                            <span>{section.lessons} lessons</span>
+                        </div>
+                        <div className="p-4">
+                          <p className="text-green-300/80 mb-4 text-sm leading-relaxed">
+                            {lab.description}
+                          </p>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {lab.skills.map((skill, skillIndex) => (
+                              <div
+                                key={skillIndex}
+                                className="bg-blue-400/10 border border-blue-400/30 rounded px-2 py-1 text-xs text-blue-400 font-mono"
+                              >
+                                #{skill.toLowerCase().replace(/\s+/g, "_")}
+                              </div>
+                            ))}
                           </div>
-                          <div className="flex items-center space-x-1 text-xs text-green-300/70">
-                            <Clock className="w-3 h-3" />
-                            <span>{section.duration}</span>
-                          </div>
-                          {section.completed && (
-                            <CheckCircle className="w-4 h-4 text-green-400" />
+                          {enrollmentStatus === "enrolled" ? (
+                            <Button
+                              size="sm"
+                              className="bg-yellow-400 text-black hover:bg-yellow-300 font-mono"
+                            >
+                              <Play className="w-4 h-4 mr-2" />
+                              START_LAB
+                            </Button>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="bg-red-400/10 border border-red-400/20 rounded p-3">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <Lock className="w-4 h-4 text-red-400" />
+                                  <span className="text-red-400 font-mono text-xs font-bold">
+                                    ENROLLMENT_REQUIRED
+                                  </span>
+                                </div>
+                                <p className="text-red-300/80 text-xs font-mono">
+                                  This lab requires course enrollment to access
+                                </p>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={handleEnrollment}
+                                className="bg-green-400 text-black hover:bg-green-300 font-mono"
+                              >
+                                <Shield className="w-4 h-4 mr-2" />
+                                ENROLL_TO_ACCESS
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-1">
-                        {section.topics.map((topic, topicIndex) => (
-                          <Badge
-                            key={topicIndex}
-                            variant="outline"
-                            className="text-xs border-green-400/30 text-green-400"
-                          >
-                            {topic}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
+                    ))}
+                  </div>
+                </TabsContent>
 
-            {/* Labs Tab */}
-            <TabsContent value="labs" className="mt-4">
-              <div className="grid gap-4">
-                {module.labs.map((lab, index) => (
-                  <Card
-                    key={index}
-                    className="bg-black/50 border-green-400/30 hover:border-green-400 transition-colors"
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-green-400 text-lg">
-                          {lab.name}
-                        </CardTitle>
-                        <div className="flex items-center space-x-3">
-                          <Badge className={getDifficultyColor(lab.difficulty)}>
-                            {lab.difficulty}
-                          </Badge>
-                          <div className="flex items-center space-x-1 text-xs text-green-300/70">
-                            <Clock className="w-3 h-3" />
-                            <span>{lab.duration}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-green-300/80 mb-3 text-sm">
-                        {lab.description}
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {lab.skills.map((skill, skillIndex) => (
-                          <Badge
-                            key={skillIndex}
-                            variant="outline"
-                            className="text-xs border-blue-400/30 text-blue-400"
-                          >
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* Games Tab */}
-            <TabsContent value="games" className="mt-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                {module.games.map((game, index) => (
-                  <Card
-                    key={index}
-                    className="bg-black/50 border-green-400/30 hover:border-green-400 transition-colors"
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-green-400 text-lg">
-                          {game.name}
-                        </CardTitle>
-                        <div className="flex items-center space-x-2">
-                          <Badge className="bg-yellow-400/20 text-yellow-400">
-                            {game.points} pts
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className="border-purple-400/30 text-purple-400"
-                          >
-                            {game.type}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-green-300/80 mb-3 text-sm">
-                        {game.description}
-                      </p>
-                      <Button
-                        size="sm"
-                        className="bg-green-400 text-black hover:bg-green-300"
+                {/* Games Tab */}
+                <TabsContent value="games" className="mt-0">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {module.games.map((game, index) => (
+                      <div
+                        key={index}
+                        className="bg-black/40 border border-green-400/30 rounded-lg overflow-hidden hover:border-green-400/60 transition-all duration-300"
                       >
-                        <Play className="w-4 h-4 mr-2" />
-                        Play Game
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* Assets Tab */}
-            <TabsContent value="assets" className="mt-4">
-              <div className="grid gap-3">
-                {module.assets.map((asset, index) => (
-                  <Card
-                    key={index}
-                    className="bg-black/50 border-green-400/30 hover:border-green-400 transition-colors"
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="text-green-400">
-                            {getFileTypeIcon(asset.type)}
-                          </div>
-                          <div>
-                            <div className="font-medium text-green-400 text-sm">
-                              {asset.name}
+                        <div className="bg-red-400/10 border-b border-red-400/20 px-4 py-3">
+                          <div className="flex items-center justify-between">
+                            <div className="text-red-400 font-mono text-sm font-bold flex items-center">
+                              <div className="w-6 h-6 rounded bg-red-400/20 border border-red-400 flex items-center justify-center mr-3">
+                                <span className="text-xs font-bold">
+                                  {(index + 1).toString().padStart(2, "0")}
+                                </span>
+                              </div>
+                              {game.name.toUpperCase()}
                             </div>
-                            <div className="text-xs text-green-300/70">
-                              {asset.type.toUpperCase()} • {asset.size}
+                            <div className="flex items-center space-x-2">
+                              <div className="bg-yellow-400/20 border border-yellow-400 rounded px-2 py-1 text-yellow-400 text-xs font-mono">
+                                {game.points} PTS
+                              </div>
+                              <div className="bg-purple-400/20 border border-purple-400 rounded px-2 py-1 text-purple-400 text-xs font-mono">
+                                {game.type.toUpperCase()}
+                              </div>
                             </div>
                           </div>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-green-400 hover:bg-green-400/10"
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
+                        <div className="p-4">
+                          <p className="text-green-300/80 mb-4 text-sm leading-relaxed">
+                            {game.description}
+                          </p>
+                          {enrollmentStatus === "enrolled" ? (
+                            <Button
+                              size="sm"
+                              className="bg-red-400 text-black hover:bg-red-300 font-mono"
+                            >
+                              <Play className="w-4 h-4 mr-2" />
+                              PLAY_GAME
+                            </Button>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="bg-red-400/10 border border-red-400/20 rounded p-3">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <Lock className="w-4 h-4 text-red-400" />
+                                  <span className="text-red-400 font-mono text-xs font-bold">
+                                    ENROLLMENT_REQUIRED
+                                  </span>
+                                </div>
+                                <p className="text-red-300/80 text-xs font-mono">
+                                  This game requires course enrollment to access
+                                </p>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={handleEnrollment}
+                                className="bg-green-400 text-black hover:bg-green-300 font-mono"
+                              >
+                                <Shield className="w-4 h-4 mr-2" />
+                                ENROLL_TO_ACCESS
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    ))}
+                  </div>
+                </TabsContent>
+
+                {/* Assets Tab */}
+                <TabsContent value="assets" className="mt-0">
+                  <div className="grid gap-3">
+                    {module.assets.map((asset, index) => (
+                      <div
+                        key={index}
+                        className="bg-black/40 border border-green-400/30 rounded-lg overflow-hidden hover:border-green-400/60 transition-all duration-300"
+                      >
+                        <div className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-10 h-10 bg-green-400/10 border border-green-400/30 rounded flex items-center justify-center">
+                                {getFileTypeIcon(asset.type)}
+                              </div>
+                              <div>
+                                <div className="font-medium text-green-400 text-sm font-mono">
+                                  {asset.name}
+                                </div>
+                                <div className="text-xs text-green-300/70 font-mono">
+                                  {asset.type.toUpperCase()} • {asset.size}
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-green-400 hover:bg-green-400/10 border border-green-400/30 font-mono"
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              DOWNLOAD
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
               </div>
-            </TabsContent>
-          </Tabs>
+            </Tabs>
+          </div>
         </div>
       </div>
+
       {/* Footer */}
       <footer className="border-t border-green-400/20 py-8 px-6 relative z-10">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">

@@ -19,7 +19,7 @@ import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-black text-green-400 relative overflow-hidden">
+      <div className="min-h-screen bg-background text-green-400 relative overflow-hidden">
         <MatrixRain />
         <div className="relative z-10">
           <Routes>

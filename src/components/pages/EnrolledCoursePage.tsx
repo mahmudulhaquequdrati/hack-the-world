@@ -18,6 +18,7 @@ import {
   Database,
   Download,
   ExternalLink,
+  Eye,
   FileText,
   Globe,
   GripVertical,
@@ -213,14 +214,39 @@ const EnrolledCoursePage = () => {
     setTimeout(() => {
       let result = "";
 
-      if (courseId === "web-security") {
+      if (
+        courseId === "web-security-intro" ||
+        courseId === "web-application-security"
+      ) {
         result = `🔍 Web Security Analysis of: "${input.substring(0, 50)}${
           input.length > 50 ? "..." : ""
         }"\n\n• Detected potential XSS vectors: 2\n• SQL injection possibilities: 1\n• Missing security headers: 3\n• Recommendation: Implement input validation and CSP headers\n\n🤖 AI Insight: This code shows classic web vulnerabilities. Focus on sanitizing user inputs and implementing proper authentication.`;
-      } else if (courseId === "networking") {
+      } else if (
+        courseId === "networking-basics" ||
+        courseId === "advanced-networking"
+      ) {
         result = `🌐 Network Analysis of: "${input.substring(0, 50)}${
           input.length > 50 ? "..." : ""
         }"\n\n• Open ports detected: 22, 80, 443\n• SSL/TLS version: TLS 1.2\n• Firewall status: Active\n• Recommendation: Close unnecessary ports\n\n🤖 AI Insight: Your network configuration looks secure, but consider upgrading to TLS 1.3 for better security.`;
+      } else if (courseId === "linux-basics") {
+        result = `🐧 Linux System Analysis of: "${input.substring(0, 50)}${
+          input.length > 50 ? "..." : ""
+        }"\n\n• File permissions: Properly configured\n• SUID/SGID files: 3 found (review needed)\n• Log analysis: Normal activity patterns\n• Recommendation: Review SUID binaries\n\n🤖 AI Insight: Your Linux system shows good security practices. Monitor those SUID files for privilege escalation risks.`;
+      } else if (courseId === "digital-forensics-basics") {
+        result = `🔍 Digital Forensics Analysis of: "${input.substring(0, 50)}${
+          input.length > 50 ? "..." : ""
+        }"\n\n• Evidence integrity: Verified\n• File signatures: 45 files analyzed\n• Timeline events: 127 entries\n• Deleted files: 8 recoverable\n\n🤖 AI Insight: Strong chain of custody maintained. Evidence shows user activity between 2:30-4:15 PM on target date.`;
+      } else if (courseId === "social-engineering-osint") {
+        result = `🕵️ OSINT Investigation of: "${input.substring(0, 50)}${
+          input.length > 50 ? "..." : ""
+        }"\n\n• Social media profiles: 3 found\n• Email addresses: 2 discovered\n• Phone numbers: 1 identified\n• Associated accounts: 5 platforms\n\n🤖 AI Insight: Target has significant digital footprint. Focus on LinkedIn and Twitter for professional connections.`;
+      } else if (courseId === "foundations") {
+        result = `🛡️ Security Framework Analysis of: "${input.substring(
+          0,
+          50
+        )}${
+          input.length > 50 ? "..." : ""
+        }"\n\n• Risk level: Medium (6/10)\n• Compliance gaps: 3 identified\n• Control effectiveness: 75%\n• Recommended actions: 5 priority items\n\n🤖 AI Insight: Good foundation with room for improvement. Focus on access controls and incident response procedures.`;
       } else {
         result = `🔍 Security Analysis of: "${input.substring(0, 50)}${
           input.length > 50 ? "..." : ""
@@ -311,76 +337,7 @@ const EnrolledCoursePage = () => {
     setPlaygroundMinimized(false);
   };
 
-  // Update playground mode when video changes
-  useEffect(() => {
-    const modes = getPlaygroundModes();
-    if (modes.length > 0) {
-      setPlaygroundMode(modes[0].id);
-    }
-    // Reset terminal history for new lesson
-    setTerminalHistory([
-      {
-        type: "output",
-        content: "Last login: Mon Dec 16 14:32:01 on ttys000",
-      },
-      {
-        type: "output",
-        content: `Welcome to ${
-          getCurrentLesson()?.title || "Cybersecurity"
-        } Terminal`,
-      },
-    ]);
-    setAnalysisResult("");
-    setAnalysisInput("");
-  }, [currentVideo, courseId]);
-
-  // Check if current lesson needs playground
-  const needsPlayground = () => {
-    const lesson = getCurrentLesson();
-    return lesson?.type === "video" || lesson?.type === "text";
-  };
-
-  // Get playground modes based on course type
-  const getPlaygroundModes = () => {
-    switch (courseId) {
-      case "web-security":
-        return [
-          { id: "web-scanner", label: "Web Scanner" },
-          { id: "sql-injection", label: "SQL Injection" },
-          { id: "xss-lab", label: "XSS Lab" },
-          { id: "ai-chat", label: "AI Chat" },
-        ];
-      case "social-engineering":
-        return [
-          { id: "osint-tools", label: "OSINT Tools" },
-          { id: "phishing-sim", label: "Phishing Sim" },
-          { id: "social-analysis", label: "Social Analysis" },
-          { id: "ai-chat", label: "AI Chat" },
-        ];
-      case "networking":
-        return [
-          { id: "network-scanner", label: "Network Scanner" },
-          { id: "packet-analysis", label: "Packet Analysis" },
-          { id: "port-scanner", label: "Port Scanner" },
-          { id: "ai-chat", label: "AI Chat" },
-        ];
-      case "linux":
-        return [
-          { id: "terminal", label: "Terminal" },
-          { id: "file-analysis", label: "File Analysis" },
-          { id: "log-analysis", label: "Log Analysis" },
-          { id: "ai-chat", label: "AI Chat" },
-        ];
-      default:
-        return [
-          { id: "terminal", label: "Terminal" },
-          { id: "analysis", label: "Analysis" },
-          { id: "ai-chat", label: "AI Chat" },
-        ];
-    }
-  };
-
-  // Course data - simplified for enrolled experience
+  // Course data - simplified for enrolled experience - moved up to be available to helper functions
   const enrolledCourses = {
     foundations: {
       title: "Cybersecurity Foundations",
@@ -607,9 +564,9 @@ const EnrolledCoursePage = () => {
         },
       ],
     },
-    linux: {
-      title: "Linux Command Line Mastery",
-      description: "Master the terminal and command-line tools",
+    "linux-basics": {
+      title: "Linux Command Line Basics",
+      description: "Master the terminal and basic command-line operations",
       icon: Terminal,
       color: "text-green-400",
       bgColor: "bg-green-400/10",
@@ -660,6 +617,30 @@ const EnrolledCoursePage = () => {
             },
           ],
         },
+        {
+          id: "navigation",
+          title: "File System Navigation",
+          lessons: [
+            {
+              id: "nav-1",
+              title: "Directory Navigation",
+              duration: "20:15",
+              type: "video",
+              completed: false,
+              description: "Navigate the file system efficiently",
+              videoUrl: "https://example.com/nav1.mp4",
+            },
+            {
+              id: "nav-2",
+              title: "File Operations",
+              duration: "25:30",
+              type: "video",
+              completed: false,
+              description: "Create, copy, move, and delete files",
+              videoUrl: "https://example.com/nav2.mp4",
+            },
+          ],
+        },
       ],
       labs: [
         {
@@ -680,6 +661,15 @@ const EnrolledCoursePage = () => {
           completed: false,
           available: true,
         },
+        {
+          id: "linux-lab-3",
+          name: "Script Writing Workshop",
+          description: "Write your first bash scripts",
+          difficulty: "Intermediate",
+          duration: "60 min",
+          completed: false,
+          available: true,
+        },
       ],
       playground: {
         title: "Linux Terminal Playground",
@@ -690,6 +680,8 @@ const EnrolledCoursePage = () => {
       resources: [
         { name: "Linux Command Reference", type: "PDF", size: "1.8 MB" },
         { name: "Shell Scripting Guide", type: "PDF", size: "2.4 MB" },
+        { name: "Vim Quick Reference", type: "PDF", size: "500 KB" },
+        { name: "System Administration Basics", type: "PDF", size: "3.1 MB" },
       ],
       games: [
         {
@@ -721,9 +713,9 @@ const EnrolledCoursePage = () => {
         },
       ],
     },
-    networking: {
-      title: "Network Security & Analysis",
-      description: "Network protocols, scanning, and monitoring",
+    "networking-basics": {
+      title: "Networking Fundamentals",
+      description: "Understanding network protocols and basic concepts",
       icon: Network,
       color: "text-purple-400",
       bgColor: "bg-purple-400/10",
@@ -745,6 +737,48 @@ const EnrolledCoursePage = () => {
               description: "Understanding the seven layers of the OSI model",
               videoUrl: "https://example.com/net1.mp4",
             },
+            {
+              id: "net-2",
+              title: "TCP/IP Protocol Suite",
+              duration: "32:15",
+              type: "video",
+              completed: true,
+              description: "Core protocols of the internet",
+              videoUrl: "https://example.com/net2.mp4",
+            },
+            {
+              id: "net-3",
+              title: "DNS and DHCP",
+              duration: "24:45",
+              type: "video",
+              completed: false,
+              description: "Domain name resolution and IP assignment",
+              videoUrl: "https://example.com/net3.mp4",
+            },
+          ],
+        },
+        {
+          id: "protocols",
+          title: "Network Protocols",
+          lessons: [
+            {
+              id: "proto-1",
+              title: "HTTP and HTTPS",
+              duration: "26:20",
+              type: "video",
+              completed: false,
+              description: "Web protocols and security",
+              videoUrl: "https://example.com/proto1.mp4",
+            },
+            {
+              id: "proto-2",
+              title: "Email Protocols",
+              duration: "22:10",
+              type: "video",
+              completed: false,
+              description: "SMTP, POP3, and IMAP explained",
+              videoUrl: "https://example.com/proto2.mp4",
+            },
           ],
         },
       ],
@@ -758,16 +792,36 @@ const EnrolledCoursePage = () => {
           completed: false,
           available: true,
         },
+        {
+          id: "net-lab-2",
+          name: "Protocol Analysis",
+          description: "Analyze network protocols with Wireshark",
+          difficulty: "Intermediate",
+          duration: "60 min",
+          completed: false,
+          available: true,
+        },
+        {
+          id: "net-lab-3",
+          name: "Network Troubleshooting",
+          description: "Diagnose and fix network issues",
+          difficulty: "Intermediate",
+          duration: "75 min",
+          completed: false,
+          available: true,
+        },
       ],
       playground: {
         title: "Network Security Lab",
         description: "Virtual network environment for testing",
-        tools: ["Wireshark", "Nmap", "Network Simulator"],
+        tools: ["Wireshark", "Nmap", "Network Simulator", "Ping Tools"],
         available: true,
       },
       resources: [
         { name: "Network Protocol Reference", type: "PDF", size: "5.2 MB" },
         { name: "Wireshark Guide", type: "PDF", size: "3.4 MB" },
+        { name: "TCP/IP Illustrated", type: "PDF", size: "8.7 MB" },
+        { name: "Network Troubleshooting Guide", type: "PDF", size: "2.8 MB" },
       ],
       games: [
         {
@@ -799,16 +853,17 @@ const EnrolledCoursePage = () => {
         },
       ],
     },
-    "web-security": {
-      title: "Web Application Security",
-      description: "Discover and exploit web vulnerabilities ethically",
+    "web-security-intro": {
+      title: "Introduction to Web Security",
+      description:
+        "Basic web application security concepts and common vulnerabilities",
       icon: Globe,
-      color: "text-red-400",
-      bgColor: "bg-red-400/10",
-      borderColor: "border-red-400/30",
-      totalLessons: 30,
-      completedLessons: 18,
-      progress: 60,
+      color: "text-cyan-400",
+      bgColor: "bg-cyan-400/10",
+      borderColor: "border-cyan-400/30",
+      totalLessons: 18,
+      completedLessons: 7,
+      progress: 40,
       sections: [
         {
           id: "fundamentals",
@@ -817,100 +872,655 @@ const EnrolledCoursePage = () => {
             {
               id: "web-1",
               title: "Web Architecture Security",
-              duration: "32:15",
+              duration: "25:15",
               type: "video",
               completed: true,
               description: "Security considerations in web architecture",
               videoUrl: "https://example.com/web1.mp4",
+            },
+            {
+              id: "web-2",
+              title: "HTTP Security Headers",
+              duration: "18:30",
+              type: "video",
+              completed: true,
+              description: "Important security headers for web applications",
+              videoUrl: "https://example.com/web2.mp4",
+            },
+            {
+              id: "web-3",
+              title: "Basic XSS Understanding",
+              duration: "22:45",
+              type: "video",
+              completed: false,
+              description: "Introduction to Cross-Site Scripting",
+              videoUrl: "https://example.com/web3.mp4",
+            },
+          ],
+        },
+        {
+          id: "vulnerabilities",
+          title: "Common Vulnerabilities",
+          lessons: [
+            {
+              id: "vuln-1",
+              title: "SQL Injection Basics",
+              duration: "28:20",
+              type: "video",
+              completed: false,
+              description: "Understanding SQL injection attacks",
+              videoUrl: "https://example.com/vuln1.mp4",
+            },
+            {
+              id: "vuln-2",
+              title: "CSRF Protection",
+              duration: "20:10",
+              type: "video",
+              completed: false,
+              description: "Cross-Site Request Forgery prevention",
+              videoUrl: "https://example.com/vuln2.mp4",
             },
           ],
         },
       ],
       labs: [
         {
-          id: "web-lab-1",
-          name: "SQL Injection Lab",
-          description: "Practice SQL injection techniques",
-          difficulty: "Intermediate",
-          duration: "90 min",
+          id: "web-intro-lab-1",
+          name: "Basic XSS Lab",
+          description: "Practice identifying XSS vulnerabilities",
+          difficulty: "Beginner",
+          duration: "30 min",
+          completed: false,
+          available: true,
+        },
+        {
+          id: "web-intro-lab-2",
+          name: "SQL Injection Discovery",
+          description: "Find SQL injection vulnerabilities",
+          difficulty: "Beginner",
+          duration: "45 min",
+          completed: false,
+          available: true,
+        },
+        {
+          id: "web-intro-lab-3",
+          name: "Security Headers Lab",
+          description: "Configure security headers",
+          difficulty: "Beginner",
+          duration: "35 min",
           completed: false,
           available: true,
         },
       ],
       playground: {
         title: "Web Security Testing Lab",
-        description: "Vulnerable web applications for testing",
-        tools: ["Burp Suite", "DVWA", "WebGoat", "SQLMap"],
+        description: "Safe environment for web security testing",
+        tools: [
+          "Burp Suite Community",
+          "DVWA",
+          "Basic Scanners",
+          "Browser Tools",
+        ],
         available: true,
       },
       resources: [
-        { name: "OWASP Top 10 Guide", type: "PDF", size: "3.4 MB" },
-        { name: "Burp Suite Manual", type: "PDF", size: "4.8 MB" },
+        { name: "OWASP Top 10 Basics", type: "PDF", size: "2.8 MB" },
+        { name: "Web Security Checklist", type: "PDF", size: "1.2 MB" },
+        { name: "HTTP Security Headers Guide", type: "PDF", size: "950 KB" },
+        { name: "Basic XSS Prevention", type: "PDF", size: "1.5 MB" },
       ],
       games: [
         {
-          id: "xss-hunter",
-          name: "XSS Hunter",
-          description: "Find and exploit cross-site scripting vulnerabilities",
-          difficulty: "Intermediate",
-          duration: "25 min",
+          id: "xss-hunter-basic",
+          name: "XSS Hunter Basics",
+          description: "Find basic XSS vulnerabilities",
+          difficulty: "Beginner",
+          duration: "15 min",
           icon: Code,
           available: true,
         },
         {
-          id: "sql-injector",
-          name: "SQL Injection Master",
-          description: "Master the art of SQL injection",
-          difficulty: "Advanced",
-          duration: "35 min",
+          id: "sql-detective",
+          name: "SQL Detective",
+          description: "Detect SQL injection vulnerabilities",
+          difficulty: "Beginner",
+          duration: "20 min",
           icon: Database,
           available: true,
         },
         {
-          id: "web-fortress",
-          name: "Web Application Fortress",
-          description: "Secure web applications against various attacks",
-          difficulty: "Expert",
-          duration: "45 min",
+          id: "security-headers",
+          name: "Security Headers Challenge",
+          description: "Configure proper security headers",
+          difficulty: "Beginner",
+          duration: "12 min",
           icon: Shield,
-          available: false,
+          available: true,
         },
       ],
     },
-    "social-engineering": {
-      title: "Social Engineering & OSINT",
-      description: "Human psychology and information gathering",
-      icon: Users,
+    "digital-forensics-basics": {
+      title: "Digital Forensics Basics",
+      description:
+        "Introduction to digital evidence and investigation techniques",
+      icon: Eye,
       color: "text-yellow-400",
       bgColor: "bg-yellow-400/10",
       borderColor: "border-yellow-400/30",
-      totalLessons: 18,
-      completedLessons: 10,
-      progress: 56,
+      totalLessons: 16,
+      completedLessons: 3,
+      progress: 20,
       sections: [
         {
           id: "fundamentals",
-          title: "Social Engineering Fundamentals",
+          title: "Forensics Fundamentals",
           lessons: [
             {
-              id: "se-1",
-              title: "Psychology of Persuasion",
-              duration: "26:45",
+              id: "forensics-1",
+              title: "Evidence Handling",
+              duration: "22:30",
               type: "video",
               completed: true,
-              description: "Understanding human psychology in security",
-              videoUrl: "https://example.com/se1.mp4",
+              description: "Proper handling of digital evidence",
+              videoUrl: "https://example.com/forensics1.mp4",
+            },
+            {
+              id: "forensics-2",
+              title: "Chain of Custody",
+              duration: "18:45",
+              type: "video",
+              completed: true,
+              description: "Maintaining evidence integrity",
+              videoUrl: "https://example.com/forensics2.mp4",
+            },
+            {
+              id: "forensics-3",
+              title: "File System Analysis",
+              duration: "28:15",
+              type: "video",
+              completed: false,
+              description: "Understanding file systems for forensics",
+              videoUrl: "https://example.com/forensics3.mp4",
+            },
+          ],
+        },
+        {
+          id: "tools",
+          title: "Forensics Tools",
+          lessons: [
+            {
+              id: "tools-1",
+              title: "Autopsy Introduction",
+              duration: "35:20",
+              type: "video",
+              completed: false,
+              description: "Getting started with Autopsy",
+              videoUrl: "https://example.com/tools1.mp4",
+            },
+            {
+              id: "tools-2",
+              title: "Volatility Framework",
+              duration: "32:10",
+              type: "video",
+              completed: false,
+              description: "Memory analysis with Volatility",
+              videoUrl: "https://example.com/tools2.mp4",
             },
           ],
         },
       ],
       labs: [
         {
-          id: "se-lab-1",
-          name: "OSINT Investigation",
-          description: "Gather intelligence ethically",
+          id: "forensics-lab-1",
+          name: "Evidence Collection",
+          description: "Practice proper evidence collection",
+          difficulty: "Beginner",
+          duration: "60 min",
+          completed: false,
+          available: true,
+        },
+        {
+          id: "forensics-lab-2",
+          name: "File Recovery Challenge",
+          description: "Recover deleted files",
+          difficulty: "Beginner",
+          duration: "45 min",
+          completed: false,
+          available: true,
+        },
+        {
+          id: "forensics-lab-3",
+          name: "Timeline Analysis",
+          description: "Create forensic timelines",
+          difficulty: "Intermediate",
+          duration: "75 min",
+          completed: false,
+          available: true,
+        },
+      ],
+      playground: {
+        title: "Digital Forensics Lab",
+        description: "Forensics tools and evidence analysis environment",
+        tools: ["Autopsy", "Volatility", "FTK Imager", "Hex Editors"],
+        available: true,
+      },
+      resources: [
+        { name: "Digital Forensics Handbook", type: "PDF", size: "6.2 MB" },
+        { name: "Evidence Collection Guide", type: "PDF", size: "2.8 MB" },
+        { name: "Autopsy User Manual", type: "PDF", size: "4.1 MB" },
+        { name: "Memory Forensics Guide", type: "PDF", size: "3.5 MB" },
+      ],
+      games: [
+        {
+          id: "evidence-hunter",
+          name: "Evidence Hunter",
+          description: "Find hidden evidence in digital artifacts",
+          difficulty: "Beginner",
+          duration: "25 min",
+          icon: Eye,
+          available: true,
+        },
+        {
+          id: "timeline-master",
+          name: "Timeline Master",
+          description: "Create accurate forensic timelines",
+          difficulty: "Intermediate",
+          duration: "30 min",
+          icon: Clock,
+          available: true,
+        },
+        {
+          id: "recovery-expert",
+          name: "Recovery Expert",
+          description: "Recover deleted and hidden data",
+          difficulty: "Intermediate",
+          duration: "35 min",
+          icon: Database,
+          available: false,
+        },
+      ],
+    },
+    "advanced-networking": {
+      title: "Advanced Network Security",
+      description:
+        "Network monitoring, intrusion detection, and security protocols",
+      icon: Network,
+      color: "text-purple-400",
+      bgColor: "bg-purple-400/10",
+      borderColor: "border-purple-400/30",
+      totalLessons: 22,
+      completedLessons: 7,
+      progress: 30,
+      sections: [
+        {
+          id: "ids-ips",
+          title: "Intrusion Detection Systems",
+          lessons: [
+            {
+              id: "ids-1",
+              title: "IDS vs IPS Overview",
+              duration: "24:30",
+              type: "video",
+              completed: true,
+              description: "Understanding intrusion detection and prevention",
+              videoUrl: "https://example.com/ids1.mp4",
+            },
+            {
+              id: "ids-2",
+              title: "Snort Configuration",
+              duration: "32:15",
+              type: "video",
+              completed: true,
+              description: "Setting up and configuring Snort IDS",
+              videoUrl: "https://example.com/ids2.mp4",
+            },
+            {
+              id: "ids-3",
+              title: "Rule Writing",
+              duration: "28:45",
+              type: "video",
+              completed: false,
+              description: "Writing custom Snort rules",
+              videoUrl: "https://example.com/ids3.mp4",
+            },
+          ],
+        },
+        {
+          id: "monitoring",
+          title: "Network Monitoring",
+          lessons: [
+            {
+              id: "mon-1",
+              title: "Traffic Analysis",
+              duration: "30:20",
+              type: "video",
+              completed: false,
+              description: "Analyzing network traffic patterns",
+              videoUrl: "https://example.com/mon1.mp4",
+            },
+            {
+              id: "mon-2",
+              title: "SIEM Integration",
+              duration: "26:10",
+              type: "video",
+              completed: false,
+              description: "Integrating with SIEM systems",
+              videoUrl: "https://example.com/mon2.mp4",
+            },
+          ],
+        },
+      ],
+      labs: [
+        {
+          id: "adv-net-lab-1",
+          name: "IDS Setup Lab",
+          description: "Configure and deploy Snort IDS",
+          difficulty: "Intermediate",
+          duration: "90 min",
+          completed: false,
+          available: true,
+        },
+        {
+          id: "adv-net-lab-2",
+          name: "Traffic Analysis Challenge",
+          description: "Analyze suspicious network traffic",
+          difficulty: "Intermediate",
+          duration: "75 min",
+          completed: false,
+          available: true,
+        },
+        {
+          id: "adv-net-lab-3",
+          name: "Network Forensics Lab",
+          description: "Investigate network incidents",
+          difficulty: "Advanced",
+          duration: "120 min",
+          completed: false,
+          available: true,
+        },
+      ],
+      playground: {
+        title: "Advanced Network Security Lab",
+        description: "Professional-grade network security tools",
+        tools: [
+          "Snort",
+          "Suricata",
+          "Security Onion",
+          "ELK Stack",
+          "Wireshark",
+        ],
+        available: true,
+      },
+      resources: [
+        { name: "Advanced IDS Guide", type: "PDF", size: "7.8 MB" },
+        { name: "Network Security Monitoring", type: "PDF", size: "9.2 MB" },
+        { name: "Snort Cookbook", type: "PDF", size: "4.6 MB" },
+        { name: "Traffic Analysis Handbook", type: "PDF", size: "5.8 MB" },
+      ],
+      games: [
+        {
+          id: "ids-master",
+          name: "IDS Configuration Master",
+          description: "Configure IDS systems to detect threats",
+          difficulty: "Intermediate",
+          duration: "30 min",
+          icon: Shield,
+          available: true,
+        },
+        {
+          id: "traffic-detective",
+          name: "Traffic Detective",
+          description: "Analyze network traffic for anomalies",
+          difficulty: "Intermediate",
+          duration: "25 min",
+          icon: Search,
+          available: true,
+        },
+        {
+          id: "network-sentinel",
+          name: "Network Sentinel",
+          description: "Monitor and defend enterprise networks",
+          difficulty: "Advanced",
+          duration: "45 min",
+          icon: Eye,
+          available: false,
+        },
+      ],
+    },
+    "web-application-security": {
+      title: "Web Application Security",
+      description: "Advanced web vulnerabilities and exploitation techniques",
+      icon: Code,
+      color: "text-red-400",
+      bgColor: "bg-red-400/10",
+      borderColor: "border-red-400/30",
+      totalLessons: 28,
+      completedLessons: 13,
+      progress: 45,
+      sections: [
+        {
+          id: "owasp",
+          title: "OWASP Top 10",
+          lessons: [
+            {
+              id: "owasp-1",
+              title: "Injection Attacks",
+              duration: "35:30",
+              type: "video",
+              completed: true,
+              description: "SQL, NoSQL, and command injection techniques",
+              videoUrl: "https://example.com/owasp1.mp4",
+            },
+            {
+              id: "owasp-2",
+              title: "Broken Authentication",
+              duration: "28:15",
+              type: "video",
+              completed: true,
+              description: "Authentication bypass techniques",
+              videoUrl: "https://example.com/owasp2.mp4",
+            },
+            {
+              id: "owasp-3",
+              title: "Sensitive Data Exposure",
+              duration: "24:45",
+              type: "video",
+              completed: false,
+              description: "Finding and exploiting data exposure",
+              videoUrl: "https://example.com/owasp3.mp4",
+            },
+          ],
+        },
+        {
+          id: "advanced",
+          title: "Advanced Techniques",
+          lessons: [
+            {
+              id: "adv-1",
+              title: "Advanced XSS",
+              duration: "40:20",
+              type: "video",
+              completed: false,
+              description: "DOM-based and stored XSS exploitation",
+              videoUrl: "https://example.com/adv1.mp4",
+            },
+            {
+              id: "adv-2",
+              title: "Business Logic Flaws",
+              duration: "32:10",
+              type: "video",
+              completed: false,
+              description: "Identifying and exploiting logic flaws",
+              videoUrl: "https://example.com/adv2.mp4",
+            },
+          ],
+        },
+      ],
+      labs: [
+        {
+          id: "web-app-lab-1",
+          name: "Advanced SQL Injection Lab",
+          description: "Master complex SQL injection techniques",
+          difficulty: "Intermediate",
+          duration: "120 min",
+          completed: false,
+          available: true,
+        },
+        {
+          id: "web-app-lab-2",
+          name: "XSS Exploitation Workshop",
+          description: "Advanced XSS attack vectors",
+          difficulty: "Intermediate",
+          duration: "90 min",
+          completed: false,
+          available: true,
+        },
+        {
+          id: "web-app-lab-3",
+          name: "Authentication Bypass Lab",
+          description: "Bypass authentication mechanisms",
+          difficulty: "Advanced",
+          duration: "150 min",
+          completed: false,
+          available: true,
+        },
+      ],
+      playground: {
+        title: "Advanced Web Security Lab",
+        description: "Professional web application testing environment",
+        tools: ["Burp Suite Pro", "DVWA", "WebGoat", "SQLMap", "Custom Apps"],
+        available: true,
+      },
+      resources: [
+        { name: "OWASP Testing Guide", type: "PDF", size: "12.4 MB" },
+        { name: "Advanced Web Attacks", type: "PDF", size: "8.7 MB" },
+        { name: "Burp Suite Mastery", type: "PDF", size: "6.3 MB" },
+        { name: "JavaScript Security", type: "PDF", size: "4.9 MB" },
+      ],
+      games: [
+        {
+          id: "xss-master",
+          name: "XSS Master",
+          description: "Advanced cross-site scripting challenges",
+          difficulty: "Intermediate",
+          duration: "35 min",
+          icon: Code,
+          available: true,
+        },
+        {
+          id: "sql-ninja",
+          name: "SQL Injection Ninja",
+          description: "Master advanced SQL injection techniques",
+          difficulty: "Advanced",
+          duration: "45 min",
+          icon: Database,
+          available: true,
+        },
+        {
+          id: "web-hacker",
+          name: "Web Application Hacker",
+          description: "Complete web application penetration testing",
+          difficulty: "Expert",
+          duration: "60 min",
+          icon: Target,
+          available: false,
+        },
+      ],
+    },
+    "social-engineering-osint": {
+      title: "Social Engineering & OSINT",
+      description: "Human psychology, information gathering, and awareness",
+      icon: Users,
+      color: "text-yellow-400",
+      bgColor: "bg-yellow-400/10",
+      borderColor: "border-yellow-400/30",
+      totalLessons: 20,
+      completedLessons: 3,
+      progress: 15,
+      sections: [
+        {
+          id: "psychology",
+          title: "Social Psychology",
+          lessons: [
+            {
+              id: "psych-1",
+              title: "Psychology of Persuasion",
+              duration: "32:30",
+              type: "video",
+              completed: true,
+              description: "Understanding human psychology in security",
+              videoUrl: "https://example.com/psych1.mp4",
+            },
+            {
+              id: "psych-2",
+              title: "Cognitive Biases",
+              duration: "26:15",
+              type: "video",
+              completed: true,
+              description: "How cognitive biases affect security decisions",
+              videoUrl: "https://example.com/psych2.mp4",
+            },
+            {
+              id: "psych-3",
+              title: "Trust and Authority",
+              duration: "24:45",
+              type: "video",
+              completed: false,
+              description: "Exploiting trust and authority in attacks",
+              videoUrl: "https://example.com/psych3.mp4",
+            },
+          ],
+        },
+        {
+          id: "osint",
+          title: "OSINT Techniques",
+          lessons: [
+            {
+              id: "osint-1",
+              title: "Information Gathering Basics",
+              duration: "30:20",
+              type: "video",
+              completed: false,
+              description: "Fundamentals of open source intelligence",
+              videoUrl: "https://example.com/osint1.mp4",
+            },
+            {
+              id: "osint-2",
+              title: "Social Media Intelligence",
+              duration: "28:10",
+              type: "video",
+              completed: false,
+              description: "Gathering intelligence from social platforms",
+              videoUrl: "https://example.com/osint2.mp4",
+            },
+          ],
+        },
+      ],
+      labs: [
+        {
+          id: "se-osint-lab-1",
+          name: "OSINT Investigation Lab",
+          description: "Conduct ethical intelligence gathering",
           difficulty: "Beginner",
           duration: "90 min",
+          completed: false,
+          available: true,
+        },
+        {
+          id: "se-osint-lab-2",
+          name: "Phishing Campaign Analysis",
+          description: "Analyze real phishing campaigns",
+          difficulty: "Intermediate",
+          duration: "75 min",
+          completed: false,
+          available: true,
+        },
+        {
+          id: "se-osint-lab-3",
+          name: "Social Engineering Simulation",
+          description: "Ethical social engineering exercise",
+          difficulty: "Advanced",
+          duration: "120 min",
           completed: false,
           available: true,
         },
@@ -918,12 +1528,19 @@ const EnrolledCoursePage = () => {
       playground: {
         title: "OSINT Investigation Lab",
         description: "Safe environment for intelligence gathering practice",
-        tools: ["OSINT Framework", "Social Media Tools", "Search Techniques"],
+        tools: [
+          "OSINT Framework",
+          "Social Media Tools",
+          "Search Techniques",
+          "Maltego",
+        ],
         available: true,
       },
       resources: [
-        { name: "OSINT Framework Guide", type: "PDF", size: "4.3 MB" },
-        { name: "Social Engineering Toolkit", type: "ZIP", size: "25.6 MB" },
+        { name: "OSINT Framework Guide", type: "PDF", size: "6.8 MB" },
+        { name: "Social Engineering Tactics", type: "PDF", size: "4.3 MB" },
+        { name: "Phishing Prevention Guide", type: "PDF", size: "3.2 MB" },
+        { name: "Information Gathering Tools", type: "ZIP", size: "25.6 MB" },
       ],
       games: [
         {
@@ -955,126 +1572,13 @@ const EnrolledCoursePage = () => {
         },
       ],
     },
-    "advanced-exploitation": {
-      title: "Advanced Penetration Testing",
-      description: "Advanced attack techniques and post-exploitation",
-      icon: Activity,
-      color: "text-orange-400",
-      bgColor: "bg-orange-400/10",
-      borderColor: "border-orange-400/30",
-      totalLessons: 35,
-      completedLessons: 5,
-      progress: 14,
-      sections: [
-        {
-          id: "fundamentals",
-          title: "Advanced Exploitation Fundamentals",
-          lessons: [
-            {
-              id: "adv-1",
-              title: "Exploit Development Basics",
-              duration: "45:30",
-              type: "video",
-              completed: true,
-              description: "Introduction to exploit development",
-              videoUrl: "https://example.com/adv1.mp4",
-            },
-          ],
-        },
-      ],
-      labs: [
-        {
-          id: "adv-lab-1",
-          name: "Buffer Overflow Workshop",
-          description: "Develop buffer overflow exploits",
-          difficulty: "Advanced",
-          duration: "180 min",
-          completed: false,
-          available: true,
-        },
-      ],
-      playground: {
-        title: "Advanced Exploitation Lab",
-        description: "Isolated environment for advanced testing",
-        tools: [
-          "Metasploit",
-          "Custom Exploits",
-          "Debuggers",
-          "Reversing Tools",
-        ],
-        available: true,
-      },
-      resources: [
-        { name: "Exploit Development Guide", type: "PDF", size: "12.8 MB" },
-        { name: "Advanced Payloads", type: "ZIP", size: "67.4 MB" },
-      ],
-      games: [
-        {
-          id: "exploit-dev",
-          name: "Exploit Developer",
-          description: "Develop working exploits for vulnerabilities",
-          difficulty: "Expert",
-          duration: "60 min",
-          icon: Code,
-          available: true,
-        },
-        {
-          id: "metasploit-master",
-          name: "Metasploit Master",
-          description: "Master the Metasploit framework",
-          difficulty: "Advanced",
-          duration: "45 min",
-          icon: Terminal,
-          available: true,
-        },
-        {
-          id: "pwn-champion",
-          name: "PWN Champion",
-          description: "Complete advanced exploitation challenges",
-          difficulty: "Expert",
-          duration: "90 min",
-          icon: Zap,
-          available: false,
-        },
-      ],
-    },
   };
 
   const course = enrolledCourses[courseId as keyof typeof enrolledCourses];
 
-  if (!course) {
-    return (
-      <div className="min-h-screen bg-black text-green-400 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Course Not Found</h1>
-          <p className="text-green-300/80 mb-4">
-            The requested course "{courseId}" is not available or doesn't exist.
-          </p>
-          <p className="text-green-300/60 mb-8 text-sm">
-            Available courses: {Object.keys(enrolledCourses).join(", ")}
-          </p>
-          <div className="space-y-4">
-            <Button
-              onClick={() => navigate("/overview")}
-              className="bg-green-400 text-black hover:bg-green-300 mr-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Overview
-            </Button>
-            <Button
-              onClick={() => navigate("/learn/foundations")}
-              variant="outline"
-              className="border-green-400/30 text-green-400 hover:bg-green-400/10"
-            >
-              Try Foundations Course
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Helper functions - with null checks to prevent errors
   const getAllLessons = () => {
+    if (!course || !course.sections) return [];
     return course.sections.flatMap((section) => section.lessons);
   };
 
@@ -1123,6 +1627,123 @@ const EnrolledCoursePage = () => {
     }
   };
 
+  // Check if current lesson needs playground
+  const needsPlayground = () => {
+    const lesson = getCurrentLesson();
+    return lesson?.type === "video" || lesson?.type === "text";
+  };
+
+  // Get playground modes based on course type
+  const getPlaygroundModes = () => {
+    switch (courseId) {
+      case "web-security-intro":
+      case "web-application-security":
+        return [
+          { id: "web-scanner", label: "Web Scanner" },
+          { id: "sql-injection", label: "SQL Injection" },
+          { id: "xss-lab", label: "XSS Lab" },
+          { id: "ai-chat", label: "AI Chat" },
+        ];
+      case "social-engineering-osint":
+        return [
+          { id: "osint-tools", label: "OSINT Tools" },
+          { id: "phishing-sim", label: "Phishing Sim" },
+          { id: "social-analysis", label: "Social Analysis" },
+          { id: "ai-chat", label: "AI Chat" },
+        ];
+      case "networking-basics":
+      case "advanced-networking":
+        return [
+          { id: "network-scanner", label: "Network Scanner" },
+          { id: "packet-analysis", label: "Packet Analysis" },
+          { id: "port-scanner", label: "Port Scanner" },
+          { id: "ai-chat", label: "AI Chat" },
+        ];
+      case "linux-basics":
+        return [
+          { id: "terminal", label: "Terminal" },
+          { id: "file-analysis", label: "File Analysis" },
+          { id: "log-analysis", label: "Log Analysis" },
+          { id: "ai-chat", label: "AI Chat" },
+        ];
+      case "digital-forensics-basics":
+        return [
+          { id: "evidence-analysis", label: "Evidence Analysis" },
+          { id: "file-recovery", label: "File Recovery" },
+          { id: "timeline-analysis", label: "Timeline Analysis" },
+          { id: "ai-chat", label: "AI Chat" },
+        ];
+      case "foundations":
+        return [
+          { id: "risk-calculator", label: "Risk Calculator" },
+          { id: "policy-builder", label: "Policy Builder" },
+          { id: "compliance-checker", label: "Compliance Checker" },
+          { id: "ai-chat", label: "AI Chat" },
+        ];
+      default:
+        return [
+          { id: "terminal", label: "Terminal" },
+          { id: "analysis", label: "Analysis" },
+          { id: "ai-chat", label: "AI Chat" },
+        ];
+    }
+  };
+
+  // Update playground mode when video changes
+  useEffect(() => {
+    const modes = getPlaygroundModes();
+    if (modes.length > 0) {
+      setPlaygroundMode(modes[0].id);
+    }
+    // Reset terminal history for new lesson
+    setTerminalHistory([
+      {
+        type: "output",
+        content: "Last login: Mon Dec 16 14:32:01 on ttys000",
+      },
+      {
+        type: "output",
+        content: `Welcome to ${
+          getCurrentLesson()?.title || "Cybersecurity"
+        } Terminal`,
+      },
+    ]);
+    setAnalysisResult("");
+    setAnalysisInput("");
+  }, [currentVideo, courseId]);
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-black text-green-400 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Course Not Found</h1>
+          <p className="text-green-300/80 mb-4">
+            The requested course "{courseId}" is not available or doesn't exist.
+          </p>
+          <p className="text-green-300/60 mb-8 text-sm">
+            Available courses: {Object.keys(enrolledCourses).join(", ")}
+          </p>
+          <div className="space-y-4">
+            <Button
+              onClick={() => navigate("/overview")}
+              className="bg-green-400 text-black hover:bg-green-300 mr-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Overview
+            </Button>
+            <Button
+              onClick={() => navigate("/learn/foundations")}
+              variant="outline"
+              className="border-green-400/30 text-green-400 hover:bg-green-400/10"
+            >
+              Try Foundations Course
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case "beginner":
@@ -1160,15 +1781,64 @@ const EnrolledCoursePage = () => {
 
       <div className="pt-5 px-6">
         <div className="max-w-7xl mx-auto">
-          {/* Back Button */}
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/overview")}
-            className="mb-4 text-green-400 hover:bg-green-400/10"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Overview
-          </Button>
+          {/* Terminal-style Navigation Bar */}
+          <div className="bg-black border-2 border-green-400/50 rounded-lg mb-6 overflow-hidden">
+            {/* Terminal header */}
+            <div className="bg-green-400/10 border-b border-green-400/30 px-4 py-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                </div>
+                <div className="text-green-400/60 text-xs font-mono">
+                  cybersec-academy/course/{courseId}
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation content */}
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  {/* File explorer style breadcrumb */}
+                  <div className="flex items-center space-x-2 text-green-400 font-mono text-sm">
+                    <span className="text-green-400/60">📁</span>
+                    <span className="text-green-400/60">courses</span>
+                    <span className="text-green-400/60">/</span>
+                    <span className="text-green-400">{courseId}</span>
+                    <span className="text-green-400/60">/</span>
+                    <span className="text-green-400 animate-pulse">
+                      learning
+                    </span>
+                  </div>
+                </div>
+
+                {/* Back buttons */}
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate(`/course/${courseId}`)}
+                    className="text-green-400 hover:bg-green-400/10 border border-green-400/30 font-mono text-xs"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    COURSE_DETAILS
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/overview")}
+                    className="text-green-400 hover:bg-green-400/10 border border-green-400/30 font-mono text-xs"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    OVERVIEW
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Scan line effect */}
+            <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-green-400/50 to-transparent animate-pulse"></div>
+          </div>
 
           {/* Course Header with Compact Progress */}
           <div className="flex items-center justify-between mb-6">
@@ -1301,7 +1971,6 @@ const EnrolledCoursePage = () => {
             </div>
           )}
 
-          {/* Main Content Area */}
           {needsPlayground() ? (
             // Split view for video/text with playground
             <div
@@ -1541,22 +2210,24 @@ const EnrolledCoursePage = () => {
                         </Button>
                       </div>
                       <div className="flex space-x-1 overflow-x-auto">
-                        {playgroundModes.map((mode) => (
-                          <Button
-                            key={mode.id}
-                            onClick={() => setPlaygroundMode(mode.id)}
-                            variant={
-                              playgroundMode === mode.id ? "default" : "ghost"
-                            }
-                            className={
-                              playgroundMode === mode.id
-                                ? "bg-green-400 text-black h-7 px-2 text-xs whitespace-nowrap"
-                                : "text-green-400 hover:bg-green-400/10 h-7 px-2 text-xs whitespace-nowrap"
-                            }
-                          >
-                            {mode.label}
-                          </Button>
-                        ))}
+                        {playgroundModes.map(
+                          (mode: { id: string; label: string }) => (
+                            <Button
+                              key={mode.id}
+                              onClick={() => setPlaygroundMode(mode.id)}
+                              variant={
+                                playgroundMode === mode.id ? "default" : "ghost"
+                              }
+                              className={
+                                playgroundMode === mode.id
+                                  ? "bg-green-400 text-black h-7 px-2 text-xs whitespace-nowrap"
+                                  : "text-green-400 hover:bg-green-400/10 h-7 px-2 text-xs whitespace-nowrap"
+                              }
+                            >
+                              {mode.label}
+                            </Button>
+                          )
+                        )}
                       </div>
                     </div>
 
@@ -2377,6 +3048,439 @@ const EnrolledCoursePage = () => {
                           )}
                         </div>
                       )}
+
+                      {/* Evidence Analysis Mode */}
+                      {playgroundMode === "evidence-analysis" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div className="flex-1">
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Evidence Data:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="Upload evidence file or enter metadata..."
+                              className="bg-black border-green-400/30 text-green-400 h-32 resize-none font-mono"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Hash Analysis: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Hash Analysis
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Metadata Extraction: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Metadata
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `File Signature: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              File Signature
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Chain of Custody: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Chain of Custody
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* File Recovery Mode */}
+                      {playgroundMode === "file-recovery" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div>
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Recovery Target:
+                            </label>
+                            <Input
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="/dev/sda1 or file pattern *.pdf"
+                              className="bg-black border-green-400/30 text-green-400 font-mono"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Deleted Files: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Scan Deleted
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Deep Scan: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Deep Scan
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Unallocated Space: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Unallocated
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`File Carving: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              File Carving
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Timeline Analysis Mode */}
+                      {playgroundMode === "timeline-analysis" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div className="flex-1">
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Evidence Sources:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="List evidence sources: system logs, file timestamps, registry..."
+                              className="bg-black border-green-400/30 text-green-400 h-32 resize-none"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Timeline Creation: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Create Timeline
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Event Correlation: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Correlate Events
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Timestamp Analysis: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Analyze Timestamps
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Activity Reconstruction: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Reconstruct Activity
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Risk Calculator Mode */}
+                      {playgroundMode === "risk-calculator" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div>
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Risk Scenario:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="Describe the security risk scenario..."
+                              className="bg-black border-green-400/30 text-green-400 h-24 resize-none"
+                            />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="text-xs text-green-400 mb-1 block">
+                                Likelihood (1-5):
+                              </label>
+                              <Input
+                                type="number"
+                                min="1"
+                                max="5"
+                                placeholder="3"
+                                className="bg-black border-green-400/30 text-green-400 h-8"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-green-400 mb-1 block">
+                                Impact (1-5):
+                              </label>
+                              <Input
+                                type="number"
+                                min="1"
+                                max="5"
+                                placeholder="4"
+                                className="bg-black border-green-400/30 text-green-400 h-8"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-green-400 mb-1 block">
+                                Current Controls:
+                              </label>
+                              <Input
+                                type="number"
+                                min="0"
+                                max="5"
+                                placeholder="2"
+                                className="bg-black border-green-400/30 text-green-400 h-8"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Risk Assessment: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Calculate Risk
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Mitigation Plan: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Mitigation Plan
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Policy Builder Mode */}
+                      {playgroundMode === "policy-builder" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div>
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Policy Type:
+                            </label>
+                            <select className="w-full bg-black border border-green-400/30 text-green-400 p-2 rounded">
+                              <option>Password Policy</option>
+                              <option>Access Control Policy</option>
+                              <option>Data Classification Policy</option>
+                              <option>Incident Response Policy</option>
+                              <option>Acceptable Use Policy</option>
+                            </select>
+                          </div>
+                          <div className="flex-1">
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Policy Requirements:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="Enter policy requirements and objectives..."
+                              className="bg-black border-green-400/30 text-green-400 h-24 resize-none"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Policy Template: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Generate Template
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Compliance Check: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Compliance Check
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Compliance Checker Mode */}
+                      {playgroundMode === "compliance-checker" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div>
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Compliance Framework:
+                            </label>
+                            <select className="w-full bg-black border border-green-400/30 text-green-400 p-2 rounded">
+                              <option>NIST Cybersecurity Framework</option>
+                              <option>ISO 27001</option>
+                              <option>GDPR</option>
+                              <option>SOX</option>
+                              <option>HIPAA</option>
+                              <option>PCI DSS</option>
+                            </select>
+                          </div>
+                          <div className="flex-1">
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Current Controls:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="List your current security controls and implementations..."
+                              className="bg-black border-green-400/30 text-green-400 h-24 resize-none"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Compliance Gap: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Gap Analysis
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Compliance Score: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Compliance Score
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Remediation Plan: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Remediation Plan
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Audit Report: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Audit Report
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2493,7 +3597,8 @@ const EnrolledCoursePage = () => {
                 <CardContent className="pt-0">
                   <div className="space-y-4 max-h-96 overflow-y-auto">
                     {/* Dynamic details based on lesson type */}
-                    {courseId === "web-security" && (
+                    {(courseId === "web-security-intro" ||
+                      courseId === "web-application-security") && (
                       <div className="space-y-6">
                         <details
                           open={expandedDetails["intro"]}
@@ -2592,7 +3697,7 @@ $stmt->execute([$_POST['username']]);`}
                       </div>
                     )}
 
-                    {courseId === "linux" && (
+                    {courseId === "linux-basics" && (
                       <div className="space-y-6">
                         <details
                           open={expandedDetails["commands"]}
@@ -2678,7 +3783,11 @@ find / -perm -2000 2>/dev/null  # SGID files`}
                     )}
 
                     {/* Default details for other courses */}
-                    {!["web-security", "linux"].includes(courseId || "") && (
+                    {![
+                      "web-security-intro",
+                      "web-application-security",
+                      "linux-basics",
+                    ].includes(courseId || "") && (
                       <div className="text-green-300/80 text-sm leading-relaxed">
                         <p className="mb-4">
                           <span className="text-green-400 font-semibold">

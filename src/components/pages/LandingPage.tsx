@@ -288,7 +288,7 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-green-400 relative overflow-hidden">
+    <div className="min-h-screen bg-background text-green-400 relative overflow-hidden">
       {/* Hero Section */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Navigation */}

@@ -32,7 +32,7 @@ export function Header({ navigate }: HeaderProps) {
   }, []);
 
   return (
-    <nav className="flex justify-between items-center p-6 border-b border-green-400/20">
+    <nav className="flex justify-between items-center p-6 lg:px-24 border-b border-green-400/20 ">
       <div
         className="flex items-center space-x-2 cursor-pointer"
         onClick={() => navigate("/")}

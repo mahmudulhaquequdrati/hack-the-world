@@ -1690,8 +1690,8 @@ const CourseDetailPage = () => {
     <div className="min-h-screen bg-black text-green-400 relative">
       <Header navigate={navigate} />
 
-      <div className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
+      <div className="pb-20 pt-5 px-6">
+        <div className="max-w-7xl mx-auto">
           {/* Back Button */}
           <Button
             variant="ghost"

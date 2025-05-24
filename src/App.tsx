@@ -1,20 +1,20 @@
 import MatrixRain from "@/components/effects/MatrixRain";
-import CourseDetailPage from "@/components/pages/CourseDetailPage";
-import CyberSecOverview from "@/components/pages/CyberSecOverview";
-import Dashboard from "@/components/pages/Dashboard";
-import EnrolledCoursePage from "@/components/pages/EnrolledCoursePage";
-import GamePage from "@/components/pages/GamePage";
-import LabPage from "@/components/pages/LabPage";
-import LandingPage from "@/components/pages/LandingPage";
-import LoginPage from "@/components/pages/LoginPage";
-import PlatformDemo from "@/components/pages/PlatformDemo";
-import PricingPage from "@/components/pages/PricingPage";
-import SignupPage from "@/components/pages/SignupPage";
-import SocialEngLab from "@/components/pages/SocialEngLab";
-import TerminalLab from "@/components/pages/TerminalLab";
-import WebSecLab from "@/components/pages/WebSecLab";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster } from "@/components/ui/sonner";
+import CourseDetailPage from "@/pages/CourseDetailPage";
+import CyberSecOverview from "@/pages/CyberSecOverview";
+import Dashboard from "@/pages/Dashboard";
+import EnrolledCoursePage from "@/pages/EnrolledCoursePage";
+import GamePage from "@/pages/GamePage";
+import LabPage from "@/pages/LabPage";
+import LandingPage from "@/pages/LandingPage";
+import LoginPage from "@/pages/LoginPage";
+import PlatformDemo from "@/pages/PlatformDemo";
+import PricingPage from "@/pages/PricingPage";
+import SignupPage from "@/pages/SignupPage";
+import SocialEngLab from "@/pages/SocialEngLab";
+import TerminalLab from "@/pages/TerminalLab";
+import WebSecLab from "@/pages/WebSecLab";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 function App() {

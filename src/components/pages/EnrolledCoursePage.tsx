@@ -45,7 +45,7 @@ import { useNavigate, useParams } from "react-router-dom";
 const EnrolledCoursePage = () => {
   const navigate = useNavigate();
   const { courseId } = useParams();
-  const [activeTab, setActiveTab] = useState("transcript");
+  const [activeTab, setActiveTab] = useState("details");
   const [currentVideo, setCurrentVideo] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
@@ -99,8 +99,8 @@ const EnrolledCoursePage = () => {
   const [activeLab, setActiveLab] = useState<string | null>(null);
   const [activeGame, setActiveGame] = useState<string | null>(null);
 
-  // Transcript expanded states
-  const [expandedTranscript, setExpandedTranscript] = useState<{
+  // Details expanded states
+  const [expandedDetails, setExpandedDetails] = useState<{
     [key: string]: boolean;
   }>({});
 
@@ -1088,6 +1088,15 @@ const EnrolledCoursePage = () => {
     if (currentVideo < allLessons.length - 1) {
       setCurrentVideo(currentVideo + 1);
       setVideoProgress(0);
+      // Reset playground to the first available mode for the new lesson
+      const newCurrentVideo = currentVideo + 1;
+      const newLesson = allLessons[newCurrentVideo];
+      if (newLesson) {
+        const newPlaygroundModes = getPlaygroundModes();
+        if (newPlaygroundModes.length > 0) {
+          setPlaygroundMode(newPlaygroundModes[0].id);
+        }
+      }
     }
   };
 
@@ -1095,6 +1104,16 @@ const EnrolledCoursePage = () => {
     if (currentVideo > 0) {
       setCurrentVideo(currentVideo - 1);
       setVideoProgress(0);
+      // Reset playground to the first available mode for the new lesson
+      const newCurrentVideo = currentVideo - 1;
+      const allLessons = getAllLessons();
+      const newLesson = allLessons[newCurrentVideo];
+      if (newLesson) {
+        const newPlaygroundModes = getPlaygroundModes();
+        if (newPlaygroundModes.length > 0) {
+          setPlaygroundMode(newPlaygroundModes[0].id);
+        }
+      }
     }
   };
 
@@ -1243,6 +1262,18 @@ const EnrolledCoursePage = () => {
                                 onClick={() => {
                                   setCurrentVideo(flatIndex);
                                   setSidebarOpen(false);
+                                  // Reset playground to the first available mode for the new lesson
+                                  const allLessons = getAllLessons();
+                                  const newLesson = allLessons[flatIndex];
+                                  if (newLesson) {
+                                    const newPlaygroundModes =
+                                      getPlaygroundModes();
+                                    if (newPlaygroundModes.length > 0) {
+                                      setPlaygroundMode(
+                                        newPlaygroundModes[0].id
+                                      );
+                                    }
+                                  }
                                 }}
                               >
                                 <div className="flex items-center space-x-2">
@@ -1292,7 +1323,7 @@ const EnrolledCoursePage = () => {
 
               {/* Floating restore buttons */}
               {videoMinimized && !playgroundMinimized && (
-                <div className="absolute top-4 left-4 z-10">
+                <div className="absolute top-4 right-16 z-10">
                   <Button
                     onClick={() => setVideoMinimized(false)}
                     className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30 rounded-full w-10 h-10 p-0"
@@ -1303,7 +1334,7 @@ const EnrolledCoursePage = () => {
               )}
 
               {playgroundMinimized && !videoMinimized && (
-                <div className="absolute top-4 right-4 z-10">
+                <div className="absolute top-4 left-16 z-10">
                   <Button
                     onClick={() => setPlaygroundMinimized(false)}
                     className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30 rounded-full w-10 h-10 p-0"
@@ -2422,11 +2453,11 @@ const EnrolledCoursePage = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-4 bg-black/50 border-green-400/30">
               <TabsTrigger
-                value="transcript"
+                value="details"
                 className="data-[state=active]:bg-green-400 data-[state=active]:text-black"
               >
                 <FileText className="w-4 h-4 mr-1" />
-                Transcript
+                Details
               </TabsTrigger>
               <TabsTrigger
                 value="labs"
@@ -2451,23 +2482,23 @@ const EnrolledCoursePage = () => {
               </TabsTrigger>
             </TabsList>
 
-            {/* Transcript Tab */}
-            <TabsContent value="transcript" className="mt-4">
+            {/* Details Tab */}
+            <TabsContent value="details" className="mt-4">
               <Card className="bg-black/50 border-green-400/30">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-green-400 text-lg">
-                    Lesson Transcript - {currentLesson?.title}
+                    Lesson Details - {currentLesson?.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {/* Dynamic transcript based on lesson type */}
+                    {/* Dynamic details based on lesson type */}
                     {courseId === "web-security" && (
                       <div className="space-y-6">
                         <details
-                          open={expandedTranscript["intro"]}
+                          open={expandedDetails["intro"]}
                           onToggle={(e) =>
-                            setExpandedTranscript((prev) => ({
+                            setExpandedDetails((prev) => ({
                               ...prev,
                               intro: (e.target as HTMLDetailsElement).open,
                             }))
@@ -2510,9 +2541,9 @@ $stmt->execute([$_POST['username']]);`}
                         </details>
 
                         <details
-                          open={expandedTranscript["owasp"]}
+                          open={expandedDetails["owasp"]}
                           onToggle={(e) =>
-                            setExpandedTranscript((prev) => ({
+                            setExpandedDetails((prev) => ({
                               ...prev,
                               owasp: (e.target as HTMLDetailsElement).open,
                             }))
@@ -2538,9 +2569,9 @@ $stmt->execute([$_POST['username']]);`}
                         </details>
 
                         <details
-                          open={expandedTranscript["practical"]}
+                          open={expandedDetails["practical"]}
                           onToggle={(e) =>
-                            setExpandedTranscript((prev) => ({
+                            setExpandedDetails((prev) => ({
                               ...prev,
                               practical: (e.target as HTMLDetailsElement).open,
                             }))
@@ -2564,9 +2595,9 @@ $stmt->execute([$_POST['username']]);`}
                     {courseId === "linux" && (
                       <div className="space-y-6">
                         <details
-                          open={expandedTranscript["commands"]}
+                          open={expandedDetails["commands"]}
                           onToggle={(e) =>
-                            setExpandedTranscript((prev) => ({
+                            setExpandedDetails((prev) => ({
                               ...prev,
                               commands: (e.target as HTMLDetailsElement).open,
                             }))
@@ -2611,9 +2642,9 @@ find / -name "*.log" 2>/dev/null # Find files`}
                         </details>
 
                         <details
-                          open={expandedTranscript["permissions"]}
+                          open={expandedDetails["permissions"]}
                           onToggle={(e) =>
-                            setExpandedTranscript((prev) => ({
+                            setExpandedDetails((prev) => ({
                               ...prev,
                               permissions: (e.target as HTMLDetailsElement)
                                 .open,
@@ -2646,7 +2677,7 @@ find / -perm -2000 2>/dev/null  # SGID files`}
                       </div>
                     )}
 
-                    {/* Default transcript for other courses */}
+                    {/* Default details for other courses */}
                     {!["web-security", "linux"].includes(courseId || "") && (
                       <div className="text-green-300/80 text-sm leading-relaxed">
                         <p className="mb-4">

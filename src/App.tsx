@@ -3,6 +3,8 @@ import CourseDetailPage from "@/components/pages/CourseDetailPage";
 import CyberSecOverview from "@/components/pages/CyberSecOverview";
 import Dashboard from "@/components/pages/Dashboard";
 import EnrolledCoursePage from "@/components/pages/EnrolledCoursePage";
+import GamePage from "@/components/pages/GamePage";
+import LabPage from "@/components/pages/LabPage";
 import LandingPage from "@/components/pages/LandingPage";
 import LoginPage from "@/components/pages/LoginPage";
 import PlatformDemo from "@/components/pages/PlatformDemo";
@@ -30,6 +32,11 @@ function App() {
             <Route path="/demo" element={<PlatformDemo />} />
             <Route path="/course/:courseId" element={<CourseDetailPage />} />
             <Route path="/learn/:courseId" element={<EnrolledCoursePage />} />
+            <Route path="/learn/:courseId/lab/:labId" element={<LabPage />} />
+            <Route
+              path="/learn/:courseId/game/:gameId"
+              element={<GamePage />}
+            />
             <Route path="/terminal-lab" element={<TerminalLab />} />
             <Route path="/websec-lab" element={<WebSecLab />} />
             <Route path="/social-eng-lab" element={<SocialEngLab />} />

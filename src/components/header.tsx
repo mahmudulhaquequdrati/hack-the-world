@@ -42,7 +42,7 @@ export function Header({ navigate }: HeaderProps) {
     <div className="">
       <nav
         className={`flex justify-between items-center w-full   mx-auto p-6   ${
-          maxWidth7xl ? "max-w-7xl px-4 lg:px-0" : "lg:px-8"
+          maxWidth7xl ? "max-w-7xl px-4 xl:px-0" : "xl:px-8"
         }`}
       >
         <div

@@ -33,15 +33,16 @@ export function Header({ navigate }: HeaderProps) {
     return () => window.removeEventListener("popstate", checkAuth);
   }, []);
 
-  const isLandingPageOrOverview =
+  const maxWidth7xl =
     window.location.pathname === "/" ||
-    window.location.pathname === "/overview";
+    window.location.pathname === "/overview" ||
+    window.location.pathname === "/dashboard";
 
   return (
     <div className="">
       <nav
         className={`flex justify-between items-center w-full   mx-auto p-6   ${
-          isLandingPageOrOverview ? "max-w-7xl lg:px-0" : "lg:px-8"
+          maxWidth7xl ? "max-w-7xl lg:px-0" : "lg:px-8"
         }`}
       >
         <div

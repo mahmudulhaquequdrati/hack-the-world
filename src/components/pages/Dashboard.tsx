@@ -540,7 +540,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-black text-green-400">
       <Header navigate={navigate} />
 
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
+      <div className="max-w-7xl mx-auto py-10 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>

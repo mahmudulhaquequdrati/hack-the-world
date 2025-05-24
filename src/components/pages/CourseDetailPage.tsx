@@ -1776,6 +1776,44 @@ const CourseDetailPage = () => {
                   ))}
                 </div>
               </div>
+              {/* Course Highlights */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <Card className="bg-black/50 border-green-400/30">
+                  <CardContent className="p-4 text-center">
+                    <BookOpen className="w-6 h-6 text-green-400 mx-auto mb-2" />
+                    <div className="text-xl font-bold text-green-400 mb-1">
+                      {module.lessons}
+                    </div>
+                    <div className="text-xs text-green-300/70">
+                      Video Lessons
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-black/50 border-green-400/30">
+                  <CardContent className="p-4 text-center">
+                    <Zap className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
+                    <div className="text-xl font-bold text-yellow-400 mb-1">
+                      {module.labsCount}
+                    </div>
+                    <div className="text-xs text-green-300/70">
+                      Hands-on Labs
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-black/50 border-green-400/30">
+                  <CardContent className="p-4 text-center">
+                    <Activity className="w-6 h-6 text-red-400 mx-auto mb-2" />
+                    <div className="text-xl font-bold text-red-400 mb-1">
+                      {module.gamesCount}
+                    </div>
+                    <div className="text-xs text-green-300/70">
+                      Interactive Games
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
 
             {/* Sidebar */}
@@ -1921,45 +1959,6 @@ const CourseDetailPage = () => {
                     </div>
                   </CardContent>
                 </Card>
-
-                {/* Course Highlights */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card className="bg-black/50 border-green-400/30">
-                    <CardContent className="p-4 text-center">
-                      <BookOpen className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                      <div className="text-xl font-bold text-green-400 mb-1">
-                        {module.lessons}
-                      </div>
-                      <div className="text-xs text-green-300/70">
-                        Video Lessons
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-black/50 border-green-400/30">
-                    <CardContent className="p-4 text-center">
-                      <Zap className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-                      <div className="text-xl font-bold text-yellow-400 mb-1">
-                        {module.labsCount}
-                      </div>
-                      <div className="text-xs text-green-300/70">
-                        Hands-on Labs
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-black/50 border-green-400/30">
-                    <CardContent className="p-4 text-center">
-                      <Activity className="w-6 h-6 text-red-400 mx-auto mb-2" />
-                      <div className="text-xl font-bold text-red-400 mb-1">
-                        {module.gamesCount}
-                      </div>
-                      <div className="text-xs text-green-300/70">
-                        Interactive Games
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
               </div>
             </TabsContent>
 

@@ -296,10 +296,10 @@ const LandingPage = () => {
 
         {/* Hero Content */}
         <div className="flex-1 flex items-center justify-center px-6">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center px-4">
             <div className="space-y-8">
-              <div className="space-y-4">
-                <h1 className="text-5xl  font-bold leading-tight text-green-400">
+              <div className="space-y-4 pt-10 lg:pt-0 text-center lg:text-left">
+                <h1 className="text-3xl lg:text-5xl font-bold leading-tight text-green-400 ">
                   {typedText}
                   <span className="terminal-cursor">|</span>
                 </h1>
@@ -401,7 +401,7 @@ const LandingPage = () => {
 
       {/* Features Section */}
       <section className="py-20 px-6 relative z-10">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4 text-green-400">
               Training Modules

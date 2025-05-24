@@ -954,15 +954,15 @@ const CourseDetailPage = () => {
       <Header navigate={navigate} />
 
       <div className="pb-20 pt-5 px-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full px-4 mx-auto">
           {/* Back Button */}
           <Button
             variant="ghost"
             onClick={() => navigate("/overview")}
-            className="mb-4 text-green-400 hover:bg-green-400/10"
+            className="mb-4 text-green-400 hover:bg-green-400/10 text-sm !px-0 "
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Overview
+            <ArrowLeft className="w-4 h-4 " />
+            BACK_TO_OVERVIEW
           </Button>
 
           {/* Hero Section */}

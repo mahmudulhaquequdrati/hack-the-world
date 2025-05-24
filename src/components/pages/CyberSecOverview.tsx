@@ -607,7 +607,7 @@ const CyberSecOverview = () => {
       <Header navigate={navigate} />
 
       <div className="pt-20 px-6">
-        <div className="max-w-6xl mx-auto">
+        <div className=" mx-auto max-w-6xl">
           {/* Header */}
           <div className="text-center mb-12">
             <Badge className="bg-green-400/20 text-green-400 border-green-400 mb-4">

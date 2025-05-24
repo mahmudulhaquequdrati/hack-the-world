@@ -22,7 +22,8 @@ export function Header({ navigate }: HeaderProps) {
       setIsLoggedIn(
         currentPath.includes("/dashboard") ||
           currentPath.includes("/course/") ||
-          currentPath.includes("/learn/")
+          currentPath.includes("/learn/") ||
+          currentPath.includes("/overview")
       );
     };
 
@@ -32,9 +33,17 @@ export function Header({ navigate }: HeaderProps) {
     return () => window.removeEventListener("popstate", checkAuth);
   }, []);
 
+  const isLandingPageOrOverview =
+    window.location.pathname === "/" ||
+    window.location.pathname === "/overview";
+
   return (
     <div className="">
-      <nav className="flex justify-between items-center w-full max-w-7xl  mx-auto p-6 lg:px-4  ">
+      <nav
+        className={`flex justify-between items-center w-full   mx-auto p-6   ${
+          isLandingPageOrOverview ? "max-w-7xl lg:px-0" : "lg:px-8"
+        }`}
+      >
         <div
           className="flex items-center space-x-2 cursor-pointer"
           onClick={() => navigate("/")}

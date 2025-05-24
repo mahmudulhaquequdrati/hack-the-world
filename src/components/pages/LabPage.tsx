@@ -161,23 +161,28 @@ const LabPage = () => {
       <div className="pt-5 px-6">
         <div className="max-w-7xl mx-auto">
           {/* Terminal-style Header */}
-          <div className="bg-black border-2 border-green-400/50 rounded-lg mb-6 overflow-hidden">
-            <div className="bg-green-400/10 border-b border-green-400/30 px-4 py-2">
+          <div className="bg-black border border-green-400/50 rounded-lg mb-6 overflow-hidden">
+            {/* <div className="bg-green-400/10 border-b border-green-400/30 px-4 py-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                </div>
                 <div className="text-green-400/60 text-xs font-mono">
                   lab-environment/{courseId}/{labId}
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div className="p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate(`/learn/${courseId}`)}
+                    className="text-green-400 hover:bg-green-400/10 border border-green-400/30 font-mono text-xs"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    BACK_TO_COURSE
+                  </Button>
+                </div>
+                <div className="flex items-center space-x-4 bg-green-400/10 rounded-lg p-2">
                   <div className="flex items-center space-x-2 text-green-400 font-mono text-sm">
                     <span className="text-green-400/60">🧪</span>
                     <span className="text-green-400/60">labs</span>
@@ -188,17 +193,6 @@ const LabPage = () => {
                       {labId}
                     </span>
                   </div>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate(`/learn/${courseId}`)}
-                    className="text-green-400 hover:bg-green-400/10 border border-green-400/30 font-mono text-xs"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    BACK_TO_COURSE
-                  </Button>
                 </div>
               </div>
             </div>

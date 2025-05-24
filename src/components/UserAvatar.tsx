@@ -105,7 +105,7 @@ const UserAvatar = ({ user }: UserAvatarProps) => {
                 <p className="text-xs text-green-300/70">{currentUser.email}</p>
               </div>
             </div>
-            <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-xs mt-1.5">
               <div className="flex items-center space-x-1">
                 <Shield className="w-3 h-3 text-green-400" />
                 <span className="text-green-300">{currentUser.level}</span>
@@ -129,17 +129,6 @@ const UserAvatar = ({ user }: UserAvatarProps) => {
         >
           <Terminal className="mr-2 h-4 w-4" />
           <span>Dashboard</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem
-          className="text-green-400 hover:bg-green-400/10 cursor-pointer"
-          onClick={() => {
-            navigate("/courses");
-            setIsOpen(false);
-          }}
-        >
-          <BookOpen className="mr-2 h-4 w-4" />
-          <span>My Courses</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem

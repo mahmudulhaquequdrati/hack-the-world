@@ -49,7 +49,6 @@ const EnrolledCoursePage = () => {
   const [activeTab, setActiveTab] = useState("details");
   const [currentVideo, setCurrentVideo] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [videoProgress, setVideoProgress] = useState(0);
   const [completedLessons, setCompletedLessons] = useState<string[]>([
     "intro-1",
     "intro-2",
@@ -86,8 +85,8 @@ const EnrolledCoursePage = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // UI State
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [leftPaneWidth, setLeftPaneWidth] = useState(50); // Percentage
+  const [contentSidebarOpen, setContentSidebarOpen] = useState(false);
+  const [leftPaneWidth, setLeftPaneWidth] = useState(60); // Percentage
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<HTMLDivElement>(null);
   const [terminalCursor, setTerminalCursor] = useState("");
@@ -95,6 +94,7 @@ const EnrolledCoursePage = () => {
   // Minimize states
   const [videoMinimized, setVideoMinimized] = useState(false);
   const [playgroundMinimized, setPlaygroundMinimized] = useState(false);
+  const [progressMinimized, setProgressMinimized] = useState(false);
 
   // Lab and Game states
   const [activeLab, setActiveLab] = useState<string | null>(null);
@@ -1591,7 +1591,6 @@ const EnrolledCoursePage = () => {
     const allLessons = getAllLessons();
     if (currentVideo < allLessons.length - 1) {
       setCurrentVideo(currentVideo + 1);
-      setVideoProgress(0);
       // Reset playground to the first available mode for the new lesson
       const newCurrentVideo = currentVideo + 1;
       const newLesson = allLessons[newCurrentVideo];
@@ -1607,7 +1606,6 @@ const EnrolledCoursePage = () => {
   const previousLesson = () => {
     if (currentVideo > 0) {
       setCurrentVideo(currentVideo - 1);
-      setVideoProgress(0);
       // Reset playground to the first available mode for the new lesson
       const newCurrentVideo = currentVideo - 1;
       const allLessons = getAllLessons();
@@ -1779,65 +1777,26 @@ const EnrolledCoursePage = () => {
     <div className="min-h-screen bg-black text-green-400 relative">
       <Header navigate={navigate} />
 
-      <div className="pt-5 px-6">
-        <div className="max-w-7xl mx-auto">
+      <div className="py-5 px-6">
+        <div className="w-full px-2 mx-auto">
           {/* Terminal-style Navigation Bar */}
-          <div className="bg-black border-2 border-green-400/50 rounded-lg mb-6 overflow-hidden">
+          <div className=" pb-2  overflow-hidden">
             {/* Terminal header */}
-            <div className="bg-green-400/10 border-b border-green-400/30 px-4 py-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                </div>
-                <div className="text-green-400/60 text-xs font-mono">
-                  cybersec-academy/course/{courseId}
-                </div>
-              </div>
-            </div>
 
             {/* Navigation content */}
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  {/* File explorer style breadcrumb */}
-                  <div className="flex items-center space-x-2 text-green-400 font-mono text-sm">
-                    <span className="text-green-400/60">📁</span>
-                    <span className="text-green-400/60">courses</span>
-                    <span className="text-green-400/60">/</span>
-                    <span className="text-green-400">{courseId}</span>
-                    <span className="text-green-400/60">/</span>
-                    <span className="text-green-400 animate-pulse">
-                      learning
-                    </span>
-                  </div>
-                </div>
-
-                {/* Back buttons */}
-                <div className="flex items-center space-x-3">
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate(`/course/${courseId}`)}
-                    className="text-green-400 hover:bg-green-400/10 border border-green-400/30 font-mono text-xs"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    COURSE_DETAILS
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate("/overview")}
-                    className="text-green-400 hover:bg-green-400/10 border border-green-400/30 font-mono text-xs"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    OVERVIEW
-                  </Button>
-                </div>
+            <div className="flex items-center justify-between">
+              {/* Back buttons */}
+              <div className="flex items-center ">
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate(`/course/${courseId}`)}
+                  className="text-green-400 hover:bg-green-400/10  font-mono text-xs !px-0 "
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  COURSE_DETAILS
+                </Button>
               </div>
             </div>
-
-            {/* Scan line effect */}
-            <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-green-400/50 to-transparent animate-pulse"></div>
           </div>
 
           {/* Course Header with Compact Progress */}
@@ -1856,126 +1815,54 @@ const EnrolledCoursePage = () => {
               </div>
             </div>
 
-            {/* Compact Progress Card */}
-            <div className="bg-black/50 border border-green-400/30 rounded-lg p-3 min-w-[200px]">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-green-400 font-medium">
-                  Progress
+            <div className="bg-black/90 border border-green-400/30 rounded-lg p-3 backdrop-blur-sm shadow-2xl min-w-[320px]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-green-400 font-medium">
+                  Lesson {currentVideo + 1}/{getAllLessons().length}
                 </span>
-                <span className="text-sm text-green-400 font-bold">
-                  {course.progress}%
-                </span>
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setContentSidebarOpen(true)}
+                    className="text-green-400 hover:bg-green-400/10 h-6 px-2"
+                  >
+                    <List className="w-3 h-3" /> Content List
+                  </Button>
+                </div>
               </div>
-              <Progress
-                value={course.progress}
-                className="h-1.5 bg-black border border-green-400/30 mb-1"
-              />
-              <div className="text-xs text-green-300/70">
-                {course.completedLessons}/{course.totalLessons} lessons
-              </div>
-            </div>
-          </div>
 
-          {/* Floating Learning Progress Button */}
-          <Button
-            onClick={() => setSidebarOpen(true)}
-            className="fixed top-1/2 right-4 z-50 bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30 rounded-full w-12 h-12 p-0"
-          >
-            <List className="w-5 h-5" />
-          </Button>
-
-          {/* Learning Progress Sidebar - Fixed opacity */}
-          {sidebarOpen && (
-            <div className="fixed inset-0 z-50 flex justify-end">
-              <div
-                className="absolute inset-0 bg-black/20"
-                onClick={() => setSidebarOpen(false)}
-              />
-              <div className="bg-black border-l border-green-400/30 w-96 h-full overflow-y-auto">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-green-400">
-                      Learning Path
-                    </h2>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSidebarOpen(false)}
-                      className="text-green-400 hover:bg-green-400/10"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {course.sections.map((section, sectionIndex) => (
-                      <div key={section.id} className="space-y-2">
-                        <div className="font-medium text-green-400 text-sm">
-                          {section.title}
-                        </div>
-                        <div className="space-y-1">
-                          {section.lessons.map((lesson, lessonIndex) => {
-                            const flatIndex =
-                              course.sections
-                                .slice(0, sectionIndex)
-                                .reduce((acc, s) => acc + s.lessons.length, 0) +
-                              lessonIndex;
-
-                            return (
-                              <div
-                                key={lesson.id}
-                                className={`flex items-center justify-between p-2 rounded border cursor-pointer transition-colors ${
-                                  currentVideo === flatIndex
-                                    ? "border-green-400 bg-green-400/10"
-                                    : "border-green-400/30 hover:border-green-400/50"
-                                }`}
-                                onClick={() => {
-                                  setCurrentVideo(flatIndex);
-                                  setSidebarOpen(false);
-                                  // Reset playground to the first available mode for the new lesson
-                                  const allLessons = getAllLessons();
-                                  const newLesson = allLessons[flatIndex];
-                                  if (newLesson) {
-                                    const newPlaygroundModes =
-                                      getPlaygroundModes();
-                                    if (newPlaygroundModes.length > 0) {
-                                      setPlaygroundMode(
-                                        newPlaygroundModes[0].id
-                                      );
-                                    }
-                                  }
-                                }}
-                              >
-                                <div className="flex items-center space-x-2">
-                                  {completedLessons.includes(lesson.id) ? (
-                                    <CheckCircle className="w-3 h-3 text-green-400" />
-                                  ) : (
-                                    <div className="w-3 h-3 border border-green-400/30 rounded-full" />
-                                  )}
-                                  <div className="text-xs text-green-400">
-                                    {lesson.title}
-                                  </div>
-                                </div>
-                                <div className="text-xs text-green-300/70">
-                                  {lesson.duration}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-green-400 font-bold">
+                    {course.progress}%
+                  </span>
+                  <Progress
+                    value={course.progress}
+                    className="h-1.5 bg-black border border-green-400/30 flex-1 mx-2"
+                  />
                 </div>
               </div>
             </div>
-          )}
+            {/* Sidebar Toggle Button - Always visible when sidebar is closed */}
+            {/* {!contentSidebarOpen && (
+              <div className="z-40">
+                <Button
+                  onClick={() => setContentSidebarOpen(true)}
+                  className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30 rounded-lg h-12 px-3"
+                >
+                  <List className="w-4 h-4" />
+                  {">"} Content List
+                </Button>
+              </div>
+            )} */}
+          </div>
 
           {needsPlayground() ? (
             // Split view for video/text with playground
             <div
-              className="flex gap-2 mb-6 relative"
-              style={{ height: "600px" }}
+              className="flex gap-2 mb-6 relative h-min"
+              //   style={{ height: "600px" }}
             >
               {/* Show Both Button - when both are minimized */}
               {videoMinimized && playgroundMinimized && (
@@ -2003,7 +1890,7 @@ const EnrolledCoursePage = () => {
               )}
 
               {playgroundMinimized && !videoMinimized && (
-                <div className="absolute top-4 left-16 z-10">
+                <div className="absolute top-4 right-16 z-10">
                   <Button
                     onClick={() => setPlaygroundMinimized(false)}
                     className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30 rounded-full w-10 h-10 p-0"
@@ -2041,14 +1928,8 @@ const EnrolledCoursePage = () => {
                           <Minimize2 className="w-4 h-4" />
                         </Button>
                       </div>
-                      <div className="flex-1 p-4 flex flex-col overflow-y-auto">
+                      <div className="flex-1 p-4 flex flex-col ">
                         <div className="aspect-video bg-black border border-green-400/30 rounded-lg flex items-center justify-center mb-4 flex-shrink-0 relative">
-                          {/* Mac-style video player */}
-                          <div className="absolute top-2 left-2 flex space-x-1">
-                            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                          </div>
                           <div className="text-center">
                             <div className="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center mx-auto mb-3">
                               {isPlaying ? (
@@ -2066,26 +1947,7 @@ const EnrolledCoursePage = () => {
                           </div>
                         </div>
 
-                        <div className="mb-4">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm text-green-300/70">
-                              Progress
-                            </span>
-                            <span className="text-sm text-green-400">
-                              {currentLesson?.duration}
-                            </span>
-                          </div>
-                          <Progress
-                            value={videoProgress}
-                            className="h-2 bg-black border border-green-400/30"
-                          />
-                        </div>
-
-                        <p className="text-green-300/80 text-sm flex-1">
-                          {currentLesson?.description}
-                        </p>
-
-                        <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center justify-between ">
                           <div className="flex space-x-2">
                             <Button
                               variant="outline"
@@ -2139,7 +2001,7 @@ const EnrolledCoursePage = () => {
                     </div>
                   ) : (
                     // Text Content
-                    <div className="h-full flex flex-col">
+                    <div className="min-h-[450px] h-full flex flex-col">
                       <div className="p-4 border-b border-green-400/30 flex items-center justify-between">
                         <h3 className="text-green-400 font-semibold flex items-center">
                           <FileText className="w-4 h-4 mr-2" />
@@ -2161,6 +2023,56 @@ const EnrolledCoursePage = () => {
                               currentLesson?.description}
                           </p>
                         </div>
+                      </div>
+                      <div className="flex items-center justify-between p-4">
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            onClick={previousLesson}
+                            disabled={currentVideo === 0}
+                            className="border-green-400/30 text-green-400 hover:bg-green-400/10"
+                            size="sm"
+                          >
+                            Previous
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={nextLesson}
+                            disabled={
+                              currentVideo === getAllLessons().length - 1
+                            }
+                            className="border-green-400/30 text-green-400 hover:bg-green-400/10"
+                            size="sm"
+                          >
+                            Next
+                          </Button>
+                        </div>
+                        <Button
+                          onClick={() =>
+                            currentLesson &&
+                            markLessonComplete(currentLesson.id)
+                          }
+                          disabled={
+                            currentLesson
+                              ? completedLessons.includes(currentLesson.id)
+                              : true
+                          }
+                          className="bg-green-400 text-black hover:bg-green-300"
+                          size="sm"
+                        >
+                          {currentLesson &&
+                          completedLessons.includes(currentLesson.id) ? (
+                            <>
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Completed
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Complete
+                            </>
+                          )}
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -3548,13 +3460,64 @@ const EnrolledCoursePage = () => {
                       </div>
                     </div>
                   )}
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        onClick={previousLesson}
+                        disabled={currentVideo === 0}
+                        className="border-green-400/30 text-green-400 hover:bg-green-400/10"
+                        size="sm"
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={nextLesson}
+                        disabled={currentVideo === getAllLessons().length - 1}
+                        className="border-green-400/30 text-green-400 hover:bg-green-400/10"
+                        size="sm"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                    <Button
+                      onClick={() =>
+                        currentLesson && markLessonComplete(currentLesson.id)
+                      }
+                      disabled={
+                        currentLesson
+                          ? completedLessons.includes(currentLesson.id)
+                          : true
+                      }
+                      className="bg-green-400 text-black hover:bg-green-300"
+                      size="sm"
+                    >
+                      {currentLesson &&
+                      completedLessons.includes(currentLesson.id) ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Completed
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Complete
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
           )}
 
           {/* Enhanced Tabs - Reordered */}
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="border border-green-400/30 p-3 rounded-lg"
+          >
             <TabsList className="grid w-full grid-cols-4 bg-black/50 border-green-400/30">
               <TabsTrigger
                 value="details"
@@ -3587,7 +3550,7 @@ const EnrolledCoursePage = () => {
             </TabsList>
 
             {/* Details Tab */}
-            <TabsContent value="details" className="mt-4">
+            <TabsContent value="details" className="mt-2">
               <Card className="bg-black/50 border-green-400/30">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-green-400 text-lg">
@@ -3848,7 +3811,7 @@ find / -perm -2000 2>/dev/null  # SGID files`}
             </TabsContent>
 
             {/* Labs Tab */}
-            <TabsContent value="labs" className="mt-4">
+            <TabsContent value="labs" className="mt-2">
               {activeLab ? (
                 // Lab Detail View
                 <div className="space-y-4">
@@ -4093,7 +4056,7 @@ find / -perm -2000 2>/dev/null  # SGID files`}
             </TabsContent>
 
             {/* Games Tab - Enhanced with Cybersecurity Games */}
-            <TabsContent value="games" className="mt-4">
+            <TabsContent value="games" className="mt-2">
               {activeGame ? (
                 // Game Detail View
                 <div className="space-y-4">
@@ -4432,7 +4395,7 @@ find / -perm -2000 2>/dev/null  # SGID files`}
             </TabsContent>
 
             {/* Resources Tab */}
-            <TabsContent value="resources" className="mt-4">
+            <TabsContent value="resources" className="mt-2">
               <div className="grid gap-3">
                 {course.resources.map((resource, index) => (
                   <Card
@@ -4471,6 +4434,115 @@ find / -perm -2000 2>/dev/null  # SGID files`}
           </Tabs>
         </div>
       </div>
+
+      {/* Collapsible Content Sidebar */}
+      <div
+        className={`fixed right-0 top-0 h-full z-50 transition-transform duration-300 ${
+          contentSidebarOpen ? "translate-x-0" : "translate-x-96"
+        }`}
+      >
+        <div className="bg-black/95 border-l border-green-400/30 w-96 h-full backdrop-blur-sm overflow-y-auto hide-scrollbar">
+          <div className="p-4 border-b border-green-400/30 px-4 sticky top-0 bg-black/95 pr-1">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-bold text-green-400">
+                Course Content
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setContentSidebarOpen(false)}
+                className="text-green-400 hover:bg-green-400/10"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="text-xs text-green-300/70">{course.title}</div>
+          </div>
+
+          <div className="p-4 h-[calc(100vh-100px)] pb-20 px-2">
+            <div className="space-y-1">
+              {course.sections.map((section, sectionIndex) => (
+                <div key={section.id} className="space-y-1">
+                  <div className="font-medium text-green-400 text-sm py-2 px-2 mx-2 bg-green-400/10 rounded">
+                    {section.title}
+                  </div>
+                  <div className="space-y-1 mx-2">
+                    {section.lessons.map((lesson, lessonIndex) => {
+                      const flatIndex =
+                        course.sections
+                          .slice(0, sectionIndex)
+                          .reduce((acc, s) => acc + s.lessons.length, 0) +
+                        lessonIndex;
+
+                      return (
+                        <div
+                          key={lesson.id}
+                          className={`flex items-center justify-between p-2 rounded border cursor-pointer transition-all group ${
+                            currentVideo === flatIndex
+                              ? "border-green-400 bg-green-400/10"
+                              : "border-green-400/20 hover:border-green-400/40 hover:bg-green-400/5"
+                          }`}
+                          onClick={() => {
+                            setCurrentVideo(flatIndex);
+                            setContentSidebarOpen(false);
+                            // Reset playground to the first available mode for the new lesson
+                            const allLessons = getAllLessons();
+                            const newLesson = allLessons[flatIndex];
+                            if (newLesson) {
+                              const newPlaygroundModes = getPlaygroundModes();
+                              if (newPlaygroundModes.length > 0) {
+                                setPlaygroundMode(newPlaygroundModes[0].id);
+                              }
+                            }
+                          }}
+                        >
+                          <div className="flex items-center space-x-2 flex-1">
+                            <div className="flex items-center space-x-2">
+                              {completedLessons.includes(lesson.id) ? (
+                                <CheckCircle className="w-3 h-3 text-green-400" />
+                              ) : (
+                                <div className="w-3 h-3 border border-green-400/30 rounded-full" />
+                              )}
+                              {lesson.type === "video" && (
+                                <Video className="w-3 h-3 text-green-400/70" />
+                              )}
+                              {lesson.type === "text" && (
+                                <FileText className="w-3 h-3 text-green-400/70" />
+                              )}
+                              {lesson.type === "quiz" && (
+                                <Brain className="w-3 h-3 text-green-400/70" />
+                              )}
+                              {lesson.type === "lab" && (
+                                <Zap className="w-3 h-3 text-green-400/70" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-xs text-green-400 group-hover:text-green-300">
+                                {lesson.title}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-xs text-green-300/50">
+                            {lesson.duration}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Overlay for sidebar */}
+      {contentSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 z-40"
+          onClick={() => setContentSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };

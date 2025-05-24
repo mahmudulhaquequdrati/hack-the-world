@@ -11,15 +11,20 @@ import {
   ArrowLeft,
   Brain,
   CheckCircle,
+  ChevronRight,
   Clock,
   Code,
+  Copy,
   Database,
   Download,
+  ExternalLink,
   FileText,
   Globe,
   GripVertical,
   List,
   Lock,
+  Maximize2,
+  Minimize2,
   Network,
   Pause,
   Play,
@@ -84,8 +89,20 @@ const EnrolledCoursePage = () => {
   const [leftPaneWidth, setLeftPaneWidth] = useState(50); // Percentage
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<HTMLDivElement>(null);
-  const terminalRef = useRef<HTMLDivElement>(null);
   const [terminalCursor, setTerminalCursor] = useState("");
+
+  // Minimize states
+  const [videoMinimized, setVideoMinimized] = useState(false);
+  const [playgroundMinimized, setPlaygroundMinimized] = useState(false);
+
+  // Lab and Game states
+  const [activeLab, setActiveLab] = useState<string | null>(null);
+  const [activeGame, setActiveGame] = useState<string | null>(null);
+
+  // Transcript expanded states
+  const [expandedTranscript, setExpandedTranscript] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   // AI Playground Handlers
   const handleTerminalCommand = (command: string) => {
@@ -277,6 +294,45 @@ const EnrolledCoursePage = () => {
   const handleMouseDown = () => {
     setIsResizing(true);
   };
+
+  // Handle minimize/maximize
+  const handleVideoMinimize = () => {
+    setVideoMinimized(!videoMinimized);
+    // Allow both panes to be visible - don't force playground to show
+  };
+
+  const handlePlaygroundMinimize = () => {
+    setPlaygroundMinimized(!playgroundMinimized);
+    // Allow both panes to be visible - don't force video to show
+  };
+
+  const handleShowBoth = () => {
+    setVideoMinimized(false);
+    setPlaygroundMinimized(false);
+  };
+
+  // Update playground mode when video changes
+  useEffect(() => {
+    const modes = getPlaygroundModes();
+    if (modes.length > 0) {
+      setPlaygroundMode(modes[0].id);
+    }
+    // Reset terminal history for new lesson
+    setTerminalHistory([
+      {
+        type: "output",
+        content: "Last login: Mon Dec 16 14:32:01 on ttys000",
+      },
+      {
+        type: "output",
+        content: `Welcome to ${
+          getCurrentLesson()?.title || "Cybersecurity"
+        } Terminal`,
+      },
+    ]);
+    setAnalysisResult("");
+    setAnalysisInput("");
+  }, [currentVideo, courseId]);
 
   // Check if current lesson needs playground
   const needsPlayground = () => {
@@ -1083,7 +1139,7 @@ const EnrolledCoursePage = () => {
     <div className="min-h-screen bg-black text-green-400 relative">
       <Header navigate={navigate} />
 
-      <div className="pt-20 px-6">
+      <div className="pt-5 px-6">
         <div className="max-w-7xl mx-auto">
           {/* Back Button */}
           <Button
@@ -1143,7 +1199,7 @@ const EnrolledCoursePage = () => {
           {sidebarOpen && (
             <div className="fixed inset-0 z-50 flex justify-end">
               <div
-                className="absolute inset-0 bg-black/50"
+                className="absolute inset-0 bg-black/20"
                 onClick={() => setSidebarOpen(false)}
               />
               <div className="bg-black border-l border-green-400/30 w-96 h-full overflow-y-auto">
@@ -1221,152 +1277,239 @@ const EnrolledCoursePage = () => {
               className="flex gap-2 mb-6 relative"
               style={{ height: "600px" }}
             >
+              {/* Show Both Button - when both are minimized */}
+              {videoMinimized && playgroundMinimized && (
+                <div className="w-full flex items-center justify-center">
+                  <Button
+                    onClick={handleShowBoth}
+                    className="bg-green-400 text-black hover:bg-green-300"
+                  >
+                    <Maximize2 className="w-4 h-4 mr-2" />
+                    Show Both Panes
+                  </Button>
+                </div>
+              )}
+
+              {/* Floating restore buttons */}
+              {videoMinimized && !playgroundMinimized && (
+                <div className="absolute top-4 left-4 z-10">
+                  <Button
+                    onClick={() => setVideoMinimized(false)}
+                    className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30 rounded-full w-10 h-10 p-0"
+                  >
+                    <Video className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+
+              {playgroundMinimized && !videoMinimized && (
+                <div className="absolute top-4 right-4 z-10">
+                  <Button
+                    onClick={() => setPlaygroundMinimized(false)}
+                    className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30 rounded-full w-10 h-10 p-0"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+
               {/* Left Pane - Content */}
-              <div
-                className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden"
-                style={{ width: `${leftPaneWidth}%` }}
-              >
-                {currentLesson?.type === "video" ? (
-                  // Video Content
-                  <div className="h-full flex flex-col">
-                    <div className="p-4 border-b border-green-400/30">
-                      <h3 className="text-green-400 font-semibold flex items-center">
-                        <Video className="w-4 h-4 mr-2" />
-                        {currentLesson?.title}
-                      </h3>
-                    </div>
-                    <div className="flex-1 p-4 flex flex-col">
-                      <div className="aspect-video bg-black border border-green-400/30 rounded-lg flex items-center justify-center mb-4 flex-shrink-0">
-                        <div className="text-center">
-                          <div className="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                            {isPlaying ? (
-                              <Pause className="w-6 h-6 text-green-400" />
-                            ) : (
-                              <Play className="w-6 h-6 text-green-400" />
-                            )}
-                          </div>
-                          <Button
-                            onClick={() => setIsPlaying(!isPlaying)}
-                            className="bg-green-400 text-black hover:bg-green-300"
-                          >
-                            {isPlaying ? "Pause" : "Play"} Video
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="mb-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm text-green-300/70">
-                            Progress
-                          </span>
-                          <span className="text-sm text-green-400">
-                            {currentLesson?.duration}
-                          </span>
-                        </div>
-                        <Progress
-                          value={videoProgress}
-                          className="h-2 bg-black border border-green-400/30"
-                        />
-                      </div>
-
-                      <p className="text-green-300/80 text-sm flex-1">
-                        {currentLesson?.description}
-                      </p>
-
-                      <div className="flex items-center justify-between mt-4">
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            onClick={previousLesson}
-                            disabled={currentVideo === 0}
-                            className="border-green-400/30 text-green-400 hover:bg-green-400/10"
-                            size="sm"
-                          >
-                            Previous
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={nextLesson}
-                            disabled={
-                              currentVideo === getAllLessons().length - 1
-                            }
-                            className="border-green-400/30 text-green-400 hover:bg-green-400/10"
-                            size="sm"
-                          >
-                            Next
-                          </Button>
-                        </div>
+              {!videoMinimized && (
+                <div
+                  className={`bg-black/50 border border-green-400/30 rounded-lg overflow-hidden transition-all duration-300 ${
+                    playgroundMinimized ? "w-full" : `w-[${leftPaneWidth}%]`
+                  }`}
+                  style={{
+                    width: playgroundMinimized ? "100%" : `${leftPaneWidth}%`,
+                    minWidth: "300px",
+                  }}
+                >
+                  {currentLesson?.type === "video" ? (
+                    // Video Content
+                    <div className="h-full flex flex-col">
+                      <div className="p-4 border-b border-green-400/30 flex items-center justify-between">
+                        <h3 className="text-green-400 font-semibold flex items-center">
+                          <Video className="w-4 h-4 mr-2" />
+                          {currentLesson?.title}
+                        </h3>
                         <Button
-                          onClick={() =>
-                            currentLesson &&
-                            markLessonComplete(currentLesson.id)
-                          }
-                          disabled={
-                            currentLesson
-                              ? completedLessons.includes(currentLesson.id)
-                              : true
-                          }
-                          className="bg-green-400 text-black hover:bg-green-300"
+                          variant="ghost"
                           size="sm"
+                          onClick={handleVideoMinimize}
+                          className="text-green-400 hover:bg-green-400/10"
                         >
-                          {currentLesson &&
-                          completedLessons.includes(currentLesson.id) ? (
-                            <>
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              Completed
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              Complete
-                            </>
-                          )}
+                          <Minimize2 className="w-4 h-4" />
                         </Button>
                       </div>
-                    </div>
-                  </div>
-                ) : (
-                  // Text Content
-                  <div className="h-full flex flex-col">
-                    <div className="p-4 border-b border-green-400/30">
-                      <h3 className="text-green-400 font-semibold flex items-center">
-                        <FileText className="w-4 h-4 mr-2" />
-                        {currentLesson?.title}
-                      </h3>
-                    </div>
-                    <div className="flex-1 p-6 overflow-y-auto">
-                      <div className="prose prose-invert max-w-none">
-                        <p className="text-green-300/80 leading-relaxed">
-                          {currentLesson?.content || currentLesson?.description}
+                      <div className="flex-1 p-4 flex flex-col overflow-y-auto">
+                        <div className="aspect-video bg-black border border-green-400/30 rounded-lg flex items-center justify-center mb-4 flex-shrink-0 relative">
+                          {/* Mac-style video player */}
+                          <div className="absolute top-2 left-2 flex space-x-1">
+                            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                          </div>
+                          <div className="text-center">
+                            <div className="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                              {isPlaying ? (
+                                <Pause className="w-6 h-6 text-green-400" />
+                              ) : (
+                                <Play className="w-6 h-6 text-green-400" />
+                              )}
+                            </div>
+                            <Button
+                              onClick={() => setIsPlaying(!isPlaying)}
+                              className="bg-green-400 text-black hover:bg-green-300"
+                            >
+                              {isPlaying ? "Pause" : "Play"} Video
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="mb-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm text-green-300/70">
+                              Progress
+                            </span>
+                            <span className="text-sm text-green-400">
+                              {currentLesson?.duration}
+                            </span>
+                          </div>
+                          <Progress
+                            value={videoProgress}
+                            className="h-2 bg-black border border-green-400/30"
+                          />
+                        </div>
+
+                        <p className="text-green-300/80 text-sm flex-1">
+                          {currentLesson?.description}
                         </p>
+
+                        <div className="flex items-center justify-between mt-4">
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              onClick={previousLesson}
+                              disabled={currentVideo === 0}
+                              className="border-green-400/30 text-green-400 hover:bg-green-400/10"
+                              size="sm"
+                            >
+                              Previous
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={nextLesson}
+                              disabled={
+                                currentVideo === getAllLessons().length - 1
+                              }
+                              className="border-green-400/30 text-green-400 hover:bg-green-400/10"
+                              size="sm"
+                            >
+                              Next
+                            </Button>
+                          </div>
+                          <Button
+                            onClick={() =>
+                              currentLesson &&
+                              markLessonComplete(currentLesson.id)
+                            }
+                            disabled={
+                              currentLesson
+                                ? completedLessons.includes(currentLesson.id)
+                                : true
+                            }
+                            className="bg-green-400 text-black hover:bg-green-300"
+                            size="sm"
+                          >
+                            {currentLesson &&
+                            completedLessons.includes(currentLesson.id) ? (
+                              <>
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Completed
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Complete
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    // Text Content
+                    <div className="h-full flex flex-col">
+                      <div className="p-4 border-b border-green-400/30 flex items-center justify-between">
+                        <h3 className="text-green-400 font-semibold flex items-center">
+                          <FileText className="w-4 h-4 mr-2" />
+                          {currentLesson?.title}
+                        </h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleVideoMinimize}
+                          className="text-green-400 hover:bg-green-400/10"
+                        >
+                          <Minimize2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="flex-1 p-6 overflow-y-auto">
+                        <div className="prose prose-invert max-w-none">
+                          <p className="text-green-300/80 leading-relaxed">
+                            {currentLesson?.content ||
+                              currentLesson?.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
-              {/* Resize Handle - Fixed */}
-              <div
-                ref={resizeRef}
-                className="w-2 bg-green-400/20 hover:bg-green-400/40 cursor-col-resize flex items-center justify-center group relative"
-                onMouseDown={handleMouseDown}
-              >
-                <GripVertical className="w-4 h-4 text-green-400/60 group-hover:text-green-400" />
-              </div>
+              {/* Resize Handle - Only show when both panes are visible */}
+              {!videoMinimized && !playgroundMinimized && (
+                <div
+                  ref={resizeRef}
+                  className="w-2 bg-green-400/20 hover:bg-green-400/40 cursor-col-resize flex items-center justify-center group relative"
+                  onMouseDown={handleMouseDown}
+                >
+                  <GripVertical className="w-4 h-4 text-green-400/60 group-hover:text-green-400" />
+                </div>
+              )}
 
               {/* Right Pane - AI Playground */}
-              <div
-                className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden"
-                style={{ width: `${100 - leftPaneWidth - 1}%` }}
-              >
-                <div className="h-full flex flex-col">
-                  <div className="p-4 border-b border-green-400/30">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-green-400 font-semibold flex items-center">
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        AI Playground
-                      </h3>
-                      <div className="flex space-x-1">
+              {!playgroundMinimized && (
+                <div
+                  className={`bg-black/50 border border-green-400/30 rounded-lg overflow-hidden transition-all duration-300 ${
+                    videoMinimized
+                      ? "w-full"
+                      : `w-[${100 - leftPaneWidth - 1}%]`
+                  }`}
+                  style={{
+                    width: videoMinimized
+                      ? "100%"
+                      : `${100 - leftPaneWidth - 1}%`,
+                    minWidth: "300px",
+                  }}
+                >
+                  <div className="h-full flex flex-col">
+                    <div className="p-4 border-b border-green-400/30">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-green-400 font-semibold flex items-center">
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Try Here!
+                        </h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handlePlaygroundMinimize}
+                          className="text-green-400 hover:bg-green-400/10"
+                        >
+                          <Minimize2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="flex space-x-1 overflow-x-auto">
                         {playgroundModes.map((mode) => (
                           <Button
                             key={mode.id}
@@ -1376,8 +1519,8 @@ const EnrolledCoursePage = () => {
                             }
                             className={
                               playgroundMode === mode.id
-                                ? "bg-green-400 text-black h-7 px-2 text-xs"
-                                : "text-green-400 hover:bg-green-400/10 h-7 px-2 text-xs"
+                                ? "bg-green-400 text-black h-7 px-2 text-xs whitespace-nowrap"
+                                : "text-green-400 hover:bg-green-400/10 h-7 px-2 text-xs whitespace-nowrap"
                             }
                           >
                             {mode.label}
@@ -1385,810 +1528,828 @@ const EnrolledCoursePage = () => {
                         ))}
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex-1 p-4">
-                    {/* Mac-style Terminal Mode */}
-                    {playgroundMode === "terminal" && (
-                      <div className="h-full flex flex-col">
-                        <div
-                          className="flex-1 bg-black border border-green-400/30 rounded-lg font-mono text-sm overflow-y-auto"
-                          style={{
-                            padding: "12px",
-                            background: "#0a0a0a",
-                            fontFamily:
-                              "SF Mono, Monaco, Inconsolata, Roboto Mono, monospace",
-                          }}
-                        >
-                          <div className="space-y-1">
-                            {terminalHistory.map((entry, index) => (
+                    <div className="flex-1 p-4 overflow-y-auto">
+                      {/* Mac-style Terminal Mode */}
+                      {playgroundMode === "terminal" && (
+                        <div className="h-full flex flex-col">
+                          <div
+                            className="flex-1 bg-black border border-green-400/30 rounded-lg font-mono text-sm overflow-y-auto relative"
+                            style={{
+                              padding: "20px 12px 12px",
+                              background:
+                                "linear-gradient(135deg, #0a0a0a 0%, #0f0f0f 100%)",
+                              fontFamily:
+                                "SF Mono, Monaco, Inconsolata, Roboto Mono, monospace",
+                              boxShadow: "inset 0 2px 4px rgba(0,255,65,0.1)",
+                            }}
+                          >
+                            {/* Mac terminal header */}
+                            <div className="absolute top-2 left-4 flex space-x-1.5">
+                              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            </div>
+                            <div className="absolute top-2 right-4 text-xs text-green-400/60">
+                              {getCurrentLesson()?.title || "Terminal"}
+                            </div>
+
+                            <div className="space-y-1 mt-4">
+                              {terminalHistory.map((entry, index) => (
+                                <div
+                                  key={index}
+                                  className={`${
+                                    entry.type === "command"
+                                      ? "text-green-400"
+                                      : entry.type === "ai"
+                                      ? "text-blue-400 text-xs italic"
+                                      : "text-green-300"
+                                  }`}
+                                >
+                                  {entry.content}
+                                </div>
+                              ))}
+                              <div className="flex">
+                                <span className="text-green-400">
+                                  user@cybersec:~${" "}
+                                </span>
+                                <input
+                                  value={terminalInput}
+                                  onChange={(e) =>
+                                    setTerminalInput(e.target.value)
+                                  }
+                                  onKeyDown={handleTerminalKeyDown}
+                                  className="bg-transparent border-none outline-none text-green-400 flex-1"
+                                  style={{ fontFamily: "inherit" }}
+                                  autoFocus
+                                />
+                                <span className="text-green-400">
+                                  {terminalCursor}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* SQL Injection Mode */}
+                      {playgroundMode === "sql-injection" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div className="flex-1">
+                            <label className="text-sm text-green-400 mb-2 block">
+                              SQL Query Test Environment:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="SELECT * FROM users WHERE username = 'admin' AND password = '...'"
+                              className="bg-black border-green-400/30 text-green-400 h-32 resize-none font-mono"
+                            />
+                          </div>
+                          <Button
+                            onClick={() => handleAnalysis(analysisInput)}
+                            disabled={isAnalyzing || !analysisInput}
+                            className="bg-green-400 text-black hover:bg-green-300"
+                          >
+                            {isAnalyzing ? (
+                              <>
+                                <Database className="w-4 h-4 mr-2 animate-spin" />
+                                Testing...
+                              </>
+                            ) : (
+                              <>
+                                <Database className="w-4 h-4 mr-2" />
+                                Test SQL
+                              </>
+                            )}
+                          </Button>
+                          {analysisResult && (
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Web Scanner Mode */}
+                      {playgroundMode === "web-scanner" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div>
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Target URL:
+                            </label>
+                            <Input
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="https://example.com"
+                              className="bg-black border-green-400/30 text-green-400"
+                            />
+                          </div>
+                          <Button
+                            onClick={() => handleAnalysis(analysisInput)}
+                            disabled={isAnalyzing || !analysisInput}
+                            className="bg-green-400 text-black hover:bg-green-300"
+                          >
+                            {isAnalyzing ? (
+                              <>
+                                <Search className="w-4 h-4 mr-2 animate-spin" />
+                                Scanning...
+                              </>
+                            ) : (
+                              <>
+                                <Search className="w-4 h-4 mr-2" />
+                                Start Scan
+                              </>
+                            )}
+                          </Button>
+                          {analysisResult && (
+                            <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Analysis Mode */}
+                      {playgroundMode === "analysis" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div className="flex-1">
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Enter code or data for AI analysis:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="Paste your code, config, or data here..."
+                              className="bg-black border-green-400/30 text-green-400 h-32 resize-none"
+                            />
+                          </div>
+                          <Button
+                            onClick={() => handleAnalysis(analysisInput)}
+                            disabled={isAnalyzing || !analysisInput}
+                            className="bg-green-400 text-black hover:bg-green-300"
+                          >
+                            {isAnalyzing ? (
+                              <>
+                                <Brain className="w-4 h-4 mr-2 animate-spin" />
+                                Analyzing...
+                              </>
+                            ) : (
+                              <>
+                                <Search className="w-4 h-4 mr-2" />
+                                Analyze
+                              </>
+                            )}
+                          </Button>
+                          {analysisResult && (
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 mt-4 overflow-y-auto max-h-48">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* AI Chat Mode */}
+                      {playgroundMode === "ai-chat" && (
+                        <div className="h-full flex flex-col">
+                          <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto mb-4">
+                            {aiChatMessages.map((message, index) => (
                               <div
                                 key={index}
-                                className={`${
-                                  entry.type === "command"
+                                className={`mb-3 ${
+                                  message.role === "user"
                                     ? "text-green-400"
-                                    : entry.type === "ai"
-                                    ? "text-blue-400 text-xs"
-                                    : "text-green-300"
+                                    : "text-blue-400"
                                 }`}
                               >
-                                {entry.content}
+                                <div className="font-semibold text-xs mb-1">
+                                  {message.role === "user"
+                                    ? "You"
+                                    : "🤖 AI Assistant"}
+                                </div>
+                                <div className="text-sm">{message.content}</div>
                               </div>
                             ))}
-                            <div className="flex">
-                              <span className="text-green-400">
-                                user@cybersec:~${" "}
-                              </span>
-                              <input
-                                value={terminalInput}
-                                onChange={(e) =>
-                                  setTerminalInput(e.target.value)
-                                }
-                                onKeyDown={handleTerminalKeyDown}
-                                className="bg-transparent border-none outline-none text-green-400 flex-1"
-                                style={{ fontFamily: "inherit" }}
-                                autoFocus
-                              />
-                              <span className="text-green-400">
-                                {terminalCursor}
-                              </span>
-                            </div>
                           </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* SQL Injection Mode */}
-                    {playgroundMode === "sql-injection" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div className="flex-1">
-                          <label className="text-sm text-green-400 mb-2 block">
-                            SQL Query Test Environment:
-                          </label>
-                          <Textarea
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="SELECT * FROM users WHERE username = 'admin' AND password = '...'"
-                            className="bg-black border-green-400/30 text-green-400 h-32 resize-none font-mono"
-                          />
-                        </div>
-                        <Button
-                          onClick={() => handleAnalysis(analysisInput)}
-                          disabled={isAnalyzing || !analysisInput}
-                          className="bg-green-400 text-black hover:bg-green-300"
-                        >
-                          {isAnalyzing ? (
-                            <>
-                              <Database className="w-4 h-4 mr-2 animate-spin" />
-                              Testing...
-                            </>
-                          ) : (
-                            <>
-                              <Database className="w-4 h-4 mr-2" />
-                              Test SQL
-                            </>
-                          )}
-                        </Button>
-                        {analysisResult && (
-                          <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Web Scanner Mode */}
-                    {playgroundMode === "web-scanner" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div>
-                          <label className="text-sm text-green-400 mb-2 block">
-                            Target URL:
-                          </label>
-                          <Input
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="https://example.com"
-                            className="bg-black border-green-400/30 text-green-400"
-                          />
-                        </div>
-                        <Button
-                          onClick={() => handleAnalysis(analysisInput)}
-                          disabled={isAnalyzing || !analysisInput}
-                          className="bg-green-400 text-black hover:bg-green-300"
-                        >
-                          {isAnalyzing ? (
-                            <>
-                              <Search className="w-4 h-4 mr-2 animate-spin" />
-                              Scanning...
-                            </>
-                          ) : (
-                            <>
-                              <Search className="w-4 h-4 mr-2" />
-                              Start Scan
-                            </>
-                          )}
-                        </Button>
-                        {analysisResult && (
-                          <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Analysis Mode */}
-                    {playgroundMode === "analysis" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div className="flex-1">
-                          <label className="text-sm text-green-400 mb-2 block">
-                            Enter code or data for AI analysis:
-                          </label>
-                          <Textarea
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="Paste your code, config, or data here..."
-                            className="bg-black border-green-400/30 text-green-400 h-32 resize-none"
-                          />
-                        </div>
-                        <Button
-                          onClick={() => handleAnalysis(analysisInput)}
-                          disabled={isAnalyzing || !analysisInput}
-                          className="bg-green-400 text-black hover:bg-green-300"
-                        >
-                          {isAnalyzing ? (
-                            <>
-                              <Brain className="w-4 h-4 mr-2 animate-spin" />
-                              Analyzing...
-                            </>
-                          ) : (
-                            <>
-                              <Search className="w-4 h-4 mr-2" />
-                              Analyze
-                            </>
-                          )}
-                        </Button>
-                        {analysisResult && (
-                          <div className="bg-black border border-green-400/30 rounded-lg p-4 mt-4 overflow-y-auto max-h-48">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* AI Chat Mode */}
-                    {playgroundMode === "ai-chat" && (
-                      <div className="h-full flex flex-col">
-                        <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto mb-4">
-                          {aiChatMessages.map((message, index) => (
-                            <div
-                              key={index}
-                              className={`mb-3 ${
-                                message.role === "user"
-                                  ? "text-green-400"
-                                  : "text-blue-400"
-                              }`}
+                          <div className="flex space-x-2">
+                            <Input
+                              value={chatInput}
+                              onChange={(e) => setChatInput(e.target.value)}
+                              onKeyPress={(e) =>
+                                e.key === "Enter" && handleAiChat(chatInput)
+                              }
+                              placeholder="Ask about cybersecurity..."
+                              className="bg-black border-green-400/30 text-green-400"
+                            />
+                            <Button
+                              onClick={() => handleAiChat(chatInput)}
+                              disabled={!chatInput}
+                              className="bg-green-400 text-black hover:bg-green-300"
+                              size="sm"
                             >
-                              <div className="font-semibold text-xs mb-1">
-                                {message.role === "user"
-                                  ? "You"
-                                  : "🤖 AI Assistant"}
-                              </div>
-                              <div className="text-sm">{message.content}</div>
+                              <Send className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* OSINT Tools Mode */}
+                      {playgroundMode === "osint-tools" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div>
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Target for OSINT Investigation:
+                            </label>
+                            <Input
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="Enter domain, email, or username"
+                              className="bg-black border-green-400/30 text-green-400"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Domain: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Domain Lookup
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Email: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Email Search
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Social: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Social Media
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Metadata: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Metadata
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
                             </div>
-                          ))}
+                          )}
                         </div>
-                        <div className="flex space-x-2">
-                          <Input
-                            value={chatInput}
-                            onChange={(e) => setChatInput(e.target.value)}
-                            onKeyPress={(e) =>
-                              e.key === "Enter" && handleAiChat(chatInput)
-                            }
-                            placeholder="Ask about cybersecurity..."
-                            className="bg-black border-green-400/30 text-green-400"
-                          />
-                          <Button
-                            onClick={() => handleAiChat(chatInput)}
-                            disabled={!chatInput}
-                            className="bg-green-400 text-black hover:bg-green-300"
-                            size="sm"
-                          >
-                            <Send className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* OSINT Tools Mode */}
-                    {playgroundMode === "osint-tools" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div>
-                          <label className="text-sm text-green-400 mb-2 block">
-                            Target for OSINT Investigation:
-                          </label>
-                          <Input
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="Enter domain, email, or username"
-                            className="bg-black border-green-400/30 text-green-400"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Domain: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Domain Lookup
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Email: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Email Search
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Social: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Social Media
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Metadata: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Metadata
-                          </Button>
-                        </div>
-                        {analysisResult && (
-                          <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
+                      {/* Network Scanner Mode */}
+                      {playgroundMode === "network-scanner" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div>
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Target Network/IP:
+                            </label>
+                            <Input
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="192.168.1.0/24 or 10.0.0.1"
+                              className="bg-black border-green-400/30 text-green-400"
+                            />
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Ping: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Ping Scan
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Port: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Port Scan
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Service: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Service Scan
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`OS: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              OS Detection
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    {/* Network Scanner Mode */}
-                    {playgroundMode === "network-scanner" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div>
-                          <label className="text-sm text-green-400 mb-2 block">
-                            Target Network/IP:
-                          </label>
-                          <Input
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="192.168.1.0/24 or 10.0.0.1"
-                            className="bg-black border-green-400/30 text-green-400"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Ping: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Ping Scan
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Port: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Port Scan
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Service: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Service Scan
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`OS: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            OS Detection
-                          </Button>
-                        </div>
-                        {analysisResult && (
-                          <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
+                      {/* XSS Lab Mode */}
+                      {playgroundMode === "xss-lab" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div className="flex-1">
+                            <label className="text-sm text-green-400 mb-2 block">
+                              XSS Payload Testing:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="<script>alert('XSS')</script>"
+                              className="bg-black border-green-400/30 text-green-400 h-32 resize-none font-mono"
+                            />
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Reflected XSS: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Test Reflected
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Stored XSS: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Test Stored
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`DOM XSS: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Test DOM
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Filter Bypass: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Filter Bypass
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    {/* XSS Lab Mode */}
-                    {playgroundMode === "xss-lab" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div className="flex-1">
-                          <label className="text-sm text-green-400 mb-2 block">
-                            XSS Payload Testing:
-                          </label>
-                          <Textarea
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="<script>alert('XSS')</script>"
-                            className="bg-black border-green-400/30 text-green-400 h-32 resize-none font-mono"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Reflected XSS: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Test Reflected
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Stored XSS: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Test Stored
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`DOM XSS: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Test DOM
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Filter Bypass: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Filter Bypass
-                          </Button>
-                        </div>
-                        {analysisResult && (
-                          <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
+                      {/* Phishing Simulator Mode */}
+                      {playgroundMode === "phishing-sim" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div>
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Email Template:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="Subject: Urgent Account Verification Required..."
+                              className="bg-black border-green-400/30 text-green-400 h-32 resize-none"
+                            />
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Phishing Analysis: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Analyze Email
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Threat Score: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Threat Score
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Social Engineering: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              SE Analysis
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Detection: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Detection
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    {/* Phishing Simulator Mode */}
-                    {playgroundMode === "phishing-sim" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div>
-                          <label className="text-sm text-green-400 mb-2 block">
-                            Email Template:
-                          </label>
-                          <Textarea
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="Subject: Urgent Account Verification Required..."
-                            className="bg-black border-green-400/30 text-green-400 h-32 resize-none"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Phishing Analysis: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Analyze Email
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Threat Score: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Threat Score
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Social Engineering: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            SE Analysis
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Detection: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Detection
-                          </Button>
-                        </div>
-                        {analysisResult && (
-                          <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
+                      {/* File Analysis Mode */}
+                      {playgroundMode === "file-analysis" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div className="flex-1">
+                            <label className="text-sm text-green-400 mb-2 block">
+                              File Content or Path:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="/var/log/auth.log or paste file content..."
+                              className="bg-black border-green-400/30 text-green-400 h-32 resize-none font-mono"
+                            />
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`File Type: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              File Type
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Permissions: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Permissions
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Security Scan: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Security Scan
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Metadata: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Metadata
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    {/* File Analysis Mode */}
-                    {playgroundMode === "file-analysis" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div className="flex-1">
-                          <label className="text-sm text-green-400 mb-2 block">
-                            File Content or Path:
-                          </label>
-                          <Textarea
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="/var/log/auth.log or paste file content..."
-                            className="bg-black border-green-400/30 text-green-400 h-32 resize-none font-mono"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`File Type: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            File Type
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Permissions: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Permissions
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Security Scan: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Security Scan
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Metadata: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Metadata
-                          </Button>
-                        </div>
-                        {analysisResult && (
-                          <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
+                      {/* Log Analysis Mode */}
+                      {playgroundMode === "log-analysis" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div className="flex-1">
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Log Data:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="Dec 16 10:30:01 server sshd[1234]: Failed password for root from 192.168.1.100..."
+                              className="bg-black border-green-400/30 text-green-400 h-32 resize-none font-mono"
+                            />
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Threat Detection: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Threat Detection
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Pattern Analysis: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Pattern Analysis
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Anomaly Detection: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Anomaly Detection
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`IP Analysis: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              IP Analysis
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    {/* Log Analysis Mode */}
-                    {playgroundMode === "log-analysis" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div className="flex-1">
-                          <label className="text-sm text-green-400 mb-2 block">
-                            Log Data:
-                          </label>
-                          <Textarea
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="Dec 16 10:30:01 server sshd[1234]: Failed password for root from 192.168.1.100..."
-                            className="bg-black border-green-400/30 text-green-400 h-32 resize-none font-mono"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Threat Detection: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Threat Detection
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Pattern Analysis: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Pattern Analysis
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Anomaly Detection: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Anomaly Detection
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`IP Analysis: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            IP Analysis
-                          </Button>
-                        </div>
-                        {analysisResult && (
-                          <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
+                      {/* Packet Analysis Mode */}
+                      {playgroundMode === "packet-analysis" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div className="flex-1">
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Packet Data (PCAP):
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="Upload PCAP file or enter packet hex data..."
+                              className="bg-black border-green-400/30 text-green-400 h-32 resize-none font-mono"
+                            />
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Protocol Analysis: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Protocol Analysis
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Traffic Flow: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Traffic Flow
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Malicious Activity: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Malicious Activity
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Data Extraction: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Data Extraction
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    {/* Packet Analysis Mode */}
-                    {playgroundMode === "packet-analysis" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div className="flex-1">
-                          <label className="text-sm text-green-400 mb-2 block">
-                            Packet Data (PCAP):
-                          </label>
-                          <Textarea
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="Upload PCAP file or enter packet hex data..."
-                            className="bg-black border-green-400/30 text-green-400 h-32 resize-none font-mono"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Protocol Analysis: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Protocol Analysis
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Traffic Flow: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Traffic Flow
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Malicious Activity: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Malicious Activity
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Data Extraction: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Data Extraction
-                          </Button>
-                        </div>
-                        {analysisResult && (
-                          <div className="bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto max-h-48">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
+                      {/* Port Scanner Mode */}
+                      {playgroundMode === "port-scanner" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div>
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Target IP/Domain:
+                            </label>
+                            <Input
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="192.168.1.1 or example.com"
+                              className="bg-black border-green-400/30 text-green-400"
+                            />
                           </div>
-                        )}
-                      </div>
-                    )}
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Quick Scan: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Quick Scan
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Full Scan: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Full Scan
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`UDP Scan: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              UDP Scan
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(`Stealth Scan: ${analysisInput}`)
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Stealth Scan
+                            </Button>
+                          </div>
+                          {analysisResult && (
+                            <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    {/* Port Scanner Mode */}
-                    {playgroundMode === "port-scanner" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div>
-                          <label className="text-sm text-green-400 mb-2 block">
-                            Target IP/Domain:
-                          </label>
-                          <Input
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="192.168.1.1 or example.com"
-                            className="bg-black border-green-400/30 text-green-400"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Quick Scan: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Quick Scan
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Full Scan: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Full Scan
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`UDP Scan: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            UDP Scan
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(`Stealth Scan: ${analysisInput}`)
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Stealth Scan
-                          </Button>
-                        </div>
-                        {analysisResult && (
-                          <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
+                      {/* Social Analysis Mode */}
+                      {playgroundMode === "social-analysis" && (
+                        <div className="h-full flex flex-col space-y-4">
+                          <div>
+                            <label className="text-sm text-green-400 mb-2 block">
+                              Social Media Profile/Content:
+                            </label>
+                            <Textarea
+                              value={analysisInput}
+                              onChange={(e) => setAnalysisInput(e.target.value)}
+                              placeholder="Enter social media profile URL or content..."
+                              className="bg-black border-green-400/30 text-green-400 h-32 resize-none"
+                            />
                           </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Social Analysis Mode */}
-                    {playgroundMode === "social-analysis" && (
-                      <div className="h-full flex flex-col space-y-4">
-                        <div>
-                          <label className="text-sm text-green-400 mb-2 block">
-                            Social Media Profile/Content:
-                          </label>
-                          <Textarea
-                            value={analysisInput}
-                            onChange={(e) => setAnalysisInput(e.target.value)}
-                            placeholder="Enter social media profile URL or content..."
-                            className="bg-black border-green-400/30 text-green-400 h-32 resize-none"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Profile Analysis: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Profile Analysis
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Sentiment Analysis: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Sentiment Analysis
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Network Mapping: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Network Mapping
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleAnalysis(
-                                `Behavior Patterns: ${analysisInput}`
-                              )
-                            }
-                            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
-                            size="sm"
-                          >
-                            Behavior Patterns
-                          </Button>
-                        </div>
-                        {analysisResult && (
-                          <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
-                            <pre className="text-green-300 text-xs whitespace-pre-wrap">
-                              {analysisResult}
-                            </pre>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Profile Analysis: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Profile Analysis
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Sentiment Analysis: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Sentiment Analysis
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Network Mapping: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Network Mapping
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleAnalysis(
+                                  `Behavior Patterns: ${analysisInput}`
+                                )
+                              }
+                              className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                              size="sm"
+                            >
+                              Behavior Patterns
+                            </Button>
                           </div>
-                        )}
-                      </div>
-                    )}
+                          {analysisResult && (
+                            <div className="flex-1 bg-black border border-green-400/30 rounded-lg p-4 overflow-y-auto">
+                              <pre className="text-green-300 text-xs whitespace-pre-wrap">
+                                {analysisResult}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : (
             // Full width for non-video/text content
@@ -2295,64 +2456,252 @@ const EnrolledCoursePage = () => {
               <Card className="bg-black/50 border-green-400/30">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-green-400 text-lg">
-                    Lesson Transcript
+                    Lesson Transcript - {currentLesson?.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="space-y-4 max-h-96 overflow-y-auto">
-                    <div className="text-green-300/80 text-sm leading-relaxed">
-                      <p className="mb-4">
-                        <span className="text-green-400 font-semibold">
-                          [00:00]
-                        </span>{" "}
-                        Welcome to this lesson on {currentLesson?.title}. In
-                        this comprehensive guide, we'll explore the fundamental
-                        concepts and practical applications.
-                      </p>
-                      <p className="mb-4">
-                        <span className="text-green-400 font-semibold">
-                          [01:30]
-                        </span>{" "}
-                        {currentLesson?.description}
-                      </p>
-                      <p className="mb-4">
-                        <span className="text-green-400 font-semibold">
-                          [03:15]
-                        </span>{" "}
-                        Let's start by understanding the key principles and how
-                        they apply in real-world scenarios.
-                      </p>
-                      <p className="mb-4">
-                        <span className="text-green-400 font-semibold">
-                          [05:45]
-                        </span>{" "}
-                        It's important to note that these concepts form the
-                        foundation for more advanced topics we'll cover later.
-                      </p>
-                      <p className="mb-4">
-                        <span className="text-green-400 font-semibold">
-                          [08:20]
-                        </span>{" "}
-                        Now, let's look at some practical examples and how to
-                        implement these concepts in your own work.
-                      </p>
-                      <p className="mb-4">
-                        <span className="text-green-400 font-semibold">
-                          [12:00]
-                        </span>{" "}
-                        Remember to practice these techniques in a safe,
-                        controlled environment before applying them
-                        professionally.
-                      </p>
-                      <p>
-                        <span className="text-green-400 font-semibold">
-                          [{currentLesson?.duration}]
-                        </span>{" "}
-                        That concludes this lesson. Make sure to complete the
-                        associated exercises and check out the additional
-                        resources.
-                      </p>
-                    </div>
+                    {/* Dynamic transcript based on lesson type */}
+                    {courseId === "web-security" && (
+                      <div className="space-y-6">
+                        <details
+                          open={expandedTranscript["intro"]}
+                          onToggle={(e) =>
+                            setExpandedTranscript((prev) => ({
+                              ...prev,
+                              intro: (e.target as HTMLDetailsElement).open,
+                            }))
+                          }
+                        >
+                          <summary className="cursor-pointer text-green-400 font-semibold mb-2 flex items-center">
+                            <ChevronRight className="w-4 h-4 mr-1" />
+                            [00:00-02:30] Introduction to Web Security
+                          </summary>
+                          <div className="text-green-300/80 text-sm leading-relaxed ml-5 space-y-3">
+                            <p>
+                              Welcome to Web Application Security. In this
+                              lesson, we'll explore the fundamental
+                              vulnerabilities that plague modern web
+                              applications.
+                            </p>
+                            <div className="bg-black/50 border border-green-400/30 rounded p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-green-400 text-xs font-mono">
+                                  Example: Basic SQL Injection
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-green-400 hover:bg-green-400/10"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </Button>
+                              </div>
+                              <pre className="text-green-300 text-xs font-mono overflow-x-auto">
+                                {`// Vulnerable code
+$query = "SELECT * FROM users WHERE username = '" . $_POST['username'] . "'";
+
+// Secure code
+$stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
+$stmt->execute([$_POST['username']]);`}
+                              </pre>
+                            </div>
+                          </div>
+                        </details>
+
+                        <details
+                          open={expandedTranscript["owasp"]}
+                          onToggle={(e) =>
+                            setExpandedTranscript((prev) => ({
+                              ...prev,
+                              owasp: (e.target as HTMLDetailsElement).open,
+                            }))
+                          }
+                        >
+                          <summary className="cursor-pointer text-green-400 font-semibold mb-2 flex items-center">
+                            <ChevronRight className="w-4 h-4 mr-1" />
+                            [02:30-05:15] OWASP Top 10 Overview
+                          </summary>
+                          <div className="text-green-300/80 text-sm leading-relaxed ml-5 space-y-3">
+                            <p>
+                              The OWASP Top 10 represents the most critical
+                              security risks to web applications:
+                            </p>
+                            <ol className="list-decimal list-inside space-y-1 text-xs">
+                              <li>Injection (SQL, NoSQL, LDAP)</li>
+                              <li>Broken Authentication</li>
+                              <li>Sensitive Data Exposure</li>
+                              <li>XML External Entities (XXE)</li>
+                              <li>Broken Access Control</li>
+                            </ol>
+                          </div>
+                        </details>
+
+                        <details
+                          open={expandedTranscript["practical"]}
+                          onToggle={(e) =>
+                            setExpandedTranscript((prev) => ({
+                              ...prev,
+                              practical: (e.target as HTMLDetailsElement).open,
+                            }))
+                          }
+                        >
+                          <summary className="cursor-pointer text-green-400 font-semibold mb-2 flex items-center">
+                            <ChevronRight className="w-4 h-4 mr-1" />
+                            [05:15-08:00] Practical Testing Methods
+                          </summary>
+                          <div className="text-green-300/80 text-sm leading-relaxed ml-5">
+                            <p>
+                              Now let's look at how to test for these
+                              vulnerabilities using tools like Burp Suite and
+                              manual testing techniques.
+                            </p>
+                          </div>
+                        </details>
+                      </div>
+                    )}
+
+                    {courseId === "linux" && (
+                      <div className="space-y-6">
+                        <details
+                          open={expandedTranscript["commands"]}
+                          onToggle={(e) =>
+                            setExpandedTranscript((prev) => ({
+                              ...prev,
+                              commands: (e.target as HTMLDetailsElement).open,
+                            }))
+                          }
+                        >
+                          <summary className="cursor-pointer text-green-400 font-semibold mb-2 flex items-center">
+                            <ChevronRight className="w-4 h-4 mr-1" />
+                            [00:00-03:00] Essential Linux Commands
+                          </summary>
+                          <div className="text-green-300/80 text-sm leading-relaxed ml-5 space-y-3">
+                            <p>
+                              Linux command line is the foundation of
+                              cybersecurity. Let's start with essential
+                              navigation commands.
+                            </p>
+                            <div className="bg-black/50 border border-green-400/30 rounded p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-green-400 text-xs font-mono">
+                                  Common Commands
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-green-400 hover:bg-green-400/10"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </Button>
+                              </div>
+                              <pre className="text-green-300 text-xs font-mono">
+                                {`# Navigation
+ls -la          # List files with details
+cd /etc         # Change directory
+pwd             # Print working directory
+
+# File Operations
+cat /etc/passwd # View file contents
+grep "root" /etc/passwd # Search in files
+find / -name "*.log" 2>/dev/null # Find files`}
+                              </pre>
+                            </div>
+                          </div>
+                        </details>
+
+                        <details
+                          open={expandedTranscript["permissions"]}
+                          onToggle={(e) =>
+                            setExpandedTranscript((prev) => ({
+                              ...prev,
+                              permissions: (e.target as HTMLDetailsElement)
+                                .open,
+                            }))
+                          }
+                        >
+                          <summary className="cursor-pointer text-green-400 font-semibold mb-2 flex items-center">
+                            <ChevronRight className="w-4 h-4 mr-1" />
+                            [03:00-06:30] File Permissions & Security
+                          </summary>
+                          <div className="text-green-300/80 text-sm leading-relaxed ml-5 space-y-3">
+                            <p>
+                              Understanding file permissions is crucial for
+                              Linux security.
+                            </p>
+                            <div className="bg-black/50 border border-green-400/30 rounded p-3">
+                              <pre className="text-green-300 text-xs font-mono">
+                                {`# Permission format: rwxrwxrwx (user/group/other)
+chmod 755 script.sh    # rwxr-xr-x
+chmod u+s binary       # Set SUID bit (dangerous!)
+chmod g+s directory    # Set SGID bit
+
+# Find SUID/SGID files (privilege escalation)
+find / -perm -4000 2>/dev/null  # SUID files
+find / -perm -2000 2>/dev/null  # SGID files`}
+                              </pre>
+                            </div>
+                          </div>
+                        </details>
+                      </div>
+                    )}
+
+                    {/* Default transcript for other courses */}
+                    {!["web-security", "linux"].includes(courseId || "") && (
+                      <div className="text-green-300/80 text-sm leading-relaxed">
+                        <p className="mb-4">
+                          <span className="text-green-400 font-semibold">
+                            [00:00]
+                          </span>{" "}
+                          Welcome to this lesson on {currentLesson?.title}. In
+                          this comprehensive guide, we'll explore the
+                          fundamental concepts and practical applications.
+                        </p>
+                        <p className="mb-4">
+                          <span className="text-green-400 font-semibold">
+                            [01:30]
+                          </span>{" "}
+                          {currentLesson?.description}
+                        </p>
+                        <p className="mb-4">
+                          <span className="text-green-400 font-semibold">
+                            [03:15]
+                          </span>{" "}
+                          Let's start by understanding the key principles and
+                          how they apply in real-world scenarios.
+                        </p>
+                        <p className="mb-4">
+                          <span className="text-green-400 font-semibold">
+                            [05:45]
+                          </span>{" "}
+                          It's important to note that these concepts form the
+                          foundation for more advanced topics we'll cover later.
+                        </p>
+                        <p className="mb-4">
+                          <span className="text-green-400 font-semibold">
+                            [08:20]
+                          </span>{" "}
+                          Now, let's look at some practical examples and how to
+                          implement these concepts in your own work.
+                        </p>
+                        <p className="mb-4">
+                          <span className="text-green-400 font-semibold">
+                            [12:00]
+                          </span>{" "}
+                          Remember to practice these techniques in a safe,
+                          controlled environment before applying them
+                          professionally.
+                        </p>
+                        <p>
+                          <span className="text-green-400 font-semibold">
+                            [{currentLesson?.duration}]
+                          </span>{" "}
+                          That concludes this lesson. Make sure to complete the
+                          associated exercises and check out the additional
+                          resources.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -2360,160 +2709,586 @@ const EnrolledCoursePage = () => {
 
             {/* Labs Tab */}
             <TabsContent value="labs" className="mt-4">
-              <div className="grid gap-4">
-                {course.labs.map((lab) => (
-                  <Card
-                    key={lab.id}
-                    className="bg-black/50 border-green-400/30 hover:border-green-400 transition-colors"
-                  >
+              {activeLab ? (
+                // Lab Detail View
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setActiveLab(null)}
+                      className="text-green-400 hover:bg-green-400/10"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Back to Labs
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        window.open(
+                          `/learn/${courseId}/lab/${activeLab}`,
+                          "_blank"
+                        );
+                      }}
+                      className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Open in New Tab
+                    </Button>
+                  </div>
+
+                  {/* Lab Environment */}
+                  <Card className="bg-black/50 border-green-400/30">
                     <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-green-400 text-lg">
-                          {lab.name}
-                        </CardTitle>
-                        <div className="flex items-center space-x-2">
-                          <Badge className={getDifficultyColor(lab.difficulty)}>
-                            {lab.difficulty}
-                          </Badge>
-                          <div className="flex items-center space-x-1 text-xs text-green-300/70">
-                            <Clock className="w-3 h-3" />
-                            <span>{lab.duration}</span>
-                          </div>
-                        </div>
-                      </div>
+                      <CardTitle className="text-green-400 text-xl">
+                        {course.labs.find((lab) => lab.id === activeLab)?.name}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <p className="text-green-300/80 mb-4 text-sm">
-                        {lab.description}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          {lab.completed && (
-                            <CheckCircle className="w-4 h-4 text-green-400" />
-                          )}
-                          <span className="text-sm text-green-300/70">
-                            {lab.completed ? "Completed" : "Not started"}
-                          </span>
+                      {/* Dynamic lab content based on course and lab */}
+                      {courseId === "web-security" &&
+                        activeLab === "web-lab-1" && (
+                          <div className="space-y-6">
+                            <div className="bg-black/30 border border-green-400/30 rounded-lg p-4">
+                              <h3 className="text-green-400 font-semibold mb-3">
+                                SQL Injection Lab Environment
+                              </h3>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm text-green-400 mb-2 block">
+                                    Target URL:
+                                  </label>
+                                  <Input
+                                    value="http://vulnerable-app.local/login.php"
+                                    readOnly
+                                    className="bg-black border-green-400/30 text-green-400 font-mono"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-sm text-green-400 mb-2 block">
+                                    Payload:
+                                  </label>
+                                  <Input
+                                    placeholder="' OR 1=1 --"
+                                    className="bg-black border-green-400/30 text-green-400 font-mono"
+                                  />
+                                </div>
+                              </div>
+                              <div className="mt-4">
+                                <Button className="bg-green-400 text-black hover:bg-green-300 mr-2">
+                                  Test Injection
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  className="border-green-400/30 text-green-400 hover:bg-green-400/10"
+                                >
+                                  View Source
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="bg-black/30 border border-yellow-400/30 rounded-lg p-4">
+                              <h4 className="text-yellow-400 font-semibold mb-2">
+                                Lab Instructions:
+                              </h4>
+                              <ol className="list-decimal list-inside space-y-2 text-green-300/80 text-sm">
+                                <li>
+                                  Identify the login form vulnerable to SQL
+                                  injection
+                                </li>
+                                <li>Test various SQL injection payloads</li>
+                                <li>Extract user data from the database</li>
+                                <li>
+                                  Document your findings and remediation steps
+                                </li>
+                              </ol>
+                            </div>
+                          </div>
+                        )}
+
+                      {courseId === "linux" && activeLab === "linux-lab-1" && (
+                        <div className="space-y-6">
+                          <div className="bg-black/30 border border-green-400/30 rounded-lg p-4">
+                            <h3 className="text-green-400 font-semibold mb-3">
+                              Terminal Navigation Challenge
+                            </h3>
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 font-mono text-sm">
+                              <div className="text-green-300 space-y-1">
+                                <div>user@lab:~$ ls</div>
+                                <div>
+                                  Desktop Documents Downloads challenge_files
+                                </div>
+                                <div>user@lab:~$ cd challenge_files</div>
+                                <div>user@lab:~/challenge_files$ ls -la</div>
+                                <div>total 16</div>
+                                <div>
+                                  drwxr-xr-x 4 user user 4096 Dec 16 10:30 .
+                                </div>
+                                <div>
+                                  drwxr-xr-x 3 user user 4096 Dec 16 10:29 ..
+                                </div>
+                                <div>
+                                  -rw-r--r-- 1 user user 42 Dec 16 10:30
+                                  .hidden_flag
+                                </div>
+                                <div>
+                                  drwxr-xr-x 2 user user 4096 Dec 16 10:30
+                                  secrets
+                                </div>
+                                <div className="flex">
+                                  <span>user@lab:~/challenge_files$ </span>
+                                  <input
+                                    className="bg-transparent border-none outline-none text-green-400 flex-1"
+                                    placeholder="Enter your command..."
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="bg-black/30 border border-blue-400/30 rounded-lg p-4">
+                            <h4 className="text-blue-400 font-semibold mb-2">
+                              Challenge Objectives:
+                            </h4>
+                            <ul className="list-disc list-inside space-y-1 text-green-300/80 text-sm">
+                              <li>
+                                Find the hidden flag in the current directory
+                              </li>
+                              <li>Navigate to the secrets directory</li>
+                              <li>List all files including hidden ones</li>
+                              <li>Read the contents of important files</li>
+                            </ul>
+                          </div>
                         </div>
-                        <Button
-                          size="sm"
-                          disabled={!lab.available}
-                          className={
-                            lab.available
-                              ? "bg-green-400 text-black hover:bg-green-300"
-                              : "bg-gray-600 text-gray-300 cursor-not-allowed"
-                          }
-                          onClick={() => {
-                            if (lab.available) {
-                              // Navigate to specialized lab environments
-                              if (
-                                courseId === "linux" &&
-                                lab.id === "linux-lab-1"
-                              ) {
-                                navigate("/terminal-lab");
-                              } else if (courseId === "web-security") {
-                                navigate("/websec-lab");
-                              } else if (courseId === "social-engineering") {
-                                navigate("/social-eng-lab");
-                              } else {
-                                // Generic lab environment (could expand this)
-                                alert(`Starting ${lab.name}...`);
-                              }
-                            }
-                          }}
-                        >
-                          {lab.available ? (
-                            <>
-                              <Play className="w-4 h-4 mr-2" />
-                              {lab.completed ? "Retry Lab" : "Start Lab"}
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="w-4 h-4 mr-2" />
-                              Locked
-                            </>
-                          )}
-                        </Button>
-                      </div>
+                      )}
+
+                      {/* Default lab content */}
+                      {(!activeLab ||
+                        !["web-lab-1", "linux-lab-1"].includes(activeLab)) && (
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Zap className="w-8 h-8 text-green-400" />
+                          </div>
+                          <h3 className="text-green-400 font-semibold mb-2">
+                            Lab Environment Loading...
+                          </h3>
+                          <p className="text-green-300/70 text-sm">
+                            Setting up your hands-on learning environment
+                          </p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
-                ))}
-              </div>
+                </div>
+              ) : (
+                // Lab List View
+                <div className="grid gap-4">
+                  {course.labs.map((lab) => (
+                    <Card
+                      key={lab.id}
+                      className="bg-black/50 border-green-400/30 hover:border-green-400 transition-colors"
+                    >
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-green-400 text-lg">
+                            {lab.name}
+                          </CardTitle>
+                          <div className="flex items-center space-x-2">
+                            <Badge
+                              className={getDifficultyColor(lab.difficulty)}
+                            >
+                              {lab.difficulty}
+                            </Badge>
+                            <div className="flex items-center space-x-1 text-xs text-green-300/70">
+                              <Clock className="w-3 h-3" />
+                              <span>{lab.duration}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-green-300/80 mb-4 text-sm">
+                          {lab.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            {lab.completed && (
+                              <CheckCircle className="w-4 h-4 text-green-400" />
+                            )}
+                            <span className="text-sm text-green-300/70">
+                              {lab.completed ? "Completed" : "Not started"}
+                            </span>
+                          </div>
+                          <Button
+                            size="sm"
+                            disabled={!lab.available}
+                            className={
+                              lab.available
+                                ? "bg-green-400 text-black hover:bg-green-300"
+                                : "bg-gray-600 text-gray-300 cursor-not-allowed"
+                            }
+                            onClick={() => {
+                              if (lab.available) {
+                                // Set active lab to show in-page view
+                                setActiveLab(lab.id);
+                              }
+                            }}
+                          >
+                            {lab.available ? (
+                              <>
+                                <Play className="w-4 h-4 mr-2" />
+                                {lab.completed ? "Retry Lab" : "Start Lab"}
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="w-4 h-4 mr-2" />
+                                Locked
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             {/* Games Tab - Enhanced with Cybersecurity Games */}
             <TabsContent value="games" className="mt-4">
-              <div className="grid gap-4">
-                {course.games?.map((game) => (
-                  <Card
-                    key={game.id}
-                    className="bg-black/50 border-green-400/30 hover:border-green-400 transition-colors"
-                  >
+              {activeGame ? (
+                // Game Detail View
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setActiveGame(null)}
+                      className="text-green-400 hover:bg-green-400/10"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Back to Games
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        window.open(
+                          `/learn/${courseId}/game/${activeGame}`,
+                          "_blank"
+                        );
+                      }}
+                      className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Open in New Tab
+                    </Button>
+                  </div>
+
+                  {/* Game Environment */}
+                  <Card className="bg-black/50 border-green-400/30">
                     <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-green-400/20 rounded-lg flex items-center justify-center">
-                            <game.icon className="w-5 h-5 text-green-400" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-green-400 text-lg">
-                              {game.name}
-                            </CardTitle>
-                            <p className="text-green-300/70 text-sm">
-                              {game.description}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge
-                            className={getDifficultyColor(game.difficulty)}
-                          >
-                            {game.difficulty}
-                          </Badge>
-                          <div className="flex items-center space-x-1 text-xs text-green-300/70">
-                            <Clock className="w-3 h-3" />
-                            <span>{game.duration}</span>
-                          </div>
-                        </div>
-                      </div>
+                      <CardTitle className="text-green-400 text-xl">
+                        {
+                          course.games?.find((game) => game.id === activeGame)
+                            ?.name
+                        }
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-green-300/70">
-                          {game.available ? "Ready to play" : "Coming soon"}
+                      {/* Dynamic game content based on course and game */}
+                      {activeGame === "xss-hunter" && (
+                        <div className="space-y-6">
+                          <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-400/30 rounded-lg p-4">
+                            <h3 className="text-red-400 font-semibold mb-3 flex items-center">
+                              <Target className="w-5 h-5 mr-2" />
+                              XSS Hunter Challenge - Score: 0 points
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-sm text-red-400 mb-2 block">
+                                  Target Input Field:
+                                </label>
+                                <Input
+                                  placeholder="Enter your search term..."
+                                  className="bg-black border-red-400/30 text-red-400 font-mono"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm text-red-400 mb-2 block">
+                                  XSS Payload:
+                                </label>
+                                <Input
+                                  placeholder="<script>alert('XSS')</script>"
+                                  className="bg-black border-red-400/30 text-red-400 font-mono"
+                                />
+                              </div>
+                            </div>
+                            <div className="mt-4 flex space-x-2">
+                              <Button className="bg-red-400 text-white hover:bg-red-300">
+                                <Zap className="w-4 h-4 mr-2" />
+                                Execute Payload
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="border-red-400/30 text-red-400 hover:bg-red-400/10"
+                              >
+                                <Shield className="w-4 h-4 mr-2" />
+                                Bypass Filter
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="bg-black/30 border border-green-400/30 rounded-lg p-4">
+                            <h4 className="text-green-400 font-semibold mb-2">
+                              Game Objectives:
+                            </h4>
+                            <ul className="list-disc list-inside space-y-1 text-green-300/80 text-sm">
+                              <li>
+                                Find and exploit 5 XSS vulnerabilities (20 pts
+                                each)
+                              </li>
+                              <li>
+                                Bypass 3 different input filters (30 pts each)
+                              </li>
+                              <li>
+                                Execute a successful DOM-based XSS (50 pts)
+                              </li>
+                              <li>Steal session cookies using XSS (100 pts)</li>
+                            </ul>
+                          </div>
                         </div>
-                        <Button
-                          size="sm"
-                          disabled={!game.available}
-                          className={
-                            game.available
-                              ? "bg-green-400 text-black hover:bg-green-300"
-                              : "bg-gray-600 text-gray-300 cursor-not-allowed"
-                          }
-                          onClick={() => {
-                            if (game.available) {
-                              // Launch game specific to the course and game type
-                              alert(`Launching ${game.name}...`);
-                            }
-                          }}
-                        >
-                          {game.available ? (
-                            <>
-                              <Play className="w-4 h-4 mr-2" />
-                              Play Game
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="w-4 h-4 mr-2" />
-                              Locked
-                            </>
-                          )}
-                        </Button>
-                      </div>
+                      )}
+
+                      {activeGame === "command-master" && (
+                        <div className="space-y-6">
+                          <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-400/30 rounded-lg p-4">
+                            <h3 className="text-green-400 font-semibold mb-3 flex items-center">
+                              <Terminal className="w-5 h-5 mr-2" />
+                              Command Line Master - Speed Challenge
+                            </h3>
+                            <div className="bg-black border border-green-400/30 rounded-lg p-4 font-mono text-sm">
+                              <div className="text-green-300 space-y-2">
+                                <div className="flex justify-between">
+                                  <span>
+                                    Challenge: List all files in /etc with
+                                    permissions
+                                  </span>
+                                  <span className="text-yellow-400">
+                                    ⏱️ 30s
+                                  </span>
+                                </div>
+                                <div className="text-blue-400">
+                                  Expected command: ls -la /etc
+                                </div>
+                                <div className="flex">
+                                  <span className="text-green-400">
+                                    user@game:~${" "}
+                                  </span>
+                                  <input
+                                    className="bg-transparent border-none outline-none text-green-400 flex-1"
+                                    placeholder="Type the command..."
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="mt-4">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm text-green-400">
+                                  Speed Bonus
+                                </span>
+                                <span className="text-sm text-green-400">
+                                  Level 1/10
+                                </span>
+                              </div>
+                              <Progress
+                                value={30}
+                                className="h-2 bg-black border border-green-400/30"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="bg-black/30 border border-blue-400/30 rounded-lg p-4">
+                            <h4 className="text-blue-400 font-semibold mb-2">
+                              Scoring System:
+                            </h4>
+                            <ul className="list-disc list-inside space-y-1 text-green-300/80 text-sm">
+                              <li>Correct command: +10 points</li>
+                              <li>Speed bonus: +5 points (under 10s)</li>
+                              <li>Perfect syntax: +3 points</li>
+                              <li>
+                                Combo multiplier: x2 after 5 correct answers
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeGame === "packet-sniffer" && (
+                        <div className="space-y-6">
+                          <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 rounded-lg p-4">
+                            <h3 className="text-purple-400 font-semibold mb-3 flex items-center">
+                              <Network className="w-5 h-5 mr-2" />
+                              Packet Sniffer Challenge - Find the Threat
+                            </h3>
+                            <div className="bg-black border border-purple-400/30 rounded-lg p-4 font-mono text-xs space-y-1">
+                              <div className="text-purple-300">
+                                Capturing packets... 🔍
+                              </div>
+                              <div className="text-gray-400">
+                                192.168.1.100:80 → 192.168.1.1:3345 [HTTP GET]
+                              </div>
+                              <div className="text-gray-400">
+                                192.168.1.101:443 → 192.168.1.1:3346 [HTTPS]
+                              </div>
+                              <div className="text-red-400 cursor-pointer hover:bg-red-400/10 p-1 rounded">
+                                192.168.1.102:1337 → 192.168.1.1:3347
+                                [SUSPICIOUS] ⚠️
+                              </div>
+                              <div className="text-gray-400">
+                                192.168.1.103:22 → 192.168.1.1:3348 [SSH]
+                              </div>
+                              <div className="text-gray-400">
+                                192.168.1.104:80 → 192.168.1.1:3349 [HTTP GET]
+                              </div>
+                            </div>
+                            <div className="mt-4 grid grid-cols-3 gap-2">
+                              <Button
+                                size="sm"
+                                className="bg-purple-400/20 border border-purple-400 text-purple-400 hover:bg-purple-400/30"
+                              >
+                                <Search className="w-3 h-3 mr-1" />
+                                Inspect
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-red-400/20 border border-red-400 text-red-400 hover:bg-red-400/30"
+                              >
+                                <Shield className="w-3 h-3 mr-1" />
+                                Block
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-yellow-400/20 border border-yellow-400 text-yellow-400 hover:bg-yellow-400/30"
+                              >
+                                <Target className="w-3 h-3 mr-1" />
+                                Flag
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="bg-black/30 border border-purple-400/30 rounded-lg p-4">
+                            <h4 className="text-purple-400 font-semibold mb-2">
+                              Mission Briefing:
+                            </h4>
+                            <p className="text-green-300/80 text-sm mb-2">
+                              Analyze network traffic to identify malicious
+                              activities. Look for suspicious ports, unusual
+                              protocols, and attack patterns.
+                            </p>
+                            <ul className="list-disc list-inside space-y-1 text-green-300/80 text-sm">
+                              <li>Identify DDoS attacks (+50 pts)</li>
+                              <li>Spot data exfiltration attempts (+75 pts)</li>
+                              <li>Find backdoor communications (+100 pts)</li>
+                              <li>
+                                Block malicious IPs in time (+25 pts each)
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Default game content */}
+                      {![
+                        "xss-hunter",
+                        "command-master",
+                        "packet-sniffer",
+                      ].includes(activeGame || "") && (
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Activity className="w-8 h-8 text-green-400" />
+                          </div>
+                          <h3 className="text-green-400 font-semibold mb-2">
+                            Game Loading...
+                          </h3>
+                          <p className="text-green-300/70 text-sm">
+                            Preparing your interactive cybersecurity challenge
+                          </p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
-                ))}
-              </div>
+                </div>
+              ) : (
+                // Game List View
+                <div className="grid gap-4">
+                  {course.games?.map((game) => (
+                    <Card
+                      key={game.id}
+                      className="bg-black/50 border-green-400/30 hover:border-green-400 transition-colors cursor-pointer"
+                      onClick={() => setActiveGame(game.id)}
+                    >
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-green-400/20 rounded-lg flex items-center justify-center">
+                              <game.icon className="w-5 h-5 text-green-400" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-green-400 text-lg">
+                                {game.name}
+                              </CardTitle>
+                              <p className="text-green-300/70 text-sm">
+                                {game.description}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge
+                              className={getDifficultyColor(game.difficulty)}
+                            >
+                              {game.difficulty}
+                            </Badge>
+                            <div className="flex items-center space-x-1 text-xs text-green-300/70">
+                              <Clock className="w-3 h-3" />
+                              <span>{game.duration}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-green-300/70">
+                            {game.available ? "Ready to play" : "Coming soon"}
+                          </div>
+                          <Button
+                            size="sm"
+                            disabled={!game.available}
+                            className={
+                              game.available
+                                ? "bg-green-400 text-black hover:bg-green-300"
+                                : "bg-gray-600 text-gray-300 cursor-not-allowed"
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (game.available) {
+                                setActiveGame(game.id);
+                              }
+                            }}
+                          >
+                            {game.available ? (
+                              <>
+                                <Play className="w-4 h-4 mr-2" />
+                                Play Game
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="w-4 h-4 mr-2" />
+                                Locked
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             {/* Resources Tab */}

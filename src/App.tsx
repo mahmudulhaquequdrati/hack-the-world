@@ -13,12 +13,14 @@ import SignupPage from "@/components/pages/SignupPage";
 import SocialEngLab from "@/components/pages/SocialEngLab";
 import TerminalLab from "@/components/pages/TerminalLab";
 import WebSecLab from "@/components/pages/WebSecLab";
+import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster } from "@/components/ui/sonner";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen bg-background text-green-400 relative overflow-hidden">
         <MatrixRain />
         <div className="relative z-10">

@@ -1,36 +1,36 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { 
-  Terminal, 
-  Eye, 
-  EyeOff, 
-  Lock, 
-  User, 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Lock,
   Shield,
-  ArrowLeft
-} from 'lucide-react';
+  Terminal,
+  User,
+} from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     // Simulate login process
     setTimeout(() => {
       setIsLoading(false);
-      navigate('/dashboard');
+      navigate("/overview");
     }, 2000);
   };
 
@@ -46,7 +46,7 @@ const LoginPage = () => {
         <Button
           variant="ghost"
           className="mb-6 text-green-400 hover:bg-green-400/10"
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
@@ -70,7 +70,10 @@ const LoginPage = () => {
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-green-400 flex items-center">
+                <Label
+                  htmlFor="email"
+                  className="text-green-400 flex items-center"
+                >
                   <User className="w-4 h-4 mr-2" />
                   Email
                 </Label>
@@ -79,14 +82,19 @@ const LoginPage = () => {
                   type="email"
                   placeholder="agent@cybersec.academy"
                   value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, email: e.target.value }))
+                  }
                   className="bg-black border-green-400/30 text-green-400 placeholder:text-green-400/50 focus:border-green-400"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-green-400 flex items-center">
+                <Label
+                  htmlFor="password"
+                  className="text-green-400 flex items-center"
+                >
                   <Lock className="w-4 h-4 mr-2" />
                   Password
                 </Label>
@@ -96,7 +104,12 @@ const LoginPage = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={formData.password}
-                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        password: e.target.value,
+                      }))
+                    }
                     className="bg-black border-green-400/30 text-green-400 placeholder:text-green-400/50 focus:border-green-400 pr-10"
                     required
                   />
@@ -107,7 +120,11 @@ const LoginPage = () => {
                     className="absolute right-0 top-0 h-full px-3 text-green-400/70 hover:text-green-400"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -133,9 +150,9 @@ const LoginPage = () => {
 
             <div className="text-center">
               <p className="text-green-300/70 text-sm">
-                Don't have access credentials?{' '}
+                Don't have access credentials?{" "}
                 <button
-                  onClick={() => navigate('/signup')}
+                  onClick={() => navigate("/signup")}
                   className="text-green-400 hover:text-green-300 underline"
                 >
                   Request Access
@@ -150,7 +167,9 @@ const LoginPage = () => {
                 <div>Connecting to secure terminal...</div>
                 <div className="flex items-center">
                   <span>Password: </span>
-                  <span className="ml-2 text-green-400">{'*'.repeat(formData.password.length)}</span>
+                  <span className="ml-2 text-green-400">
+                    {"*".repeat(formData.password.length)}
+                  </span>
                   <span className="terminal-cursor ml-1">|</span>
                 </div>
               </div>

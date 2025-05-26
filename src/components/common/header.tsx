@@ -1,9 +1,9 @@
 import { Play, Terminal } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import UserAvatar from "@/components/common/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import UserAvatar from "@/components/UserAvatar";
 
 interface HeaderProps {
   navigate: (path: string) => void;

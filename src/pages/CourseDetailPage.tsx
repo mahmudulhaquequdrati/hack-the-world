@@ -1,3 +1,4 @@
+import { Header } from "@/components/common/header";
 import {
   AssetsTab,
   CourseFeatures,
@@ -10,7 +11,6 @@ import {
   LabsTab,
   OverviewTab,
 } from "@/components/course";
-import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Course } from "@/lib/types";
 import { ArrowLeft, Shield, Terminal } from "lucide-react";

@@ -1,4 +1,4 @@
-import { Header } from "@/components/header";
+import { Header } from "@/components/common/header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

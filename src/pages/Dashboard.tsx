@@ -1,9 +1,9 @@
+import { Header } from "@/components/common/header";
 import {
   DashboardHeader,
   DashboardTabs,
   StatsGrid,
 } from "@/components/dashboard";
-import { Header } from "@/components/header";
 import { Module, Phase } from "@/lib/types";
 import {
   Activity,

@@ -1,3 +1,4 @@
+import { Header } from "@/components/common/header";
 import {
   AIPlayground,
   ContentSidebar,
@@ -6,7 +7,6 @@ import {
   SplitView,
   VideoPlayer,
 } from "@/components/enrolled";
-import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import {
   ChatMessage,

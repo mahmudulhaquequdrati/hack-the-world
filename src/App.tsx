@@ -1,5 +1,5 @@
+import ScrollToTop from "@/components/common/ScrollToTop";
 import MatrixRain from "@/components/effects/MatrixRain";
-import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster } from "@/components/ui/sonner";
 import CourseDetailPage from "@/pages/CourseDetailPage";
 import CyberSecOverview from "@/pages/CyberSecOverview";

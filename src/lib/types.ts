@@ -119,12 +119,16 @@ export interface EnrolledLesson {
   id: string;
   title: string;
   duration: string;
-  type: "video" | "text" | "quiz" | "lab";
+  type: "video" | "text" | "quiz" | "lab" | "game";
   completed: boolean;
   description: string;
   videoUrl?: string;
   content?: string;
   questions?: QuizQuestion[];
+  dynamicResources?: Resource[];
+  relatedLabs?: string[];
+  relatedGames?: string[];
+  contextualContent?: ContextualContent;
 }
 
 export interface QuizQuestion {
@@ -147,6 +151,15 @@ export interface Lab {
   duration: string;
   completed: boolean;
   available: boolean;
+  objectives: string[];
+  prerequisites: string[];
+  tools: string[];
+  steps: LabStep[];
+  hints: string[];
+  solution?: string;
+  category: string;
+  estimatedTime: string;
+  skillsGained: string[];
 }
 
 export interface Game {
@@ -157,12 +170,24 @@ export interface Game {
   duration: string;
   points: number;
   available: boolean;
+  type: "simulation" | "puzzle" | "strategy" | "quiz" | "ctf" | "scenario";
+  objectives: string[];
+  maxScore: number;
+  timeLimit?: string;
+  category: string;
+  skillsGained: string[];
+  challenges: GameChallenge[];
 }
 
 export interface Resource {
   name: string;
   type: string;
   size: string;
+  category?: "reference" | "template" | "tool" | "guide" | "exercise";
+  description?: string;
+  downloadUrl?: string;
+  isContextual?: boolean;
+  relatedTopics?: string[];
 }
 
 export interface PlaygroundTool {
@@ -244,4 +269,22 @@ export interface User {
   avatar?: string;
   level?: string;
   points?: number;
+}
+
+export interface ContextualContent {
+  objectives: string[];
+  keyPoints: string[];
+  practicalExercises: string[];
+  realWorldApplications: string[];
+  troubleshootingTips?: string[];
+  securityConsiderations?: string[];
+}
+
+export interface GameChallenge {
+  id: string;
+  title: string;
+  description: string;
+  points: number;
+  difficulty: "easy" | "medium" | "hard";
+  completed: boolean;
 }

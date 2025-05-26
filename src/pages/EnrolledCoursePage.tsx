@@ -8,6 +8,11 @@ import {
   VideoPlayer,
 } from "@/components/enrolled";
 import { Button } from "@/components/ui/button";
+import { getCourseById } from "@/lib/coursesData";
+import {
+  convertCourseToEnrolledCourse,
+  getDefaultCompletedLessons,
+} from "@/lib/courseUtils";
 import {
   ChatMessage,
   EnrolledCourse,
@@ -26,11 +31,10 @@ import {
   FileText,
   Lock,
   Network,
-  Shield,
   Target,
   Terminal,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const EnrolledCoursePage = () => {
@@ -39,11 +43,9 @@ const EnrolledCoursePage = () => {
   const [activeTab, setActiveTab] = useState("details");
   const [currentVideo, setCurrentVideo] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [completedLessons, setCompletedLessons] = useState<string[]>([
-    "intro-1",
-    "intro-2",
-    "intro-3",
-  ]);
+  const [course, setCourse] = useState<EnrolledCourse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [completedLessons, setCompletedLessons] = useState<string[]>([]);
 
   // AI Playground State
   const [playgroundMode, setPlaygroundMode] = useState("terminal");
@@ -80,103 +82,22 @@ const EnrolledCoursePage = () => {
   const [activeLab, setActiveLab] = useState<string | null>(null);
   const [activeGame, setActiveGame] = useState<string | null>(null);
 
-  // Course data
-  const course: EnrolledCourse = {
-    title: "Cybersecurity Foundations",
-    description: "Essential concepts, terminology, and security principles",
-    icon: Shield,
-    color: "text-blue-400",
-    bgColor: "bg-blue-400/10",
-    borderColor: "border-blue-400/30",
-    totalLessons: 15,
-    completedLessons: 8,
-    progress: 53,
-    sections: [
-      {
-        id: "intro",
-        title: "Introduction to Cybersecurity",
-        lessons: [
-          {
-            id: "intro-1",
-            title: "What is Cybersecurity",
-            duration: "15:30",
-            type: "video",
-            completed: true,
-            description:
-              "Overview of cybersecurity fundamentals and core concepts",
-            videoUrl: "https://example.com/video1.mp4",
-          },
-          {
-            id: "intro-2",
-            title: "Threat Landscape",
-            duration: "12:45",
-            type: "video",
-            completed: true,
-            description: "Understanding modern cybersecurity threats",
-            videoUrl: "https://example.com/video2.mp4",
-          },
-          {
-            id: "intro-3",
-            title: "Security Principles",
-            duration: "18:20",
-            type: "video",
-            completed: true,
-            description:
-              "Core security principles every professional should know",
-            videoUrl: "https://example.com/video3.mp4",
-          },
-          {
-            id: "intro-4",
-            title: "CIA Triad",
-            duration: "14:15",
-            type: "text",
-            completed: false,
-            description:
-              "Confidentiality, Integrity, and Availability explained",
-            content:
-              "The CIA Triad forms the foundation of information security...",
-          },
-        ],
-      },
-    ],
-    labs: [
-      {
-        id: "lab-1",
-        name: "Risk Assessment Simulation",
-        description: "Hands-on risk assessment of a fictional company",
-        difficulty: "Beginner",
-        duration: "45 min",
-        completed: false,
-        available: true,
-      },
-    ],
-    playground: {
-      title: "Security Assessment Playground",
-      description:
-        "Interactive environment to practice risk assessment and policy development",
-      tools: ["Risk Calculator", "Policy Builder", "Compliance Checker"],
-      available: true,
-    },
-    resources: [
-      { name: "CIA Triad Reference Guide", type: "PDF", size: "2.1 MB" },
-      { name: "Risk Assessment Template", type: "Excel", size: "1.5 MB" },
-    ],
-    games: [
-      {
-        id: "threat-hunter",
-        name: "Threat Hunter",
-        description: "Hunt for threats in network traffic",
-        difficulty: "Beginner",
-        duration: "20 min",
-        points: 100,
-        available: true,
-      },
-    ],
-  };
+  // Load course data dynamically
+  useEffect(() => {
+    if (courseId) {
+      const courseData = getCourseById(courseId);
+      if (courseData) {
+        const enrolledCourse = convertCourseToEnrolledCourse(courseData);
+        setCourse(enrolledCourse);
+        setCompletedLessons(getDefaultCompletedLessons(enrolledCourse));
+      }
+      setLoading(false);
+    }
+  }, [courseId]);
 
   // Helper functions
   const getAllLessons = () => {
-    return course.sections.flatMap((section) => section.lessons);
+    return course?.sections.flatMap((section) => section.lessons) || [];
   };
 
   const getCurrentLesson = () => {
@@ -304,7 +225,16 @@ const EnrolledCoursePage = () => {
 
   const needsPlayground = () => {
     const currentLesson = getCurrentLesson();
-    return currentLesson?.type === "video" || currentLesson?.type === "text";
+    return currentLesson?.type === "video";
+  };
+
+  const needsFullScreenContent = () => {
+    const currentLesson = getCurrentLesson();
+    return (
+      currentLesson?.type === "text" ||
+      currentLesson?.type === "lab" ||
+      currentLesson?.type === "game"
+    );
   };
 
   // Event handlers
@@ -427,6 +357,39 @@ const EnrolledCoursePage = () => {
     setActiveGame(null);
   };
 
+  // Loading and error states
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-green-400 relative flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400 mx-auto mb-4"></div>
+          <p className="font-mono">LOADING_COURSE_DATA...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-black text-green-400 relative flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold font-mono mb-4">
+            COURSE_NOT_FOUND
+          </h1>
+          <p className="font-mono mb-6">
+            The requested course could not be found.
+          </p>
+          <Button
+            onClick={() => navigate("/overview")}
+            className="bg-green-400 text-black hover:bg-green-300 font-mono"
+          >
+            BACK_TO_OVERVIEW
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-green-400 relative">
       <Header navigate={navigate} />
@@ -536,6 +499,122 @@ const EnrolledCoursePage = () => {
                 </div>
               </div>
             </div>
+          ) : needsFullScreenContent() ? (
+            // Text/Lab/Game Content - Full Screen like Lab
+            <div className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden mb-6">
+              <div className="p-4 border-b border-green-400/30 bg-green-400/10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-green-400 font-semibold text-lg">
+                    {getCurrentLesson()?.title}
+                  </h3>
+                  <div className="flex items-center space-x-2">
+                    {(getCurrentLesson()?.type === "lab" ||
+                      getCurrentLesson()?.type === "game") && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const currentLesson = getCurrentLesson();
+                          if (currentLesson?.type === "lab") {
+                            openLabInNewTab(currentLesson.id);
+                          } else if (currentLesson?.type === "game") {
+                            openGameInNewTab(currentLesson.id);
+                          }
+                        }}
+                        className="border-green-400/30 text-green-400 hover:bg-green-400/10"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Open in New Tab
+                      </Button>
+                    )}
+                    <div className="px-3 py-1 bg-green-400/20 border border-green-400/40 rounded text-green-400 text-xs font-mono font-bold">
+                      {getCurrentLesson()?.type.toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="bg-gray-900/50 border border-green-400/20 rounded-lg p-8">
+                  {getCurrentLesson()?.type === "text" ? (
+                    <div className="prose prose-green max-w-none">
+                      <div className="text-green-400 text-xl mb-4 font-mono">
+                        Reading Material
+                      </div>
+                      <div className="text-green-300/90 leading-relaxed font-mono text-sm">
+                        {getCurrentLesson()?.content ||
+                          getCurrentLesson()?.description}
+                      </div>
+                    </div>
+                  ) : getCurrentLesson()?.type === "lab" ? (
+                    <div className="text-center">
+                      <h4 className="text-green-400 text-xl mb-4 font-mono">
+                        Lab Environment Loading...
+                      </h4>
+                      <p className="text-green-300/70 mb-6 font-mono">
+                        {getCurrentLesson()?.description}
+                      </p>
+                      <div className="animate-pulse">
+                        <div className="h-4 bg-green-400/20 rounded w-3/4 mx-auto mb-2"></div>
+                        <div className="h-4 bg-green-400/20 rounded w-1/2 mx-auto"></div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <h4 className="text-green-400 text-xl mb-4 font-mono">
+                        Game Loading...
+                      </h4>
+                      <p className="text-green-300/70 mb-6 font-mono">
+                        {getCurrentLesson()?.description}
+                      </p>
+                      <div className="animate-pulse">
+                        <div className="h-4 bg-green-400/20 rounded w-3/4 mx-auto mb-2"></div>
+                        <div className="h-4 bg-green-400/20 rounded w-1/2 mx-auto"></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Navigation Controls for all content types */}
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-green-400/30">
+                  <Button
+                    variant="outline"
+                    onClick={previousLesson}
+                    disabled={currentVideo === 0}
+                    className="border-green-400/30 text-green-400 hover:bg-green-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ← Previous
+                  </Button>
+
+                  <div className="flex items-center space-x-4">
+                    <span className="text-green-400/70 text-sm font-mono">
+                      {currentVideo + 1} / {getAllLessons().length}
+                    </span>
+                    <Button
+                      onClick={() =>
+                        markLessonComplete(getCurrentLesson()?.id || "")
+                      }
+                      disabled={completedLessons.includes(
+                        getCurrentLesson()?.id || ""
+                      )}
+                      className="bg-green-400 text-black hover:bg-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {completedLessons.includes(getCurrentLesson()?.id || "")
+                        ? "✓ Completed"
+                        : "Mark Complete"}
+                    </Button>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    onClick={nextLesson}
+                    disabled={currentVideo >= getAllLessons().length - 1}
+                    className="border-green-400/30 text-green-400 hover:bg-green-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next →
+                  </Button>
+                </div>
+              </div>
+            </div>
           ) : needsPlayground() ? (
             // Video + Playground Content
             <SplitView
@@ -583,20 +662,13 @@ const EnrolledCoursePage = () => {
               onRestorePlayground={() => setPlaygroundMinimized(false)}
             />
           ) : (
-            // Video Only Content
+            // Default Content
             <div className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden mb-6">
-              <VideoPlayer
-                lesson={getCurrentLesson()}
-                isPlaying={isPlaying}
-                currentVideo={currentVideo}
-                totalLessons={getAllLessons().length}
-                completedLessons={completedLessons}
-                onPlayPause={() => setIsPlaying(!isPlaying)}
-                onPrevious={previousLesson}
-                onNext={nextLesson}
-                onMarkComplete={markLessonComplete}
-                onMinimize={() => setVideoMinimized(true)}
-              />
+              <div className="p-6">
+                <div className="text-center text-green-400 font-mono">
+                  Content type not supported yet.
+                </div>
+              </div>
             </div>
           )}
 
@@ -605,6 +677,7 @@ const EnrolledCoursePage = () => {
             activeTab={activeTab}
             activeLab={activeLab}
             activeGame={activeGame}
+            currentLesson={getCurrentLesson()}
             onTabChange={setActiveTab}
             onLabSelect={handleLabSelect}
             onGameSelect={handleGameSelect}

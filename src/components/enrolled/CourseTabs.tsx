@@ -1,16 +1,22 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EnrolledCourse, Game, Lab, Resource } from "@/lib/types";
 import {
-  Clock,
+  getAllResourcesForLesson,
+  getContextualContentForLesson,
+} from "@/lib/courseUtils";
+import { EnrolledCourse, EnrolledLesson, Resource } from "@/lib/types";
+import {
+  BookOpen,
+  Brain,
+  Code,
   Download,
   FileText,
-  Globe,
-  Lock,
-  Play,
+  Gamepad2,
+  Monitor,
   Target,
-  Zap,
+  Terminal,
+  Video,
 } from "lucide-react";
 
 interface CourseTabsProps {
@@ -18,6 +24,7 @@ interface CourseTabsProps {
   activeTab: string;
   activeLab: string | null;
   activeGame: string | null;
+  currentLesson?: EnrolledLesson;
   onTabChange: (tab: string) => void;
   onLabSelect: (labId: string) => void;
   onGameSelect: (gameId: string) => void;
@@ -26,289 +33,294 @@ interface CourseTabsProps {
 const CourseTabs = ({
   course,
   activeTab,
-  activeLab,
-  activeGame,
+  currentLesson,
   onTabChange,
-  onLabSelect,
-  onGameSelect,
 }: CourseTabsProps) => {
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case "beginner":
-        return "text-green-400 bg-green-400/20";
-      case "intermediate":
-        return "text-yellow-400 bg-yellow-400/20";
-      case "advanced":
-        return "text-red-400 bg-red-400/20";
-      case "expert":
-        return "text-purple-400 bg-purple-400/20";
-      case "master":
-        return "text-orange-400 bg-orange-400/20";
+  const getLessonTypeIcon = (type: string) => {
+    switch (type) {
+      case "video":
+        return <Video className="w-5 h-5 text-cyan-400" />;
+      case "text":
+        return <FileText className="w-5 h-5 text-green-400" />;
+      case "quiz":
+        return <Brain className="w-5 h-5 text-purple-400" />;
+      case "lab":
+        return <Monitor className="w-5 h-5 text-yellow-400" />;
+      case "game":
+        return <Gamepad2 className="w-5 h-5 text-pink-400" />;
       default:
-        return "text-blue-400 bg-blue-400/20";
+        return <Monitor className="w-5 h-5 text-blue-400" />;
     }
   };
 
-  const getFileTypeIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case "pdf":
-        return <FileText className="w-4 h-4" />;
-      case "zip":
-        return <Download className="w-4 h-4" />;
-      case "html":
-        return <Globe className="w-4 h-4" />;
+  const getCategoryIcon = (category?: string) => {
+    switch (category) {
+      case "guide":
+        return <BookOpen className="w-4 h-4 text-blue-300" />;
+      case "template":
+        return <Code className="w-4 h-4 text-green-300" />;
+      case "tool":
+        return <Terminal className="w-4 h-4 text-yellow-300" />;
+      case "exercise":
+        return <Target className="w-4 h-4 text-red-300" />;
+      case "reference":
       default:
-        return <FileText className="w-4 h-4" />;
+        return <FileText className="w-4 h-4 text-purple-300" />;
     }
+  };
+
+  const getCategoryColor = (category?: string) => {
+    switch (category) {
+      case "guide":
+        return "border-blue-400/40 bg-blue-400/10";
+      case "template":
+        return "border-green-400/40 bg-green-400/10";
+      case "tool":
+        return "border-yellow-400/40 bg-yellow-400/10";
+      case "exercise":
+        return "border-red-400/40 bg-red-400/10";
+      case "reference":
+      default:
+        return "border-purple-400/40 bg-purple-400/10";
+    }
+  };
+
+  // Get all resources for current lesson
+  const getAllResources = () => {
+    if (!currentLesson) return course.resources;
+    return getAllResourcesForLesson(currentLesson, course.resources);
+  };
+
+  // Get contextual resources (lesson-specific)
+  const getContextualResources = () => {
+    const allResources = getAllResources();
+    return allResources.filter((resource) => resource.isContextual);
+  };
+
+  // Get course resources (general)
+  const getCourseResources = () => {
+    const allResources = getAllResources();
+    return allResources.filter((resource) => !resource.isContextual);
+  };
+
+  const getDetailedDescription = () => {
+    if (!currentLesson) return course.description;
+
+    const contextualContent = getContextualContentForLesson(currentLesson);
+    const baseDescription = currentLesson.description || course.description;
+    const lessonType = currentLesson.type;
+
+    let typeSpecificInfo = "";
+    switch (lessonType) {
+      case "video":
+        typeSpecificInfo =
+          "📹 Interactive video content with AI-powered assistance and real-time Q&A support.";
+        break;
+      case "text":
+        typeSpecificInfo =
+          "📖 Comprehensive reading material with interactive elements and knowledge checks.";
+        break;
+      case "lab":
+        typeSpecificInfo =
+          "🧪 Hands-on laboratory exercise with guided instructions and practical implementation.";
+        break;
+      case "quiz":
+        typeSpecificInfo =
+          "🧠 Knowledge assessment with immediate feedback and performance analytics.";
+        break;
+      case "game":
+        typeSpecificInfo =
+          "🎮 Gamified learning experience with challenges and achievement tracking.";
+        break;
+      default:
+        typeSpecificInfo =
+          "💻 Interactive learning module with multimedia content.";
+    }
+
+    return `${baseDescription}\n\n${typeSpecificInfo}\n\nObjectives:\n${contextualContent.objectives
+      .map((obj) => `• ${obj}`)
+      .join("\n")}`;
   };
 
   return (
-    <div className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden">
-      <div className="p-4 border-b border-green-400/30 bg-green-400/10">
-        <h2 className="text-green-400 font-semibold text-lg">Course Details</h2>
+    <div className="bg-black/60 border-2 border-green-400/40 rounded-none overflow-hidden shadow-2xl shadow-green-400/10">
+      {/* Terminal-style Header */}
+      <div className="bg-green-400/15 border-b-2 border-green-400/40 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="flex space-x-1">
+              <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+              <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+              <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+            </div>
+            <h2 className="text-green-400 font-bold text-lg font-mono tracking-wider">
+              LESSON.DETAILS
+            </h2>
+          </div>
+          <div className="flex items-center space-x-2 text-xs text-green-400/70 font-mono">
+            <Terminal className="w-4 h-4" />
+            <span>INTERACTIVE_MODE</span>
+          </div>
+        </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-6">
         <Tabs value={activeTab} onValueChange={onTabChange}>
-          <TabsList className="grid w-full grid-cols-4 bg-black/60 border border-green-400/30">
+          <TabsList className="grid w-full grid-cols-2 bg-black/80 border-2 border-green-400/30 rounded-none">
             <TabsTrigger
               value="details"
-              className="text-green-400 data-[state=active]:bg-green-400 data-[state=active]:text-black"
+              className="text-green-400 font-mono font-bold data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:shadow-lg transition-all duration-300 rounded-none"
             >
-              Details
-            </TabsTrigger>
-            <TabsTrigger
-              value="labs"
-              className="text-green-400 data-[state=active]:bg-green-400 data-[state=active]:text-black"
-            >
-              Labs ({course.labs.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="games"
-              className="text-green-400 data-[state=active]:bg-green-400 data-[state=active]:text-black"
-            >
-              Games ({course.games.length})
+              {`>> DETAILS`}
             </TabsTrigger>
             <TabsTrigger
               value="resources"
-              className="text-green-400 data-[state=active]:bg-green-400 data-[state=active]:text-black"
+              className="text-green-400 font-mono font-bold data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:shadow-lg transition-all duration-300 rounded-none"
             >
-              Resources ({course.resources.length})
+              {`>> RESOURCES (${getAllResources().length})`}
             </TabsTrigger>
           </TabsList>
 
           {/* Details Tab */}
-          <TabsContent value="details" className="mt-4">
-            <div className="space-y-4">
-              <div className="bg-black/40 border border-green-400/30 rounded-lg p-4">
-                <h3 className="text-green-400 font-semibold mb-2">
-                  Course Overview
-                </h3>
-                <p className="text-green-300/80 text-sm leading-relaxed">
-                  {course.description}
-                </p>
-              </div>
+          <TabsContent value="details" className="mt-6">
+            <div className="space-y-6">
+              {/* Current Lesson Info */}
+              {currentLesson && (
+                <div className="bg-black/60 border-2 border-cyan-400/40 rounded-none p-5 shadow-lg shadow-cyan-400/10">
+                  <div className="flex items-center space-x-3 mb-4">
+                    {getLessonTypeIcon(currentLesson.type)}
+                    <h3 className="text-cyan-400 font-bold text-lg font-mono tracking-wide">
+                      CURRENT: {currentLesson.title.toUpperCase()}
+                    </h3>
+                  </div>
 
-              {course.playground.available && (
-                <div className="bg-black/40 border border-green-400/30 rounded-lg p-4">
-                  <h3 className="text-green-400 font-semibold mb-2 flex items-center">
-                    <Target className="w-4 h-4 mr-2" />
-                    {course.playground.title}
-                  </h3>
-                  <p className="text-green-300/80 text-sm mb-3">
-                    {course.playground.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {course.playground.tools.map((tool, index) => (
-                      <div
-                        key={index}
-                        className="bg-blue-400/10 border border-blue-400/30 rounded px-2 py-1 text-xs text-blue-400"
-                      >
-                        {tool}
-                      </div>
-                    ))}
+                  <div className="bg-black/40 border border-cyan-400/30 p-4 rounded-none">
+                    <div className="text-xs text-cyan-400/70 font-mono mb-2">
+                      DESCRIPTION
+                    </div>
+                    <p className="text-cyan-300/90 text-sm leading-relaxed font-mono whitespace-pre-line">
+                      {getDetailedDescription()}
+                    </p>
                   </div>
                 </div>
               )}
             </div>
           </TabsContent>
 
-          {/* Labs Tab */}
-          <TabsContent value="labs" className="mt-4">
-            <div className="grid gap-3">
-              {course.labs.map((lab: Lab) => (
-                <Card
-                  key={lab.id}
-                  className={`bg-black/50 border-green-400/30 hover:border-green-400 transition-colors cursor-pointer ${
-                    activeLab === lab.id
-                      ? "border-green-400 bg-green-400/5"
-                      : ""
-                  }`}
-                  onClick={() => onLabSelect(lab.id)}
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-green-400 text-base flex items-center">
-                        <Zap className="w-4 h-4 mr-2" />
-                        {lab.name}
-                      </CardTitle>
-                      <div className="flex items-center space-x-2">
-                        <div
-                          className={`px-2 py-1 rounded text-xs ${getDifficultyColor(
-                            lab.difficulty
+          {/* Resources Tab */}
+          <TabsContent value="resources" className="mt-6">
+            <div className="space-y-6">
+              {/* Contextual Resources */}
+              {getContextualResources().length > 0 && (
+                <div>
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Target className="w-5 h-5 text-green-400" />
+                    <h3 className="text-green-400 font-bold text-lg font-mono">
+                      LESSON RESOURCES ({getContextualResources().length})
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    {getContextualResources().map(
+                      (resource: Resource, index) => (
+                        <Card
+                          key={index}
+                          className={`bg-black/60 border-2 hover:border-green-400/70 transition-all duration-300 rounded-none shadow-lg hover:shadow-green-400/20 ${getCategoryColor(
+                            resource.category
                           )}`}
                         >
-                          {lab.difficulty}
-                        </div>
-                        <div className="flex items-center space-x-1 text-xs text-green-300/70">
-                          <Clock className="w-3 h-3" />
-                          <span>{lab.duration}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-green-300/70">
-                        {lab.available ? "Ready to start" : "Coming soon"}
-                      </div>
-                      <Button
-                        size="sm"
-                        disabled={!lab.available}
-                        className={
-                          lab.available
-                            ? "bg-green-400 text-black hover:bg-green-300"
-                            : "bg-gray-600 text-gray-300 cursor-not-allowed"
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (lab.available) {
-                            onLabSelect(lab.id);
-                          }
-                        }}
-                      >
-                        {lab.available ? (
-                          <>
-                            <Play className="w-4 h-4 mr-2" />
-                            Start Lab
-                          </>
-                        ) : (
-                          <>
-                            <Lock className="w-4 h-4 mr-2" />
-                            Locked
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-4">
+                                <div className="bg-black/60 border border-green-400/30 p-2 rounded-none">
+                                  {getCategoryIcon(resource.category)}
+                                </div>
+                                <div>
+                                  <div className="font-bold text-green-400 text-sm font-mono">
+                                    {resource.name}
+                                  </div>
+                                  <div className="text-xs text-green-400/70 font-mono mt-1">
+                                    {resource.type.toUpperCase()} •{" "}
+                                    {resource.size}
+                                    {resource.category &&
+                                      ` • ${resource.category.toUpperCase()}`}
+                                  </div>
+                                  {resource.description && (
+                                    <div className="text-xs text-green-300/60 font-mono mt-1">
+                                      {resource.description}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                className="bg-green-400 text-black hover:bg-green-300 font-mono font-bold rounded-none border-2 border-green-400 transition-all duration-300"
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                DOWNLOAD
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
 
-          {/* Games Tab */}
-          <TabsContent value="games" className="mt-4">
-            <div className="grid gap-3 md:grid-cols-2">
-              {course.games.map((game: Game) => (
-                <Card
-                  key={game.id}
-                  className={`bg-black/50 border-green-400/30 hover:border-green-400 transition-colors cursor-pointer ${
-                    activeGame === game.id
-                      ? "border-green-400 bg-green-400/5"
-                      : ""
-                  }`}
-                  onClick={() => onGameSelect(game.id)}
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-green-400 text-base">
-                        {game.name}
-                      </CardTitle>
-                      <div className="flex items-center space-x-2">
-                        <div className="bg-yellow-400/20 border border-yellow-400 rounded px-2 py-1 text-yellow-400 text-xs">
-                          {game.points} PTS
-                        </div>
-                        <div className="flex items-center space-x-1 text-xs text-green-300/70">
-                          <Clock className="w-3 h-3" />
-                          <span>{game.duration}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-green-300/70">
-                        {game.available ? "Ready to play" : "Coming soon"}
-                      </div>
-                      <Button
-                        size="sm"
-                        disabled={!game.available}
-                        className={
-                          game.available
-                            ? "bg-green-400 text-black hover:bg-green-300"
-                            : "bg-gray-600 text-gray-300 cursor-not-allowed"
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (game.available) {
-                            onGameSelect(game.id);
-                          }
-                        }}
+              {/* Course Resources */}
+              {getCourseResources().length > 0 && (
+                <div>
+                  <div className="flex items-center space-x-2 mb-4">
+                    <BookOpen className="w-5 h-5 text-purple-400" />
+                    <h3 className="text-purple-400 font-bold text-lg font-mono">
+                      COURSE RESOURCES ({getCourseResources().length})
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    {getCourseResources().map((resource: Resource, index) => (
+                      <Card
+                        key={index}
+                        className={`bg-black/60 border-2 hover:border-purple-400/70 transition-all duration-300 rounded-none shadow-lg hover:shadow-purple-400/20 ${getCategoryColor(
+                          resource.category
+                        )}`}
                       >
-                        {game.available ? (
-                          <>
-                            <Play className="w-4 h-4 mr-2" />
-                            Play Game
-                          </>
-                        ) : (
-                          <>
-                            <Lock className="w-4 h-4 mr-2" />
-                            Locked
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* Resources Tab */}
-          <TabsContent value="resources" className="mt-2">
-            <div className="grid gap-3">
-              {course.resources.map((resource: Resource, index) => (
-                <Card
-                  key={index}
-                  className="bg-black/50 border-green-400/30 hover:border-green-400 transition-colors"
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="text-green-400">
-                          {getFileTypeIcon(resource.type)}
-                        </div>
-                        <div>
-                          <div className="font-medium text-green-400 text-sm">
-                            {resource.name}
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="bg-black/60 border border-purple-400/30 p-2 rounded-none">
+                                {getCategoryIcon(resource.category)}
+                              </div>
+                              <div>
+                                <div className="font-bold text-purple-400 text-sm font-mono">
+                                  {resource.name}
+                                </div>
+                                <div className="text-xs text-purple-400/70 font-mono mt-1">
+                                  {resource.type.toUpperCase()} •{" "}
+                                  {resource.size}
+                                  {resource.category &&
+                                    ` • ${resource.category.toUpperCase()}`}
+                                </div>
+                                {resource.description && (
+                                  <div className="text-xs text-purple-300/60 font-mono mt-1">
+                                    {resource.description}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="bg-purple-400 text-black hover:bg-purple-300 font-mono font-bold rounded-none border-2 border-purple-400 transition-all duration-300"
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              DOWNLOAD
+                            </Button>
                           </div>
-                          <div className="text-xs text-green-300/70">
-                            {resource.type.toUpperCase()} • {resource.size}
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-green-400 hover:bg-green-400/10"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

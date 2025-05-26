@@ -61,7 +61,7 @@ const UserAvatar = ({ user }: UserAvatarProps) => {
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <div
-          className="relative h-10 w-10 rounded-full border-2 border-green-400/50 hover:border-green-400 transition-colors "
+          className="relative h-8 w-8 rounded-full border-2 border-green-400/50 hover:border-green-400 transition-colors cursor-pointer"
           onClick={() => setIsOpen(!isOpen)}
         >
           {currentUser.avatar ? (

@@ -394,7 +394,7 @@ const EnrolledCoursePage = () => {
     <div className="min-h-screen bg-black text-green-400 relative">
       <Header navigate={navigate} />
 
-      <div className="py-5 px-6">
+      <div className="pb-5 pt-3 px-6">
         <div className="w-full px-2 mx-auto">
           <CourseHeader
             course={course}

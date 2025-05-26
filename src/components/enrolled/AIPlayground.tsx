@@ -7,7 +7,7 @@ import {
   Brain,
   ChevronLeft,
   ChevronRight,
-  Minimize2,
+  Maximize2,
   Send,
   Sparkles,
   Terminal,
@@ -21,11 +21,13 @@ interface AIPlaygroundProps {
   chatMessages: ChatMessage[];
   analysisResult: string;
   isAnalyzing: boolean;
+  isMaximized?: boolean;
   onModeChange: (mode: string) => void;
   onTerminalCommand: (command: string) => void;
   onChatMessage: (message: string) => void;
   onAnalysis: (input: string) => void;
-  onMinimize: () => void;
+  onMaximize: () => void;
+  onRestore?: () => void;
 }
 
 const AIPlayground = ({
@@ -35,11 +37,13 @@ const AIPlayground = ({
   chatMessages,
   analysisResult,
   isAnalyzing,
+  isMaximized = false,
   onModeChange,
   onTerminalCommand,
   onChatMessage,
   onAnalysis,
-  onMinimize,
+  onMaximize,
+  onRestore,
 }: AIPlaygroundProps) => {
   const [terminalInput, setTerminalInput] = useState("");
   const [chatInput, setChatInput] = useState("");
@@ -173,14 +177,29 @@ const AIPlayground = ({
           <Sparkles className="w-4 h-4 mr-2" />
           AI Learning Assistant
         </h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onMinimize}
-          className="text-green-400 hover:bg-green-400/10"
-        >
-          <Minimize2 className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center space-x-2">
+          {isMaximized && onRestore ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRestore}
+              className="text-green-400 hover:bg-green-400/10"
+              title="Restore to split view"
+            >
+              <Maximize2 className="w-4 h-4 rotate-180" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onMaximize}
+              className="text-green-400 hover:bg-green-400/10"
+              title="Maximize playground"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 p-4">

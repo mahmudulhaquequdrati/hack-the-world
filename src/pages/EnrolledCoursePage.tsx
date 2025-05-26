@@ -74,9 +74,9 @@ const EnrolledCoursePage = () => {
   const [leftPaneWidth, setLeftPaneWidth] = useState(60); // Percentage
   const [isResizing, setIsResizing] = useState(false);
 
-  // Minimize states
-  const [videoMinimized, setVideoMinimized] = useState(false);
-  const [playgroundMinimized, setPlaygroundMinimized] = useState(false);
+  // Maximize states
+  const [videoMaximized, setVideoMaximized] = useState(false);
+  const [playgroundMaximized, setPlaygroundMaximized] = useState(false);
 
   // Lab and Game states
   const [activeLab, setActiveLab] = useState<string | null>(null);
@@ -625,11 +625,19 @@ const EnrolledCoursePage = () => {
                   currentVideo={currentVideo}
                   totalLessons={getAllLessons().length}
                   completedLessons={completedLessons}
+                  isMaximized={videoMaximized}
                   onPlayPause={() => setIsPlaying(!isPlaying)}
                   onPrevious={previousLesson}
                   onNext={nextLesson}
                   onMarkComplete={markLessonComplete}
-                  onMinimize={() => setVideoMinimized(true)}
+                  onMaximize={() => {
+                    setVideoMaximized(true);
+                    setPlaygroundMaximized(false);
+                  }}
+                  onRestore={() => {
+                    setVideoMaximized(false);
+                    setPlaygroundMaximized(false);
+                  }}
                 />
               }
               rightPane={
@@ -640,26 +648,28 @@ const EnrolledCoursePage = () => {
                   chatMessages={aiChatMessages}
                   analysisResult={analysisResult}
                   isAnalyzing={isAnalyzing}
+                  isMaximized={playgroundMaximized}
                   onModeChange={setPlaygroundMode}
                   onTerminalCommand={handleTerminalCommand}
                   onChatMessage={handleAiChat}
                   onAnalysis={handleAnalysis}
-                  onMinimize={() => setPlaygroundMinimized(true)}
+                  onMaximize={() => {
+                    setPlaygroundMaximized(true);
+                    setVideoMaximized(false);
+                  }}
+                  onRestore={() => {
+                    setVideoMaximized(false);
+                    setPlaygroundMaximized(false);
+                  }}
                 />
               }
               leftPaneWidth={leftPaneWidth}
-              videoMinimized={videoMinimized}
-              playgroundMinimized={playgroundMinimized}
+              videoMaximized={videoMaximized}
+              playgroundMaximized={playgroundMaximized}
               isResizing={isResizing}
               onLeftPaneWidthChange={setLeftPaneWidth}
               onResizeStart={() => setIsResizing(true)}
               onResizeEnd={() => setIsResizing(false)}
-              onShowBoth={() => {
-                setVideoMinimized(false);
-                setPlaygroundMinimized(false);
-              }}
-              onRestoreVideo={() => setVideoMinimized(false)}
-              onRestorePlayground={() => setPlaygroundMinimized(false)}
             />
           ) : (
             // Default Content

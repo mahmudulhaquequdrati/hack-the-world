@@ -1,35 +1,27 @@
-import { Button } from "@/components/ui/button";
-import { Maximize2, Sparkles, Video } from "lucide-react";
 import { ReactNode, useEffect, useRef } from "react";
 
 interface SplitViewProps {
   leftPane: ReactNode;
   rightPane: ReactNode;
   leftPaneWidth: number;
-  videoMinimized: boolean;
-  playgroundMinimized: boolean;
+  videoMaximized: boolean;
+  playgroundMaximized: boolean;
   isResizing: boolean;
   onLeftPaneWidthChange: (width: number) => void;
   onResizeStart: () => void;
   onResizeEnd: () => void;
-  onShowBoth: () => void;
-  onRestoreVideo: () => void;
-  onRestorePlayground: () => void;
 }
 
 const SplitView = ({
   leftPane,
   rightPane,
   leftPaneWidth,
-  videoMinimized,
-  playgroundMinimized,
+  videoMaximized,
+  playgroundMaximized,
   isResizing,
   onLeftPaneWidthChange,
   onResizeStart,
   onResizeEnd,
-  onShowBoth,
-  onRestoreVideo,
-  onRestorePlayground,
 }: SplitViewProps) => {
   const resizeRef = useRef<HTMLDivElement>(null);
 
@@ -68,48 +60,12 @@ const SplitView = ({
 
   return (
     <div className="flex gap-2 mb-6 relative h-min">
-      {/* Show Both Button - when both are minimized */}
-      {videoMinimized && playgroundMinimized && (
-        <div className="w-full flex items-center justify-center">
-          <Button
-            onClick={onShowBoth}
-            className="bg-green-400 text-black hover:bg-green-300"
-          >
-            <Maximize2 className="w-4 h-4 mr-2" />
-            Show Both Panes
-          </Button>
-        </div>
-      )}
-
-      {/* Floating restore buttons */}
-      {videoMinimized && !playgroundMinimized && (
-        <div className="absolute top-4 right-16 z-10">
-          <Button
-            onClick={onRestoreVideo}
-            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30 rounded-full w-10 h-10 p-0"
-          >
-            <Video className="w-4 h-4" />
-          </Button>
-        </div>
-      )}
-
-      {playgroundMinimized && !videoMinimized && (
-        <div className="absolute top-4 right-16 z-10">
-          <Button
-            onClick={onRestorePlayground}
-            className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400/30 rounded-full w-10 h-10 p-0"
-          >
-            <Sparkles className="w-4 h-4" />
-          </Button>
-        </div>
-      )}
-
-      {/* Left Pane - Content */}
-      {!videoMinimized && (
+      {/* Left Pane - Video Player */}
+      {!playgroundMaximized && (
         <div
           className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden transition-all duration-300"
           style={{
-            width: playgroundMinimized ? "100%" : `${leftPaneWidth}%`,
+            width: videoMaximized ? "100%" : `${leftPaneWidth}%`,
             minWidth: "300px",
           }}
         >
@@ -117,8 +73,8 @@ const SplitView = ({
         </div>
       )}
 
-      {/* Resize Handle */}
-      {!videoMinimized && !playgroundMinimized && (
+      {/* Resize Handle - only show when both panes are visible */}
+      {!videoMaximized && !playgroundMaximized && (
         <div
           ref={resizeRef}
           className="w-1 bg-green-400/30 hover:bg-green-400/60 cursor-col-resize transition-colors relative group"
@@ -130,11 +86,11 @@ const SplitView = ({
       )}
 
       {/* Right Pane - AI Playground */}
-      {!playgroundMinimized && (
+      {!videoMaximized && (
         <div
           className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden transition-all duration-300"
           style={{
-            width: videoMinimized ? "100%" : `${100 - leftPaneWidth}%`,
+            width: playgroundMaximized ? "100%" : `${100 - leftPaneWidth}%`,
             minWidth: "300px",
           }}
         >

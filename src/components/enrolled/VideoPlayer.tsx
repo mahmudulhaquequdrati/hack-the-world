@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { EnrolledLesson } from "@/lib/types";
-import { CheckCircle, Minimize2, Pause, Play, Video } from "lucide-react";
+import { CheckCircle, Maximize2, Pause, Play, Video } from "lucide-react";
 
 interface VideoPlayerProps {
   lesson: EnrolledLesson;
@@ -8,11 +8,13 @@ interface VideoPlayerProps {
   currentVideo: number;
   totalLessons: number;
   completedLessons: string[];
+  isMaximized?: boolean;
   onPlayPause: () => void;
   onPrevious: () => void;
   onNext: () => void;
   onMarkComplete: (lessonId: string) => void;
-  onMinimize: () => void;
+  onMaximize: () => void;
+  onRestore?: () => void;
 }
 
 const VideoPlayer = ({
@@ -21,11 +23,13 @@ const VideoPlayer = ({
   currentVideo,
   totalLessons,
   completedLessons,
+  isMaximized = false,
   onPlayPause,
   onPrevious,
   onNext,
   onMarkComplete,
-  onMinimize,
+  onMaximize,
+  onRestore,
 }: VideoPlayerProps) => {
   return (
     <div className="h-full flex flex-col">
@@ -34,14 +38,29 @@ const VideoPlayer = ({
           <Video className="w-4 h-4 mr-2" />
           {lesson?.title}
         </h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onMinimize}
-          className="text-green-400 hover:bg-green-400/10"
-        >
-          <Minimize2 className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center space-x-2">
+          {isMaximized && onRestore ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRestore}
+              className="text-green-400 hover:bg-green-400/10"
+              title="Restore to split view"
+            >
+              <Maximize2 className="w-4 h-4 rotate-180" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onMaximize}
+              className="text-green-400 hover:bg-green-400/10"
+              title="Maximize video"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 p-4 flex flex-col">

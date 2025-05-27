@@ -1,14 +1,9 @@
 import { Header } from "@/components/common/Header";
-import {
-  DashboardHeader,
-  DashboardTabs,
-  StatsGrid,
-} from "@/components/dashboard";
+import { DashboardTabs, LearningDashboard } from "@/components/dashboard";
 import {
   ACHIEVEMENTS_DATA,
   getAllModules,
   getCompletedModules,
-  getDashboardStats,
   getEnrolledModules,
   PHASES_DATA,
 } from "@/lib/appData";
@@ -31,8 +26,8 @@ const Dashboard = () => {
 
   // Use centralized data
   const phases = PHASES_DATA;
-  const stats = getDashboardStats();
   const achievements = ACHIEVEMENTS_DATA;
+  const enrolledModules = getEnrolledModules();
 
   const handleModuleClick = (module: Module) => {
     if (module.enrolled) {
@@ -55,9 +50,7 @@ const Dashboard = () => {
       <Header navigate={navigate} />
 
       <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
-        <DashboardHeader />
-
-        <StatsGrid stats={stats} />
+        <LearningDashboard enrolledModules={enrolledModules} />
 
         <DashboardTabs
           activeTab={activeTab}

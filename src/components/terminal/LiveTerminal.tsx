@@ -1,3 +1,4 @@
+import { DEFAULT_TERMINAL_COMMANDS, getTerminalLineColor } from "@/lib";
 import { Activity } from "lucide-react";
 import { useEffect, useState } from "react";
 import TerminalWindow from "./TerminalWindow";
@@ -8,31 +9,8 @@ interface LiveTerminalProps {
   className?: string;
 }
 
-const defaultCommands = [
-  "$ nmap -sS 192.168.1.0/24",
-  "Scanning 256 hosts...",
-  "Host 192.168.1.1 is up (0.001s latency)",
-  "Host 192.168.1.15 is up (0.002s latency)",
-  "22/tcp open ssh",
-  "80/tcp open http",
-  "443/tcp open https",
-  "$ sqlmap -u 'http://target.com/login'",
-  "Testing parameter 'username'...",
-  "[CRITICAL] SQL injection vulnerability found!",
-  "$ hydra -l admin -P passwords.txt ssh://target",
-  "Attempting password brute force...",
-  "[SUCCESS] Password found: admin123",
-  "$ msfconsole",
-  "Starting Metasploit Framework...",
-  "msf6 > use exploit/multi/handler",
-  "msf6 exploit(multi/handler) > set payload windows/meterpreter/reverse_tcp",
-  "msf6 exploit(multi/handler) > exploit",
-  "[*] Meterpreter session 1 opened",
-  "$ clear",
-];
-
 const LiveTerminal = ({
-  commands = defaultCommands,
+  commands = [...DEFAULT_TERMINAL_COMMANDS],
   title = "Live Penetration Testing",
   className = "",
 }: LiveTerminalProps) => {
@@ -55,15 +33,6 @@ const LiveTerminal = ({
     return () => clearInterval(interval);
   }, [currentCommand, commands]);
 
-  const getLineColor = (line: string) => {
-    if (line.startsWith("$")) return "text-green-400";
-    if (line.includes("CRITICAL") || line.includes("SUCCESS"))
-      return "text-red-400";
-    if (line.includes("open") || line.includes("up")) return "text-green-300";
-    if (line.includes("msf6")) return "text-purple-400";
-    return "text-green-300/80";
-  };
-
   return (
     <TerminalWindow title={title} className={className}>
       <div className="space-y-1">
@@ -72,7 +41,7 @@ const LiveTerminal = ({
           {title}
         </div>
         {terminalLines.map((line, index) => (
-          <div key={index} className={getLineColor(line)}>
+          <div key={index} className={getTerminalLineColor(line)}>
             {line}
           </div>
         ))}

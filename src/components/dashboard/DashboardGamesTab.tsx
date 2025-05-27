@@ -1,3 +1,9 @@
+import {
+  GAME_TYPES,
+  getGameTypeColor,
+  getPhaseColor,
+  getPhaseIcon,
+} from "@/lib";
 import { Module, Phase } from "@/lib/types";
 import {
   ChevronDown,
@@ -54,17 +60,6 @@ export const DashboardGamesTab = ({
     );
   };
 
-  const gameTypes = [
-    "Strategy",
-    "Puzzle",
-    "Simulation",
-    "Educational",
-    "Speed",
-    "CTF",
-    "Hunt",
-    "Configuration",
-  ];
-
   // Generate game items from enrolled modules, organized by module
   const generateGamesFromModules = (): GameItem[] => {
     const games: GameItem[] = [];
@@ -76,7 +71,7 @@ export const DashboardGamesTab = ({
         for (let i = 1; i <= module.games; i++) {
           const isAvailable = module.progress > (i - 1) * (100 / module.games);
           const isCompleted = module.completed && Math.random() > 0.4;
-          const gameType = gameTypes[i % gameTypes.length];
+          const gameType = GAME_TYPES[i % GAME_TYPES.length];
 
           games.push({
             id: `${module.id}-game-${i}`,
@@ -128,64 +123,6 @@ export const DashboardGamesTab = ({
     };
     return acc;
   }, {} as Record<string, { phase: Phase; modules: Record<string, { module: Module; games: GameItem[] }> }>);
-
-  const getTypeColor = (type: string) => {
-    switch (type.toLowerCase()) {
-      case "strategy":
-        return "text-purple-400 bg-purple-400/20 border-purple-400/30";
-      case "puzzle":
-        return "text-blue-400 bg-blue-400/20 border-blue-400/30";
-      case "simulation":
-        return "text-cyan-400 bg-cyan-400/20 border-cyan-400/30";
-      case "educational":
-        return "text-green-400 bg-green-400/20 border-green-400/30";
-      case "speed":
-        return "text-yellow-400 bg-yellow-400/20 border-yellow-400/30";
-      case "ctf":
-        return "text-red-400 bg-red-400/20 border-red-400/30";
-      case "hunt":
-        return "text-orange-400 bg-orange-400/20 border-orange-400/30";
-      case "configuration":
-        return "text-indigo-400 bg-indigo-400/20 border-indigo-400/30";
-      default:
-        return "text-gray-400 bg-gray-400/20 border-gray-400/30";
-    }
-  };
-
-  const getPointsColor = (points: number) => {
-    if (points >= 300) return "text-red-400 bg-red-400/20 border-red-400/30";
-    if (points >= 200)
-      return "text-orange-400 bg-orange-400/20 border-orange-400/30";
-    if (points >= 150)
-      return "text-yellow-400 bg-yellow-400/20 border-yellow-400/30";
-    return "text-green-400 bg-green-400/20 border-green-400/30";
-  };
-
-  const getPhaseColor = (phaseId: string) => {
-    switch (phaseId) {
-      case "beginner":
-        return "text-green-400";
-      case "intermediate":
-        return "text-yellow-400";
-      case "advanced":
-        return "text-red-400";
-      default:
-        return "text-blue-400";
-    }
-  };
-
-  const getPhaseIcon = (phaseId: string) => {
-    switch (phaseId) {
-      case "beginner":
-        return "🌱";
-      case "intermediate":
-        return "🎯";
-      case "advanced":
-        return "🧠";
-      default:
-        return "🎮";
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -323,11 +260,6 @@ export const DashboardGamesTab = ({
                           ([moduleId, { module, games: moduleGames }]) => {
                             const isModuleExpanded =
                               expandedModules.includes(moduleId);
-                            const modulePoints = moduleGames.reduce(
-                              (sum, game) =>
-                                sum + (game.completed ? game.points : 0),
-                              0
-                            );
 
                             return (
                               <div key={moduleId} className="space-y-3">
@@ -358,8 +290,7 @@ export const DashboardGamesTab = ({
                                               (game) => game.completed
                                             ).length
                                           }{" "}
-                                          completed • {modulePoints} points
-                                          earned
+                                          completed
                                         </p>
                                       </div>
                                     </div>
@@ -399,14 +330,14 @@ export const DashboardGamesTab = ({
                                         }`}
                                       >
                                         {/* Game Header */}
-                                        <div className="bg-gradient-to-r from-purple-400/10 to-purple-400/5 border-b border-purple-400/20 px-4 py-3">
+                                        <div className="bg-gradient-to-r from-red-400/10 to-red-400/5 border-b border-red-400/20 px-4 py-3">
                                           <div className="flex items-center justify-between">
                                             <div className="flex items-center space-x-3">
-                                              <div className="w-8 h-8 rounded bg-purple-400/20 border border-purple-400/40 flex items-center justify-center">
-                                                <Gamepad2 className="w-4 h-4 text-purple-400" />
+                                              <div className="w-8 h-8 rounded bg-red-400/20 border border-red-400/40 flex items-center justify-center">
+                                                <Gamepad2 className="w-4 h-4 text-red-400" />
                                               </div>
                                               <div>
-                                                <div className="text-purple-400 font-mono text-sm font-bold">
+                                                <div className="text-red-400 font-mono text-sm font-bold">
                                                   GAME_
                                                   {(index + 1)
                                                     .toString()
@@ -419,18 +350,11 @@ export const DashboardGamesTab = ({
                                             </div>
                                             <div className="flex items-center space-x-2">
                                               <div
-                                                className={`px-2 py-1 rounded border text-xs font-mono font-bold ${getTypeColor(
+                                                className={`px-2 py-1 rounded border text-xs font-mono font-bold ${getGameTypeColor(
                                                   game.type
                                                 )}`}
                                               >
                                                 {game.type.toUpperCase()}
-                                              </div>
-                                              <div
-                                                className={`px-2 py-1 rounded border text-xs font-mono font-bold ${getPointsColor(
-                                                  game.points
-                                                )}`}
-                                              >
-                                                {game.points}pts
                                               </div>
                                             </div>
                                           </div>
@@ -446,25 +370,34 @@ export const DashboardGamesTab = ({
                                           <div className="grid grid-cols-2 gap-3 mb-4">
                                             <div className="bg-black/40 border border-green-400/20 rounded p-2">
                                               <div className="text-green-400 font-mono text-xs font-bold mb-1">
-                                                DIFFICULTY
+                                                POINTS
                                               </div>
                                               <div className="text-green-300 text-sm">
-                                                {game.difficulty}
+                                                {game.points} pts
                                               </div>
                                             </div>
                                             <div className="bg-black/40 border border-green-400/20 rounded p-2">
                                               <div className="text-green-400 font-mono text-xs font-bold mb-1">
-                                                {game.completed
-                                                  ? "HIGH_SCORE"
-                                                  : "MAX_POINTS"}
+                                                TYPE
                                               </div>
                                               <div className="text-green-300 text-sm">
-                                                {game.completed && game.score
-                                                  ? `${game.score}pts`
-                                                  : `${game.points}pts`}
+                                                {game.type}
                                               </div>
                                             </div>
                                           </div>
+
+                                          {/* Score Display */}
+                                          {game.completed && game.score && (
+                                            <div className="mb-4 p-2 bg-green-400/10 border border-green-400/30 rounded">
+                                              <div className="text-green-400 font-mono text-xs font-bold mb-1">
+                                                BEST SCORE
+                                              </div>
+                                              <div className="text-green-300 text-sm flex items-center">
+                                                <Trophy className="w-4 h-4 mr-1 text-yellow-400" />
+                                                {game.score} points
+                                              </div>
+                                            </div>
+                                          )}
 
                                           {/* Game Actions & Status */}
                                           <div className="flex items-center justify-between pt-3 border-t border-green-400/20">
@@ -472,7 +405,9 @@ export const DashboardGamesTab = ({
                                               <div className="text-green-400 font-mono text-xs">
                                                 {game.completed ? (
                                                   <div className="flex items-center space-x-1">
-                                                    <Trophy className="w-3 h-3 text-yellow-400" />
+                                                    <span className="text-green-400">
+                                                      ✓
+                                                    </span>
                                                     <span>COMPLETED</span>
                                                   </div>
                                                 ) : game.available ? (
@@ -483,7 +418,7 @@ export const DashboardGamesTab = ({
                                               </div>
                                             </div>
                                             {game.available && (
-                                              <button className="px-3 py-1 bg-purple-400/20 border border-purple-400/40 rounded text-purple-400 font-mono text-xs hover:bg-purple-400/30 transition-colors">
+                                              <button className="px-3 py-1 bg-red-400/20 border border-red-400/40 rounded text-red-400 font-mono text-xs hover:bg-red-400/30 transition-colors">
                                                 {game.completed
                                                   ? "PLAY_AGAIN"
                                                   : "START_GAME"}

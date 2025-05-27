@@ -28,14 +28,6 @@ export const FILE_TYPE_ICONS = {
   doc: "📝",
 } as const;
 
-export const GAME_TYPES = {
-  "Cipher Challenge": "text-blue-400",
-  "Hash Cracking": "text-red-400",
-  "Port Scanning": "text-yellow-400",
-  "Social Engineering": "text-purple-400",
-  "Web Exploitation": "text-green-400",
-} as const;
-
 export const NAVIGATION_PATHS = {
   HOME: "/",
   LOGIN: "/login",

@@ -1,3 +1,4 @@
+import { PORT_SCAN_PORTS } from "@/lib";
 import { useState } from "react";
 
 interface PortScanGameProps {
@@ -5,7 +6,7 @@ interface PortScanGameProps {
 }
 
 const PortScanGame = ({ onScoreUpdate }: PortScanGameProps) => {
-  const [ports] = useState([22, 80, 443, 3389, 21]);
+  const [ports] = useState([...PORT_SCAN_PORTS]);
   const [scannedPorts, setScannedPorts] = useState<number[]>([]);
   const [scanning, setScanning] = useState(false);
 

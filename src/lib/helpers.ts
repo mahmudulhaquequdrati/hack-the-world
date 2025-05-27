@@ -3,7 +3,6 @@ import {
   DIFFICULTY_BORDER_COLORS,
   DIFFICULTY_COLORS,
   FILE_TYPE_ICONS,
-  GAME_TYPES,
 } from "./constants";
 
 export const getDifficultyColor = (difficulty: string) => {
@@ -30,10 +29,6 @@ export const getDifficultyBorderColor = (difficulty: string) => {
 
 export const getFileTypeIcon = (type: string) => {
   return FILE_TYPE_ICONS[type as keyof typeof FILE_TYPE_ICONS] || "📄";
-};
-
-export const getGameTypeColor = (type: string) => {
-  return GAME_TYPES[type as keyof typeof GAME_TYPES] || "text-gray-400";
 };
 
 export const formatTime = (seconds: number) => {

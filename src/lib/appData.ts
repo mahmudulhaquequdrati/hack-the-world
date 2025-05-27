@@ -508,20 +508,6 @@ export const getPhaseProgress = (phaseId: string): number => {
   );
 };
 
-// Get phase color classes
-export const getPhaseColor = (phaseId: string): string => {
-  switch (phaseId) {
-    case "beginner":
-      return "text-green-400 bg-green-400/10 border-green-400/30";
-    case "intermediate":
-      return "text-yellow-400 bg-yellow-400/10 border-yellow-400/30";
-    case "advanced":
-      return "text-red-400 bg-red-400/10 border-red-400/30";
-    default:
-      return "text-blue-400 bg-blue-400/10 border-blue-400/30";
-  }
-};
-
 // Update module progress (for future state management)
 export const updateModuleProgress = (
   moduleId: string,

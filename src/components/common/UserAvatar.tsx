@@ -6,15 +6,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Award,
-  BookOpen,
-  LogOut,
-  Settings,
-  Shield,
-  Terminal,
-  User,
-} from "lucide-react";
+import { DEFAULT_USER, getInitials } from "@/lib";
+import { Award, LogOut, Settings, Shield, Terminal, User } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -32,29 +25,11 @@ const UserAvatar = ({ user }: UserAvatarProps) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Default user data for demo
-  const defaultUser = {
-    name: "Agent Smith",
-    email: "agent@cybersec.academy",
-    avatar:
-      "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150",
-    level: "Elite Hacker",
-    points: 2847,
-  };
-
-  const currentUser = user || defaultUser;
+  const currentUser = user || DEFAULT_USER;
 
   const handleLogout = () => {
     // In real app, this would clear auth tokens
     navigate("/");
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
   };
 
   return (

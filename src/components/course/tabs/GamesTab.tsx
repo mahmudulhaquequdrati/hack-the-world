@@ -1,4 +1,5 @@
 import { TabsContent } from "@/components/ui/tabs";
+import { getGameTypeColor, getPointsColor } from "@/lib";
 import { GameItem } from "@/lib/types";
 import { Gamepad2, Star, Trophy } from "lucide-react";
 
@@ -7,38 +8,6 @@ interface GamesTabProps {
 }
 
 const GamesTab = ({ games }: GamesTabProps) => {
-  const getTypeColor = (type: string) => {
-    switch (type.toLowerCase()) {
-      case "strategy":
-        return "text-purple-400 bg-purple-400/20 border-purple-400/30";
-      case "puzzle":
-        return "text-blue-400 bg-blue-400/20 border-blue-400/30";
-      case "simulation":
-        return "text-cyan-400 bg-cyan-400/20 border-cyan-400/30";
-      case "educational":
-        return "text-green-400 bg-green-400/20 border-green-400/30";
-      case "speed":
-        return "text-yellow-400 bg-yellow-400/20 border-yellow-400/30";
-      case "ctf":
-        return "text-red-400 bg-red-400/20 border-red-400/30";
-      case "hunt":
-        return "text-orange-400 bg-orange-400/20 border-orange-400/30";
-      case "configuration":
-        return "text-indigo-400 bg-indigo-400/20 border-indigo-400/30";
-      default:
-        return "text-gray-400 bg-gray-400/20 border-gray-400/30";
-    }
-  };
-
-  const getPointsColor = (points: number) => {
-    if (points >= 200) return "text-red-400 bg-red-400/20 border-red-400/30";
-    if (points >= 150)
-      return "text-orange-400 bg-orange-400/20 border-orange-400/30";
-    if (points >= 100)
-      return "text-yellow-400 bg-yellow-400/20 border-yellow-400/30";
-    return "text-green-400 bg-green-400/20 border-green-400/30";
-  };
-
   return (
     <TabsContent value="games" className="mt-0">
       <div className="space-y-6">
@@ -83,7 +52,7 @@ const GamesTab = ({ games }: GamesTabProps) => {
                       {game.points} PTS
                     </div>
                     <div
-                      className={`px-3 py-1 rounded-lg border text-xs font-mono font-bold ${getTypeColor(
+                      className={`px-3 py-1 rounded-lg border text-xs font-mono font-bold ${getGameTypeColor(
                         game.type
                       )}`}
                     >

@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { getDifficultyColor, getGameTypeColor } from "@/lib";
 import { Game } from "@/lib/types";
 import {
   CheckCircle,
-  Circle,
   Clock,
   ExternalLink,
   Gamepad2,
@@ -31,42 +31,11 @@ const EnhancedGameView = ({
     (challenge) => challenge.completed
   ).length;
   const totalPoints = game.challenges.reduce(
-    (sum, challenge) => (challenge.completed ? sum + challenge.points : sum),
+    (sum, challenge) => sum + (challenge.completed ? challenge.points : 0),
     0
   );
   const progressPercentage =
     (completedChallenges / game.challenges.length) * 100;
-
-  const getGameTypeColor = (type: string) => {
-    switch (type) {
-      case "simulation":
-        return "text-blue-400 border-blue-400/40 bg-blue-400/10";
-      case "puzzle":
-        return "text-purple-400 border-purple-400/40 bg-purple-400/10";
-      case "strategy":
-        return "text-green-400 border-green-400/40 bg-green-400/10";
-      case "ctf":
-        return "text-red-400 border-red-400/40 bg-red-400/10";
-      case "scenario":
-        return "text-cyan-400 border-cyan-400/40 bg-cyan-400/10";
-      case "quiz":
-      default:
-        return "text-yellow-400 border-yellow-400/40 bg-yellow-400/10";
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case "easy":
-        return "text-green-400 border-green-400/40 bg-green-400/10";
-      case "medium":
-        return "text-yellow-400 border-yellow-400/40 bg-yellow-400/10";
-      case "hard":
-        return "text-red-400 border-red-400/40 bg-red-400/10";
-      default:
-        return "text-blue-400 border-blue-400/40 bg-blue-400/10";
-    }
-  };
 
   const getGameTypeIcon = (type: string) => {
     switch (type) {
@@ -240,11 +209,11 @@ const EnhancedGameView = ({
         </Card>
 
         {/* Game Challenges */}
-        <Card className="bg-black/40 border border-cyan-400/30 rounded-none">
+        <Card className="bg-black/40 border border-purple-400/30 rounded-none">
           <CardContent className="p-5">
             <div className="flex items-center space-x-2 mb-4">
-              {getGameTypeIcon(game.type)}
-              <h3 className="text-cyan-400 font-bold text-lg font-mono">
+              <Zap className="w-5 h-5 text-purple-400" />
+              <h3 className="text-purple-400 font-bold text-lg font-mono">
                 CHALLENGES
               </h3>
             </div>
@@ -252,62 +221,79 @@ const EnhancedGameView = ({
               {game.challenges.map((challenge, index) => (
                 <div
                   key={challenge.id}
-                  className={`border-2 rounded-none p-4 transition-all ${
+                  className={`p-4 border rounded-none transition-all ${
                     challenge.completed
                       ? "border-green-400/40 bg-green-400/10"
-                      : "border-cyan-400/30 bg-cyan-400/5"
+                      : challenge.unlocked
+                      ? "border-purple-400/40 bg-purple-400/5 hover:bg-purple-400/10"
+                      : "border-gray-600/40 bg-gray-600/5 opacity-50"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-3">
-                      {challenge.completed ? (
-                        <CheckCircle className="w-5 h-5 text-green-400" />
-                      ) : (
-                        <Circle className="w-5 h-5 text-cyan-400" />
-                      )}
+                      <div
+                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-mono text-sm font-bold ${
+                          challenge.completed
+                            ? "border-green-400 bg-green-400/20 text-green-400"
+                            : challenge.unlocked
+                            ? "border-purple-400 bg-purple-400/20 text-purple-400"
+                            : "border-gray-600 bg-gray-600/20 text-gray-600"
+                        }`}
+                      >
+                        {challenge.completed ? "✓" : index + 1}
+                      </div>
                       <div>
-                        <span
-                          className={`font-bold font-mono ${
+                        <h4
+                          className={`font-mono font-bold ${
                             challenge.completed
                               ? "text-green-400"
-                              : "text-cyan-400"
+                              : challenge.unlocked
+                              ? "text-purple-400"
+                              : "text-gray-600"
                           }`}
                         >
-                          {challenge.title}
-                        </span>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <div
-                            className={`px-2 py-1 border rounded-none text-xs font-mono ${getDifficultyColor(
-                              challenge.difficulty
-                            )}`}
-                          >
-                            {challenge.difficulty.toUpperCase()}
-                          </div>
-                          <div className="text-xs font-mono text-yellow-400">
-                            {challenge.points} PTS
-                          </div>
-                        </div>
+                          {challenge.name}
+                        </h4>
+                        <p
+                          className={`text-sm font-mono ${
+                            challenge.completed
+                              ? "text-green-300/80"
+                              : challenge.unlocked
+                              ? "text-purple-300/80"
+                              : "text-gray-600/80"
+                          }`}
+                        >
+                          {challenge.description}
+                        </p>
                       </div>
                     </div>
-                    {!challenge.completed && (
-                      <Button
-                        size="sm"
-                        onClick={() => onChallengeComplete(challenge.id)}
-                        className="bg-cyan-400 text-black hover:bg-cyan-300 font-mono font-bold rounded-none"
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className={`px-2 py-1 border rounded-none text-xs font-mono font-bold ${getDifficultyColor(
+                          challenge.difficulty
+                        )}`}
                       >
-                        START
-                      </Button>
-                    )}
+                        {challenge.difficulty.toUpperCase()}
+                      </div>
+                      <div
+                        className={`px-2 py-1 border rounded-none text-xs font-mono font-bold ${
+                          challenge.completed
+                            ? "text-green-400 border-green-400/40 bg-green-400/10"
+                            : "text-purple-400 border-purple-400/40 bg-purple-400/10"
+                        }`}
+                      >
+                        {challenge.points} PTS
+                      </div>
+                    </div>
                   </div>
-                  <p
-                    className={`text-sm font-mono ${
-                      challenge.completed
-                        ? "text-green-300/80"
-                        : "text-cyan-300/80"
-                    }`}
-                  >
-                    {challenge.description}
-                  </p>
+                  {challenge.unlocked && !challenge.completed && (
+                    <button
+                      onClick={() => onChallengeComplete(challenge.id)}
+                      className="w-full mt-3 px-4 py-2 bg-purple-400/20 border border-purple-400/40 text-purple-400 font-mono text-sm font-bold rounded-none hover:bg-purple-400/30 transition-colors"
+                    >
+                      START CHALLENGE
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

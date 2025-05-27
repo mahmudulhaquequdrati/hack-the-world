@@ -27,7 +27,7 @@ import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("courses");
   const [expandedPhases, setExpandedPhases] = useState<string[]>(["beginner"]);
 
   const togglePhase = (phaseId: string) => {

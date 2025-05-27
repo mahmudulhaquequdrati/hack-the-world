@@ -1,8 +1,11 @@
 export { AchievementCard } from "./AchievementCard";
 export { AchievementsTab } from "./AchievementsTab";
 export { default as CourseTree } from "./CourseTree";
+export { DashboardGamesTab } from "./DashboardGamesTab";
 export { DashboardHeader } from "./DashboardHeader";
+export { DashboardLabsTab } from "./DashboardLabsTab";
 export { DashboardTabs } from "./DashboardTabs";
+export { EnhancedProgressTab } from "./EnhancedProgressTab";
 export { ModuleProgressCard } from "./ModuleProgressCard";
 export { DashboardOverviewTab } from "./OverviewTab";
 export { ProgressTab } from "./ProgressTab";

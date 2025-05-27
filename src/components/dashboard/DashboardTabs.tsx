@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getEnrolledPhases, getModulesByPhase } from "@/lib/appData";
 import { Module, Phase } from "@/lib/types";
 import { AchievementsTab } from "./AchievementsTab";
 import { DashboardGamesTab } from "./DashboardGamesTab";
@@ -36,25 +37,7 @@ export const DashboardTabs = ({
   getCompletedModules,
   achievements,
 }: DashboardTabsProps) => {
-  // Get enrolled phases (phases that have at least one enrolled module)
-  const getEnrolledPhases = () => {
-    return phases.filter((phase) =>
-      phase.modules.some((module) => module.enrolled)
-    );
-  };
-
-  // Get modules by phase and enrollment status
-  const getModulesByPhase = (
-    phaseId: string,
-    enrolledOnly: boolean = false
-  ) => {
-    const phase = phases.find((p) => p.id === phaseId);
-    if (!phase) return [];
-
-    return enrolledOnly
-      ? phase.modules.filter((module) => module.enrolled)
-      : phase.modules;
-  };
+  // Use centralized functions
 
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-6">

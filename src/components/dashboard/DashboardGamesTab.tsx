@@ -35,7 +35,16 @@ export const DashboardGamesTab = ({
   phases,
   getModulesByPhase,
 }: DashboardGamesTabProps) => {
+  const [expandedPhases, setExpandedPhases] = useState<string[]>(["beginner"]);
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
+
+  const togglePhase = (phaseId: string) => {
+    setExpandedPhases((prev) =>
+      prev.includes(phaseId)
+        ? prev.filter((id) => id !== phaseId)
+        : [...prev, phaseId]
+    );
+  };
 
   const toggleModule = (moduleId: string) => {
     setExpandedModules((prev) =>
@@ -99,18 +108,26 @@ export const DashboardGamesTab = ({
 
   const games = generateGamesFromModules();
 
-  // Group games by module
-  const gamesByModule = phases.reduce((acc, phase) => {
+  // Group games by phase, then by module
+  const gamesByPhase = phases.reduce((acc, phase) => {
     const phaseModules = getModulesByPhase(phase.id, true);
-    phaseModules.forEach((module) => {
-      acc[module.id] = {
-        module,
-        games: games.filter((game) => game.moduleId === module.id),
-        phase,
-      };
-    });
+    if (phaseModules.length === 0) return acc;
+
+    acc[phase.id] = {
+      phase,
+      modules: phaseModules.reduce((moduleAcc, module) => {
+        const moduleGames = games.filter((game) => game.moduleId === module.id);
+        if (moduleGames.length > 0) {
+          moduleAcc[module.id] = {
+            module,
+            games: moduleGames,
+          };
+        }
+        return moduleAcc;
+      }, {} as Record<string, { module: Module; games: GameItem[] }>),
+    };
     return acc;
-  }, {} as Record<string, { module: Module; games: GameItem[]; phase: Phase }>);
+  }, {} as Record<string, { phase: Phase; modules: Record<string, { module: Module; games: GameItem[] }> }>);
 
   const getTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
@@ -157,13 +174,26 @@ export const DashboardGamesTab = ({
     }
   };
 
+  const getPhaseIcon = (phaseId: string) => {
+    switch (phaseId) {
+      case "beginner":
+        return "🌱";
+      case "intermediate":
+        return "🎯";
+      case "advanced":
+        return "🧠";
+      default:
+        return "🎮";
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-black/60 border border-green-400/30 rounded-lg p-6">
         <div className="flex items-center space-x-2 mb-6">
           <Terminal className="w-5 h-5 text-green-400" />
           <span className="text-green-400 font-mono text-sm">
-            ~/games$ find . -name "*.game" -type f | grep enrolled | sort -k2
+            ~/games$ find . -name "*.game" -type f | grep enrolled | sort -k1,2
           </span>
         </div>
 
@@ -172,7 +202,8 @@ export const DashboardGamesTab = ({
             INTERACTIVE_GAMES
           </h3>
           <p className="text-green-300/70 font-mono text-sm">
-            Organized by modules • {games.length} total games available
+            Organized by phases → modules → games • {games.length} total games
+            available
           </p>
         </div>
 
@@ -187,178 +218,287 @@ export const DashboardGamesTab = ({
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {Object.entries(gamesByModule).map(
-              ([moduleId, { module, games: moduleGames, phase }]) => {
-                const isExpanded = expandedModules.includes(moduleId);
+          <div className="space-y-6">
+            {Object.entries(gamesByPhase).map(
+              ([phaseId, { phase, modules }]) => {
+                const isPhaseExpanded = expandedPhases.includes(phaseId);
+                const phaseGameCount = Object.values(modules).reduce(
+                  (sum, { games }) => sum + games.length,
+                  0
+                );
+                const phaseCompletedCount = Object.values(modules).reduce(
+                  (sum, { games }) =>
+                    sum + games.filter((game) => game.completed).length,
+                  0
+                );
+                const phaseTotalPoints = Object.values(modules).reduce(
+                  (sum, { games }) =>
+                    sum +
+                    games.reduce(
+                      (gameSum, game) =>
+                        gameSum + (game.completed ? game.points : 0),
+                      0
+                    ),
+                  0
+                );
 
-                if (moduleGames.length === 0) return null;
+                if (phaseGameCount === 0) return null;
 
                 return (
-                  <div key={moduleId} className="space-y-3">
-                    {/* Module Header */}
+                  <div key={phaseId} className="space-y-4">
+                    {/* Phase Header */}
                     <div
-                      className={`${module.bgColor} ${module.borderColor} border rounded-lg p-4 cursor-pointer transition-all hover:border-opacity-80`}
-                      onClick={() => toggleModule(moduleId)}
+                      className={`bg-gradient-to-r from-${
+                        phaseId === "beginner"
+                          ? "green"
+                          : phaseId === "intermediate"
+                          ? "yellow"
+                          : "red"
+                      }-400/10 to-transparent border border-${
+                        phaseId === "beginner"
+                          ? "green"
+                          : phaseId === "intermediate"
+                          ? "yellow"
+                          : "red"
+                      }-400/30 rounded-lg p-4 cursor-pointer transition-all hover:border-opacity-80`}
+                      onClick={() => togglePhase(phaseId)}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={`p-2 rounded-lg ${module.bgColor}`}>
-                            <module.icon
-                              className={`w-5 h-5 ${module.color}`}
-                            />
+                        <div className="flex items-center space-x-4">
+                          <div className="text-2xl">
+                            {getPhaseIcon(phaseId)}
                           </div>
                           <div>
-                            <div className="flex items-center space-x-2 mb-1">
-                              <h3 className="text-lg font-bold font-mono text-green-400">
-                                {module.title}
-                              </h3>
-                              <span
-                                className={`text-xs font-mono px-2 py-1 rounded ${getPhaseColor(
-                                  phase.id
-                                )} bg-current/10`}
+                            <div className="flex items-center space-x-3 mb-1">
+                              <h2
+                                className={`text-xl font-bold font-mono ${getPhaseColor(
+                                  phaseId
+                                )}`}
                               >
-                                {phase.title}
+                                {phase.title.toUpperCase()}
+                              </h2>
+                              <span className="text-xs font-mono px-2 py-1 rounded bg-black/40 text-green-300">
+                                {Object.keys(modules).length} modules
                               </span>
                             </div>
                             <p className="text-green-300/70 text-sm">
-                              {moduleGames.length} games •{" "}
-                              {
-                                moduleGames.filter((game) => game.completed)
-                                  .length
-                              }{" "}
-                              completed •{" "}
-                              {moduleGames.reduce(
-                                (sum, game) => sum + (game.score || 0),
-                                0
-                              )}{" "}
-                              total points
+                              {phaseGameCount} games • {phaseCompletedCount}{" "}
+                              completed • {phaseTotalPoints} points earned
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-3">
                           <div className="text-right">
-                            <div className="text-green-400 font-mono text-sm font-bold">
+                            <div
+                              className={`${getPhaseColor(
+                                phaseId
+                              )} font-mono text-sm font-bold`}
+                            >
                               {Math.round(
-                                (moduleGames.filter((game) => game.completed)
-                                  .length /
-                                  moduleGames.length) *
-                                  100
+                                (phaseCompletedCount / phaseGameCount) * 100
                               )}
                               % COMPLETE
                             </div>
                             <div className="text-xs text-green-300/60">
-                              {module.progress}% module progress
+                              phase progress
                             </div>
                           </div>
-                          {isExpanded ? (
-                            <ChevronDown className="w-5 h-5 text-green-400" />
+                          {isPhaseExpanded ? (
+                            <ChevronDown
+                              className={`w-5 h-5 ${getPhaseColor(phaseId)}`}
+                            />
                           ) : (
-                            <ChevronRight className="w-5 h-5 text-green-400" />
+                            <ChevronRight
+                              className={`w-5 h-5 ${getPhaseColor(phaseId)}`}
+                            />
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Module Games */}
-                    {isExpanded && (
-                      <div className="grid gap-3 md:grid-cols-2 ml-6">
-                        {moduleGames.map((game, index) => (
-                          <div
-                            key={game.id}
-                            className={`bg-black/40 border border-green-400/30 rounded-lg overflow-hidden hover:border-green-400/60 transition-all duration-300 ${
-                              !game.available ? "opacity-50" : ""
-                            }`}
-                          >
-                            {/* Game Header */}
-                            <div className="bg-gradient-to-r from-red-400/10 to-red-400/5 border-b border-red-400/20 px-4 py-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 rounded bg-red-400/20 border border-red-400/40 flex items-center justify-center">
-                                    <Gamepad2 className="w-4 h-4 text-red-400" />
-                                  </div>
-                                  <div>
-                                    <div className="text-red-400 font-mono text-sm font-bold">
-                                      GAME_
-                                      {(index + 1).toString().padStart(2, "0")}
-                                    </div>
-                                    <h4 className="text-green-400 font-semibold">
-                                      {game.name}
-                                    </h4>
-                                  </div>
-                                </div>
-                                <div className="flex flex-col items-end space-y-1">
-                                  <div
-                                    className={`px-2 py-0.5 rounded border text-xs font-mono font-bold ${getPointsColor(
-                                      game.points
-                                    )}`}
-                                  >
-                                    <Trophy className="w-3 h-3 inline mr-1" />
-                                    {game.points}
-                                  </div>
-                                  <div
-                                    className={`px-2 py-0.5 rounded border text-xs font-mono font-bold ${getTypeColor(
-                                      game.type
-                                    )}`}
-                                  >
-                                    {game.type.toUpperCase()}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
+                    {/* Phase Modules */}
+                    {isPhaseExpanded && (
+                      <div className="ml-6 space-y-4">
+                        {Object.entries(modules).map(
+                          ([moduleId, { module, games: moduleGames }]) => {
+                            const isModuleExpanded =
+                              expandedModules.includes(moduleId);
+                            const modulePoints = moduleGames.reduce(
+                              (sum, game) =>
+                                sum + (game.completed ? game.points : 0),
+                              0
+                            );
 
-                            {/* Game Content */}
-                            <div className="p-4">
-                              <p className="text-green-300/90 mb-4 text-sm leading-relaxed">
-                                {game.description}
-                              </p>
-
-                              {/* Game Features */}
-                              <div className="mb-4 p-3 bg-green-400/5 border border-green-400/20 rounded">
-                                <h5 className="text-green-400 font-mono text-xs font-bold mb-2 flex items-center">
-                                  <Gamepad2 className="w-3 h-3 mr-1" />
-                                  FEATURES
-                                </h5>
-                                <div className="grid grid-cols-2 gap-1 text-xs text-green-300/80">
-                                  <div>• Interactive</div>
-                                  <div>• Real-time</div>
-                                  <div>• Progress tracking</div>
-                                  <div>• Skill validation</div>
-                                </div>
-                              </div>
-
-                              {/* Score display for completed games */}
-                              {game.completed && game.score && (
-                                <div className="mb-3 p-2 bg-blue-400/10 border border-blue-400/30 rounded">
+                            return (
+                              <div key={moduleId} className="space-y-3">
+                                {/* Module Header */}
+                                <div
+                                  className={`${module.bgColor} ${module.borderColor} border rounded-lg p-4 cursor-pointer transition-all hover:border-opacity-80`}
+                                  onClick={() => toggleModule(moduleId)}
+                                >
                                   <div className="flex items-center justify-between">
-                                    <span className="text-blue-400 font-mono text-xs font-bold">
-                                      YOUR_SCORE
-                                    </span>
-                                    <span className="text-blue-400 font-mono text-sm font-bold">
-                                      {game.score} / {game.points}
-                                    </span>
+                                    <div className="flex items-center space-x-3">
+                                      <div
+                                        className={`p-2 rounded-lg ${module.bgColor}`}
+                                      >
+                                        <module.icon
+                                          className={`w-5 h-5 ${module.color}`}
+                                        />
+                                      </div>
+                                      <div>
+                                        <div className="flex items-center space-x-2 mb-1">
+                                          <h3 className="text-lg font-bold font-mono text-green-400">
+                                            {module.title}
+                                          </h3>
+                                        </div>
+                                        <p className="text-green-300/70 text-sm">
+                                          {moduleGames.length} games •{" "}
+                                          {
+                                            moduleGames.filter(
+                                              (game) => game.completed
+                                            ).length
+                                          }{" "}
+                                          completed • {modulePoints} points
+                                          earned
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center space-x-3">
+                                      <div className="text-right">
+                                        <div className="text-green-400 font-mono text-sm font-bold">
+                                          {Math.round(
+                                            (moduleGames.filter(
+                                              (game) => game.completed
+                                            ).length /
+                                              moduleGames.length) *
+                                              100
+                                          )}
+                                          % COMPLETE
+                                        </div>
+                                        <div className="text-xs text-green-300/60">
+                                          {module.progress}% module progress
+                                        </div>
+                                      </div>
+                                      {isModuleExpanded ? (
+                                        <ChevronDown className="w-5 h-5 text-green-400" />
+                                      ) : (
+                                        <ChevronRight className="w-5 h-5 text-green-400" />
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              )}
 
-                              {/* Game Actions & Status */}
-                              <div className="flex items-center justify-between pt-3 border-t border-green-400/20">
-                                <div className="text-green-400 font-mono text-xs">
-                                  {game.completed
-                                    ? "✓ COMPLETED"
-                                    : game.available
-                                    ? "○ AVAILABLE"
-                                    : "⚬ LOCKED"}
-                                </div>
-                                {game.available && (
-                                  <button className="px-3 py-1 bg-red-400/20 border border-red-400/40 rounded text-red-400 font-mono text-xs hover:bg-red-400/30 transition-colors">
-                                    {game.completed ? "REPLAY" : "PLAY_GAME"}
-                                  </button>
+                                {/* Module Games */}
+                                {isModuleExpanded && (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 ml-6">
+                                    {moduleGames.map((game, index) => (
+                                      <div
+                                        key={game.id}
+                                        className={`bg-black/40 border border-green-400/30 rounded-lg overflow-hidden hover:border-green-400/60 transition-all duration-300 ${
+                                          !game.available ? "opacity-50" : ""
+                                        }`}
+                                      >
+                                        {/* Game Header */}
+                                        <div className="bg-gradient-to-r from-purple-400/10 to-purple-400/5 border-b border-purple-400/20 px-4 py-3">
+                                          <div className="flex items-center justify-between">
+                                            <div className="flex items-center space-x-3">
+                                              <div className="w-8 h-8 rounded bg-purple-400/20 border border-purple-400/40 flex items-center justify-center">
+                                                <Gamepad2 className="w-4 h-4 text-purple-400" />
+                                              </div>
+                                              <div>
+                                                <div className="text-purple-400 font-mono text-sm font-bold">
+                                                  GAME_
+                                                  {(index + 1)
+                                                    .toString()
+                                                    .padStart(2, "0")}
+                                                </div>
+                                                <h4 className="text-green-400 font-semibold">
+                                                  {game.name}
+                                                </h4>
+                                              </div>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                              <div
+                                                className={`px-2 py-1 rounded border text-xs font-mono font-bold ${getTypeColor(
+                                                  game.type
+                                                )}`}
+                                              >
+                                                {game.type.toUpperCase()}
+                                              </div>
+                                              <div
+                                                className={`px-2 py-1 rounded border text-xs font-mono font-bold ${getPointsColor(
+                                                  game.points
+                                                )}`}
+                                              >
+                                                {game.points}pts
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Game Content */}
+                                        <div className="p-4">
+                                          <p className="text-green-300/90 mb-4 text-sm leading-relaxed">
+                                            {game.description}
+                                          </p>
+
+                                          {/* Game Stats */}
+                                          <div className="grid grid-cols-2 gap-3 mb-4">
+                                            <div className="bg-black/40 border border-green-400/20 rounded p-2">
+                                              <div className="text-green-400 font-mono text-xs font-bold mb-1">
+                                                DIFFICULTY
+                                              </div>
+                                              <div className="text-green-300 text-sm">
+                                                {game.difficulty}
+                                              </div>
+                                            </div>
+                                            <div className="bg-black/40 border border-green-400/20 rounded p-2">
+                                              <div className="text-green-400 font-mono text-xs font-bold mb-1">
+                                                {game.completed
+                                                  ? "HIGH_SCORE"
+                                                  : "MAX_POINTS"}
+                                              </div>
+                                              <div className="text-green-300 text-sm">
+                                                {game.completed && game.score
+                                                  ? `${game.score}pts`
+                                                  : `${game.points}pts`}
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          {/* Game Actions & Status */}
+                                          <div className="flex items-center justify-between pt-3 border-t border-green-400/20">
+                                            <div className="flex items-center space-x-2">
+                                              <div className="text-green-400 font-mono text-xs">
+                                                {game.completed ? (
+                                                  <div className="flex items-center space-x-1">
+                                                    <Trophy className="w-3 h-3 text-yellow-400" />
+                                                    <span>COMPLETED</span>
+                                                  </div>
+                                                ) : game.available ? (
+                                                  "○ AVAILABLE"
+                                                ) : (
+                                                  "⚬ LOCKED"
+                                                )}
+                                              </div>
+                                            </div>
+                                            {game.available && (
+                                              <button className="px-3 py-1 bg-purple-400/20 border border-purple-400/40 rounded text-purple-400 font-mono text-xs hover:bg-purple-400/30 transition-colors">
+                                                {game.completed
+                                                  ? "PLAY_AGAIN"
+                                                  : "START_GAME"}
+                                              </button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
                                 )}
                               </div>
-                            </div>
-                          </div>
-                        ))}
+                            );
+                          }
+                        )}
                       </div>
                     )}
                   </div>

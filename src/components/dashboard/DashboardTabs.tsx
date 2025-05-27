@@ -1,22 +1,17 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getEnrolledPhases, getModulesByPhase } from "@/lib/appData";
-import { Module, Phase } from "@/lib/types";
+import { Module } from "@/lib/types";
 import { AchievementsTab } from "./AchievementsTab";
 import { DashboardGamesTab } from "./DashboardGamesTab";
 import { DashboardLabsTab } from "./DashboardLabsTab";
 import { EnhancedProgressTab } from "./EnhancedProgressTab";
-import { DashboardOverviewTab } from "./OverviewTab";
 
 interface DashboardTabsProps {
   activeTab: string;
   onTabChange: (value: string) => void;
-  phases: Phase[];
-  expandedPhases: string[];
-  onTogglePhase: (phaseId: string) => void;
   onModuleClick: (module: Module) => void;
   getAllModules: () => Module[];
   getEnrolledModules: () => Module[];
-  getCompletedModules: () => Module[];
   achievements: Array<{
     title: string;
     description: string;
@@ -28,26 +23,14 @@ interface DashboardTabsProps {
 export const DashboardTabs = ({
   activeTab,
   onTabChange,
-  phases,
-  expandedPhases,
-  onTogglePhase,
   onModuleClick,
   getAllModules,
   getEnrolledModules,
-  getCompletedModules,
   achievements,
 }: DashboardTabsProps) => {
-  // Use centralized functions
-
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-6">
       <TabsList className="bg-black/50 border border-green-400/30">
-        <TabsTrigger
-          value="courses"
-          className="data-[state=active]:bg-green-400 data-[state=active]:text-black font-mono"
-        >
-          {">> "}course_tree
-        </TabsTrigger>
         <TabsTrigger
           value="progress"
           className="data-[state=active]:bg-green-400 data-[state=active]:text-black font-mono"
@@ -74,23 +57,11 @@ export const DashboardTabs = ({
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="courses" className="space-y-6">
-        <DashboardOverviewTab
-          phases={phases}
-          expandedPhases={expandedPhases}
-          onTogglePhase={onTogglePhase}
-          onModuleClick={onModuleClick}
-          getAllModules={getAllModules}
-          getEnrolledModules={getEnrolledModules}
-          getCompletedModules={getCompletedModules}
-        />
-      </TabsContent>
-
       <TabsContent value="progress" className="space-y-6">
         <EnhancedProgressTab
           enrolledModules={getEnrolledModules()}
-          phases={getEnrolledPhases()}
-          getModulesByPhase={getModulesByPhase}
+          onModuleClick={onModuleClick}
+          getAllModules={getAllModules}
         />
       </TabsContent>
 

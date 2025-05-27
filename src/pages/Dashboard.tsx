@@ -3,9 +3,7 @@ import { DashboardTabs, LearningDashboard } from "@/components/dashboard";
 import {
   ACHIEVEMENTS_DATA,
   getAllModules,
-  getCompletedModules,
   getEnrolledModules,
-  PHASES_DATA,
 } from "@/lib/appData";
 import { Module } from "@/lib/types";
 import { useState } from "react";
@@ -13,19 +11,9 @@ import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("courses");
-  const [expandedPhases, setExpandedPhases] = useState<string[]>(["beginner"]);
-
-  const togglePhase = (phaseId: string) => {
-    setExpandedPhases((prev) =>
-      prev.includes(phaseId)
-        ? prev.filter((id) => id !== phaseId)
-        : [...prev, phaseId]
-    );
-  };
+  const [activeTab, setActiveTab] = useState("progress");
 
   // Use centralized data
-  const phases = PHASES_DATA;
   const achievements = ACHIEVEMENTS_DATA;
   const enrolledModules = getEnrolledModules();
 
@@ -55,13 +43,9 @@ const Dashboard = () => {
         <DashboardTabs
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          phases={phases}
-          expandedPhases={expandedPhases}
-          onTogglePhase={togglePhase}
           onModuleClick={handleModuleClick}
           getAllModules={getAllModules}
           getEnrolledModules={getEnrolledModules}
-          getCompletedModules={getCompletedModules}
           achievements={achievements}
         />
       </div>

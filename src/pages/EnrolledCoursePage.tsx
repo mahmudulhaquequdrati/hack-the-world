@@ -4,10 +4,14 @@ import {
   ContentSidebar,
   CourseHeader,
   CourseTabs,
+  ErrorState,
+  FullScreenContent,
+  GameContent,
+  LabContent,
+  LoadingSpinner,
   SplitView,
   VideoPlayer,
 } from "@/components/enrolled";
-import { Button } from "@/components/ui/button";
 import { getCourseById } from "@/lib/coursesData";
 import {
   convertCourseToEnrolledCourse,
@@ -26,7 +30,6 @@ import {
   Bug,
   Calculator,
   Code,
-  ExternalLink,
   Eye,
   FileText,
   Lock,
@@ -200,32 +203,30 @@ const EnrolledCoursePage = () => {
       );
     }
 
-    // Default additional modes if no specific matches
-    if (additionalModes.length === 0) {
+    if (lessonTitle.includes("malware") || lessonTitle.includes("virus")) {
       additionalModes.push(
         {
-          id: "analysis",
-          name: "Code Analysis",
-          icon: Code,
-          description: "AI-powered code and command analysis",
+          id: "malware-analysis",
+          name: "Malware Analysis",
+          icon: Bug,
+          description: "Malware detection and analysis tools",
         },
         {
-          id: "vulnerability",
-          name: "Vuln Scanner",
-          icon: Bug,
-          description: "Vulnerability detection and analysis",
+          id: "code-review",
+          name: "Code Review",
+          icon: Code,
+          description: "Security code review and analysis",
         }
       );
     }
 
     return [...baseModes, ...additionalModes];
-  }, [currentVideo]);
+  }, [currentVideo, course]);
 
-  const playgroundModes: PlaygroundMode[] = getDynamicPlaygroundModes;
-
+  // Check if current lesson needs playground
   const needsPlayground = () => {
     const currentLesson = getCurrentLesson();
-    return currentLesson?.type === "video";
+    return currentLesson?.type === "video" || currentLesson?.type === "text";
   };
 
   const needsFullScreenContent = () => {
@@ -237,65 +238,78 @@ const EnrolledCoursePage = () => {
     );
   };
 
-  // Event handlers
   const handleTerminalCommand = (command: string) => {
+    // Add user command to history
     setTerminalHistory((prev) => [
       ...prev,
       { type: "command", content: `user@cybersec:~$ ${command}` },
     ]);
 
-    // Simulate command execution with AI assistance
+    // Simulate AI response based on command
     setTimeout(() => {
-      let output = "";
-      let aiTip = "";
+      let response = "";
+      const cmd = command.toLowerCase();
 
-      switch (command.toLowerCase()) {
-        case "help":
-          output =
-            "Available commands: ls, pwd, whoami, ps, netstat, nmap, ping, cat, grep, find";
-          aiTip =
-            "💡 AI Tip: Try 'ls -la' to see detailed file listings with permissions!";
-          break;
-        case "ls":
-          output =
-            "Desktop  Documents  Downloads  Pictures  Videos  logs  scripts";
-          aiTip =
-            "💡 AI Tip: Great! You're listing directory contents. Try 'ls -la' for detailed view.";
-          break;
-        default:
-          output = `bash: ${command}: command not found`;
-          aiTip =
-            "💡 AI Tip: Try 'help' to see available commands, or ask me for guidance!";
+      if (cmd.includes("help")) {
+        response = `Available commands:
+- nmap: Network scanning
+- wireshark: Packet analysis
+- metasploit: Penetration testing
+- john: Password cracking
+- hashcat: Hash cracking
+- sqlmap: SQL injection testing
+- burpsuite: Web application testing
+- volatility: Memory analysis
+- autopsy: Digital forensics
+- yara: Malware detection`;
+      } else if (cmd.includes("nmap")) {
+        response = `Starting Nmap scan...
+Host discovery disabled (-Pn). All addresses will be marked 'up'
+Nmap scan report for target (192.168.1.1)
+Host is up (0.0010s latency).
+PORT     STATE SERVICE
+22/tcp   open  ssh
+80/tcp   open  http
+443/tcp  open  https`;
+      } else if (cmd.includes("ls")) {
+        response = `total 24
+drwxr-xr-x  2 user user 4096 Dec 16 14:32 Documents
+drwxr-xr-x  2 user user 4096 Dec 16 14:32 Downloads
+drwxr-xr-x  2 user user 4096 Dec 16 14:32 Tools
+-rw-r--r--  1 user user  220 Dec 16 14:32 .bash_logout
+-rw-r--r--  1 user user 3771 Dec 16 14:32 .bashrc`;
+      } else {
+        response = `Command '${command}' executed. This is a simulated environment for learning purposes.`;
       }
 
       setTerminalHistory((prev) => [
         ...prev,
-        { type: "output", content: output },
-        { type: "ai", content: aiTip },
+        { type: "output", content: response },
       ]);
-    }, 300);
+    }, 1000);
   };
 
   const handleAiChat = (message: string) => {
+    // Add user message
     setAiChatMessages((prev) => [...prev, { role: "user", content: message }]);
 
     // Simulate AI response
     setTimeout(() => {
-      let aiResponse = "";
-      const lowerMessage = message.toLowerCase();
+      const responses = [
+        "That's a great question about cybersecurity! Let me explain...",
+        "Based on the current lesson, here's what you should know...",
+        "This concept is fundamental to understanding cybersecurity...",
+        "Let me break this down for you step by step...",
+      ];
 
-      if (lowerMessage.includes("sql injection")) {
-        aiResponse =
-          "SQL injection is a code injection technique where malicious SQL statements are inserted into application entry points. Key prevention methods include: 1) Parameterized queries, 2) Input validation, 3) Least privilege principles.";
-      } else {
-        aiResponse = `That's a great question about ${message}! I'd be happy to help you understand this concept better.`;
-      }
+      const randomResponse =
+        responses[Math.floor(Math.random() * responses.length)];
 
       setAiChatMessages((prev) => [
         ...prev,
-        { role: "ai", content: aiResponse },
+        { role: "ai", content: randomResponse },
       ]);
-    }, 1000);
+    }, 1500);
   };
 
   const handleAnalysis = async (input: string) => {
@@ -303,15 +317,15 @@ const EnrolledCoursePage = () => {
     // Simulate analysis
     setTimeout(() => {
       setAnalysisResult(
-        `Analysis of "${input}":\n\nThis appears to be a cybersecurity-related command/code. Here are some insights:\n\n1. Security implications\n2. Best practices\n3. Potential vulnerabilities\n\nWould you like me to explain any specific aspect?`
+        `Analysis complete for: "${input}"\n\nThis appears to be a cybersecurity-related query. Based on the current lesson context, here are the key findings...`
       );
       setIsAnalyzing(false);
     }, 2000);
   };
 
   const nextLesson = () => {
-    const allLessons = getAllLessons();
-    if (currentVideo < allLessons.length - 1) {
+    const totalLessons = getAllLessons().length;
+    if (currentVideo < totalLessons - 1) {
       setCurrentVideo(currentVideo + 1);
     }
   };
@@ -323,29 +337,23 @@ const EnrolledCoursePage = () => {
   };
 
   const markLessonComplete = (lessonId: string) => {
-    if (!completedLessons.includes(lessonId)) {
-      setCompletedLessons([...completedLessons, lessonId]);
-    }
+    setCompletedLessons((prev) => [...prev, lessonId]);
   };
 
-  // Custom handlers for lab and game selection
   const handleLabSelect = (labId: string) => {
     setActiveLab(labId);
-    setActiveGame(null); // Clear any active game
   };
 
   const handleGameSelect = (gameId: string) => {
     setActiveGame(gameId);
-    setActiveLab(null); // Clear any active lab
   };
 
-  // Helper functions to open in new tab
   const openLabInNewTab = (labId: string) => {
-    window.open(`/learn/${courseId}/lab/${labId}`, "_blank");
+    window.open(`/lab/${labId}`, "_blank");
   };
 
   const openGameInNewTab = (gameId: string) => {
-    window.open(`/learn/${courseId}/game/${gameId}`, "_blank");
+    window.open(`/game/${gameId}`, "_blank");
   };
 
   // Helper function to close lab/game and return to lesson
@@ -359,34 +367,17 @@ const EnrolledCoursePage = () => {
 
   // Loading and error states
   if (loading) {
-    return (
-      <div className="min-h-screen bg-black text-green-400 relative flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400 mx-auto mb-4"></div>
-          <p className="font-mono">LOADING_COURSE_DATA...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="LOADING_COURSE_DATA..." />;
   }
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-black text-green-400 relative flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold font-mono mb-4">
-            COURSE_NOT_FOUND
-          </h1>
-          <p className="font-mono mb-6">
-            The requested course could not be found.
-          </p>
-          <Button
-            onClick={() => navigate("/overview")}
-            className="bg-green-400 text-black hover:bg-green-300 font-mono"
-          >
-            BACK_TO_OVERVIEW
-          </Button>
-        </div>
-      </div>
+      <ErrorState
+        title="COURSE_NOT_FOUND"
+        message="The requested course could not be found."
+        buttonText="BACK_TO_OVERVIEW"
+        onButtonClick={() => navigate("/overview")}
+      />
     );
   }
 
@@ -406,218 +397,49 @@ const EnrolledCoursePage = () => {
 
           {/* Main Content Area */}
           {activeLab ? (
-            // Lab Content
-            <div className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden mb-6">
-              <div className="p-4 border-b border-green-400/30 bg-green-400/10">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-green-400 font-semibold text-lg">
-                    {course.labs.find((lab) => lab.id === activeLab)?.name}
-                  </h3>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openLabInNewTab(activeLab)}
-                      className="border-green-400/30 text-green-400 hover:bg-green-400/10"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Open in New Tab
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={closeLab}
-                      className="text-green-400 hover:bg-green-400/10"
-                    >
-                      ✕
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="bg-gray-900/50 border border-green-400/20 rounded-lg p-8 text-center">
-                  <h4 className="text-green-400 text-xl mb-4">
-                    Lab Environment Loading...
-                  </h4>
-                  <p className="text-green-300/70 mb-6">
-                    {
-                      course.labs.find((lab) => lab.id === activeLab)
-                        ?.description
-                    }
-                  </p>
-                  <div className="animate-pulse">
-                    <div className="h-4 bg-green-400/20 rounded w-3/4 mx-auto mb-2"></div>
-                    <div className="h-4 bg-green-400/20 rounded w-1/2 mx-auto"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <LabContent
+              course={course}
+              activeLab={activeLab}
+              onOpenInNewTab={openLabInNewTab}
+              onClose={closeLab}
+            />
           ) : activeGame ? (
-            // Game Content
-            <div className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden mb-6">
-              <div className="p-4 border-b border-green-400/30 bg-green-400/10">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-green-400 font-semibold text-lg">
-                    {course.games.find((game) => game.id === activeGame)?.name}
-                  </h3>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openGameInNewTab(activeGame)}
-                      className="border-green-400/30 text-green-400 hover:bg-green-400/10"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Open in New Tab
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={closeGame}
-                      className="text-green-400 hover:bg-green-400/10"
-                    >
-                      ✕
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="bg-gray-900/50 border border-green-400/20 rounded-lg p-8 text-center">
-                  <h4 className="text-green-400 text-xl mb-4">
-                    Game Loading...
-                  </h4>
-                  <p className="text-green-300/70 mb-6">
-                    {
-                      course.games.find((game) => game.id === activeGame)
-                        ?.description
-                    }
-                  </p>
-                  <div className="animate-pulse">
-                    <div className="h-4 bg-green-400/20 rounded w-3/4 mx-auto mb-2"></div>
-                    <div className="h-4 bg-green-400/20 rounded w-1/2 mx-auto"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <GameContent
+              course={course}
+              activeGame={activeGame}
+              onOpenInNewTab={openGameInNewTab}
+              onClose={closeGame}
+            />
           ) : needsFullScreenContent() ? (
-            // Text/Lab/Game Content - Full Screen like Lab
-            <div className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden mb-6">
-              <div className="p-4 border-b border-green-400/30 bg-green-400/10">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-green-400 font-semibold text-lg">
-                    {getCurrentLesson()?.title}
-                  </h3>
-                  <div className="flex items-center space-x-2">
-                    {(getCurrentLesson()?.type === "lab" ||
-                      getCurrentLesson()?.type === "game") && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const currentLesson = getCurrentLesson();
-                          if (currentLesson?.type === "lab") {
-                            openLabInNewTab(currentLesson.id);
-                          } else if (currentLesson?.type === "game") {
-                            openGameInNewTab(currentLesson.id);
-                          }
-                        }}
-                        className="border-green-400/30 text-green-400 hover:bg-green-400/10"
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Open in New Tab
-                      </Button>
-                    )}
-                    <div className="px-3 py-1 bg-green-400/20 border border-green-400/40 rounded text-green-400 text-xs font-mono font-bold">
-                      {getCurrentLesson()?.type.toUpperCase()}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="bg-gray-900/50 border border-green-400/20 rounded-lg p-8">
-                  {getCurrentLesson()?.type === "text" ? (
-                    <div className="prose prose-green max-w-none">
-                      <div className="text-green-400 text-xl mb-4 font-mono">
-                        Reading Material
-                      </div>
-                      <div className="text-green-300/90 leading-relaxed font-mono text-sm">
-                        {getCurrentLesson()?.content ||
-                          getCurrentLesson()?.description}
-                      </div>
-                    </div>
-                  ) : getCurrentLesson()?.type === "lab" ? (
-                    <div className="text-center">
-                      <h4 className="text-green-400 text-xl mb-4 font-mono">
-                        Lab Environment Loading...
-                      </h4>
-                      <p className="text-green-300/70 mb-6 font-mono">
-                        {getCurrentLesson()?.description}
-                      </p>
-                      <div className="animate-pulse">
-                        <div className="h-4 bg-green-400/20 rounded w-3/4 mx-auto mb-2"></div>
-                        <div className="h-4 bg-green-400/20 rounded w-1/2 mx-auto"></div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <h4 className="text-green-400 text-xl mb-4 font-mono">
-                        Game Loading...
-                      </h4>
-                      <p className="text-green-300/70 mb-6 font-mono">
-                        {getCurrentLesson()?.description}
-                      </p>
-                      <div className="animate-pulse">
-                        <div className="h-4 bg-green-400/20 rounded w-3/4 mx-auto mb-2"></div>
-                        <div className="h-4 bg-green-400/20 rounded w-1/2 mx-auto"></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Navigation Controls for all content types */}
-                <div className="flex items-center justify-between mt-6 pt-4 border-t border-green-400/30">
-                  <Button
-                    variant="outline"
-                    onClick={previousLesson}
-                    disabled={currentVideo === 0}
-                    className="border-green-400/30 text-green-400 hover:bg-green-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ← Previous
-                  </Button>
-
-                  <div className="flex items-center space-x-4">
-                    <span className="text-green-400/70 text-sm font-mono">
-                      {currentVideo + 1} / {getAllLessons().length}
-                    </span>
-                    <Button
-                      onClick={() =>
-                        markLessonComplete(getCurrentLesson()?.id || "")
-                      }
-                      disabled={completedLessons.includes(
-                        getCurrentLesson()?.id || ""
-                      )}
-                      className="bg-green-400 text-black hover:bg-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {completedLessons.includes(getCurrentLesson()?.id || "")
-                        ? "✓ Completed"
-                        : "Mark Complete"}
-                    </Button>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    onClick={nextLesson}
-                    disabled={currentVideo >= getAllLessons().length - 1}
-                    className="border-green-400/30 text-green-400 hover:bg-green-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next →
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <FullScreenContent
+              lesson={getCurrentLesson()!}
+              currentIndex={currentVideo}
+              totalCount={getAllLessons().length}
+              isCompleted={completedLessons.includes(
+                getCurrentLesson()?.id || ""
+              )}
+              onPrevious={previousLesson}
+              onNext={nextLesson}
+              onMarkComplete={() =>
+                markLessonComplete(getCurrentLesson()?.id || "")
+              }
+              onOpenInNewTab={
+                getCurrentLesson()?.type === "lab"
+                  ? () => openLabInNewTab(getCurrentLesson()?.id || "")
+                  : getCurrentLesson()?.type === "game"
+                  ? () => openGameInNewTab(getCurrentLesson()?.id || "")
+                  : undefined
+              }
+            />
           ) : needsPlayground() ? (
-            // Video + Playground Content
             <SplitView
+              leftPaneWidth={leftPaneWidth}
+              onLeftPaneWidthChange={setLeftPaneWidth}
+              isResizing={isResizing}
+              onResizeStart={() => setIsResizing(true)}
+              onResizeEnd={() => setIsResizing(false)}
+              videoMaximized={videoMaximized}
+              playgroundMaximized={playgroundMaximized}
               leftPane={
                 <VideoPlayer
                   lesson={getCurrentLesson()}
@@ -642,7 +464,7 @@ const EnrolledCoursePage = () => {
               }
               rightPane={
                 <AIPlayground
-                  playgroundModes={playgroundModes}
+                  playgroundModes={getDynamicPlaygroundModes}
                   activeMode={playgroundMode}
                   terminalHistory={terminalHistory}
                   chatMessages={aiChatMessages}
@@ -663,25 +485,14 @@ const EnrolledCoursePage = () => {
                   }}
                 />
               }
-              leftPaneWidth={leftPaneWidth}
-              videoMaximized={videoMaximized}
-              playgroundMaximized={playgroundMaximized}
-              isResizing={isResizing}
-              onLeftPaneWidthChange={setLeftPaneWidth}
-              onResizeStart={() => setIsResizing(true)}
-              onResizeEnd={() => setIsResizing(false)}
             />
           ) : (
-            // Default Content
-            <div className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden mb-6">
-              <div className="p-6">
-                <div className="text-center text-green-400 font-mono">
-                  Content type not supported yet.
-                </div>
-              </div>
+            <div className="text-center text-green-400 font-mono">
+              Content type not supported yet.
             </div>
           )}
 
+          {/* Course Tabs */}
           <CourseTabs
             course={course}
             activeTab={activeTab}
@@ -695,6 +506,7 @@ const EnrolledCoursePage = () => {
         </div>
       </div>
 
+      {/* Content Sidebar */}
       <ContentSidebar
         course={course}
         currentVideo={currentVideo}
@@ -704,7 +516,7 @@ const EnrolledCoursePage = () => {
         onLessonSelect={(lessonIndex) => {
           setCurrentVideo(lessonIndex);
           // Reset playground to the first available mode for the new lesson
-          const newPlaygroundModes = playgroundModes;
+          const newPlaygroundModes = getDynamicPlaygroundModes;
           if (newPlaygroundModes.length > 0) {
             setPlaygroundMode(newPlaygroundModes[0].id);
           }

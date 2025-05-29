@@ -349,11 +349,21 @@ drwxr-xr-x  2 user user 4096 Dec 16 14:32 Tools
   };
 
   const openLabInNewTab = (labId: string) => {
-    window.open(`/lab/${labId}`, "_blank");
+    // Convert lab name to URL-friendly ID if needed
+    const urlFriendlyLabId = labId
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    window.open(`/learn/${courseId}/lab/${urlFriendlyLabId}`, "_blank");
   };
 
   const openGameInNewTab = (gameId: string) => {
-    window.open(`/game/${gameId}`, "_blank");
+    // Convert game name to URL-friendly ID if needed
+    const urlFriendlyGameId = gameId
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    window.open(`/learn/${courseId}/game/${urlFriendlyGameId}`, "_blank");
   };
 
   // Helper function to close lab/game and return to lesson

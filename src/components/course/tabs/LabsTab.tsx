@@ -1,12 +1,26 @@
+import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { LabItem } from "@/lib/types";
-import { Clock, Code, Target } from "lucide-react";
+import { Clock, Code, Play, Target } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface LabsTabProps {
   labs: LabItem[];
 }
 
 const LabsTab = ({ labs }: LabsTabProps) => {
+  const navigate = useNavigate();
+  const { courseId } = useParams();
+
+  const handleStartLab = (labName: string) => {
+    // Convert lab name to a URL-friendly ID and navigate to dedicated lab route
+    const labId = labName
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    navigate(`/learn/${courseId}/lab/${labId}`);
+  };
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case "beginner":
@@ -99,7 +113,7 @@ const LabsTab = ({ labs }: LabsTabProps) => {
                 </div>
 
                 {/* Lab Info Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-green-400/20">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-green-400/20 mb-6">
                   <div className="text-center">
                     <div className="text-green-400 font-mono text-xs font-bold mb-1">
                       DIFFICULTY
@@ -125,6 +139,15 @@ const LabsTab = ({ labs }: LabsTabProps) => {
                     </div>
                   </div>
                 </div>
+
+                {/* Start Lab Button */}
+                <Button
+                  onClick={() => handleStartLab(lab.name)}
+                  className="w-full bg-yellow-400 text-black hover:bg-yellow-300 font-mono text-sm"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  START_LAB
+                </Button>
               </div>
             </div>
           ))}

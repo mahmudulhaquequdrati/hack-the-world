@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { getGameData, getGamesByModule } from "@/lib/appData";
+import { GameData } from "@/lib/types";
 import {
   ArrowLeft,
   Network,
@@ -17,15 +19,6 @@ import {
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-interface GameData {
-  name: string;
-  description: string;
-  type: string;
-  maxPoints: number;
-  timeLimit?: string;
-  objectives: string[];
-}
-
 const GamePage = () => {
   const navigate = useNavigate();
   const { courseId, gameId } = useParams();
@@ -33,62 +26,59 @@ const GamePage = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(300); // 5 minutes
 
-  // Mock game data - in real app this would come from API
-  const getGameData = (): GameData => {
-    const games: { [key: string]: GameData } = {
-      "xss-hunter": {
-        name: "XSS Hunter Challenge",
-        description: "Find and exploit Cross-Site Scripting vulnerabilities",
-        type: "Security Challenge",
-        maxPoints: 300,
-        timeLimit: "10 minutes",
-        objectives: [
-          "Find 5 XSS vulnerabilities (20 pts each)",
-          "Bypass 3 input filters (30 pts each)",
-          "Execute DOM-based XSS (50 pts)",
-          "Steal session cookies (100 pts)",
-        ],
-      },
-      "command-master": {
-        name: "Command Line Master",
-        description: "Speed challenge for Linux command mastery",
-        type: "Speed Challenge",
-        maxPoints: 500,
-        timeLimit: "5 minutes",
-        objectives: [
-          "Complete 10 basic commands (10 pts each)",
-          "Speed bonus for fast completion (5 pts each)",
-          "Perfect syntax bonus (3 pts each)",
-          "Combo multiplier after 5 correct (x2)",
-        ],
-      },
-      "packet-sniffer": {
-        name: "Packet Sniffer Challenge",
-        description: "Analyze network traffic to find threats",
-        type: "Analysis Game",
-        maxPoints: 400,
-        timeLimit: "8 minutes",
-        objectives: [
-          "Identify suspicious packets (25 pts each)",
-          "Classify threat types (30 pts each)",
-          "Find hidden payloads (50 pts each)",
-          "Complete threat analysis (100 pts)",
-        ],
-      },
-    };
-
-    return (
-      games[gameId || ""] || {
+  // Get game data from centralized system
+  const getGameDataFromCentral = (): GameData => {
+    if (!courseId || !gameId) {
+      return {
         name: "Cybersecurity Game",
         description: "Interactive cybersecurity challenge",
         type: "Challenge",
         maxPoints: 200,
         objectives: ["Complete game objectives"],
+      };
+    }
+
+    // First try direct lookup
+    let gameData = getGameData(courseId, gameId);
+
+    // If not found, try to find by matching name converted to URL-friendly ID
+    if (!gameData) {
+      const gamesForModule = getGamesByModule(courseId);
+      for (const [, game] of Object.entries(gamesForModule)) {
+        const gameUrlId = game.name
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "");
+        if (gameUrlId === gameId) {
+          gameData = game;
+          break;
+        }
       }
-    );
+    }
+
+    if (gameData) {
+      return gameData;
+    }
+
+    // Fallback data if game not found
+    return {
+      name: "Cybersecurity Game",
+      description: "Interactive cybersecurity challenge",
+      type: "Challenge",
+      maxPoints: 200,
+      objectives: ["Complete game objectives"],
+    };
   };
 
-  const game = getGameData();
+  const game = getGameDataFromCentral();
+
+  // Initialize timer based on game's timeLimit
+  useState(() => {
+    if (game.timeLimit) {
+      const minutes = parseInt(game.timeLimit.split(" ")[0]);
+      setTimeRemaining(minutes * 60);
+    }
+  });
 
   const getTypeColor = (type: string) => {
     switch (type.toLowerCase()) {

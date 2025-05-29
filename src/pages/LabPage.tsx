@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getLabData, getLabsByModule } from "@/lib/appData";
+import { LabData } from "@/lib/types";
 import {
   ArrowLeft,
   CheckCircle,
@@ -22,116 +24,59 @@ interface LabStep {
   completed: boolean;
 }
 
-interface LabData {
-  name: string;
-  description: string;
-  difficulty: string;
-  duration: string;
-  objectives: string[];
-  steps: LabStep[];
-}
-
 const LabPage = () => {
   const navigate = useNavigate();
   const { courseId, labId } = useParams();
   const [labProgress, setLabProgress] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
 
-  // Mock lab data - in real app this would come from API
-  const getLabData = (): LabData => {
-    const labs: { [key: string]: LabData } = {
-      "web-lab-1": {
-        name: "SQL Injection Fundamentals",
-        description:
-          "Learn to identify and exploit SQL injection vulnerabilities",
-        difficulty: "Beginner",
-        duration: "45 min",
-        objectives: [
-          "Identify SQL injection entry points",
-          "Test basic SQL injection payloads",
-          "Extract data from vulnerable database",
-          "Document findings and remediation",
-        ],
-        steps: [
-          {
-            id: "step-1",
-            title: "Reconnaissance",
-            description: "Identify the login form and test for SQL injection",
-            completed: false,
-          },
-          {
-            id: "step-2",
-            title: "Payload Testing",
-            description: "Test various SQL injection payloads",
-            completed: false,
-          },
-          {
-            id: "step-3",
-            title: "Data Extraction",
-            description: "Extract user data from the database",
-            completed: false,
-          },
-          {
-            id: "step-4",
-            title: "Documentation",
-            description: "Document your findings and remediation steps",
-            completed: false,
-          },
-        ],
-      },
-      "linux-lab-1": {
-        name: "Linux Command Line Basics",
-        description: "Master essential Linux commands and file navigation",
-        difficulty: "Beginner",
-        duration: "30 min",
-        objectives: [
-          "Navigate the Linux file system",
-          "Use basic file manipulation commands",
-          "Understand file permissions",
-          "Find hidden files and directories",
-        ],
-        steps: [
-          {
-            id: "step-1",
-            title: "File System Navigation",
-            description: "Use cd, ls, and pwd commands to navigate",
-            completed: false,
-          },
-          {
-            id: "step-2",
-            title: "File Operations",
-            description: "Create, copy, move, and delete files",
-            completed: false,
-          },
-          {
-            id: "step-3",
-            title: "Permissions",
-            description: "Understand and modify file permissions",
-            completed: false,
-          },
-          {
-            id: "step-4",
-            title: "Hidden Files",
-            description: "Find and access hidden files",
-            completed: false,
-          },
-        ],
-      },
-    };
-
-    return (
-      labs[labId || ""] || {
+  // Get lab data from centralized system
+  const getLabDataFromCentral = (): LabData => {
+    if (!courseId || !labId) {
+      return {
         name: "Lab Environment",
         description: "Interactive cybersecurity lab",
         difficulty: "Intermediate",
         duration: "60 min",
         objectives: ["Complete lab objectives"],
         steps: [],
+      };
+    }
+
+    // First try direct lookup
+    let labData = getLabData(courseId, labId);
+
+    // If not found, try to find by matching name converted to URL-friendly ID
+    if (!labData) {
+      const labsForModule = getLabsByModule(courseId);
+      for (const [, lab] of Object.entries(labsForModule)) {
+        const labUrlId = lab.name
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "");
+        if (labUrlId === labId) {
+          labData = lab;
+          break;
+        }
       }
-    );
+    }
+
+    if (labData) {
+      return labData;
+    }
+
+    // Fallback data if lab not found
+    return {
+      name: "Lab Environment",
+      description: "Interactive cybersecurity lab",
+      difficulty: "Intermediate",
+      duration: "60 min",
+      objectives: ["Complete lab objectives"],
+      steps: [],
+    };
   };
 
-  const lab = getLabData();
+  const lab = getLabDataFromCentral();
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {

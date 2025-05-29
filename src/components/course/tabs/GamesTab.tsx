@@ -1,13 +1,27 @@
+import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { getGameTypeColor, getPointsColor } from "@/lib";
 import { GameItem } from "@/lib/types";
-import { Gamepad2, Star, Trophy } from "lucide-react";
+import { Gamepad2, Play, Star, Trophy } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface GamesTabProps {
   games: GameItem[];
 }
 
 const GamesTab = ({ games }: GamesTabProps) => {
+  const navigate = useNavigate();
+  const { courseId } = useParams();
+
+  const handlePlayGame = (gameName: string) => {
+    // Convert game name to a URL-friendly ID and navigate to dedicated game route
+    const gameId = gameName
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    navigate(`/learn/${courseId}/game/${gameId}`);
+  };
+
   return (
     <TabsContent value="games" className="mt-0">
       <div className="space-y-6">
@@ -95,12 +109,21 @@ const GamesTab = ({ games }: GamesTabProps) => {
                     <Gamepad2 className="w-4 h-4 mr-2" />
                     GAME_FEATURES
                   </h5>
-                  <div className="grid grid-cols-2 gap-2 text-sm text-green-300/80">
+                  <div className="grid grid-cols-2 gap-2 text-sm text-green-300/80 mb-4">
                     <div>• Interactive gameplay</div>
                     <div>• Real-time scoring</div>
                     <div>• Progress tracking</div>
                     <div>• Skill validation</div>
                   </div>
+
+                  {/* Play Game Button */}
+                  <Button
+                    onClick={() => handlePlayGame(game.name)}
+                    className="w-full bg-green-400 text-black hover:bg-green-300 font-mono text-sm"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    PLAY_GAME
+                  </Button>
                 </div>
               </div>
             </div>

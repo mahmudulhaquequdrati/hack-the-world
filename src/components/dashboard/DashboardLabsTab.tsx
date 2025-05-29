@@ -2,6 +2,7 @@ import { getDifficultyColor, getPhaseColor, getPhaseIcon } from "@/lib";
 import { Module, Phase } from "@/lib/types";
 import { ChevronDown, ChevronRight, Target, Terminal } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardLabsTabProps {
   phases: Phase[];
@@ -29,6 +30,7 @@ export const DashboardLabsTab = ({
   phases,
   getModulesByPhase,
 }: DashboardLabsTabProps) => {
+  const navigate = useNavigate();
   const [expandedPhases, setExpandedPhases] = useState<string[]>(["beginner"]);
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
 
@@ -46,6 +48,15 @@ export const DashboardLabsTab = ({
         ? prev.filter((id) => id !== moduleId)
         : [...prev, moduleId]
     );
+  };
+
+  const handleStartLab = (lab: LabItem) => {
+    // Navigate to dedicated lab route
+    const labId = lab.name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    navigate(`/learn/${lab.moduleId}/lab/${labId}`);
   };
 
   // Generate lab items from enrolled modules, organized by module
@@ -394,7 +405,12 @@ export const DashboardLabsTab = ({
                                               </div>
                                             </div>
                                             {lab.available && (
-                                              <button className="px-3 py-1 bg-cyan-400/20 border border-cyan-400/40 rounded text-cyan-400 font-mono text-xs hover:bg-cyan-400/30 transition-colors">
+                                              <button
+                                                className="px-3 py-1 bg-cyan-400/20 border border-cyan-400/40 rounded text-cyan-400 font-mono text-xs hover:bg-cyan-400/30 transition-colors"
+                                                onClick={() =>
+                                                  handleStartLab(lab)
+                                                }
+                                              >
                                                 {lab.completed
                                                   ? "REVIEW_LAB"
                                                   : "START_LAB"}

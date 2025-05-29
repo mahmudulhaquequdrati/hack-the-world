@@ -13,6 +13,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardGamesTabProps {
   phases: Phase[];
@@ -41,6 +42,7 @@ export const DashboardGamesTab = ({
   phases,
   getModulesByPhase,
 }: DashboardGamesTabProps) => {
+  const navigate = useNavigate();
   const [expandedPhases, setExpandedPhases] = useState<string[]>(["beginner"]);
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
 
@@ -58,6 +60,15 @@ export const DashboardGamesTab = ({
         ? prev.filter((id) => id !== moduleId)
         : [...prev, moduleId]
     );
+  };
+
+  const handlePlayGame = (game: GameItem) => {
+    // Navigate to dedicated game route
+    const gameId = game.name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    navigate(`/learn/${game.moduleId}/game/${gameId}`);
   };
 
   // Generate game items from enrolled modules, organized by module
@@ -418,7 +429,12 @@ export const DashboardGamesTab = ({
                                               </div>
                                             </div>
                                             {game.available && (
-                                              <button className="px-3 py-1 bg-red-400/20 border border-red-400/40 rounded text-red-400 font-mono text-xs hover:bg-red-400/30 transition-colors">
+                                              <button
+                                                className="px-3 py-1 bg-red-400/20 border border-red-400/40 rounded text-red-400 font-mono text-xs hover:bg-red-400/30 transition-colors"
+                                                onClick={() =>
+                                                  handlePlayGame(game)
+                                                }
+                                              >
                                                 {game.completed
                                                   ? "PLAY_AGAIN"
                                                   : "START_GAME"}

@@ -1,5 +1,29 @@
 import { Network, Shield, Target, Terminal } from "lucide-react";
-import { Course } from "./types";
+import { getGamesByModule, getLabsByModule } from "./appData";
+import { Course, GameItem, LabItem } from "./types";
+
+// Helper function to convert centralized game data to CourseGame format
+const convertGameData = (moduleId: string): GameItem[] => {
+  const gamesData = getGamesByModule(moduleId);
+  return Object.entries(gamesData).map(([, game]) => ({
+    name: game.name,
+    description: game.description,
+    points: game.maxPoints,
+    type: game.type,
+  }));
+};
+
+// Helper function to convert centralized lab data to CourseLab format
+const convertLabData = (moduleId: string): LabItem[] => {
+  const labsData = getLabsByModule(moduleId);
+  return Object.entries(labsData).map(([, lab]) => ({
+    name: lab.name,
+    description: lab.description,
+    difficulty: lab.difficulty,
+    duration: lab.duration,
+    skills: lab.objectives, // Using objectives as skills for compatibility
+  }));
+};
 
 export const coursesData: { [key: string]: Course } = {
   foundations: {
@@ -101,106 +125,8 @@ export const coursesData: { [key: string]: Course } = {
         skills: ["NIST Framework", "ISO 27001", "COBIT"],
       },
     ],
-    labsData: [
-      {
-        name: "Risk Assessment Simulation",
-        description: "Hands-on risk assessment of a fictional company",
-        difficulty: "Beginner",
-        duration: "45 min",
-        skills: ["Risk Analysis", "Documentation"],
-      },
-      {
-        name: "Policy Development Workshop",
-        description: "Create security policies for different scenarios",
-        difficulty: "Beginner",
-        duration: "60 min",
-        skills: ["Policy Writing", "Compliance"],
-      },
-      {
-        name: "CIA Triad Implementation",
-        description:
-          "Practical implementation of confidentiality, integrity, and availability",
-        difficulty: "Beginner",
-        duration: "30 min",
-        skills: ["CIA Triad", "Security Controls"],
-      },
-      {
-        name: "Security Framework Mapping",
-        description: "Map security controls to different compliance frameworks",
-        difficulty: "Intermediate",
-        duration: "75 min",
-        skills: ["Framework Analysis", "Control Mapping"],
-      },
-      {
-        name: "Incident Response Planning",
-        description:
-          "Develop an incident response plan for a simulated organization",
-        difficulty: "Intermediate",
-        duration: "90 min",
-        skills: ["Incident Response", "Planning", "Documentation"],
-      },
-      {
-        name: "Security Awareness Training Design",
-        description:
-          "Create security awareness training materials for employees",
-        difficulty: "Beginner",
-        duration: "50 min",
-        skills: ["Training Design", "Security Awareness"],
-      },
-      {
-        name: "Threat Modeling Exercise",
-        description: "Perform threat modeling on a sample application",
-        difficulty: "Intermediate",
-        duration: "80 min",
-        skills: ["Threat Modeling", "Risk Assessment"],
-      },
-      {
-        name: "Compliance Audit Simulation",
-        description: "Conduct a mock compliance audit using industry standards",
-        difficulty: "Advanced",
-        duration: "120 min",
-        skills: ["Auditing", "Compliance", "Documentation"],
-      },
-    ],
-    gamesData: [
-      {
-        name: "Security Policy Builder",
-        description: "Interactive game to build security policies",
-        points: 100,
-        type: "Strategy",
-      },
-      {
-        name: "Risk Matrix Challenge",
-        description: "Calculate and prioritize security risks",
-        points: 150,
-        type: "Puzzle",
-      },
-      {
-        name: "Framework Matcher",
-        description: "Match security controls to appropriate frameworks",
-        points: 120,
-        type: "Educational",
-      },
-      {
-        name: "CIA Triad Simulator",
-        description:
-          "Practice implementing confidentiality, integrity, and availability",
-        points: 130,
-        type: "Simulation",
-      },
-      {
-        name: "Threat Landscape Explorer",
-        description: "Navigate through different cybersecurity threats",
-        points: 110,
-        type: "Adventure",
-      },
-      {
-        name: "Compliance Checker",
-        description: "Test your knowledge of security compliance requirements",
-        points: 90,
-        type: "Quiz",
-      },
-    ],
+    labsData: convertLabData("foundations"),
+    gamesData: convertGameData("foundations"),
     assetsData: [
       { name: "CIA Triad Reference Guide", type: "PDF", size: "2.1 MB" },
       { name: "Risk Assessment Template", type: "Excel", size: "1.5 MB" },
@@ -309,148 +235,8 @@ export const coursesData: { [key: string]: Course } = {
         skills: ["User Management", "Process Control", "System Administration"],
       },
     ],
-    labsData: [
-      {
-        name: "Command Line Navigation Challenge",
-        description:
-          "Navigate through complex directory structures using only terminal commands",
-        difficulty: "Beginner",
-        duration: "30 min",
-        skills: ["Navigation", "File Operations"],
-      },
-      {
-        name: "File Permissions Workshop",
-        description:
-          "Practice setting and modifying file permissions for security",
-        difficulty: "Beginner",
-        duration: "45 min",
-        skills: ["Permissions", "Security"],
-      },
-      {
-        name: "Log Analysis with Command Line",
-        description:
-          "Analyze system logs using grep, awk, and other text processing tools",
-        difficulty: "Intermediate",
-        duration: "60 min",
-        skills: ["Text Processing", "Log Analysis"],
-      },
-      {
-        name: "Advanced Navigation Lab",
-        description: "Master advanced navigation techniques and shortcuts",
-        difficulty: "Intermediate",
-        duration: "40 min",
-        skills: ["Advanced Navigation", "Efficiency"],
-      },
-      {
-        name: "Shell Scripting Basics",
-        description: "Create your first shell scripts for automation",
-        difficulty: "Intermediate",
-        duration: "75 min",
-        skills: ["Shell Scripting", "Automation"],
-      },
-      {
-        name: "Process Management Lab",
-        description: "Learn to manage and monitor system processes effectively",
-        difficulty: "Intermediate",
-        duration: "55 min",
-        skills: ["Process Management", "System Administration"],
-      },
-      {
-        name: "Network Commands Workshop",
-        description: "Use Linux networking commands for troubleshooting",
-        difficulty: "Intermediate",
-        duration: "65 min",
-        skills: ["Networking", "Troubleshooting"],
-      },
-      {
-        name: "System Security Hardening",
-        description: "Harden a Linux system against common security threats",
-        difficulty: "Advanced",
-        duration: "90 min",
-        skills: ["System Hardening", "Security"],
-      },
-      {
-        name: "Backup and Recovery Lab",
-        description:
-          "Implement backup strategies and practice recovery procedures",
-        difficulty: "Intermediate",
-        duration: "70 min",
-        skills: ["Backup", "Recovery", "Data Protection"],
-      },
-      {
-        name: "Performance Monitoring Workshop",
-        description: "Monitor system performance and identify bottlenecks",
-        difficulty: "Advanced",
-        duration: "85 min",
-        skills: ["Performance Monitoring", "System Analysis"],
-      },
-      {
-        name: "Container Security Lab",
-        description: "Secure Docker containers and implement best practices",
-        difficulty: "Advanced",
-        duration: "100 min",
-        skills: ["Container Security", "Docker"],
-      },
-      {
-        name: "Incident Response with Linux",
-        description:
-          "Use Linux tools for digital forensics and incident response",
-        difficulty: "Advanced",
-        duration: "110 min",
-        skills: ["Incident Response", "Digital Forensics"],
-      },
-    ],
-    gamesData: [
-      {
-        name: "Terminal Speed Challenge",
-        description: "Complete tasks as quickly as possible using command line",
-        points: 80,
-        type: "Speed",
-      },
-      {
-        name: "Permission Puzzle",
-        description: "Solve file permission challenges step by step",
-        points: 120,
-        type: "Puzzle",
-      },
-      {
-        name: "File System Explorer",
-        description:
-          "Navigate complex directory structures in a game environment",
-        points: 100,
-        type: "Adventure",
-      },
-      {
-        name: "Command Master",
-        description: "Master Linux commands through interactive challenges",
-        points: 140,
-        type: "Educational",
-      },
-      {
-        name: "Process Hunter",
-        description: "Find and manage system processes in real-time scenarios",
-        points: 160,
-        type: "Simulation",
-      },
-      {
-        name: "Log Detective",
-        description: "Analyze system logs to solve security incidents",
-        points: 180,
-        type: "Investigation",
-      },
-      {
-        name: "Shell Scripting Challenge",
-        description: "Create powerful shell scripts to automate tasks",
-        points: 200,
-        type: "Programming",
-      },
-      {
-        name: "Linux Security Fortress",
-        description: "Secure a Linux system against various attack scenarios",
-        points: 220,
-        type: "Defense",
-      },
-    ],
+    labsData: convertLabData("linux-basics"),
+    gamesData: convertGameData("linux-basics"),
     assetsData: [
       { name: "Linux Command Cheat Sheet", type: "PDF", size: "1.2 MB" },
       { name: "File Permission Calculator", type: "Tool", size: "500 KB" },
@@ -556,181 +342,8 @@ export const coursesData: { [key: string]: Course } = {
         ],
       },
     ],
-    labsData: [
-      {
-        name: "Network Packet Analysis",
-        description:
-          "Analyze network traffic using Wireshark to understand protocols",
-        difficulty: "Beginner",
-        duration: "60 min",
-        skills: ["Packet Analysis", "Wireshark"],
-      },
-      {
-        name: "DNS Configuration Lab",
-        description:
-          "Configure and troubleshoot DNS settings in a lab environment",
-        difficulty: "Beginner",
-        duration: "45 min",
-        skills: ["DNS", "Network Configuration"],
-      },
-      {
-        name: "Network Scanning Exercise",
-        description:
-          "Use network scanning tools to discover devices and services",
-        difficulty: "Intermediate",
-        duration: "75 min",
-        skills: ["Network Scanning", "Reconnaissance"],
-      },
-      {
-        name: "OSI Model Practical Lab",
-        description: "Hands-on exploration of the OSI model layers",
-        difficulty: "Beginner",
-        duration: "50 min",
-        skills: ["OSI Model", "Network Theory"],
-      },
-      {
-        name: "TCP/IP Configuration Workshop",
-        description: "Configure and troubleshoot TCP/IP settings",
-        difficulty: "Intermediate",
-        duration: "65 min",
-        skills: ["TCP/IP", "Network Configuration"],
-      },
-      {
-        name: "Firewall Rules Lab",
-        description: "Create and test firewall rules for network security",
-        difficulty: "Intermediate",
-        duration: "80 min",
-        skills: ["Firewall", "Network Security"],
-      },
-      {
-        name: "VPN Setup and Configuration",
-        description: "Set up and configure VPN connections",
-        difficulty: "Intermediate",
-        duration: "70 min",
-        skills: ["VPN", "Network Security"],
-      },
-      {
-        name: "Network Monitoring Lab",
-        description: "Monitor network traffic and identify anomalies",
-        difficulty: "Advanced",
-        duration: "90 min",
-        skills: ["Network Monitoring", "Security Analysis"],
-      },
-      {
-        name: "Wireless Security Assessment",
-        description: "Assess and secure wireless network infrastructure",
-        difficulty: "Advanced",
-        duration: "95 min",
-        skills: ["Wireless Security", "Network Assessment"],
-      },
-      {
-        name: "Network Forensics Workshop",
-        description: "Investigate network incidents using forensic techniques",
-        difficulty: "Advanced",
-        duration: "110 min",
-        skills: ["Network Forensics", "Incident Investigation"],
-      },
-      {
-        name: "VLAN Configuration Lab",
-        description:
-          "Configure and manage Virtual LANs for network segmentation",
-        difficulty: "Intermediate",
-        duration: "75 min",
-        skills: ["VLAN", "Network Segmentation"],
-      },
-      {
-        name: "Network Performance Optimization",
-        description:
-          "Optimize network performance and troubleshoot bottlenecks",
-        difficulty: "Advanced",
-        duration: "100 min",
-        skills: ["Performance Optimization", "Network Troubleshooting"],
-      },
-      {
-        name: "Network Attack Simulation",
-        description: "Simulate and defend against common network attacks",
-        difficulty: "Advanced",
-        duration: "120 min",
-        skills: ["Attack Simulation", "Network Defense"],
-      },
-      {
-        name: "Load Balancer Configuration",
-        description: "Configure and test network load balancers",
-        difficulty: "Advanced",
-        duration: "85 min",
-        skills: ["Load Balancing", "High Availability"],
-      },
-      {
-        name: "Network Documentation Lab",
-        description: "Create comprehensive network documentation and diagrams",
-        difficulty: "Intermediate",
-        duration: "60 min",
-        skills: ["Documentation", "Network Mapping"],
-      },
-    ],
-    gamesData: [
-      {
-        name: "Protocol Stack Builder",
-        description:
-          "Build network protocol stacks by matching layers correctly",
-        points: 100,
-        type: "Educational",
-      },
-      {
-        name: "Network Troubleshooter",
-        description: "Diagnose and fix network connectivity issues",
-        points: 150,
-        type: "Simulation",
-      },
-      {
-        name: "Protocol Analysis Game",
-        description: "Analyze network protocols and identify their functions",
-        points: 120,
-        type: "Analysis",
-      },
-      {
-        name: "Packet Capture Challenge",
-        description: "Capture and analyze network packets in real-time",
-        points: 140,
-        type: "Investigation",
-      },
-      {
-        name: "Network Security Scanner",
-        description: "Scan networks for vulnerabilities and security issues",
-        points: 160,
-        type: "Security",
-      },
-      {
-        name: "Firewall Configuration Game",
-        description: "Configure firewalls to protect network infrastructure",
-        points: 180,
-        type: "Configuration",
-      },
-      {
-        name: "VPN Setup Simulator",
-        description: "Set up and configure VPN connections securely",
-        points: 170,
-        type: "Simulation",
-      },
-      {
-        name: "Network Attack Defense",
-        description: "Defend against various network-based attacks",
-        points: 200,
-        type: "Defense",
-      },
-      {
-        name: "DNS Security Challenge",
-        description: "Secure DNS infrastructure against attacks",
-        points: 130,
-        type: "Security",
-      },
-      {
-        name: "Network Forensics Game",
-        description: "Investigate network incidents using forensic techniques",
-        points: 190,
-        type: "Forensics",
-      },
-    ],
+    labsData: convertLabData("networking-basics"),
+    gamesData: convertGameData("networking-basics"),
     assetsData: [
       { name: "OSI Model Reference", type: "PDF", size: "1.8 MB" },
       { name: "Protocol Comparison Chart", type: "PDF", size: "900 KB" },
@@ -838,127 +451,8 @@ export const coursesData: { [key: string]: Course } = {
         ],
       },
     ],
-    labsData: [
-      {
-        name: "XSS Vulnerability Lab",
-        description:
-          "Identify and exploit cross-site scripting vulnerabilities",
-        difficulty: "Beginner",
-        duration: "45 min",
-        skills: ["XSS", "Web Exploitation"],
-      },
-      {
-        name: "CSRF Attack Simulation",
-        description:
-          "Understand and demonstrate cross-site request forgery attacks",
-        difficulty: "Beginner",
-        duration: "40 min",
-        skills: ["CSRF", "Web Security"],
-      },
-      {
-        name: "Authentication Bypass Challenge",
-        description: "Find and exploit authentication vulnerabilities",
-        difficulty: "Intermediate",
-        duration: "60 min",
-        skills: ["Authentication", "Web Exploitation"],
-      },
-      {
-        name: "Web Security Basics Lab",
-        description: "Explore fundamental web security concepts hands-on",
-        difficulty: "Beginner",
-        duration: "50 min",
-        skills: ["Web Security", "HTTP/HTTPS"],
-      },
-      {
-        name: "SQL Injection Workshop",
-        description:
-          "Learn to identify and exploit SQL injection vulnerabilities",
-        difficulty: "Intermediate",
-        duration: "75 min",
-        skills: ["SQL Injection", "Database Security"],
-      },
-      {
-        name: "Web Application Testing Lab",
-        description: "Comprehensive testing of web application security",
-        difficulty: "Intermediate",
-        duration: "90 min",
-        skills: ["Web Testing", "Security Assessment"],
-      },
-      {
-        name: "Session Management Lab",
-        description: "Analyze and exploit session management vulnerabilities",
-        difficulty: "Intermediate",
-        duration: "65 min",
-        skills: ["Session Management", "Web Security"],
-      },
-      {
-        name: "Input Validation Testing",
-        description: "Test input validation mechanisms in web applications",
-        difficulty: "Intermediate",
-        duration: "55 min",
-        skills: ["Input Validation", "Web Security"],
-      },
-      {
-        name: "Web API Security Lab",
-        description: "Secure and test REST API endpoints",
-        difficulty: "Advanced",
-        duration: "80 min",
-        skills: ["API Security", "REST APIs"],
-      },
-      {
-        name: "OWASP Top 10 Workshop",
-        description: "Hands-on exploration of OWASP Top 10 vulnerabilities",
-        difficulty: "Advanced",
-        duration: "120 min",
-        skills: ["OWASP", "Web Vulnerabilities"],
-      },
-    ],
-    gamesData: [
-      {
-        name: "Web Vulnerability Hunter",
-        description: "Find hidden vulnerabilities in web applications",
-        points: 120,
-        type: "Hunt",
-      },
-      {
-        name: "Security Header Configurator",
-        description: "Configure security headers to protect web applications",
-        points: 100,
-        type: "Configuration",
-      },
-      {
-        name: "XSS Attack Simulator",
-        description: "Learn to identify and exploit XSS vulnerabilities safely",
-        points: 140,
-        type: "Simulation",
-      },
-      {
-        name: "SQL Injection Challenge",
-        description:
-          "Master SQL injection techniques in a controlled environment",
-        points: 160,
-        type: "Exploitation",
-      },
-      {
-        name: "CSRF Defense Game",
-        description:
-          "Implement defenses against Cross-Site Request Forgery attacks",
-        points: 130,
-        type: "Defense",
-      },
-      {
-        name: "Authentication Bypass Puzzle",
-        description: "Find creative ways to bypass authentication mechanisms",
-        points: 150,
-        type: "Puzzle",
-      },
-      {
-        name: "Web Application Firewall Game",
-        description: "Configure and test web application firewalls",
-        points: 170,
-        type: "Configuration",
-      },
-    ],
+    labsData: convertLabData("web-security-intro"),
+    gamesData: convertGameData("web-security-intro"),
     assetsData: [
       { name: "OWASP Top 10 Guide", type: "PDF", size: "2.5 MB" },
       { name: "Web Security Checklist", type: "PDF", size: "1.1 MB" },
@@ -1079,228 +573,127 @@ export const coursesData: { [key: string]: Course } = {
         ],
       },
     ],
-    labsData: [
-      {
-        name: "Network Reconnaissance Lab",
-        description: "Perform comprehensive reconnaissance on a target network",
-        difficulty: "Intermediate",
-        duration: "90 min",
-        skills: ["Reconnaissance", "Network Scanning"],
-      },
-      {
-        name: "Web Application Penetration Test",
-        description:
-          "Complete penetration test of a vulnerable web application",
-        difficulty: "Intermediate",
-        duration: "120 min",
-        skills: ["Web Testing", "Exploitation"],
-      },
-      {
-        name: "Privilege Escalation Challenge",
-        description: "Escalate privileges on compromised systems",
-        difficulty: "Advanced",
-        duration: "75 min",
-        skills: ["Privilege Escalation", "Post-Exploitation"],
-      },
-      {
-        name: "Penetration Testing Planning Lab",
-        description: "Plan and scope a penetration testing engagement",
-        difficulty: "Beginner",
-        duration: "60 min",
-        skills: ["Planning", "Scoping", "Documentation"],
-      },
-      {
-        name: "OSINT Collection Workshop",
-        description: "Gather intelligence using open source techniques",
-        difficulty: "Beginner",
-        duration: "70 min",
-        skills: ["OSINT", "Intelligence Gathering"],
-      },
-      {
-        name: "Enumeration Challenge Lab",
-        description: "Enumerate services and gather system information",
-        difficulty: "Intermediate",
-        duration: "85 min",
-        skills: ["Enumeration", "Information Gathering"],
-      },
-      {
-        name: "Vulnerability Assessment Lab",
-        description: "Identify and assess vulnerabilities in target systems",
-        difficulty: "Intermediate",
-        duration: "95 min",
-        skills: ["Vulnerability Assessment", "Risk Analysis"],
-      },
-      {
-        name: "Metasploit Framework Lab",
-        description: "Master the Metasploit framework for exploitation",
-        difficulty: "Advanced",
-        duration: "110 min",
-        skills: ["Metasploit", "Exploitation"],
-      },
-      {
-        name: "Social Engineering Lab",
-        description: "Practice social engineering techniques ethically",
-        difficulty: "Intermediate",
-        duration: "80 min",
-        skills: ["Social Engineering", "Human Psychology"],
-      },
-      {
-        name: "Post-Exploitation Workshop",
-        description: "Learn post-exploitation techniques and persistence",
-        difficulty: "Advanced",
-        duration: "100 min",
-        skills: ["Post-Exploitation", "Persistence"],
-      },
-      {
-        name: "Wireless Penetration Testing",
-        description: "Test wireless network security",
-        difficulty: "Advanced",
-        duration: "105 min",
-        skills: ["Wireless Security", "Network Testing"],
-      },
-      {
-        name: "Mobile Application Testing",
-        description: "Penetration test mobile applications",
-        difficulty: "Advanced",
-        duration: "115 min",
-        skills: ["Mobile Security", "Application Testing"],
-      },
-      {
-        name: "Red Team Exercise",
-        description: "Conduct a full red team operation",
-        difficulty: "Expert",
-        duration: "180 min",
-        skills: ["Red Teaming", "Advanced Tactics"],
-      },
-      {
-        name: "Penetration Testing Report Lab",
-        description: "Create professional penetration testing reports",
-        difficulty: "Intermediate",
-        duration: "90 min",
-        skills: ["Report Writing", "Documentation"],
-      },
-      {
-        name: "Cloud Penetration Testing",
-        description: "Test cloud infrastructure security",
-        difficulty: "Advanced",
-        duration: "125 min",
-        skills: ["Cloud Security", "Infrastructure Testing"],
-      },
-      {
-        name: "Active Directory Attack Lab",
-        description: "Attack and compromise Active Directory environments",
-        difficulty: "Advanced",
-        duration: "130 min",
-        skills: ["Active Directory", "Windows Security"],
-      },
-      {
-        name: "Buffer Overflow Exploitation",
-        description: "Learn to exploit buffer overflow vulnerabilities",
-        difficulty: "Expert",
-        duration: "150 min",
-        skills: ["Buffer Overflow", "Exploit Development"],
-      },
-      {
-        name: "Evasion Techniques Lab",
-        description: "Evade detection systems and security controls",
-        difficulty: "Advanced",
-        duration: "95 min",
-        skills: ["Evasion", "Anti-Detection"],
-      },
-      {
-        name: "Physical Security Assessment",
-        description: "Assess physical security controls and bypasses",
-        difficulty: "Intermediate",
-        duration: "75 min",
-        skills: ["Physical Security", "Lock Picking"],
-      },
-    ],
-    gamesData: [
-      {
-        name: "Capture the Flag",
-        description: "Complete penetration testing challenges to capture flags",
-        points: 200,
-        type: "CTF",
-      },
-      {
-        name: "Exploit Chain Builder",
-        description: "Chain multiple exploits together for maximum impact",
-        points: 250,
-        type: "Strategy",
-      },
-      {
-        name: "OSINT Collection Game",
-        description:
-          "Gather intelligence using open source intelligence techniques",
-        points: 180,
-        type: "Investigation",
-      },
-      {
-        name: "Methodology Simulation",
-        description:
-          "Practice penetration testing methodologies in realistic scenarios",
-        points: 160,
-        type: "Simulation",
-      },
-      {
-        name: "Vulnerability Assessment Game",
-        description: "Identify and assess vulnerabilities in target systems",
-        points: 170,
-        type: "Assessment",
-      },
-      {
-        name: "Social Engineering Simulator",
-        description:
-          "Learn social engineering techniques in a safe environment",
-        points: 140,
-        type: "Simulation",
-      },
-      {
-        name: "Metasploit Master",
-        description:
-          "Master the Metasploit framework through hands-on challenges",
-        points: 220,
-        type: "Technical",
-      },
-      {
-        name: "Privilege Escalation Puzzle",
-        description:
-          "Find creative ways to escalate privileges on compromised systems",
-        points: 240,
-        type: "Puzzle",
-      },
-      {
-        name: "Red Team Simulator",
-        description:
-          "Conduct full red team operations against defended networks",
-        points: 300,
-        type: "Advanced",
-      },
-      {
-        name: "Persistence Challenge",
-        description:
-          "Maintain access to compromised systems using various techniques",
-        points: 210,
-        type: "Stealth",
-      },
-      {
-        name: "Evasion Techniques Game",
-        description: "Evade detection systems and security controls",
-        points: 230,
-        type: "Evasion",
-      },
-      {
-        name: "Reporting Master",
-        description: "Create professional penetration testing reports",
-        points: 120,
-        type: "Documentation",
-      },
-    ],
+    labsData: convertLabData("penetration-testing"),
+    gamesData: convertGameData("penetration-testing"),
     assetsData: [
       { name: "Penetration Testing Methodology", type: "PDF", size: "3.2 MB" },
       { name: "Metasploit Quick Reference", type: "PDF", size: "1.8 MB" },
     ],
     enrollPath: "/learn/penetration-testing",
+  },
+  "web-application-security": {
+    id: "web-application-security",
+    title: "Web Application Security",
+    description:
+      "Advanced web vulnerabilities and exploitation techniques for comprehensive application security testing.",
+    category: "Web Security",
+    difficulty: "Intermediate",
+    duration: "5-6 weeks",
+    icon: Shield,
+    color: "text-cyan-400",
+    bgColor: "bg-cyan-400/10",
+    borderColor: "border-cyan-400/30",
+    enrolled: true,
+    progress: 45,
+    lessons: 28,
+    labs: 18,
+    games: 10,
+    assets: 30,
+    rating: 4.8,
+    students: 2800,
+    price: "$149",
+    skills: ["OWASP Top 10", "SQL Injection", "XSS", "Authentication Bypass"],
+    prerequisites: "Web Security Introduction",
+    certification: true,
+    instructor: {
+      name: "Sarah Martinez",
+      title: "Application Security Lead",
+      avatar:
+        "https://images.pexels.com/photos/3823488/pexels-photo-3823488.jpeg?auto=compress&cs=tinysrgb&w=150",
+      experience: "14+ years in application security",
+    },
+    curriculum: [
+      {
+        title: "Advanced Web Vulnerabilities",
+        lessons: 10,
+        duration: "5h",
+        topics: [
+          "OWASP Top 10",
+          "SQL Injection",
+          "XSS",
+          "Authentication Bypass",
+        ],
+        completed: false,
+      },
+      {
+        title: "Exploitation Techniques",
+        lessons: 10,
+        duration: "5h",
+        topics: [
+          "SQL Injection",
+          "XSS",
+          "Authentication Bypass",
+          "Web Application Exploitation",
+        ],
+        completed: false,
+      },
+      {
+        title: "Security Testing",
+        lessons: 8,
+        duration: "4h",
+        topics: [
+          "Manual Testing",
+          "Automated Tools",
+          "Security Scanners",
+          "Web Application Testing Lab",
+          "Vulnerability Scanner Game",
+          "Reporting",
+        ],
+        completed: false,
+      },
+    ],
+    learningOutcomes: [
+      {
+        title: "Understand advanced web vulnerabilities",
+        description:
+          "Recognize and understand the most common web application security flaws.",
+        skills: [
+          "OWASP Top 10",
+          "SQL Injection",
+          "XSS",
+          "Authentication Bypass",
+        ],
+      },
+      {
+        title: "Perform advanced security testing",
+        description:
+          "Learn to test web applications for security vulnerabilities using manual and automated techniques.",
+        skills: [
+          "Security Testing",
+          "Vulnerability Assessment",
+          "Web Scanners",
+        ],
+      },
+      {
+        title: "Execute web application exploitation",
+        description:
+          "Learn to identify, exploit, and leverage vulnerabilities in target web applications.",
+        skills: [
+          "Exploitation",
+          "SQL Injection",
+          "XSS",
+          "Authentication Bypass",
+        ],
+      },
+    ],
+    labsData: convertLabData("web-application-security"),
+    gamesData: convertGameData("web-application-security"),
+    assetsData: [
+      { name: "Advanced OWASP Guide", type: "PDF", size: "5.1 MB" },
+      { name: "Exploitation Techniques Manual", type: "PDF", size: "3.2 MB" },
+      { name: "Security Testing Tools", type: "ZIP", size: "2.1 MB" },
+    ],
+    enrollPath: "/learn/web-application-security",
   },
 };
 

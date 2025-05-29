@@ -16,7 +16,7 @@ import {
   Wifi,
   Zap,
 } from "lucide-react";
-import { Module, Phase } from "./types";
+import { GameData, LabData, Module, Phase } from "./types";
 
 // Centralized Phases and Modules Data
 export const PHASES_DATA: Phase[] = [
@@ -415,6 +415,526 @@ export const ACHIEVEMENTS_DATA = [
   },
 ];
 
+// Centralized Games Data connected to courses
+export const GAMES_DATA: { [key: string]: { [gameId: string]: GameData } } = {
+  foundations: {
+    "security-policy-builder": {
+      name: "Security Policy Builder",
+      description: "Interactive game to build security policies",
+      type: "Strategy",
+      maxPoints: 100,
+      timeLimit: "15 minutes",
+      objectives: [
+        "Create comprehensive security policies (25 pts)",
+        "Address compliance requirements (20 pts)",
+        "Implement risk-based controls (30 pts)",
+        "Complete policy review process (25 pts)",
+      ],
+    },
+    "risk-matrix-challenge": {
+      name: "Risk Matrix Challenge",
+      description: "Calculate and prioritize security risks",
+      type: "Puzzle",
+      maxPoints: 150,
+      timeLimit: "12 minutes",
+      objectives: [
+        "Identify risk factors (30 pts)",
+        "Calculate risk scores (40 pts)",
+        "Prioritize risks correctly (50 pts)",
+        "Speed bonus for quick completion (30 pts)",
+      ],
+    },
+    "cia-triad-simulator": {
+      name: "CIA Triad Simulator",
+      description:
+        "Practice implementing confidentiality, integrity, and availability",
+      type: "Simulation",
+      maxPoints: 130,
+      timeLimit: "10 minutes",
+      objectives: [
+        "Implement confidentiality controls (40 pts)",
+        "Ensure data integrity measures (40 pts)",
+        "Maintain system availability (40 pts)",
+        "Balance all three principles (10 pts)",
+      ],
+    },
+  },
+  "linux-basics": {
+    "command-master": {
+      name: "Command Line Master",
+      description: "Speed challenge for Linux command mastery",
+      type: "Speed Challenge",
+      maxPoints: 500,
+      timeLimit: "5 minutes",
+      objectives: [
+        "Complete 10 basic commands (10 pts each)",
+        "Speed bonus for fast completion (5 pts each)",
+        "Perfect syntax bonus (3 pts each)",
+        "Combo multiplier after 5 correct (x2)",
+      ],
+    },
+    "file-system-navigator": {
+      name: "File System Navigator",
+      description: "Navigate through complex directory structures",
+      type: "Adventure",
+      maxPoints: 200,
+      timeLimit: "8 minutes",
+      objectives: [
+        "Find hidden files (25 pts each)",
+        "Navigate to target directories (15 pts each)",
+        "Complete navigation challenges (50 pts)",
+        "Discover secret paths (30 pts)",
+      ],
+    },
+  },
+  "networking-basics": {
+    "packet-sniffer": {
+      name: "Packet Sniffer Challenge",
+      description: "Analyze network traffic to find threats",
+      type: "Analysis Game",
+      maxPoints: 400,
+      timeLimit: "8 minutes",
+      objectives: [
+        "Identify suspicious packets (25 pts each)",
+        "Classify threat types (30 pts each)",
+        "Find hidden payloads (50 pts each)",
+        "Complete threat analysis (100 pts)",
+      ],
+    },
+    "protocol-detective": {
+      name: "Protocol Detective",
+      description: "Identify and analyze network protocols",
+      type: "Investigation",
+      maxPoints: 300,
+      timeLimit: "10 minutes",
+      objectives: [
+        "Identify protocol types (20 pts each)",
+        "Analyze protocol behavior (30 pts each)",
+        "Detect protocol anomalies (40 pts each)",
+        "Complete protocol analysis (50 pts)",
+      ],
+    },
+  },
+  "web-security-intro": {
+    "xss-hunter": {
+      name: "XSS Hunter Challenge",
+      description: "Find and exploit Cross-Site Scripting vulnerabilities",
+      type: "Security Challenge",
+      maxPoints: 300,
+      timeLimit: "10 minutes",
+      objectives: [
+        "Find 5 XSS vulnerabilities (20 pts each)",
+        "Bypass 3 input filters (30 pts each)",
+        "Execute DOM-based XSS (50 pts)",
+        "Steal session cookies (100 pts)",
+      ],
+    },
+    "csrf-defender": {
+      name: "CSRF Defender",
+      description: "Protect applications from Cross-Site Request Forgery",
+      type: "Defense",
+      maxPoints: 250,
+      timeLimit: "12 minutes",
+      objectives: [
+        "Identify CSRF vulnerabilities (40 pts each)",
+        "Implement protection mechanisms (60 pts each)",
+        "Test defense effectiveness (50 pts)",
+        "Complete security audit (50 pts)",
+      ],
+    },
+  },
+  "penetration-testing": {
+    "recon-master": {
+      name: "Reconnaissance Master",
+      description: "Master information gathering techniques",
+      type: "Investigation",
+      maxPoints: 400,
+      timeLimit: "15 minutes",
+      objectives: [
+        "Perform OSINT gathering (50 pts)",
+        "Identify target services (60 pts)",
+        "Map network topology (80 pts)",
+        "Document findings (60 pts)",
+        "Create attack plan (50 pts)",
+      ],
+    },
+    "exploit-chain-builder": {
+      name: "Exploit Chain Builder",
+      description: "Chain multiple exploits together for maximum impact",
+      type: "Strategy",
+      maxPoints: 500,
+      timeLimit: "20 minutes",
+      objectives: [
+        "Identify vulnerability chain (80 pts)",
+        "Execute initial compromise (100 pts)",
+        "Escalate privileges (120 pts)",
+        "Maintain persistence (100 pts)",
+        "Complete objective (100 pts)",
+      ],
+    },
+  },
+  "web-application-security": {
+    "sql-injection-master": {
+      name: "SQL Injection Master",
+      description: "Master SQL injection techniques",
+      type: "Technical",
+      maxPoints: 450,
+      timeLimit: "18 minutes",
+      objectives: [
+        "Identify injection points (60 pts)",
+        "Bypass authentication (80 pts)",
+        "Extract database schema (100 pts)",
+        "Retrieve sensitive data (120 pts)",
+        "Document exploitation (90 pts)",
+      ],
+    },
+    "owasp-champion": {
+      name: "OWASP Top 10 Champion",
+      description: "Master all OWASP Top 10 vulnerabilities",
+      type: "Comprehensive",
+      maxPoints: 600,
+      timeLimit: "25 minutes",
+      objectives: [
+        "Identify all 10 vulnerability types (20 pts each)",
+        "Exploit 5 different vulnerabilities (40 pts each)",
+        "Complete advanced challenge (200 pts)",
+      ],
+    },
+  },
+};
+
+// Centralized Labs Data connected to courses
+export const LABS_DATA: { [key: string]: { [labId: string]: LabData } } = {
+  foundations: {
+    "risk-assessment-simulation": {
+      name: "Risk Assessment Simulation",
+      description: "Hands-on risk assessment of a fictional company",
+      difficulty: "Beginner",
+      duration: "45 min",
+      objectives: [
+        "Analyze company infrastructure for risks",
+        "Calculate risk scores using standard matrices",
+        "Prioritize risks based on business impact",
+        "Create comprehensive risk report",
+      ],
+      steps: [
+        {
+          id: "step-1",
+          title: "Asset Identification",
+          description: "Identify and catalog all company assets",
+          completed: false,
+        },
+        {
+          id: "step-2",
+          title: "Threat Analysis",
+          description: "Analyze potential threats to each asset",
+          completed: false,
+        },
+        {
+          id: "step-3",
+          title: "Vulnerability Assessment",
+          description: "Identify vulnerabilities in systems and processes",
+          completed: false,
+        },
+        {
+          id: "step-4",
+          title: "Risk Calculation",
+          description: "Calculate risk scores using impact and likelihood",
+          completed: false,
+        },
+        {
+          id: "step-5",
+          title: "Mitigation Planning",
+          description: "Develop risk mitigation strategies",
+          completed: false,
+        },
+      ],
+    },
+    "cia-triad-implementation": {
+      name: "CIA Triad Implementation",
+      description:
+        "Practical implementation of confidentiality, integrity, and availability",
+      difficulty: "Beginner",
+      duration: "30 min",
+      objectives: [
+        "Implement confidentiality controls",
+        "Ensure data integrity mechanisms",
+        "Design availability safeguards",
+        "Test all three principles together",
+      ],
+      steps: [
+        {
+          id: "step-1",
+          title: "Confidentiality Setup",
+          description: "Configure encryption and access controls",
+          completed: false,
+        },
+        {
+          id: "step-2",
+          title: "Integrity Verification",
+          description: "Implement checksums and digital signatures",
+          completed: false,
+        },
+        {
+          id: "step-3",
+          title: "Availability Design",
+          description: "Set up redundancy and backup systems",
+          completed: false,
+        },
+        {
+          id: "step-4",
+          title: "Integration Testing",
+          description: "Test all CIA components working together",
+          completed: false,
+        },
+      ],
+    },
+  },
+  "linux-basics": {
+    "file-system-mastery": {
+      name: "Linux File System Mastery",
+      description: "Master Linux file system navigation and operations",
+      difficulty: "Beginner",
+      duration: "40 min",
+      objectives: [
+        "Navigate complex directory structures",
+        "Master file and directory operations",
+        "Understand and modify permissions",
+        "Find and manipulate hidden files",
+      ],
+      steps: [
+        {
+          id: "step-1",
+          title: "Basic Navigation",
+          description: "Use cd, ls, pwd to navigate the file system",
+          completed: false,
+        },
+        {
+          id: "step-2",
+          title: "File Operations",
+          description: "Create, copy, move, and delete files and directories",
+          completed: false,
+        },
+        {
+          id: "step-3",
+          title: "Permission Management",
+          description: "Understand and modify file permissions using chmod",
+          completed: false,
+        },
+        {
+          id: "step-4",
+          title: "Advanced Features",
+          description: "Work with hidden files, links, and special directories",
+          completed: false,
+        },
+      ],
+    },
+    "command-line-fundamentals": {
+      name: "Command Line Fundamentals",
+      description: "Essential command line skills for cybersecurity",
+      difficulty: "Beginner",
+      duration: "50 min",
+      objectives: [
+        "Master essential Linux commands",
+        "Understand command piping and redirection",
+        "Use text processing tools effectively",
+        "Create simple shell scripts",
+      ],
+      steps: [
+        {
+          id: "step-1",
+          title: "Core Commands",
+          description: "Learn essential commands like grep, find, and ps",
+          completed: false,
+        },
+        {
+          id: "step-2",
+          title: "Pipes and Redirection",
+          description: "Master command chaining and output redirection",
+          completed: false,
+        },
+        {
+          id: "step-3",
+          title: "Text Processing",
+          description: "Use sed, awk, and other text processing tools",
+          completed: false,
+        },
+        {
+          id: "step-4",
+          title: "Basic Scripting",
+          description: "Create simple shell scripts for automation",
+          completed: false,
+        },
+      ],
+    },
+  },
+  "networking-basics": {
+    "network-analysis-fundamentals": {
+      name: "Network Analysis Fundamentals",
+      description: "Learn to analyze network traffic and protocols",
+      difficulty: "Intermediate",
+      duration: "60 min",
+      objectives: [
+        "Capture and analyze network packets",
+        "Identify different network protocols",
+        "Detect suspicious network activity",
+        "Generate network analysis reports",
+      ],
+      steps: [
+        {
+          id: "step-1",
+          title: "Packet Capture Setup",
+          description: "Configure packet capture tools and interfaces",
+          completed: false,
+        },
+        {
+          id: "step-2",
+          title: "Protocol Identification",
+          description: "Identify and categorize different network protocols",
+          completed: false,
+        },
+        {
+          id: "step-3",
+          title: "Traffic Analysis",
+          description: "Analyze traffic patterns and detect anomalies",
+          completed: false,
+        },
+        {
+          id: "step-4",
+          title: "Reporting",
+          description: "Generate comprehensive network analysis reports",
+          completed: false,
+        },
+      ],
+    },
+  },
+  "web-security-intro": {
+    "web-lab-1": {
+      name: "SQL Injection Fundamentals",
+      description:
+        "Learn to identify and exploit SQL injection vulnerabilities",
+      difficulty: "Beginner",
+      duration: "45 min",
+      objectives: [
+        "Identify SQL injection entry points",
+        "Test basic SQL injection payloads",
+        "Extract data from vulnerable database",
+        "Document findings and remediation",
+      ],
+      steps: [
+        {
+          id: "step-1",
+          title: "Reconnaissance",
+          description: "Identify the login form and test for SQL injection",
+          completed: false,
+        },
+        {
+          id: "step-2",
+          title: "Payload Testing",
+          description: "Test various SQL injection payloads",
+          completed: false,
+        },
+        {
+          id: "step-3",
+          title: "Data Extraction",
+          description: "Extract user data from the database",
+          completed: false,
+        },
+        {
+          id: "step-4",
+          title: "Documentation",
+          description: "Document your findings and remediation steps",
+          completed: false,
+        },
+      ],
+    },
+    "xss-exploitation-lab": {
+      name: "XSS Exploitation Lab",
+      description: "Hands-on Cross-Site Scripting vulnerability exploitation",
+      difficulty: "Beginner",
+      duration: "50 min",
+      objectives: [
+        "Identify XSS vulnerabilities in web applications",
+        "Create and test XSS payloads",
+        "Bypass input filtering mechanisms",
+        "Demonstrate impact of XSS attacks",
+      ],
+      steps: [
+        {
+          id: "step-1",
+          title: "Vulnerability Discovery",
+          description: "Find XSS injection points in the web application",
+          completed: false,
+        },
+        {
+          id: "step-2",
+          title: "Payload Development",
+          description: "Create effective XSS payloads for different contexts",
+          completed: false,
+        },
+        {
+          id: "step-3",
+          title: "Filter Bypass",
+          description: "Bypass input validation and filtering mechanisms",
+          completed: false,
+        },
+        {
+          id: "step-4",
+          title: "Impact Demonstration",
+          description: "Show the real-world impact of XSS vulnerabilities",
+          completed: false,
+        },
+      ],
+    },
+  },
+  "penetration-testing": {
+    "web-application-pentest": {
+      name: "Web Application Penetration Test",
+      description: "Complete penetration test of a web application",
+      difficulty: "Advanced",
+      duration: "120 min",
+      objectives: [
+        "Perform comprehensive reconnaissance",
+        "Identify and exploit multiple vulnerabilities",
+        "Achieve privilege escalation",
+        "Document complete penetration test report",
+      ],
+      steps: [
+        {
+          id: "step-1",
+          title: "Reconnaissance",
+          description: "Gather information about the target application",
+          completed: false,
+        },
+        {
+          id: "step-2",
+          title: "Vulnerability Discovery",
+          description: "Identify security weaknesses in the application",
+          completed: false,
+        },
+        {
+          id: "step-3",
+          title: "Exploitation",
+          description: "Exploit identified vulnerabilities",
+          completed: false,
+        },
+        {
+          id: "step-4",
+          title: "Post-Exploitation",
+          description: "Escalate privileges and maintain access",
+          completed: false,
+        },
+        {
+          id: "step-5",
+          title: "Reporting",
+          description: "Create detailed penetration test report",
+          completed: false,
+        },
+      ],
+    },
+  },
+};
+
 // Utility functions for data access
 export const getAllModules = (): Module[] => {
   return PHASES_DATA.flatMap((phase) => phase.modules);
@@ -538,4 +1058,60 @@ export const unenrollFromModule = (moduleId: string): void => {
     module.progress = 0;
     module.completed = false;
   }
+};
+
+// Helper functions to get data by course and module
+export const getGamesByModule = (
+  moduleId: string
+): { [gameId: string]: GameData } => {
+  return GAMES_DATA[moduleId] || {};
+};
+
+export const getLabsByModule = (
+  moduleId: string
+): { [labId: string]: LabData } => {
+  return LABS_DATA[moduleId] || {};
+};
+
+export const getGameData = (
+  moduleId: string,
+  gameId: string
+): GameData | null => {
+  const moduleGames = GAMES_DATA[moduleId];
+  return moduleGames?.[gameId] || null;
+};
+
+export const getLabData = (moduleId: string, labId: string): LabData | null => {
+  const moduleLabs = LABS_DATA[moduleId];
+  return moduleLabs?.[labId] || null;
+};
+
+export const getAllGamesForPhase = (
+  phaseId: string
+): { [gameId: string]: GameData } => {
+  const phase = PHASES_DATA.find((p) => p.id === phaseId);
+  if (!phase) return {};
+
+  const allGames: { [gameId: string]: GameData } = {};
+  phase.modules.forEach((module) => {
+    const moduleGames = GAMES_DATA[module.id] || {};
+    Object.assign(allGames, moduleGames);
+  });
+
+  return allGames;
+};
+
+export const getAllLabsForPhase = (
+  phaseId: string
+): { [labId: string]: LabData } => {
+  const phase = PHASES_DATA.find((p) => p.id === phaseId);
+  if (!phase) return {};
+
+  const allLabs: { [labId: string]: LabData } = {};
+  phase.modules.forEach((module) => {
+    const moduleLabs = LABS_DATA[module.id] || {};
+    Object.assign(allLabs, moduleLabs);
+  });
+
+  return allLabs;
 };

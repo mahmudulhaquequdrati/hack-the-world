@@ -1,4 +1,4 @@
-import { PHASES_DATA } from "@/lib/appData";
+import { getNormalizedPhases } from "@/lib/appData";
 import { Module } from "@/lib/types";
 import { BookOpen } from "lucide-react";
 import { useState } from "react";
@@ -27,22 +27,25 @@ export const EnhancedProgressTab = ({
   const allModules = getAllModules();
   const availableModules = allModules.filter((module) => !module.enrolled);
 
-  // Categorize enrolled modules by phase
+  // Get normalized phases data
+  const normalizedPhases = getNormalizedPhases();
+
+  // Categorize enrolled modules by phase using normalized data
   const categorizedModules = {
     beginner: enrolledModules.filter((module) =>
-      PHASES_DATA.find((phase) => phase.id === "beginner")?.modules.some(
-        (m) => m.id === module.id
-      )
+      normalizedPhases
+        .find((phase) => phase.id === "beginner")
+        ?.modules.some((m) => m.id === module.id)
     ),
     intermediate: enrolledModules.filter((module) =>
-      PHASES_DATA.find((phase) => phase.id === "intermediate")?.modules.some(
-        (m) => m.id === module.id
-      )
+      normalizedPhases
+        .find((phase) => phase.id === "intermediate")
+        ?.modules.some((m) => m.id === module.id)
     ),
     advanced: enrolledModules.filter((module) =>
-      PHASES_DATA.find((phase) => phase.id === "advanced")?.modules.some(
-        (m) => m.id === module.id
-      )
+      normalizedPhases
+        .find((phase) => phase.id === "advanced")
+        ?.modules.some((m) => m.id === module.id)
     ),
   };
 

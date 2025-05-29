@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { getDifficultyColor, getGameTypeColor } from "@/lib";
+import { getGameTypeColor } from "@/lib";
 import { Game } from "@/lib/types";
 import {
   CheckCircle,
   Clock,
   ExternalLink,
-  Gamepad2,
-  Play,
   Star,
   Target,
   Timer,
@@ -36,24 +34,6 @@ const EnhancedGameView = ({
   );
   const progressPercentage =
     (completedChallenges / game.challenges.length) * 100;
-
-  const getGameTypeIcon = (type: string) => {
-    switch (type) {
-      case "simulation":
-        return <Play className="w-5 h-5 text-blue-400" />;
-      case "puzzle":
-        return <Zap className="w-5 h-5 text-purple-400" />;
-      case "strategy":
-        return <Target className="w-5 h-5 text-green-400" />;
-      case "ctf":
-        return <Trophy className="w-5 h-5 text-red-400" />;
-      case "scenario":
-        return <Star className="w-5 h-5 text-cyan-400" />;
-      case "quiz":
-      default:
-        return <Gamepad2 className="w-5 h-5 text-yellow-400" />;
-    }
-  };
 
   return (
     <div className="bg-black/60 border-2 border-pink-400/40 rounded-none overflow-hidden shadow-2xl shadow-pink-400/10">
@@ -224,76 +204,63 @@ const EnhancedGameView = ({
                   className={`p-4 border rounded-none transition-all ${
                     challenge.completed
                       ? "border-green-400/40 bg-green-400/10"
-                      : challenge.unlocked
-                      ? "border-purple-400/40 bg-purple-400/5 hover:bg-purple-400/10"
-                      : "border-gray-600/40 bg-gray-600/5 opacity-50"
+                      : "border-purple-400/40 bg-purple-400/5 hover:bg-purple-400/10"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-3">
                       <div
-                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-mono text-sm font-bold ${
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                           challenge.completed
-                            ? "border-green-400 bg-green-400/20 text-green-400"
-                            : challenge.unlocked
-                            ? "border-purple-400 bg-purple-400/20 text-purple-400"
-                            : "border-gray-600 bg-gray-600/20 text-gray-600"
+                            ? "border-green-400 bg-green-400/20"
+                            : "border-purple-400/50 bg-purple-400/10"
                         }`}
                       >
-                        {challenge.completed ? "✓" : index + 1}
+                        {challenge.completed ? (
+                          <CheckCircle className="w-3 h-3 text-green-400" />
+                        ) : (
+                          <span className="text-purple-400 text-xs font-bold">
+                            {index + 1}
+                          </span>
+                        )}
                       </div>
-                      <div>
-                        <h4
-                          className={`font-mono font-bold ${
-                            challenge.completed
-                              ? "text-green-400"
-                              : challenge.unlocked
-                              ? "text-purple-400"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          {challenge.name}
-                        </h4>
-                        <p
-                          className={`text-sm font-mono ${
-                            challenge.completed
-                              ? "text-green-300/80"
-                              : challenge.unlocked
-                              ? "text-purple-300/80"
-                              : "text-gray-600/80"
-                          }`}
-                        >
-                          {challenge.description}
-                        </p>
-                      </div>
+                      <h4 className="text-purple-300 font-mono font-bold">
+                        {challenge.title}
+                      </h4>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div
-                        className={`px-2 py-1 border rounded-none text-xs font-mono font-bold ${getDifficultyColor(
-                          challenge.difficulty
-                        )}`}
-                      >
-                        {challenge.difficulty.toUpperCase()}
-                      </div>
-                      <div
-                        className={`px-2 py-1 border rounded-none text-xs font-mono font-bold ${
-                          challenge.completed
-                            ? "text-green-400 border-green-400/40 bg-green-400/10"
-                            : "text-purple-400 border-purple-400/40 bg-purple-400/10"
+                      <span
+                        className={`px-2 py-1 text-xs font-mono border rounded-none ${
+                          challenge.difficulty === "easy"
+                            ? "border-green-400/40 text-green-400"
+                            : challenge.difficulty === "medium"
+                            ? "border-yellow-400/40 text-yellow-400"
+                            : "border-red-400/40 text-red-400"
                         }`}
                       >
+                        {challenge.difficulty.toUpperCase()}
+                      </span>
+                      <span className="text-purple-400 font-mono text-sm">
                         {challenge.points} PTS
-                      </div>
+                      </span>
                     </div>
                   </div>
-                  {challenge.unlocked && !challenge.completed && (
-                    <button
-                      onClick={() => onChallengeComplete(challenge.id)}
-                      className="w-full mt-3 px-4 py-2 bg-purple-400/20 border border-purple-400/40 text-purple-400 font-mono text-sm font-bold rounded-none hover:bg-purple-400/30 transition-colors"
-                    >
-                      START CHALLENGE
-                    </button>
-                  )}
+                  <p className="text-purple-300/80 text-sm font-mono mb-3">
+                    {challenge.description}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={`font-mono text-xs rounded-none ${
+                      challenge.completed
+                        ? "border-green-400/50 text-green-400 bg-green-400/10"
+                        : "border-purple-400/50 text-purple-400 hover:bg-purple-400/10"
+                    }`}
+                    onClick={() => onChallengeComplete(challenge.id)}
+                    disabled={challenge.completed}
+                  >
+                    {challenge.completed ? "COMPLETED" : "START CHALLENGE"}
+                  </Button>
                 </div>
               ))}
             </div>

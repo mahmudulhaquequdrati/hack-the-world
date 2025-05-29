@@ -1,104 +1,91 @@
-import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { Terminal, ArrowLeft, CheckCircle, AlertCircle, Lightbulb } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle,
+  Lightbulb,
+  Terminal,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const TerminalLab = () => {
   const navigate = useNavigate();
   const [currentChallenge, setCurrentChallenge] = useState(0);
   const [terminalHistory, setTerminalHistory] = useState<string[]>([
-    'Welcome to CyberSec Terminal Lab',
-    'Type commands to complete challenges',
-    '$ '
+    "Welcome to CyberSec Terminal Lab",
+    "Type commands to complete challenges",
+    "$ ",
   ]);
-  const [currentInput, setCurrentInput] = useState('');
+  const [currentInput, setCurrentInput] = useState("");
   const [completedChallenges, setCompletedChallenges] = useState<boolean[]>([]);
   const terminalRef = useRef<HTMLDivElement>(null);
 
   const challenges = [
     {
       id: 1,
-      title: 'Basic Navigation',
-      description: 'Learn to navigate the file system using basic commands',
-      objective: 'List the contents of the current directory',
-      command: 'ls',
+      title: "Basic Navigation",
+      description: "Learn to navigate the file system using basic commands",
+      objective: "List the contents of the current directory",
+      command: "ls",
       hint: 'Use the "ls" command to list directory contents',
-      difficulty: 'Beginner',
-      points: 10
+      difficulty: "Beginner",
+      points: 10,
     },
     {
       id: 2,
-      title: 'Directory Exploration',
-      description: 'Navigate to different directories and explore the file system',
-      objective: 'Change to the /home directory',
-      command: 'cd /home',
+      title: "Directory Exploration",
+      description:
+        "Navigate to different directories and explore the file system",
+      objective: "Change to the /home directory",
+      command: "cd /home",
       hint: 'Use "cd" followed by the directory path',
-      difficulty: 'Beginner',
-      points: 15
+      difficulty: "Beginner",
+      points: 15,
     },
     {
       id: 3,
-      title: 'File Permissions',
-      description: 'Understanding and modifying file permissions',
-      objective: 'Check permissions of a file using ls -la',
-      command: 'ls -la',
+      title: "File Permissions",
+      description: "Understanding and modifying file permissions",
+      objective: "Check permissions of a file using ls -la",
+      command: "ls -la",
       hint: 'Use "ls -la" to see detailed file information including permissions',
-      difficulty: 'Intermediate',
-      points: 20
+      difficulty: "Intermediate",
+      points: 20,
     },
     {
       id: 4,
-      title: 'Process Management',
-      description: 'Learn to view and manage running processes',
-      objective: 'List all running processes',
-      command: 'ps aux',
+      title: "Process Management",
+      description: "Learn to view and manage running processes",
+      objective: "List all running processes",
+      command: "ps aux",
       hint: 'Use "ps aux" to see all running processes',
-      difficulty: 'Intermediate',
-      points: 25
+      difficulty: "Intermediate",
+      points: 25,
     },
     {
       id: 5,
-      title: 'Network Analysis',
-      description: 'Use network tools to analyze connections',
-      objective: 'Show network connections',
-      command: 'netstat -an',
+      title: "Network Analysis",
+      description: "Use network tools to analyze connections",
+      objective: "Show network connections",
+      command: "netstat -an",
       hint: 'Use "netstat -an" to display network connections',
-      difficulty: 'Advanced',
-      points: 30
-    }
+      difficulty: "Advanced",
+      points: 30,
+    },
   ];
-
-  const fileSystem = {
-    '/': {
-      'home': {
-        'user': {
-          'documents': {
-            'secret.txt': 'This is a secret file',
-            'notes.txt': 'Important notes here'
-          },
-          'downloads': {},
-          '.bashrc': 'Bash configuration file'
-        }
-      },
-      'etc': {
-        'passwd': 'User account information',
-        'hosts': 'Host file configuration'
-      },
-      'var': {
-        'log': {
-          'system.log': 'System log entries'
-        }
-      }
-    }
-  };
 
   useEffect(() => {
     setCompletedChallenges(new Array(challenges.length).fill(false));
-  }, []);
+  }, [challenges.length]);
 
   useEffect(() => {
     if (terminalRef.current) {
@@ -112,15 +99,20 @@ const TerminalLab = () => {
 
     // Simulate command execution
     const currentChallengeData = challenges[currentChallenge];
-    
-    if (command.toLowerCase().trim() === currentChallengeData.command.toLowerCase()) {
-      newHistory.push('✓ Command executed successfully!');
-      newHistory.push(`Challenge completed! +${currentChallengeData.points} points`);
-      
+
+    if (
+      command.toLowerCase().trim() ===
+      currentChallengeData.command.toLowerCase()
+    ) {
+      newHistory.push("✓ Command executed successfully!");
+      newHistory.push(
+        `Challenge completed! +${currentChallengeData.points} points`
+      );
+
       const newCompleted = [...completedChallenges];
       newCompleted[currentChallenge] = true;
       setCompletedChallenges(newCompleted);
-      
+
       if (currentChallenge < challenges.length - 1) {
         setTimeout(() => {
           setCurrentChallenge(currentChallenge + 1);
@@ -129,20 +121,22 @@ const TerminalLab = () => {
     } else {
       // Simulate basic command responses
       switch (command.toLowerCase().trim()) {
-        case 'ls':
-          newHistory.push('documents  downloads  .bashrc');
+        case "ls":
+          newHistory.push("documents  downloads  .bashrc");
           break;
-        case 'pwd':
-          newHistory.push('/home/user');
+        case "pwd":
+          newHistory.push("/home/user");
           break;
-        case 'whoami':
-          newHistory.push('user');
+        case "whoami":
+          newHistory.push("user");
           break;
-        case 'help':
-          newHistory.push('Available commands: ls, cd, pwd, whoami, ps, netstat, cat, grep');
+        case "help":
+          newHistory.push(
+            "Available commands: ls, cd, pwd, whoami, ps, netstat, cat, grep"
+          );
           break;
-        case 'clear':
-          setTerminalHistory(['$ ']);
+        case "clear":
+          setTerminalHistory(["$ "]);
           return;
         default:
           newHistory.push(`Command not found: ${command}`);
@@ -150,18 +144,19 @@ const TerminalLab = () => {
       }
     }
 
-    newHistory.push('$ ');
+    newHistory.push("$ ");
     setTerminalHistory(newHistory);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleCommand(currentInput);
-      setCurrentInput('');
+      setCurrentInput("");
     }
   };
 
-  const progress = (completedChallenges.filter(Boolean).length / challenges.length) * 100;
+  const progress =
+    (completedChallenges.filter(Boolean).length / challenges.length) * 100;
 
   return (
     <div className="min-h-screen bg-black text-green-400 p-6">
@@ -169,10 +164,10 @@ const TerminalLab = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate("/dashboard")}
               className="text-green-400 hover:bg-green-400/10"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -183,12 +178,16 @@ const TerminalLab = () => {
                 <Terminal className="w-6 h-6 mr-2" />
                 Linux Terminal Lab
               </h1>
-              <p className="text-green-300/70">Master command-line operations through hands-on practice</p>
+              <p className="text-green-300/70">
+                Master command-line operations through hands-on practice
+              </p>
             </div>
           </div>
           <div className="text-right">
             <div className="text-sm text-green-300/70">Progress</div>
-            <div className="text-lg font-bold text-green-400">{Math.round(progress)}%</div>
+            <div className="text-lg font-bold text-green-400">
+              {Math.round(progress)}%
+            </div>
           </div>
         </div>
 
@@ -218,8 +217,8 @@ const TerminalLab = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className="border-green-400/50 text-green-400"
                     >
                       {challenges[currentChallenge].difficulty}
@@ -230,8 +229,12 @@ const TerminalLab = () => {
                   </div>
 
                   <div className="bg-green-900/20 border border-green-400/30 rounded p-4">
-                    <h4 className="font-bold text-green-400 mb-2">Objective:</h4>
-                    <p className="text-green-300">{challenges[currentChallenge].objective}</p>
+                    <h4 className="font-bold text-green-400 mb-2">
+                      Objective:
+                    </h4>
+                    <p className="text-green-300">
+                      {challenges[currentChallenge].objective}
+                    </p>
                   </div>
 
                   <div className="bg-blue-900/20 border border-blue-400/30 rounded p-4">
@@ -239,7 +242,9 @@ const TerminalLab = () => {
                       <Lightbulb className="w-4 h-4 mr-2" />
                       Hint:
                     </h4>
-                    <p className="text-blue-300">{challenges[currentChallenge].hint}</p>
+                    <p className="text-blue-300">
+                      {challenges[currentChallenge].hint}
+                    </p>
                   </div>
                 </div>
 
@@ -247,10 +252,12 @@ const TerminalLab = () => {
                 <div className="space-y-2">
                   <h4 className="font-bold text-green-400">All Challenges:</h4>
                   {challenges.map((challenge, index) => (
-                    <div 
+                    <div
                       key={challenge.id}
                       className={`flex items-center space-x-3 p-2 rounded ${
-                        index === currentChallenge ? 'bg-green-400/10 border border-green-400/30' : ''
+                        index === currentChallenge
+                          ? "bg-green-400/10 border border-green-400/30"
+                          : ""
                       }`}
                     >
                       {completedChallenges[index] ? (
@@ -260,10 +267,15 @@ const TerminalLab = () => {
                       ) : (
                         <div className="w-5 h-5 rounded-full border border-green-400/30" />
                       )}
-                      <span className={`text-sm ${
-                        completedChallenges[index] ? 'text-green-400' : 
-                        index === currentChallenge ? 'text-green-300' : 'text-green-300/60'
-                      }`}>
+                      <span
+                        className={`text-sm ${
+                          completedChallenges[index]
+                            ? "text-green-400"
+                            : index === currentChallenge
+                            ? "text-green-300"
+                            : "text-green-300/60"
+                        }`}
+                      >
                         {challenge.title}
                       </span>
                     </div>
@@ -285,11 +297,13 @@ const TerminalLab = () => {
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   </div>
-                  <span className="text-green-400 text-sm ml-4">Terminal - user@cybersec-lab</span>
+                  <span className="text-green-400 text-sm ml-4">
+                    Terminal - user@cybersec-lab
+                  </span>
                 </div>
               </CardHeader>
               <CardContent className="p-4 h-full">
-                <div 
+                <div
                   ref={terminalRef}
                   className="h-full overflow-y-auto font-mono text-sm space-y-1 bg-black rounded p-4"
                 >

@@ -1,10 +1,16 @@
+import { LoadingSkeleton } from "@/components/common";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { getDifficultyColor } from "@/lib/helpers";
+import {
+  getNormalizedGamesByModule,
+  getNormalizedLabsByModule,
+  getVideosCountForModule,
+} from "@/lib/appData";
 import { Module } from "@/lib/types";
-import { CheckCircle, Clock } from "lucide-react";
+import { CheckCircle, Clock, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface ModuleCardProps {
   module: Module;
@@ -14,18 +20,102 @@ interface ModuleCardProps {
   isCompleted: boolean;
   onNavigate: (path: string) => void;
   onEnroll: (path: string) => void;
+  isEnrolling?: boolean;
+}
+
+interface ModuleStatsType {
+  videos: number;
+  labs: number;
+  games: number;
 }
 
 const ModuleCard = ({
-  module,
+  module: initialModule,
   index,
   totalModules,
   isLast,
   isCompleted,
   onNavigate,
   onEnroll,
+  isEnrolling,
 }: ModuleCardProps) => {
+  const [module, setModule] = useState(initialModule);
+  const [stats, setStats] = useState<ModuleStatsType | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadModuleStats = async () => {
+      setLoading(true);
+
+      // Simulate API call with slight delay for staggered loading
+      await new Promise((resolve) => setTimeout(resolve, 500 + index * 200));
+
+      // Get dynamic stats
+      const videosCount = getVideosCountForModule(module.id);
+      const labsData = getNormalizedLabsByModule(module.id);
+      const gamesData = getNormalizedGamesByModule(module.id);
+
+      setStats({
+        videos: videosCount,
+        labs: Object.keys(labsData).length,
+        games: Object.keys(gamesData).length,
+      });
+      setLoading(false);
+    };
+
+    loadModuleStats();
+  }, [module.id, index]);
+
+  const handleEnroll = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Call parent handler immediately - this will trigger the loading state
+    onEnroll(module.path);
+  };
+
+  const handleNavigate = () => {
+    // If enrolled, go to learning page; otherwise, go to course overview
+    if (module.enrolled) {
+      onNavigate(module.enrollPath);
+    } else {
+      onNavigate(module.path);
+    }
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty.toLowerCase()) {
+      case "beginner":
+        return "text-green-400 border-green-400";
+      case "intermediate":
+        return "text-yellow-400 border-yellow-400";
+      case "advanced":
+        return "text-red-400 border-red-400";
+      case "expert":
+        return "text-purple-400 border-purple-400";
+      default:
+        return "text-gray-400 border-gray-400";
+    }
+  };
+
   const treeChar = isLast ? "└──" : "├──";
+
+  if (loading || !stats) {
+    return (
+      <div className="relative">
+        <div className="flex items-start space-x-1">
+          <div className="flex flex-col items-center">
+            <span className="text-green-400/70 text-sm leading-none">
+              {treeChar}
+            </span>
+            {!isLast && <div className="w-px h-12 bg-green-400/30 mt-1"></div>}
+          </div>
+          <div className="flex-1 ml-2 mb-4">
+            <LoadingSkeleton type="card" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -45,7 +135,7 @@ const ModuleCard = ({
             hover:scale-[1.01] cursor-pointer transition-all duration-300
             relative ml-2 mb-4
           `}
-          onClick={() => onNavigate(module.path)}
+          onClick={handleNavigate}
         >
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -136,21 +226,21 @@ const ModuleCard = ({
             {/* Stats in terminal format */}
             <div className="grid grid-cols-3 gap-4 mb-3 text-xs font-mono">
               <div className="text-center">
+                <span className="text-green-300/50">videos:</span>
+                <span className={`ml-1 font-bold text-cyan-400`}>
+                  {stats.videos}
+                </span>
+              </div>
+              <div className="text-center">
                 <span className="text-green-300/50">labs:</span>
-                <span className={`ml-1 font-bold ${module.color}`}>
-                  {module.labs}
+                <span className={`ml-1 font-bold text-yellow-400`}>
+                  {stats.labs}
                 </span>
               </div>
               <div className="text-center">
                 <span className="text-green-300/50">games:</span>
-                <span className={`ml-1 font-bold ${module.color}`}>
-                  {module.games}
-                </span>
-              </div>
-              <div className="text-center">
-                <span className="text-green-300/50">assets:</span>
-                <span className={`ml-1 font-bold ${module.color}`}>
-                  {module.assets}
+                <span className={`ml-1 font-bold text-red-400`}>
+                  {stats.games}
                 </span>
               </div>
             </div>
@@ -201,13 +291,22 @@ const ModuleCard = ({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-green-400/50 text-green-400 font-mono text-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEnroll(module.path);
-                  }}
+                  className={`
+                    border-green-400/50 text-green-400 font-mono text-xs
+                    hover:bg-green-400/10 transition-all duration-200
+                    ${isEnrolling ? "opacity-80 cursor-not-allowed" : ""}
+                  `}
+                  onClick={handleEnroll}
+                  disabled={isEnrolling}
                 >
-                  {">> enroll"}
+                  {isEnrolling ? (
+                    <div className="flex items-center space-x-2">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>enrolling...</span>
+                    </div>
+                  ) : (
+                    ">> enroll"
+                  )}
                 </Button>
               )}
 

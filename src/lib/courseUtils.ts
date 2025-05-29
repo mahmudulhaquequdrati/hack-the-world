@@ -574,22 +574,23 @@ export const convertCourseToEnrolledCourse = (
   course: Course
 ): EnrolledCourse => {
   // Convert curriculum to sections with lessons
-  const sections: CourseSection[] = course.curriculum.map(
+  const allSections: CourseSection[] = course.curriculum.map(
     (curriculumSection, sectionIndex) => {
-      const lessons: EnrolledLesson[] = curriculumSection.topics.map(
-        (topic, topicIndex) => {
+      const curriculumLessons: EnrolledLesson[] = curriculumSection.topics
+        .map((topic, topicIndex) => {
           const lessonId = `${course.id}-section-${sectionIndex}-lesson-${topicIndex}`;
 
           // Determine lesson type based on topic content and position
-          let lessonType: "video" | "text" | "quiz" | "lab" | "game" = "video";
+          let lessonType: "video" | "text" | "lab" | "game" = "video";
           const topicLower = topic.toLowerCase();
 
+          // Skip quiz/test/assessment content entirely
           if (
             topicLower.includes("quiz") ||
             topicLower.includes("test") ||
             topicLower.includes("assessment")
           ) {
-            lessonType = "quiz";
+            return null; // Mark for filtering out
           } else if (
             topicLower.includes("lab") ||
             topicLower.includes("hands-on") ||
@@ -651,16 +652,76 @@ export const convertCourseToEnrolledCourse = (
             relatedGames,
             contextualContent,
           };
-        }
-      );
+        })
+        .filter(Boolean) as EnrolledLesson[]; // Remove null entries (quizzes)
+
+      // Add actual games from course data to this section
+      const sectionGames: EnrolledLesson[] = course.gamesData
+        .slice(sectionIndex * 2, (sectionIndex + 1) * 2) // Distribute games across sections
+        .map((game, gameIndex) => {
+          const gameId = `${course.id}-section-${sectionIndex}-game-${gameIndex}`;
+          return {
+            id: gameId,
+            title: game.name,
+            duration: "20:00",
+            type: "game" as const,
+            completed: false,
+            description: game.description,
+            contextualContent: generateContextualContent(game.name),
+            dynamicResources: generateDynamicResources(game.name, "game"),
+            relatedLabs: [],
+            relatedGames: [],
+          };
+        });
+
+      // Add actual labs from course data to this section
+      const sectionLabs: EnrolledLesson[] = course.labsData
+        .slice(sectionIndex * 2, (sectionIndex + 1) * 2) // Distribute labs across sections
+        .map((lab, labIndex) => {
+          const labId = `${course.id}-section-${sectionIndex}-lab-${labIndex}`;
+          return {
+            id: labId,
+            title: lab.name,
+            duration: lab.duration || "45:00",
+            type: "lab" as const,
+            completed: false,
+            description: lab.description,
+            contextualContent: generateContextualContent(lab.name),
+            dynamicResources: generateDynamicResources(lab.name, "lab"),
+            relatedLabs: [],
+            relatedGames: [],
+          };
+        });
+
+      // Mix curriculum lessons, games, and labs together
+      const allLessons = [
+        ...curriculumLessons,
+        ...sectionGames,
+        ...sectionLabs,
+      ];
 
       return {
         id: `${course.id}-section-${sectionIndex}`,
         title: curriculumSection.title,
-        lessons,
+        lessons: allLessons,
       };
     }
   );
+
+  // Process sections: show all sections with proper titles
+  const sections = allSections
+    .map((section, index) => {
+      const hasAnyLessons = section.lessons.length > 0;
+
+      return {
+        ...section,
+        // Always show section title if it has lessons, with fallback
+        title: hasAnyLessons ? section.title || `Section ${index + 1}` : "",
+        // Keep all lessons (videos, labs, games, etc.)
+        lessons: section.lessons,
+      };
+    })
+    .filter((section) => section.lessons.length > 0); // Remove completely empty sections
 
   // Generate enhanced labs
   const labs = generateEnhancedLabs(course);
@@ -679,7 +740,7 @@ export const convertCourseToEnrolledCourse = (
     relatedTopics: course.skills.slice(0, 2),
   }));
 
-  // Calculate total lessons
+  // Calculate total lessons (only from sections with videos)
   const totalLessons = sections.reduce(
     (acc, section) => acc + section.lessons.length,
     0

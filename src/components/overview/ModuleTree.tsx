@@ -7,6 +7,7 @@ interface ModuleTreeProps {
   completedModules: string[];
   onNavigate: (path: string) => void;
   onEnroll: (path: string) => void;
+  enrollingModules?: Set<string>;
 }
 
 const ModuleTree = ({
@@ -14,6 +15,7 @@ const ModuleTree = ({
   completedModules,
   onNavigate,
   onEnroll,
+  enrollingModules = new Set(),
 }: ModuleTreeProps) => {
   const getModuleStatus = (moduleId: string) => {
     return completedModules.includes(moduleId) ? "completed" : "in-progress";
@@ -45,6 +47,7 @@ const ModuleTree = ({
                 isCompleted={isCompleted}
                 onNavigate={onNavigate}
                 onEnroll={onEnroll}
+                isEnrolling={enrollingModules.has(module.id)}
               />
             );
           })}

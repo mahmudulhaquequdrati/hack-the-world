@@ -82,6 +82,14 @@ const ContentSidebar = ({
     }
   };
 
+  // Helper function to ensure section title is never empty
+  const getSectionTitle = (title: string, index: number) => {
+    if (!title || title.trim() === "") {
+      return `Section ${index + 1}`;
+    }
+    return title.trim();
+  };
+
   return (
     <>
       {/* Sidebar */}
@@ -134,7 +142,10 @@ const ContentSidebar = ({
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                       <div className="font-bold text-green-400 text-sm font-mono tracking-wide">
-                        {section.title.toUpperCase()}
+                        {getSectionTitle(
+                          section.title,
+                          sectionIndex
+                        ).toUpperCase()}
                       </div>
                     </div>
                   </div>

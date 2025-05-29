@@ -12,7 +12,7 @@ import {
   OverviewTab,
 } from "@/components/course";
 import { Button } from "@/components/ui/button";
-import { getCourseById } from "@/lib/coursesData";
+import { getNormalizedCourseById } from "@/lib/appData";
 import { Course } from "@/lib/types";
 import { ArrowLeft, Terminal } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -29,7 +29,7 @@ const CourseDetailPage = () => {
 
   useEffect(() => {
     if (courseId) {
-      const courseData = getCourseById(courseId);
+      const courseData = getNormalizedCourseById(courseId);
       setCourse(courseData);
       setLoading(false);
     }

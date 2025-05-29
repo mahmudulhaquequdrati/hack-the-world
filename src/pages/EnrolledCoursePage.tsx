@@ -12,7 +12,7 @@ import {
   SplitView,
   VideoPlayer,
 } from "@/components/enrolled";
-import { getCourseById } from "@/lib/coursesData";
+import { getNormalizedCourseById } from "@/lib/appData";
 import {
   convertCourseToEnrolledCourse,
   getDefaultCompletedLessons,
@@ -88,7 +88,7 @@ const EnrolledCoursePage = () => {
   // Load course data dynamically
   useEffect(() => {
     if (courseId) {
-      const courseData = getCourseById(courseId);
+      const courseData = getNormalizedCourseById(courseId);
       if (courseData) {
         const enrolledCourse = convertCourseToEnrolledCourse(courseData);
         setCourse(enrolledCourse);

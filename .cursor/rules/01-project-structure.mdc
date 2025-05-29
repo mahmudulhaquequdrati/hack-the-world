@@ -1,0 +1,188 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Project Structure & Architecture
+
+## 📋 Project Management Files
+
+### Required Project Files
+- **Always read [PLANNING.md](mdc:PLANNING.md)** at the start of new conversations to understand architecture, goals, and constraints
+- **Check [TASK.md](mdc:TASK.md)** before starting work. Add new tasks with descriptions and dates
+- **Reference [README.md](mdc:README.md)** for quick start and overview
+- **Use [src/docs/](mdc:src/docs/)** for comprehensive documentation
+
+### Documentation Strategy
+- **[README.md](mdc:README.md)** - **Concise overview** with quick start and links to detailed docs
+- **[src/docs/README.md](mdc:src/docs/README.md)** - **Main documentation index** with navigation
+- **[PLANNING.md](mdc:PLANNING.md)** - High-level architecture and development strategy
+- **[TASK.md](mdc:TASK.md)** - Active tasks and project backlog
+
+### Complete Documentation Structure (Target: 17 files)
+```
+src/docs/
+├── README.md                    # Documentation index and navigation
+├── 01-platform-overview.md     # ✅ Complete feature overview
+├── 02-architecture.md          # ✅ Technical architecture guide
+├── 03-user-experience.md       # ✅ Complete user journey
+├── 04-component-library.md     # ✅ Component documentation
+├── 05-development-guide.md     # 🔄 Setup and standards
+├── 06-api-reference.md         # 🔄 Data structures and APIs
+├── 07-testing-strategy.md      # 🔄 Testing approach
+├── 08-deployment.md            # 🔄 Build and deployment
+├── 09-design-system.md         # 🔄 Visual guidelines
+├── 10-animation-effects.md     # 📋 Matrix effects guide
+├── 11-responsive-design.md     # 📋 Mobile-first approach
+├── 12-learning-paths.md        # 📋 Course structure
+├── 13-interactive-features.md  # 📋 Games and labs
+├── 14-progress-tracking.md     # 📋 Achievement system
+├── 15-performance.md           # 📋 Optimization guide
+├── 16-security.md              # 📋 Security implementation
+└── 17-accessibility.md         # 📋 WCAG compliance
+```
+
+**Documentation Rules:**
+- Keep README.md concise with links to detailed docs
+- All detailed information goes in `src/docs/` files
+- Each doc file should be self-contained but cross-reference when needed
+- Update relevant docs when adding new features
+- Include code examples with file paths relative to project root
+
+## 🏗️ File Structure Patterns
+
+### Core Application Structure
+```
+src/
+├── components/     # 50+ reusable React components
+│   ├── common/    # Shared UI (DifficultyBadge, ProgressBar, StatCard)
+│   ├── course/    # Course detail and enrollment
+│   ├── enrolled/  # Learning interface components
+│   ├── dashboard/ # User dashboard and progress
+│   ├── landing/   # Marketing and landing page
+│   ├── overview/  # Course navigation and structure
+│   ├── games/     # Interactive security games
+│   ├── terminal/  # Terminal emulation
+│   ├── effects/   # Animation and visual effects
+│   └── ui/       # shadcn/ui base components
+├── pages/         # Route-level page components
+├── lib/           # Core utilities and data management
+├── hooks/         # Custom React hooks
+├── docs/          # 📚 Comprehensive documentation (17 files)
+└── assets/        # Static assets
+```
+
+### Component Organization by Feature
+- **Common Components** (`/common`) - Shared UI across pages
+- **Feature Components** - Organized by application features:
+  - `/course` - Course detail and enrollment
+  - `/enrolled` - Learning interface components
+  - `/dashboard` - User dashboard and progress
+  - `/landing` - Marketing and landing page
+  - `/overview` - Course navigation and structure
+  - `/games` - Interactive security games
+  - `/terminal` - Terminal emulation
+  - `/effects` - Animation and visual effects
+
+### Library Structure (`src/lib/`)
+- [appData.ts](mdc:src/lib/appData.ts) - **SINGLE SOURCE OF TRUTH** for all data
+- [types.ts](mdc:src/lib/types.ts) - TypeScript interfaces
+- [constants.ts](mdc:src/lib/constants.ts) - Application constants
+- [helpers.ts](mdc:src/lib/helpers.ts) - Utility functions
+- [utils.ts](mdc:src/lib/utils.ts) - General utilities
+
+## 🎯 Technology Stack
+
+### Core Technologies
+- **Frontend**: React 18 + TypeScript (100% functional components)
+- **Build**: Vite for fast development and optimized builds
+- **Styling**: Tailwind CSS + shadcn/ui component library
+- **Routing**: React Router DOM for client-side navigation
+- **State**: React hooks + Context API (no external state libs)
+- **Package Manager**: pnpm (required for all operations)
+
+### Specialized Libraries
+- **Terminal**: xterm.js for realistic terminal emulation
+- **Charts**: Recharts for data visualization
+- **Forms**: React Hook Form + Zod validation
+- **Animations**: Custom CSS animations for cybersecurity effects
+
+## 📊 Data Management
+
+### Centralized Data Pattern
+- **ALL data must come from [appData.ts](mdc:src/lib/appData.ts)**
+- No duplicate data definitions across components
+- Use provided utility functions: `getAllModules()`, `getEnrolledModules()`, etc.
+- Data flows: `appData.ts` → Pages → Components via props
+
+### Type Safety Requirements
+- All data structures defined in [types.ts](mdc:src/lib/types.ts)
+- Use proper TypeScript interfaces for all props
+- No `any` types - maintain 100% type coverage
+- Component interfaces must extend from base types
+
+## 🎨 Cybersecurity Theme Adherence
+
+### Color System
+```css
+/* Primary Cybersecurity Colors */
+--cyber-green: #00ff00; /* Primary terminal green */
+--cyber-green-dark: #00cc00; /* Darker variant */
+--cyber-green-light: #33ff33; /* Lighter variant */
+--terminal-bg: #0a0a0a; /* Terminal background */
+--terminal-border: #333333; /* Terminal borders */
+
+/* Difficulty Color System */
+--beginner: #4ade80; /* Green */
+--intermediate: #fbbf24; /* Yellow */
+--advanced: #f87171; /* Red */
+--expert: #a855f7; /* Purple */
+```
+
+### Typography Standards
+- **Primary**: JetBrains Mono (monospace) for terminal authenticity
+- **Secondary**: Inter (sans-serif) for readable content
+- **Terminal Text**: Always monospace with green color variants
+
+## 🔄 Development Workflow
+
+### Quality Standards
+- **File Size Limit**: Maximum 500 lines per component file
+- **Component Pattern**: Functional components with TypeScript interfaces
+- **Testing Requirements**: Unit tests for all new features (3 test types minimum)
+- **Documentation**: Update relevant docs in `src/docs/` when adding features
+
+### Performance Targets
+- **Bundle Size**: Keep under 1MB total
+- **Load Time**: Under 3 seconds on 3G
+- **Test Coverage**: >90%
+- **TypeScript Coverage**: 100%
+- **Component Reusability**: >80% of components used in multiple places
+
+## 📈 Project Achievements
+
+### Completed Features
+- ✅ Complete three-phase learning system (Beginner, Intermediate, Advanced)
+- ✅ 15+ cybersecurity courses with comprehensive content
+- ✅ Interactive video player with resizable AI playground
+- ✅ Terminal emulation with cybersecurity tool simulation
+- ✅ Hands-on labs with step-by-step guidance
+- ✅ Security games with scoring and achievements
+- ✅ Dashboard with progress tracking and analytics
+- ✅ Course enrollment and learning management system
+- ✅ Responsive design with mobile optimization
+- ✅ Authentication system with user state management
+
+### Performance Metrics
+- **83% Code Reduction** through component refactoring
+- **50+ Reusable Components** with high reuse rates
+- **12% Bundle Size Reduction** through optimization
+- **100% TypeScript Coverage** with no `any` types
+- **Complete Data Centralization** in single source of truth (`appData.ts`)
+- **Centralized Navigation** with clean URL patterns
+
+### Documentation Metrics
+- **4/17 Documentation Files** completed (target: 17 files)
+- **100% Component Documentation** in component library guide
+- **Comprehensive Architecture** documentation with data flows
+- **Complete User Experience** documentation with interaction patterns

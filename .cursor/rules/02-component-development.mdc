@@ -1,0 +1,307 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Component Development Rules
+
+## 🧱 Component Structure & Patterns
+
+### Component Size Limits
+- **Never create files longer than 500 lines**
+- If approaching limit, refactor into smaller components
+- Break large components into feature-specific modules
+
+### Functional Component Pattern
+```typescript
+// Required pattern for all components
+interface ComponentProps {
+  // Required props first
+  title: string;
+  data: DataType;
+
+  // Optional props with defaults
+  className?: string;
+  onAction?: (data: DataType) => void;
+}
+
+/**
+ * Component description
+ * @param props - Component props interface
+ * @returns JSX element
+ */
+const Component: React.FC<ComponentProps> = ({
+  title,
+  data,
+  className = "",
+  onAction,
+}) => {
+  return (
+    <div className={cn("base-styles", className)}>
+      {/* Component content */}
+    </div>
+  );
+};
+
+export default Component;
+```
+
+## 📦 Reusable Component Categories
+
+### 1. Common Components (`/common`)
+Base components used across multiple pages:
+- [DifficultyBadge](mdc:src/components/common/DifficultyBadge.tsx) - Color-coded difficulty indicators
+- [ProgressBar](mdc:src/components/common/ProgressBar.tsx) - Progress indicators with percentages
+- [StatCard](mdc:src/components/common/StatCard.tsx) - Statistics display cards
+
+### 2. Feature-Specific Components
+Organized by application features:
+- **Course Components** (`/course`) - Course detail and enrollment
+- **Enrolled Components** (`/enrolled`) - Learning interface
+- **Dashboard Components** (`/dashboard`) - User progress tracking
+- **Landing Components** (`/landing`) - Marketing pages
+- **Game Components** (`/games`) - Interactive security challenges
+- **Terminal Components** (`/terminal`) - Terminal emulation
+- **Effects Components** (`/effects`) - Animations and visual effects
+
+### 3. UI Base Components (`/ui`)
+From shadcn/ui library - use as foundation, don't modify directly
+
+## 🎨 Cybersecurity Theme Implementation
+
+### Required Theme Elements
+All components must follow the cybersecurity aesthetic established in [README.md](mdc:README.md):
+
+```typescript
+// Use established color constants
+import { COLORS } from '@/lib/constants';
+
+// Terminal styling pattern
+const terminalStyles = {
+  base: "bg-black border-green-500/30 text-green-400 font-mono",
+  window: "rounded-lg border-2 border-green-500/30 bg-black p-4",
+  text: "text-green-400 font-mono text-sm",
+};
+
+// Difficulty badge pattern
+const difficultyColors = {
+  beginner: "bg-green-500 text-black",
+  intermediate: "bg-yellow-500 text-black",
+  advanced: "bg-red-500 text-white",
+  expert: "bg-purple-500 text-white",
+};
+```
+
+### Matrix Effect Integration
+- Use [MatrixRain](mdc:src/components/effects/MatrixRain.tsx) for background effects
+- Implement [TypewriterText](mdc:src/components/effects/TypewriterText.tsx) for dramatic reveals
+- Include terminal-style window controls with green glows
+
+## 📊 Data Flow & Props
+
+### Centralized Data Pattern
+**CRITICAL**: All data must flow from [appData.ts](mdc:src/lib/appData.ts)
+
+```typescript
+// ❌ WRONG - Don't create static data in components
+const staticGames = [
+  { name: "Cipher Game", points: 100 }
+];
+
+// ✅ CORRECT - Receive data via props
+interface GameListProps {
+  games: Game[];
+  onGameSelect: (gameId: string) => void;
+}
+
+const GameList: React.FC<GameListProps> = ({ games, onGameSelect }) => {
+  // Component implementation
+};
+```
+
+### Props Interface Standards
+```typescript
+interface ComponentProps {
+  // 1. Required props (no defaults)
+  id: string;
+  title: string;
+
+  // 2. Optional props with clear defaults
+  variant?: 'primary' | 'secondary';
+  className?: string;
+  disabled?: boolean;
+
+  // 3. Event handlers (optional, prefixed with 'on')
+  onClick?: () => void;
+  onSubmit?: (data: FormData) => void;
+
+  // 4. Children (if component accepts them)
+  children?: React.ReactNode;
+}
+```
+
+## 🔄 Navigation & Routing Integration
+
+### URL-Friendly Navigation Pattern
+Based on the centralized navigation documented in [README.md](mdc:README.md):
+
+```typescript
+import { useNavigate } from 'react-router-dom';
+
+// Game/Lab navigation pattern
+const handleNavigateToGame = (game: Game) => {
+  const gameId = game.name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+  navigate(`/learn/${courseId}/game/${gameId}`);
+};
+
+// Open in new tab pattern
+const openInNewTab = (url: string) => {
+  window.open(url, '_blank', 'noopener,noreferrer');
+};
+```
+
+### Supported Route Patterns
+```typescript
+// Course routes
+"/course/:courseId"                    → CourseDetailPage
+"/learn/:courseId"                     → EnrolledCoursePage
+"/learn/:courseId/lab/:labId"          → LabPage
+"/learn/:courseId/game/:gameId"        → GamePage
+
+// Dashboard routes
+"/dashboard"                           → Dashboard
+"/overview"                           → CyberSecOverview
+```
+
+## 🧪 Testing Requirements
+
+### Component Testing Pattern
+Every new component requires tests covering:
+
+```typescript
+// 1. Expected use case
+describe('ComponentName', () => {
+  it('renders with required props', () => {
+    render(<ComponentName title="Test" data={mockData} />);
+    expect(screen.getByText('Test')).toBeInTheDocument();
+  });
+
+  // 2. Edge case
+  it('handles empty data gracefully', () => {
+    render(<ComponentName title="Test" data={[]} />);
+    expect(screen.getByText('No data available')).toBeInTheDocument();
+  });
+
+  // 3. Failure case
+  it('displays error state when data loading fails', () => {
+    render(<ComponentName title="Test" data={null} error="Failed to load" />);
+    expect(screen.getByText('Failed to load')).toBeInTheDocument();
+  });
+});
+```
+
+### Testing File Organization
+```
+src/components/
+├── common/
+│   ├── __tests__/
+│   │   ├── DifficultyBadge.test.tsx
+│   │   ├── ProgressBar.test.tsx
+│   │   └── StatCard.test.tsx
+│   ├── DifficultyBadge.tsx
+│   ├── ProgressBar.tsx
+│   └── StatCard.tsx
+```
+
+## 📈 Performance & Optimization
+
+### Project Achievements (from README.md)
+The current component architecture has achieved:
+- **83% Code Reduction** through refactoring
+- **50+ Reusable Components** with high reuse rates
+- **12% Bundle Size Reduction** through optimization
+- **100% TypeScript Coverage** with no `any` types
+
+### Optimization Patterns
+```typescript
+// Memoization for expensive calculations
+const ExpensiveComponent = memo(({ data }) => {
+  const processedData = useMemo(() =>
+    expensiveCalculation(data), [data]
+  );
+
+  return <div>{processedData}</div>;
+});
+
+// Callback optimization
+const ParentComponent = () => {
+  const handleClick = useCallback((id: string) => {
+    // Handle click logic
+  }, []);
+
+  return <ChildComponent onClick={handleClick} />;
+};
+```
+
+## 🔧 Export & Import Standards
+
+### Component Exports
+```typescript
+// Default export for main component
+export default ComponentName;
+
+// Named exports for utilities/types
+export type { ComponentProps };
+export { componentHelper };
+```
+
+### Index File Pattern
+```typescript
+// src/components/feature/index.ts
+export { default as ComponentA } from './ComponentA';
+export { default as ComponentB } from './ComponentB';
+export type { ComponentAProps, ComponentBProps } from './types';
+```
+
+### Import Guidelines
+```typescript
+// 1. React imports first
+import React, { useState, useEffect } from 'react';
+
+// 2. External library imports
+import { useNavigate } from 'react-router-dom';
+
+// 3. Internal imports (absolute paths)
+import { Button } from '@/components/ui/button';
+import { GameData } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+// 4. Relative imports (same feature area only)
+import { HelperComponent } from './HelperComponent';
+```
+
+## ✅ Quality Checklist
+
+Before creating/modifying components:
+- [ ] Props interface defined with TypeScript
+- [ ] Component follows functional pattern
+- [ ] Cybersecurity theme implemented
+- [ ] Data comes from centralized source
+- [ ] Navigation uses established patterns
+- [ ] Error states handled gracefully
+- [ ] Responsive design implemented
+- [ ] Tests written (3 test types minimum)
+- [ ] Documentation added for complex logic
+- [ ] Component exported in index.ts file
+
+## 📚 Documentation Reference
+
+All component patterns, architecture details, and development guidelines are documented in [README.md](mdc:README.md). Reference this file for:
+- Complete component hierarchy and relationships
+- Data flow patterns and state management
+- Performance optimization strategies
+- Security considerations and accessibility
+- Testing strategies and examples

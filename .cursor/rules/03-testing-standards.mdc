@@ -1,0 +1,458 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Testing Standards & Requirements
+
+## 🧪 Testing Philosophy
+
+### Testing Requirements
+- **Always create unit tests for new features**
+- **Use `pnpm` for all test operations** - no permission needed
+- **After updating logic**, check if existing tests need updates
+- **Install test packages without asking permission**
+
+### Testing Targets (from README.md)
+- **Test Coverage**: >90% target
+- **TypeScript Coverage**: 100% (no `any` types)
+- **Quality Standard**: All new features require comprehensive tests
+- **Performance**: Tests must not impact build times significantly
+
+### Test File Organization
+```
+src/
+├── components/
+│   └── __tests__/          # Component tests
+├── lib/
+│   └── __tests__/          # Utility function tests
+├── pages/
+│   └── __tests__/          # Page component tests
+└── __tests__/              # Integration tests
+```
+
+## 📋 Test Coverage Requirements
+
+### For Every New Feature
+Include at least:
+1. **1 test for expected use** - Happy path scenario
+2. **1 edge case test** - Boundary conditions
+3. **1 failure case test** - Error handling
+
+### Component Testing Template
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import ComponentName from '../ComponentName';
+
+// Mock data based on appData.ts structure
+const mockData = {
+  id: 'test-id',
+  title: 'Test Title',
+  // ... other required props
+};
+
+const renderWithRouter = (component: React.ReactElement) => {
+  return render(
+    <BrowserRouter>
+      {component}
+    </BrowserRouter>
+  );
+};
+
+describe('ComponentName', () => {
+  // 1. Expected use case
+  it('renders correctly with valid props', () => {
+    renderWithRouter(<ComponentName data={mockData} />);
+    expect(screen.getByText('Test Title')).toBeInTheDocument();
+    expect(screen.getByTestId('test-id')).toBeInTheDocument();
+  });
+
+  // 2. Edge case
+  it('handles empty data gracefully', () => {
+    renderWithRouter(<ComponentName data={null} />);
+    expect(screen.getByText('No data available')).toBeInTheDocument();
+  });
+
+  // 3. Failure case
+  it('displays error state properly', () => {
+    renderWithRouter(<ComponentName data={mockData} error="Failed to load" />);
+    expect(screen.getByText('Failed to load')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
+  // 4. User interaction
+  it('handles user interactions correctly', () => {
+    const mockOnClick = jest.fn();
+    renderWithRouter(<ComponentName data={mockData} onClick={mockOnClick} />);
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(mockOnClick).toHaveBeenCalledWith(mockData.id);
+  });
+
+  // 5. Cybersecurity theme
+  it('applies cybersecurity theme correctly', () => {
+    renderWithRouter(<ComponentName data={mockData} />);
+    const element = screen.getByTestId('test-id');
+    expect(element).toHaveClass('text-green-400');
+    expect(element).toHaveClass('font-mono');
+  });
+});
+```
+
+## 🎮 Game & Interactive Component Testing
+
+### Game Component Testing
+```typescript
+import { GameSelector } from '../GameSelector';
+
+describe('GameSelector', () => {
+  const mockGames = [
+    { id: 'cipher', name: 'Cipher Game', points: 100 },
+    { id: 'hash', name: 'Hash Crack', points: 150 },
+  ];
+
+  it('renders all available games', () => {
+    render(<GameSelector games={mockGames} />);
+    expect(screen.getByText('Cipher Game')).toBeInTheDocument();
+    expect(screen.getByText('Hash Crack')).toBeInTheDocument();
+  });
+
+  it('handles game selection', () => {
+    const mockOnSelect = jest.fn();
+    render(<GameSelector games={mockGames} onGameSelect={mockOnSelect} />);
+
+    fireEvent.click(screen.getByText('Cipher Game'));
+    expect(mockOnSelect).toHaveBeenCalledWith('cipher');
+  });
+
+  it('displays points correctly', () => {
+    render(<GameSelector games={mockGames} />);
+    expect(screen.getByText('100 points')).toBeInTheDocument();
+  });
+});
+```
+
+### Terminal Component Testing
+```typescript
+import { TerminalWindow } from '../TerminalWindow';
+
+describe('TerminalWindow', () => {
+  it('renders with terminal styling', () => {
+    render(
+      <TerminalWindow title="Test Terminal">
+        <div>Terminal content</div>
+      </TerminalWindow>
+    );
+
+    expect(screen.getByText('Test Terminal')).toBeInTheDocument();
+    expect(screen.getByText('Terminal content')).toBeInTheDocument();
+
+    const terminalWindow = screen.getByRole('region');
+    expect(terminalWindow).toHaveClass('bg-black');
+    expect(terminalWindow).toHaveClass('border-green-500/30');
+  });
+
+  it('includes window controls', () => {
+    render(<TerminalWindow title="Test">Content</TerminalWindow>);
+
+    // Test for macOS-style window controls
+    expect(screen.getByLabelText('Close')).toBeInTheDocument();
+    expect(screen.getByLabelText('Minimize')).toBeInTheDocument();
+    expect(screen.getByLabelText('Maximize')).toBeInTheDocument();
+  });
+});
+```
+
+## 📊 Data Management Testing
+
+### Testing Data Flow from appData.ts
+```typescript
+import * as appData from '@/lib/appData';
+import { getAllModules, getGamesByModule } from '@/lib/appData';
+
+// Mock the entire appData module
+jest.mock('@/lib/appData', () => ({
+  getAllModules: jest.fn(),
+  getGamesByModule: jest.fn(),
+  // ... other functions
+}));
+
+describe('Data Integration', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('loads modules from centralized data', () => {
+    const mockModules = [
+      { id: 'foundations', title: 'Security Foundations' }
+    ];
+    (getAllModules as jest.Mock).mockReturnValue(mockModules);
+
+    render(<ModuleList />);
+    expect(getAllModules).toHaveBeenCalled();
+    expect(screen.getByText('Security Foundations')).toBeInTheDocument();
+  });
+
+  it('handles data loading errors', () => {
+    (getAllModules as jest.Mock).mockImplementation(() => {
+      throw new Error('Failed to load modules');
+    });
+
+    render(<ModuleList />);
+    expect(screen.getByText('Failed to load modules')).toBeInTheDocument();
+  });
+});
+```
+
+## 🗺️ Navigation Testing
+
+### Route Testing Pattern
+```typescript
+import { MemoryRouter } from 'react-router-dom';
+import { render, screen, fireEvent } from '@testing-library/react';
+
+const renderWithRoute = (component: React.ReactElement, initialRoute = '/') => {
+  return render(
+    <MemoryRouter initialEntries={[initialRoute]}>
+      {component}
+    </MemoryRouter>
+  );
+};
+
+describe('Navigation Integration', () => {
+  it('navigates to game page with correct URL', () => {
+    const mockNavigate = jest.fn();
+    jest.mock('react-router-dom', () => ({
+      ...jest.requireActual('react-router-dom'),
+      useNavigate: () => mockNavigate,
+    }));
+
+    render(<GameCard game={{ name: 'XSS Hunter Challenge' }} />);
+    fireEvent.click(screen.getByText('PLAY_GAME'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('/learn/course-id/game/xss-hunter-challenge');
+  });
+
+  it('generates URL-friendly IDs correctly', () => {
+    const testCases = [
+      { input: 'XSS Hunter Challenge', expected: 'xss-hunter-challenge' },
+      { input: 'SQL Injection Lab', expected: 'sql-injection-lab' },
+      { input: 'Buffer Overflow (Advanced)', expected: 'buffer-overflow-advanced' },
+    ];
+
+    testCases.forEach(({ input, expected }) => {
+      const urlId = input
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '');
+      expect(urlId).toBe(expected);
+    });
+  });
+});
+```
+
+## 🎨 Accessibility Testing
+
+### Cybersecurity Theme Accessibility
+```typescript
+import { axe, toHaveNoViolations } from 'jest-axe';
+
+expect.extend(toHaveNoViolations);
+
+describe('Accessibility Compliance', () => {
+  it('meets WCAG standards with cybersecurity theme', async () => {
+    const { container } = render(<CybersecurityComponent />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('provides sufficient color contrast', () => {
+    render(<DifficultyBadge difficulty="expert" />);
+    const badge = screen.getByText('Expert');
+
+    // Purple background with white text should have sufficient contrast
+    expect(badge).toHaveClass('bg-purple-500');
+    expect(badge).toHaveClass('text-white');
+  });
+
+  it('supports keyboard navigation', () => {
+    render(<InteractiveGameButton />);
+    const button = screen.getByRole('button');
+
+    button.focus();
+    expect(button).toHaveFocus();
+
+    // Should show focus indicators
+    expect(button).toHaveClass('focus:ring-2');
+    expect(button).toHaveClass('focus:ring-green-500');
+  });
+});
+```
+
+## 🏗️ Integration Testing
+
+### Page Component Testing
+```typescript
+import { render, screen, waitFor } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import Dashboard from '@/pages/Dashboard';
+
+// Mock the data dependencies
+jest.mock('@/lib/appData', () => ({
+  getEnrolledModules: () => [
+    { id: 'foundations', title: 'Security Foundations', progress: 75 }
+  ],
+  getUserStats: () => ({
+    totalPoints: 1250,
+    completedLabs: 12,
+    completedGames: 8
+  })
+}));
+
+describe('Dashboard Integration', () => {
+  it('renders with all major components', async () => {
+    render(
+      <BrowserRouter>
+        <Dashboard />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Security Foundations')).toBeInTheDocument();
+      expect(screen.getByText('1,250 Points')).toBeInTheDocument();
+      expect(screen.getByText('12 Labs Completed')).toBeInTheDocument();
+    });
+  });
+
+  it('handles component interactions', async () => {
+    render(
+      <BrowserRouter>
+        <Dashboard />
+      </BrowserRouter>
+    );
+
+    // Test tab switching
+    fireEvent.click(screen.getByText('Progress'));
+    expect(screen.getByTestId('progress-tab')).toBeVisible();
+  });
+});
+```
+
+## 📈 Performance Testing
+
+### Component Performance Testing
+```typescript
+import { render } from '@testing-library/react';
+import { performance } from 'perf_hooks';
+
+describe('Component Performance', () => {
+  it('renders large lists efficiently', () => {
+    const largeDataset = Array.from({ length: 1000 }, (_, i) => ({
+      id: `item-${i}`,
+      title: `Item ${i}`,
+    }));
+
+    const startTime = performance.now();
+    render(<LargeList items={largeDataset} />);
+    const endTime = performance.now();
+
+    // Should render within reasonable time (< 100ms)
+    expect(endTime - startTime).toBeLessThan(100);
+  });
+
+  it('memoizes expensive calculations', () => {
+    const expensiveCalculation = jest.fn().mockReturnValue('calculated');
+
+    const TestComponent = React.memo(({ data }: { data: any }) => {
+      const result = React.useMemo(() => expensiveCalculation(data), [data]);
+      return <div>{result}</div>;
+    });
+
+    const { rerender } = render(<TestComponent data="test" />);
+    expect(expensiveCalculation).toHaveBeenCalledTimes(1);
+
+    // Re-render with same data shouldn't call expensive function
+    rerender(<TestComponent data="test" />);
+    expect(expensiveCalculation).toHaveBeenCalledTimes(1);
+  });
+});
+```
+
+## 🔧 Test Setup & Configuration
+
+### Test Environment Setup
+```typescript
+// setupTests.ts
+import '@testing-library/jest-dom';
+import { TextEncoder, TextDecoder } from 'util';
+
+// Polyfills for testing environment
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
+// Mock IntersectionObserver for component tests
+global.IntersectionObserver = jest.fn(() => ({
+  observe: jest.fn(),
+  disconnect: jest.fn(),
+  unobserve: jest.fn(),
+}));
+
+// Mock window.matchMedia for responsive components
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+```
+
+### Test Utilities
+```typescript
+// testUtils.tsx
+import { render as rtlRender } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+
+// Custom render function with providers
+export const render = (ui: React.ReactElement, options = {}) => {
+  const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <BrowserRouter>
+      {children}
+    </BrowserRouter>
+  );
+
+  return rtlRender(ui, { wrapper: Wrapper, ...options });
+};
+
+// Re-export everything
+export * from '@testing-library/react';
+```
+
+## ✅ Testing Checklist
+
+Before submitting new features:
+- [ ] Unit tests written for all new components
+- [ ] Integration tests for page-level functionality
+- [ ] Accessibility tests for cybersecurity theme compliance
+- [ ] Performance tests for large datasets
+- [ ] Navigation tests for URL generation
+- [ ] Error boundary tests for failure scenarios
+- [ ] Data integration tests with appData.ts
+- [ ] All tests pass with `pnpm test`
+- [ ] Coverage reports show >90% coverage
+
+## 📚 Testing Documentation
+
+All testing strategies, architecture patterns, and implementation examples are documented in [README.md](mdc:README.md). Reference this file for:
+- Component testing strategies and patterns
+- Performance optimization testing
+- Accessibility testing requirements
+- Integration testing approaches
+- Complete testing setup and configuration

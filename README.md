@@ -1,16 +1,11 @@
 # Hack The World - Cybersecurity Learning Platform
 
-A comprehensive, interactive cybersecurity learning platform built with React, TypeScript, and Vite. This platform provides hands-on training through interactive labs, games, and real-world simulations in a terminal-styled interface.
+A comprehensive, interactive cybersecurity learning platform built with React, TypeScript, and Vite. Experience hands-on training through interactive labs, games, and real-world simulations in a terminal-styled interface.
 
-## 🎯 What is Hack The World?
-
-Hack The World is an immersive cybersecurity education platform that combines:
-
-- **Interactive Learning**: Video lessons, hands-on labs, and practical exercises
-- **Gamification**: Security challenges, CTF-style games, and point-based progression
-- **Real-world Simulations**: Terminal environments, network scanning, and vulnerability assessment
-- **Progressive Curriculum**: Structured learning paths from beginner to advanced levels
-- **AI-Powered Assistance**: Integrated AI playground for learning support and analysis
+![Cybersecurity Platform](https://img.shields.io/badge/Platform-Cybersecurity%20Learning-00ff00?style=for-the-badge&logo=terminal)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-100%25-3178C6?style=for-the-badge&logo=typescript)
+![Vite](https://img.shields.io/badge/Vite-Build%20Tool-646CFF?style=for-the-badge&logo=vite)
 
 ## 🚀 Quick Start
 
@@ -34,175 +29,112 @@ pnpm dev
 
 # Build for production
 pnpm build
-
-# Preview production build
-pnpm preview
 ```
 
 ### Development Commands
 
 ```bash
-pnpm dev          # Start development server
+pnpm dev          # Start development server (http://localhost:5173)
 pnpm build        # Build for production
 pnpm lint         # Run ESLint
 pnpm preview      # Preview production build
 ```
 
+## ✨ Key Features
+
+### 🎓 Three-Phase Learning System
+
+- **Beginner Phase**: Cybersecurity fundamentals and basic concepts
+- **Intermediate Phase**: Advanced security skills and practical techniques
+- **Advanced Phase**: Expert-level specializations and cutting-edge topics
+
+### 🎮 Interactive Learning Environment
+
+- **Split-Screen Interface**: Video lessons + AI-powered playground
+- **Real Terminal Emulation**: Authentic cybersecurity tools experience
+- **Hands-on Labs**: Step-by-step practical exercises
+- **Security Games**: Gamified challenges and CTF-style competitions
+
+### 🛡️ Cybersecurity-Themed Experience
+
+- **Matrix-Style Interface**: Authentic hacker aesthetic with terminal theme
+- **AI Assistant**: Context-aware learning support and guidance
+- **Progress Tracking**: Comprehensive analytics and achievement system
+- **Responsive Design**: Full functionality across all devices
+
 ## 🏗️ Technology Stack
 
-- **Frontend**: React 18 + TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **Routing**: React Router DOM
-- **State Management**: React hooks + Context
-- **Terminal**: xterm.js for terminal emulation
-- **Charts**: Recharts for data visualization
-- **Forms**: React Hook Form + Zod validation
-
-## 🎓 Learning Paths
-
-The platform offers structured learning through different phases:
-
-### 1. **Foundation Phase**
-
-- Network Security Fundamentals
-- Web Application Security
-- System Administration
-- Cryptography Basics
-
-### 2. **Intermediate Phase**
-
-- Penetration Testing
-- Digital Forensics
-- Incident Response
-- Malware Analysis
-
-### 3. **Advanced Phase**
-
-- Advanced Persistent Threats
-- Red Team Operations
-- Security Architecture
-- Threat Hunting
-
-## 🎮 Key Features
-
-### Interactive Learning
-
-- **Video Lessons**: Comprehensive video tutorials with progress tracking
-- **Hands-on Labs**: Real-world security scenarios and exercises
-- **AI Playground**: AI-assisted learning with terminal, chat, and analysis modes
-- **Progress Tracking**: Visual progress indicators and achievement system
-
-### Gamification
-
-- **Cipher Games**: Caesar cipher decoding challenges
-- **Hash Cracking**: MD5 hash breaking exercises
-- **Port Scanning**: Network reconnaissance simulations
-- **CTF Challenges**: Capture-the-flag style security puzzles
-
-### Real-world Simulations
-
-- **Terminal Labs**: Command-line security tools practice
-- **Web Security Labs**: Hands-on vulnerability testing
-- **Social Engineering Labs**: Security awareness training
-- **Network Analysis**: Traffic analysis and monitoring
-
-## 🎨 Design Philosophy
-
-The platform uses a cybersecurity-themed design with:
-
-- **Matrix/Hacker Aesthetic**: Green terminal-style interfaces
-- **Dark Theme**: Professional cybersecurity look and feel
-- **Interactive Elements**: Smooth animations and hover effects
-- **Responsive Design**: Optimized for all device sizes
-
-## 📁 Project Structure
-
-```
-hack-the-world/
-├── public/                 # Static assets
-├── src/
-│   ├── components/        # 50+ reusable React components
-│   ├── pages/            # Main application pages
-│   ├── lib/              # Utilities and configurations
-│   ├── hooks/            # Custom React hooks
-│   └── assets/           # Images, icons, and media files
-├── package.json          # Dependencies and scripts
-├── vite.config.ts        # Vite configuration
-└── tsconfig.json         # TypeScript configuration
-```
+- **Frontend**: React 18 + TypeScript (100% functional components)
+- **Build Tool**: Vite for fast development and optimized builds
+- **Styling**: Tailwind CSS + shadcn/ui component library
+- **State Management**: React hooks + Context API
+- **Package Manager**: pnpm (required for all operations)
 
 ## 📚 Documentation
 
-### For Developers
+Comprehensive documentation is available in the [`src/docs/`](src/docs/) directory:
 
-- **[Architecture Guide](./ARCHITECTURE.md)** - Complete technical architecture, component relationships, and development patterns
-- **[Refactoring Summary](./REFACTORING_SUMMARY.md)** - Recent improvements and code optimization history
+### Core Documentation
 
-### For Users
+- **[Platform Overview](src/docs/01-platform-overview.md)** - Complete feature overview and capabilities
+- **[Architecture Guide](src/docs/02-architecture.md)** - Technical architecture and system design
+- **[User Experience Flow](src/docs/03-user-experience.md)** - Complete user journey and interactions
+- **[Component Library](src/docs/04-component-library.md)** - Component documentation and usage
 
-- **Getting Started**: Follow the Quick Start guide above
-- **Learning Paths**: Explore the structured curriculum phases
-- **Interactive Features**: Discover games, labs, and AI assistance
+### Development Documentation
 
-## 🔧 Development Guidelines
+- **[Development Guide](src/docs/05-development-guide.md)** - Setup, standards, and workflows
+- **[API Reference](src/docs/06-api-reference.md)** - Data structures and utilities
+- **[Testing Strategy](src/docs/07-testing-strategy.md)** - Testing approach and implementation
 
-### Component Development
+### Design Documentation
 
-- Use functional components with TypeScript
-- Follow established naming conventions
-- Create reusable, well-documented components
-- Implement proper error handling and accessibility
+- **[Design System](src/docs/09-design-system.md)** - Cybersecurity theme and visual guidelines
+- **[Interactive Features](src/docs/13-interactive-features.md)** - Games, labs, and AI playground
 
-### Code Quality
+> **📖 [View Complete Documentation Index](src/docs/README.md)**
 
-- **Type Safety**: Comprehensive TypeScript coverage
-- **Performance**: Optimized bundle size and loading times
-- **Testing**: Component and integration testing
-- **Documentation**: Keep code well-documented
+## 🎯 Project Highlights
 
-### Styling
+### Performance Achievements
 
-- Use Tailwind CSS utility classes
-- Follow the cybersecurity theme color palette
-- Implement responsive design patterns
-- Maintain consistent spacing and typography
+- **83% Code Reduction** through component refactoring and optimization
+- **50+ Reusable Components** with modular, maintainable architecture
+- **100% TypeScript Coverage** with comprehensive type safety
+- **Centralized Data Management** eliminating duplication and sync issues
+
+### Features Implemented
+
+- ✅ Complete three-phase learning system with 15+ courses
+- ✅ Interactive video player with resizable AI playground
+- ✅ Terminal emulation with cybersecurity tool simulation
+- ✅ Comprehensive progress tracking and achievement system
+- ✅ Responsive design with mobile-optimized experience
+- ✅ Games and labs with new-tab functionality
+- ✅ Dashboard with analytics and learning recommendations
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Standards
-
-- Follow TypeScript best practices
-- Write clean, readable code
-- Add proper documentation for new features
-- Test components thoroughly
-- Follow the established design patterns
-
-## 📊 Project Stats
-
-- **50+ Reusable Components**: Modular architecture for maintainability
-- **83% Code Reduction**: Through component refactoring and optimization
-- **Type-Safe**: Comprehensive TypeScript coverage
-- **Performance Optimized**: Bundle size reduced by 12%
+1. Review the [Development Guide](src/docs/05-development-guide.md)
+2. Check the [Architecture Guide](src/docs/02-architecture.md)
+3. Follow coding standards in [Cursor Rules](.cursor/rules/)
+4. Write tests for new features
+5. Update documentation as needed
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+## 🚀 Future Roadmap
 
-For questions, issues, or contributions:
-
-- Create an issue in the repository
-- Follow the contributing guidelines
-- Check existing documentation first
+- **Testing Implementation**: Comprehensive test suite with >90% coverage
+- **Backend Integration**: API connectivity for real data persistence
+- **Authentication**: User accounts and progress synchronization
+- **Real-time Features**: Live collaboration and team learning
+- **Mobile Apps**: React Native implementation for mobile platforms
 
 ---
 
 **Built with ❤️ for cybersecurity education and hands-on learning.**
+
+_Experience the matrix. Master cybersecurity. Hack the world._

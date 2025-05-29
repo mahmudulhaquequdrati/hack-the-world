@@ -1,0 +1,502 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Navigation & Routing Guidelines
+
+## 🗺️ Route Structure
+
+### Current Route Patterns
+Based on [README.md](mdc:README.md) routing structure and centralized navigation achievements:
+
+```typescript
+// Public Routes
+"/"                    → LandingPage
+"/login"              → LoginPage
+"/signup"             → SignupPage
+"/pricing"            → PricingPage
+
+// Dashboard & Overview
+"/dashboard"          → Dashboard
+"/overview"           → CyberSecOverview
+"/demo"              → PlatformDemo
+
+// Course & Learning Routes
+"/course/:courseId"                    → CourseDetailPage
+"/learn/:courseId"                     → EnrolledCoursePage
+"/learn/:courseId/lab/:labId"          → LabPage
+"/learn/:courseId/game/:gameId"        → GamePage
+
+// Standalone Lab Routes
+"/terminal-lab"       → TerminalLab
+"/websec-lab"        → WebSecLab
+"/social-eng-lab"    → SocialEngLab
+```
+
+### Navigation Achievements
+Based on the centralized navigation implementation documented in [README.md](mdc:README.md):
+- **Clean, RESTful URL patterns** for all games and labs
+- **URL-friendly ID generation** from game/lab names
+- **Shareable and bookmarkable links** for all content
+- **Deep linking support** for direct access to specific content
+
+## 🔗 URL-Friendly ID Generation
+
+### Consistent ID Conversion Pattern
+```typescript
+// Standard pattern used throughout the application
+const generateUrlId = (name: string): string => {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '-')        // Spaces to dashes
+    .replace(/[^a-z0-9-]/g, '');  // Remove special characters
+};
+
+// Examples from the platform:
+// "XSS Hunter Challenge" → "xss-hunter-challenge"
+// "SQL Injection Lab" → "sql-injection-lab"
+// "Buffer Overflow (Advanced)" → "buffer-overflow-advanced"
+```
+
+### Reverse ID Lookup
+```typescript
+// For finding original data from URL-friendly IDs
+const findByUrlId = (items: any[], urlId: string) => {
+  return items.find(item => {
+    const generatedId = generateUrlId(item.name);
+    return generatedId === urlId || item.id === urlId;
+  });
+};
+```
+
+## 🎮 Game & Lab Navigation
+
+### Game Navigation Pattern
+From any part of the application:
+
+```typescript
+import { useNavigate } from 'react-router-dom';
+
+const GameCard: React.FC<{ game: Game; courseId: string }> = ({ game, courseId }) => {
+  const navigate = useNavigate();
+
+  const handlePlayGame = () => {
+    const gameId = generateUrlId(game.name);
+    navigate(`/learn/${courseId}/game/${gameId}`);
+  };
+
+  return (
+    <button onClick={handlePlayGame} className="hacker-btn">
+      PLAY_GAME
+    </button>
+  );
+};
+```
+
+### Lab Navigation Pattern
+```typescript
+const LabCard: React.FC<{ lab: Lab; courseId: string }> = ({ lab, courseId }) => {
+  const navigate = useNavigate();
+
+  const handleStartLab = () => {
+    const labId = generateUrlId(lab.name);
+    navigate(`/learn/${courseId}/lab/${labId}`);
+  };
+
+  return (
+    <button onClick={handleStartLab} className="hacker-btn">
+      START_LAB
+    </button>
+  );
+};
+```
+
+## 📊 Navigation Access Points
+
+### From Dashboard
+Access all games and labs from enrolled courses (as documented in [README.md](mdc:README.md)):
+
+```typescript
+// Dashboard Games Tab Navigation
+const DashboardGamesTab = () => {
+  const navigate = useNavigate();
+
+  const handleGameAction = (game: GameItem) => {
+    const gameId = generateUrlId(game.name);
+    navigate(`/learn/${game.moduleId}/game/${gameId}`);
+  };
+
+  // Organized by Phase → Module → Games
+  // Uses "START_GAME" and "PLAY_AGAIN" buttons
+};
+
+// Dashboard Labs Tab Navigation
+const DashboardLabsTab = () => {
+  const navigate = useNavigate();
+
+  const handleLabAction = (lab: LabItem) => {
+    const labId = generateUrlId(lab.name);
+    navigate(`/learn/${lab.moduleId}/lab/${labId}`);
+  };
+
+  // Organized by Phase → Module → Labs
+  // Uses "START_LAB" and "REVIEW_LAB" buttons
+};
+```
+
+### From Course Detail Pages
+Navigate to course-specific content:
+
+```typescript
+// Course Games Tab
+const GamesTab: React.FC<{ courseId: string }> = ({ courseId }) => {
+  const navigate = useNavigate();
+
+  const games = getGamesByModule(courseId);
+
+  const handlePlayGame = (game: Game) => {
+    const gameId = generateUrlId(game.name);
+    navigate(`/learn/${courseId}/game/${gameId}`);
+  };
+
+  // Shows games specific to that course
+  // Click "PLAY_GAME" buttons
+};
+
+// Course Labs Tab
+const LabsTab: React.FC<{ courseId: string }> = ({ courseId }) => {
+  const navigate = useNavigate();
+
+  const labs = getLabsByModule(courseId);
+
+  const handleStartLab = (lab: Lab) => {
+    const labId = generateUrlId(lab.name);
+    navigate(`/learn/${courseId}/lab/${labId}`);
+  };
+
+  // Shows labs specific to that course
+  // Click "START_LAB" buttons
+};
+```
+
+### From Enrolled Course Pages
+Embedded and full-screen experiences:
+
+```typescript
+const EnrolledCoursePage = () => {
+  const { courseId } = useParams();
+  const navigate = useNavigate();
+
+  // Embedded experience for internal navigation
+  const [selectedGame, setSelectedGame] = useState<string | null>(null);
+  const [selectedLab, setSelectedLab] = useState<string | null>(null);
+
+  // Full-screen navigation for new tabs
+  const openGameInNewTab = (gameId: string) => {
+    const urlFriendlyGameId = generateUrlId(gameId);
+    window.open(`/learn/${courseId}/game/${urlFriendlyGameId}`, '_blank');
+  };
+
+  const openLabInNewTab = (labId: string) => {
+    const urlFriendlyLabId = generateUrlId(labId);
+    window.open(`/learn/${courseId}/lab/${urlFriendlyLabId}`, '_blank');
+  };
+};
+```
+
+## 🔄 Route Parameter Handling
+
+### Game Page Pattern
+```typescript
+// GamePage.tsx - Enhanced to handle multiple ID sources
+const GamePage = () => {
+  const { courseId, gameId } = useParams();
+  const [gameData, setGameData] = useState<Game | null>(null);
+
+  useEffect(() => {
+    // Try multiple lookup strategies
+    const games = getGamesByModule(courseId);
+
+    // 1. Direct ID lookup
+    let game = games.find(g => g.id === gameId);
+
+    // 2. URL-friendly name lookup
+    if (!game) {
+      game = games.find(g => generateUrlId(g.name) === gameId);
+    }
+
+    // 3. Exact name match (fallback)
+    if (!game) {
+      game = games.find(g => g.name.toLowerCase() === gameId?.toLowerCase());
+    }
+
+    setGameData(game || null);
+  }, [courseId, gameId]);
+
+  if (!gameData) {
+    return <div>Game not found</div>;
+  }
+
+  return <GameDisplay game={gameData} />;
+};
+```
+
+### Lab Page Pattern
+```typescript
+// LabPage.tsx - Enhanced to handle multiple ID sources
+const LabPage = () => {
+  const { courseId, labId } = useParams();
+  const [labData, setLabData] = useState<Lab | null>(null);
+
+  useEffect(() => {
+    const labs = getLabsByModule(courseId);
+
+    // Multiple lookup strategies like GamePage
+    let lab = labs.find(l => l.id === labId) ||
+              labs.find(l => generateUrlId(l.name) === labId) ||
+              labs.find(l => l.name.toLowerCase() === labId?.toLowerCase());
+
+    setLabData(lab || null);
+  }, [courseId, labId]);
+
+  return labData ? <LabDisplay lab={labData} /> : <div>Lab not found</div>;
+};
+```
+
+## 🧭 Navigation Components
+
+### Navigation Hook Pattern
+```typescript
+// Custom hook for consistent navigation
+const useAppNavigation = () => {
+  const navigate = useNavigate();
+
+  return {
+    toDashboard: () => navigate('/dashboard'),
+    toOverview: () => navigate('/overview'),
+    toCourse: (courseId: string) => navigate(`/course/${courseId}`),
+    toEnrolledCourse: (courseId: string) => navigate(`/learn/${courseId}`),
+    toGame: (courseId: string, gameId: string) => {
+      const urlId = generateUrlId(gameId);
+      navigate(`/learn/${courseId}/game/${urlId}`);
+    },
+    toLab: (courseId: string, labId: string) => {
+      const urlId = generateUrlId(labId);
+      navigate(`/learn/${courseId}/lab/${urlId}`);
+    },
+    openGameInNewTab: (courseId: string, gameId: string) => {
+      const urlId = generateUrlId(gameId);
+      window.open(`/learn/${courseId}/game/${urlId}`, '_blank');
+    },
+    openLabInNewTab: (courseId: string, labId: string) => {
+      const urlId = generateUrlId(labId);
+      window.open(`/learn/${courseId}/lab/${urlId}`, '_blank');
+    },
+  };
+};
+```
+
+### Breadcrumb Navigation
+```typescript
+const Breadcrumb: React.FC = () => {
+  const location = useLocation();
+  const { courseId, gameId, labId } = useParams();
+
+  const getBreadcrumbs = () => {
+    const paths = location.pathname.split('/').filter(Boolean);
+    const breadcrumbs: BreadcrumbItem[] = [
+      { label: 'Dashboard', path: '/dashboard' }
+    ];
+
+    if (paths.includes('course') && courseId) {
+      const course = getCourseById(courseId);
+      breadcrumbs.push({
+        label: course?.title || 'Course',
+        path: `/course/${courseId}`
+      });
+    }
+
+    if (paths.includes('learn') && courseId) {
+      const course = getCourseById(courseId);
+      breadcrumbs.push({
+        label: course?.title || 'Learning',
+        path: `/learn/${courseId}`
+      });
+
+      if (gameId) {
+        const games = getGamesByModule(courseId);
+        const game = findByUrlId(games, gameId);
+        breadcrumbs.push({
+          label: game?.name || 'Game',
+          path: location.pathname
+        });
+      }
+
+      if (labId) {
+        const labs = getLabsByModule(courseId);
+        const lab = findByUrlId(labs, labId);
+        breadcrumbs.push({
+          label: lab?.name || 'Lab',
+          path: location.pathname
+        });
+      }
+    }
+
+    return breadcrumbs;
+  };
+
+  return (
+    <nav className="breadcrumb-nav">
+      {getBreadcrumbs().map((crumb, index) => (
+        <span key={index} className="breadcrumb-item">
+          {index < getBreadcrumbs().length - 1 ? (
+            <Link to={crumb.path}>{crumb.label}</Link>
+          ) : (
+            <span>{crumb.label}</span>
+          )}
+        </span>
+      ))}
+    </nav>
+  );
+};
+```
+
+## 🔍 Route Guards & Navigation Logic
+
+### Enrollment Check Pattern
+```typescript
+const ProtectedRoute: React.FC<{ children: React.ReactNode; courseId: string }> = ({
+  children,
+  courseId
+}) => {
+  const enrolledCourses = getEnrolledCourses();
+  const isEnrolled = enrolledCourses.includes(courseId);
+
+  if (!isEnrolled) {
+    return <Navigate to={`/course/${courseId}`} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Usage in App.tsx
+<Route
+  path="/learn/:courseId"
+  element={
+    <ProtectedRoute courseId={courseId}>
+      <EnrolledCoursePage />
+    </ProtectedRoute>
+  }
+/>
+```
+
+### Navigation State Management
+```typescript
+// Track navigation state for better UX
+const useNavigationState = () => {
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
+
+  const navigate = useNavigate();
+
+  const navigateWithState = useCallback((path: string) => {
+    setIsNavigating(true);
+    setNavigationHistory(prev => [...prev, path]);
+
+    navigate(path);
+
+    // Reset loading state after navigation
+    setTimeout(() => setIsNavigating(false), 100);
+  }, [navigate]);
+
+  return { isNavigating, navigationHistory, navigate: navigateWithState };
+};
+```
+
+## 📱 Mobile Navigation Considerations
+
+### Touch-Friendly Navigation
+```typescript
+const MobileNavigation: React.FC = () => {
+  return (
+    <div className="mobile-nav">
+      {/* Larger touch targets */}
+      <button className="min-h-[44px] min-w-[44px] hacker-btn">
+        Dashboard
+      </button>
+
+      {/* Swipe gesture support */}
+      <div
+        className="swipe-area"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Navigation content */}
+      </div>
+    </div>
+  );
+};
+```
+
+### Responsive Route Handling
+```typescript
+// Adjust navigation behavior based on screen size
+const useResponsiveNavigation = () => {
+  const [isMobile] = useMobile(); // From shadcn/ui
+
+  const navigateToGame = (courseId: string, gameId: string) => {
+    if (isMobile) {
+      // Full-screen navigation on mobile
+      navigate(`/learn/${courseId}/game/${generateUrlId(gameId)}`);
+    } else {
+      // Can use modals or embedded views on desktop
+      setSelectedGame(gameId);
+    }
+  };
+
+  return { navigateToGame };
+};
+```
+
+## ✅ Navigation Best Practices
+
+### URL Structure Guidelines
+- Use **kebab-case** for all URL segments
+- Keep URLs **semantic and readable**
+- Ensure URLs are **shareable and bookmarkable**
+- Support **direct navigation** to any content
+
+### Data Flow Integration
+- All navigation must use data from [appData.ts](mdc:src/lib/appData.ts)
+- Use centralized utility functions for ID generation
+- Maintain consistent lookup patterns across components
+- Handle missing/invalid routes gracefully
+
+### Performance Considerations
+- Implement **lazy loading** for route components
+- Use **React.memo** for navigation components
+- Cache frequently accessed route data
+- Optimize navigation state updates
+
+### Accessibility Standards
+- Provide **clear navigation paths**
+- Include **ARIA labels** for navigation elements
+- Support **keyboard navigation**
+- Ensure **focus management** during route changes
+
+### Testing Requirements
+- Test all navigation paths and URL generation
+- Verify deep linking functionality
+- Test mobile and desktop navigation patterns
+- Ensure error handling for invalid routes
+
+## 📚 Navigation Documentation
+
+All navigation patterns, routing strategies, and implementation guidelines are documented in [README.md](mdc:README.md). Reference this file for:
+- Complete routing structure and URL patterns
+- Navigation achievements and performance metrics
+- Data flow integration with centralized appData
+- Mobile navigation considerations
+- Accessibility and testing requirements

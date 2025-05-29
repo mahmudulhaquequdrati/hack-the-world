@@ -1,6 +1,6 @@
+import { Footer } from "@/components";
 import { Header } from "@/components/common/Header";
 import {
-  AssetsTab,
   CourseFeatures,
   CourseHero,
   CourseInfoSidebar,
@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { getNormalizedCourseById } from "@/lib/appData";
 import { Course } from "@/lib/types";
-import { ArrowLeft, Terminal } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
@@ -24,15 +24,30 @@ const CourseDetailPage = () => {
   const from = location.state?.from;
   const { courseId } = useParams();
   const [activeTab, setActiveTab] = useState("overview");
+
+  // State management for dynamic loading
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch course data dynamically
   useEffect(() => {
-    if (courseId) {
-      const courseData = getNormalizedCourseById(courseId);
-      setCourse(courseData);
-      setLoading(false);
-    }
+    const fetchCourseData = async () => {
+      try {
+        setLoading(true);
+
+        // Simulate API delay for realistic loading experience
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        if (courseId) {
+          const courseData = getNormalizedCourseById(courseId);
+          setCourse(courseData);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourseData();
   }, [courseId]);
 
   const handleEnrollment = () => {
@@ -141,23 +156,12 @@ const CourseDetailPage = () => {
             <CurriculumTab curriculum={course.curriculum} />
             <LabsTab labs={course.labsData} />
             <GamesTab games={course.gamesData} />
-            <AssetsTab assets={course.assetsData} />
           </CourseTabsContainer>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-green-400/20 py-8 px-6 relative z-10">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center space-x-2 mb-4 md:mb-0">
-            <Terminal className="w-6 h-6 text-green-400" />
-            <span className="font-bold text-green-400">CyberSec Academy</span>
-          </div>
-          <div className="text-green-300/60 text-sm">
-            © 2024 CyberSec Academy. All rights reserved. Hack responsibly.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

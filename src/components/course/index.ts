@@ -5,7 +5,6 @@ export { default as CourseTabsContainer } from "./CourseTabsContainer";
 export { default as EnrollmentButton } from "./EnrollmentButton";
 
 // Tab components
-export { default as AssetsTab } from "./tabs/AssetsTab";
 export { default as CurriculumTab } from "./tabs/CurriculumTab";
 export { default as GamesTab } from "./tabs/GamesTab";
 export { default as LabsTab } from "./tabs/LabsTab";

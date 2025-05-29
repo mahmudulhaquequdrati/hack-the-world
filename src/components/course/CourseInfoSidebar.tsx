@@ -1,4 +1,5 @@
 import { getDetailedCourseProgress } from "@/lib/appData";
+import { isUserLoggedIn } from "@/lib/helpers";
 import { Course } from "@/lib/types";
 
 interface CourseInfoSidebarProps {
@@ -8,6 +9,9 @@ interface CourseInfoSidebarProps {
 const CourseInfoSidebar = ({ course }: CourseInfoSidebarProps) => {
   // Get detailed progress information
   const detailedProgress = getDetailedCourseProgress(course.id);
+
+  // Check if user is logged in
+  const userLoggedIn = isUserLoggedIn();
 
   return (
     <div className="space-y-6">
@@ -57,8 +61,9 @@ const CourseInfoSidebar = ({ course }: CourseInfoSidebarProps) => {
         </div>
       </div>
 
-      {/* Progress Terminal */}
-      {detailedProgress &&
+      {/* Progress Terminal - Only show if user is logged in */}
+      {userLoggedIn &&
+        detailedProgress &&
         detailedProgress.isEnrolled &&
         detailedProgress.overallProgress > 0 && (
           <div className="bg-black border-2 border-blue-400/50 rounded-lg overflow-hidden">

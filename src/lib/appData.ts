@@ -2100,11 +2100,25 @@ export const getDetailedCourseProgress = (courseId: string) => {
   const course = getNormalizedCourseById(courseId);
   if (!course) return null;
 
-  // Get games and labs for this module
+  // Calculate totals from actual course content instead of raw data arrays
+  // 1. Total lessons from curriculum sections
+  const totalLessons = course.curriculum.reduce(
+    (total, section) => total + section.lessons,
+    0
+  );
+
+  // 2. Total labs from course labsData (what user actually sees)
+  const totalLabs = course.labsData.length;
+
+  // 3. Total games from course gamesData (what user actually sees)
+  const totalGames = course.gamesData.length;
+
+  // For completed counts, we need to map the course content back to actual IDs
+  // Get the raw data to find IDs for games and labs in this module
   const moduleGames = GAMES.filter((game) => game.moduleId === courseId);
   const moduleLabs = LABS.filter((lab) => lab.moduleId === courseId);
 
-  // Calculate completed games
+  // Calculate completed counts using the actual IDs
   const completedGames = moduleGames.filter((game) =>
     USER_GAME_PROGRESS.some(
       (ugp) =>
@@ -2112,11 +2126,19 @@ export const getDetailedCourseProgress = (courseId: string) => {
     )
   ).length;
 
-  // Calculate completed labs
   const completedLabs = moduleLabs.filter((lab) =>
     USER_LAB_PROGRESS.some(
       (ulp) => ulp.labId === lab.id && ulp.completed && ulp.userId === "user-1"
     )
+  ).length;
+
+  // For lessons: use USER_LESSON_PROGRESS (this stays the same)
+  const moduleLessons = USER_LESSON_PROGRESS.filter(
+    (lessonProgress) =>
+      lessonProgress.moduleId === courseId && lessonProgress.userId === "user-1"
+  );
+  const completedLessons = moduleLessons.filter(
+    (lesson) => lesson.completed
   ).length;
 
   // Get overall progress from USER_PROGRESS
@@ -2125,23 +2147,8 @@ export const getDetailedCourseProgress = (courseId: string) => {
   );
   const overallProgress = userProgress?.progress || 0;
 
-  // Calculate lessons completed based on overall progress
-  // For linux-basics with 70% progress, user expects 3/4 lessons completed
-  const totalLessons =
-    typeof course.lessons === "number" ? course.lessons : course.lessons.length;
-
-  // Improved calculation: 70% of 4 = 2.8, but user expects 3
-  // Use ceiling for closer-to-completion modules
-  const progressRatio = overallProgress / 100;
-  const exactLessons = progressRatio * totalLessons;
-
-  // For higher progress (>60%), use ceiling to be more generous
-  // For lower progress (<60%), use floor to be more conservative
-  const completedLessons =
-    overallProgress > 60 ? Math.ceil(exactLessons) : Math.floor(exactLessons);
-
   // Calculate more granular progress breakdown
-  const totalActivities = totalLessons + course.labs + course.games;
+  const totalActivities = totalLessons + totalLabs + totalGames;
   const completedActivities = completedLessons + completedLabs + completedGames;
 
   // Calculate weighted progress (lessons are worth more)
@@ -2151,9 +2158,8 @@ export const getDetailedCourseProgress = (courseId: string) => {
 
   const lessonProgress =
     totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
-  const labProgress = course.labs > 0 ? (completedLabs / course.labs) * 100 : 0;
-  const gameProgress =
-    course.games > 0 ? (completedGames / course.games) * 100 : 0;
+  const labProgress = totalLabs > 0 ? (completedLabs / totalLabs) * 100 : 0;
+  const gameProgress = totalGames > 0 ? (completedGames / totalGames) * 100 : 0;
 
   const weightedProgress = Math.round(
     lessonProgress * lessonWeight +
@@ -2164,11 +2170,11 @@ export const getDetailedCourseProgress = (courseId: string) => {
   return {
     overallProgress: Math.max(overallProgress, weightedProgress), // Use the higher of the two
     completedLessons,
-    totalLessons,
+    totalLessons, // Now calculated from course.curriculum
     completedLabs,
-    totalLabs: course.labs,
+    totalLabs, // Now calculated from course.labsData
     completedGames,
-    totalGames: course.games,
+    totalGames, // Now calculated from course.gamesData
     completedActivities,
     totalActivities,
     lessonProgress: Math.round(lessonProgress),
@@ -2599,14 +2605,26 @@ export const USER_LAB_PROGRESS: Array<{
     completedAt: "2024-01-14T15:10:00Z",
     startedAt: "2024-01-14T14:40:00Z",
   },
+
+  // Linux-basics lab progress (1/2 labs completed)
   {
-    id: "ulp-3",
+    id: "ulp-6",
     userId: "user-1",
     labId: "file-system-mastery",
-    completed: false,
-    completedSteps: ["fsm-step-1", "fsm-step-2"],
-    startedAt: "2024-01-19T12:45:00Z",
+    completed: true,
+    completedSteps: ["fsm-step-1", "fsm-step-2", "fsm-step-3", "fsm-step-4"],
+    completedAt: "2024-01-15T18:30:00Z",
+    startedAt: "2024-01-15T17:45:00Z",
   },
+  {
+    id: "ulp-7",
+    userId: "user-1",
+    labId: "command-line-fundamentals",
+    completed: false,
+    completedSteps: ["clf-step-1", "clf-step-2"],
+    startedAt: "2024-01-21T15:20:00Z",
+  },
+
   {
     id: "ulp-4",
     userId: "user-1",
@@ -2623,6 +2641,119 @@ export const USER_LAB_PROGRESS: Array<{
     completedSteps: ["clf-step-1"],
     startedAt: "2024-01-21T15:20:00Z",
   },
+];
+
+// User Lesson Progress - track lesson completion
+export const USER_LESSON_PROGRESS: Array<{
+  id: string;
+  userId: string;
+  moduleId: string;
+  lessonIndex: number; // 0-based index of lesson in course
+  completed: boolean;
+  completedAt?: string; // ISO date string
+  startedAt?: string; // ISO date string
+  watchTime?: number; // in seconds
+}> = [
+  // Sample lesson progress for foundations module
+  {
+    id: "lp-1",
+    userId: "user-1",
+    moduleId: "foundations",
+    lessonIndex: 0,
+    completed: true,
+    completedAt: "2024-01-05T14:30:00Z",
+    startedAt: "2024-01-05T14:00:00Z",
+    watchTime: 1800, // 30 minutes
+  },
+  {
+    id: "lp-2",
+    userId: "user-1",
+    moduleId: "foundations",
+    lessonIndex: 1,
+    completed: true,
+    completedAt: "2024-01-06T15:45:00Z",
+    startedAt: "2024-01-06T15:00:00Z",
+    watchTime: 2700, // 45 minutes
+  },
+  {
+    id: "lp-3",
+    userId: "user-1",
+    moduleId: "foundations",
+    lessonIndex: 2,
+    completed: true,
+    completedAt: "2024-01-07T16:20:00Z",
+    startedAt: "2024-01-07T15:30:00Z",
+    watchTime: 3000, // 50 minutes
+  },
+
+  // Sample lesson progress for linux-basics module (70% progress = 3/4 lessons)
+  {
+    id: "lp-4",
+    userId: "user-1",
+    moduleId: "linux-basics",
+    lessonIndex: 0,
+    completed: true,
+    completedAt: "2024-01-10T11:30:00Z",
+    startedAt: "2024-01-10T10:45:00Z",
+    watchTime: 2400, // 40 minutes
+  },
+  {
+    id: "lp-5",
+    userId: "user-1",
+    moduleId: "linux-basics",
+    lessonIndex: 1,
+    completed: true,
+    completedAt: "2024-01-12T14:15:00Z",
+    startedAt: "2024-01-12T13:30:00Z",
+    watchTime: 2700, // 45 minutes
+  },
+  {
+    id: "lp-6",
+    userId: "user-1",
+    moduleId: "linux-basics",
+    lessonIndex: 2,
+    completed: true,
+    completedAt: "2024-01-14T16:45:00Z",
+    startedAt: "2024-01-14T16:00:00Z",
+    watchTime: 2700, // 45 minutes
+  },
+  // Note: lesson 3 (index 3) is not completed, so 3/4 = 75% which aligns with 70% overall progress
+
+  // Sample lesson progress for networking-basics module (60% progress = 2/4 lessons)
+  {
+    id: "lp-7",
+    userId: "user-1",
+    moduleId: "networking-basics",
+    lessonIndex: 0,
+    completed: true,
+    completedAt: "2024-01-16T10:30:00Z",
+    startedAt: "2024-01-16T09:45:00Z",
+    watchTime: 2700, // 45 minutes
+  },
+  {
+    id: "lp-8",
+    userId: "user-1",
+    moduleId: "networking-basics",
+    lessonIndex: 1,
+    completed: true,
+    completedAt: "2024-01-18T13:20:00Z",
+    startedAt: "2024-01-18T12:30:00Z",
+    watchTime: 3000, // 50 minutes
+  },
+  // Note: lessons 2 and 3 are not completed, so 2/4 = 50% which is close to 60% overall progress
+
+  // Sample lesson progress for web-security-intro module (40% progress = 1/3 lessons)
+  {
+    id: "lp-9",
+    userId: "user-1",
+    moduleId: "web-security-intro",
+    lessonIndex: 0,
+    completed: true,
+    completedAt: "2024-01-20T15:45:00Z",
+    startedAt: "2024-01-20T15:00:00Z",
+    watchTime: 2700, // 45 minutes
+  },
+  // Note: lessons 1 and 2 are not completed, so 1/3 = 33% which is close to 40% overall progress
 ];
 
 // User Achievement Progress - track earned achievements

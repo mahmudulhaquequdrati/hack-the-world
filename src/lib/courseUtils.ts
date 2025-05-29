@@ -1,3 +1,4 @@
+import { USER_LESSON_PROGRESS } from "./appData";
 import {
   ContextualContent,
   Course,
@@ -569,11 +570,27 @@ const generateEnhancedGames = (course: Course): Game[] => {
   return enhancedGames;
 };
 
+// Helper function to check if a lesson is completed based on USER_LESSON_PROGRESS
+const isLessonCompletedByIndex = (
+  moduleId: string,
+  lessonIndex: number
+): boolean => {
+  return USER_LESSON_PROGRESS.some(
+    (lp) =>
+      lp.moduleId === moduleId &&
+      lp.lessonIndex === lessonIndex &&
+      lp.completed &&
+      lp.userId === "user-1" // Default user for now
+  );
+};
+
 // Convert Course curriculum to EnrolledCourse sections
 export const convertCourseToEnrolledCourse = (
   course: Course
 ): EnrolledCourse => {
   // Convert curriculum to sections with lessons
+  let globalLessonIndex = 0; // Keep track of lesson indices across all sections
+
   const allSections: CourseSection[] = course.curriculum.map(
     (curriculumSection, sectionIndex) => {
       const curriculumLessons: EnrolledLesson[] = curriculumSection.topics
@@ -630,12 +647,12 @@ export const convertCourseToEnrolledCourse = (
           const relatedLabs = generateRelatedLabs(topic, course.id);
           const relatedGames = generateRelatedGames(topic, course.id);
 
-          return {
+          const lesson = {
             id: lessonId,
             title: topic,
             duration,
             type: lessonType,
-            completed: curriculumSection.completed && topicIndex < 2, // Mark first 2 as completed if section is completed
+            completed: isLessonCompletedByIndex(course.id, globalLessonIndex),
             description: `Learn about ${topic.toLowerCase()} in this comprehensive lesson. ${
               contextualContent.objectives[0]
             }.`,
@@ -652,6 +669,9 @@ export const convertCourseToEnrolledCourse = (
             relatedGames,
             contextualContent,
           };
+
+          globalLessonIndex++; // Increment for next lesson
+          return lesson;
         })
         .filter(Boolean) as EnrolledLesson[]; // Remove null entries (quizzes)
 
@@ -660,18 +680,21 @@ export const convertCourseToEnrolledCourse = (
         .slice(sectionIndex * 2, (sectionIndex + 1) * 2) // Distribute games across sections
         .map((game, gameIndex) => {
           const gameId = `${course.id}-section-${sectionIndex}-game-${gameIndex}`;
-          return {
+          const lesson = {
             id: gameId,
             title: game.name,
             duration: "20:00",
             type: "game" as const,
-            completed: false,
+            completed: isLessonCompletedByIndex(course.id, globalLessonIndex),
             description: game.description,
             contextualContent: generateContextualContent(game.name),
             dynamicResources: generateDynamicResources(game.name, "game"),
             relatedLabs: [],
             relatedGames: [],
           };
+
+          globalLessonIndex++; // Increment for next lesson
+          return lesson;
         });
 
       // Add actual labs from course data to this section
@@ -679,18 +702,21 @@ export const convertCourseToEnrolledCourse = (
         .slice(sectionIndex * 2, (sectionIndex + 1) * 2) // Distribute labs across sections
         .map((lab, labIndex) => {
           const labId = `${course.id}-section-${sectionIndex}-lab-${labIndex}`;
-          return {
+          const lesson = {
             id: labId,
             title: lab.name,
             duration: lab.duration || "45:00",
             type: "lab" as const,
-            completed: false,
+            completed: isLessonCompletedByIndex(course.id, globalLessonIndex),
             description: lab.description,
             contextualContent: generateContextualContent(lab.name),
             dynamicResources: generateDynamicResources(lab.name, "lab"),
             relatedLabs: [],
             relatedGames: [],
           };
+
+          globalLessonIndex++; // Increment for next lesson
+          return lesson;
         });
 
       // Mix curriculum lessons, games, and labs together

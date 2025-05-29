@@ -48,3 +48,17 @@ export const generateId = () => {
 export const truncateText = (text: string, maxLength: number) => {
   return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
 };
+
+/**
+ * Check if user is currently logged in based on current path
+ * In a real app, this would check auth tokens or context
+ */
+export const isUserLoggedIn = (): boolean => {
+  const currentPath = window.location.pathname;
+  return (
+    currentPath.includes("/dashboard") ||
+    currentPath.includes("/course/") ||
+    currentPath.includes("/learn/") ||
+    currentPath.includes("/overview")
+  );
+};

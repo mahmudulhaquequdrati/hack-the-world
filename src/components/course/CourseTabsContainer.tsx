@@ -31,7 +31,7 @@ const CourseTabsContainer = ({
 
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
         <div className="bg-black/60 border-b border-green-400/20 px-6 py-2">
-          <TabsList className="grid w-full grid-cols-5 bg-transparent border-0 gap-2">
+          <TabsList className="grid w-full grid-cols-4 bg-transparent border-0 gap-2">
             <TabsTrigger
               value="overview"
               className="bg-black/60 border border-green-400/30 text-green-400 font-mono text-sm data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:border-green-400 hover:bg-green-400/10 transition-all duration-300"
@@ -55,12 +55,6 @@ const CourseTabsContainer = ({
               className="bg-black/60 border border-green-400/30 text-green-400 font-mono text-sm data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:border-green-400 hover:bg-green-400/10 transition-all duration-300"
             >
               GAMES
-            </TabsTrigger>
-            <TabsTrigger
-              value="assets"
-              className="bg-black/60 border border-green-400/30 text-green-400 font-mono text-sm data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:border-green-400 hover:bg-green-400/10 transition-all duration-300"
-            >
-              ASSETS
             </TabsTrigger>
           </TabsList>
         </div>

@@ -11,7 +11,7 @@ alwaysApply: false
 - **Always read [PLANNING.md](mdc:PLANNING.md)** at the start of new conversations to understand architecture, goals, and constraints
 - **Check [TASK.md](mdc:TASK.md)** before starting work. Add new tasks with descriptions and dates
 - **Reference [README.md](mdc:README.md)** for quick start and overview
-- **Use [src/docs/](mdc:src/docs/)** for comprehensive documentation
+- **Use [src/docs/](mdc:src/docs)** for comprehensive documentation
 
 ### Documentation Strategy
 - **[README.md](mdc:README.md)** - **Concise overview** with quick start and links to detailed docs
@@ -182,7 +182,7 @@ src/
 - **Centralized Navigation** with clean URL patterns
 
 ### Documentation Metrics
-- **4/17 Documentation Files** completed (target: 17 files)
+- **17 Documentation Files** completed (target: 17 files)
 - **100% Component Documentation** in component library guide
 - **Comprehensive Architecture** documentation with data flows
 - **Complete User Experience** documentation with interaction patterns

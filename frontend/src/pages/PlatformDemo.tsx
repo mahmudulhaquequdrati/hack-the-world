@@ -1,4 +1,3 @@
-import { Header } from "@/components/common/Header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -131,8 +130,6 @@ const PlatformDemo = () => {
 
   return (
     <div className="min-h-screen bg-black text-green-400 relative">
-      <Header navigate={navigate} />
-
       <div className="pt-20 px-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}

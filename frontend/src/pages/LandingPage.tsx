@@ -1,8 +1,6 @@
-import { Header } from "@/components/common/Header";
 import {
   CTASection,
   FeaturesSection,
-  Footer,
   HeroSection,
   InteractiveDemoSection,
 } from "@/components/landing";
@@ -100,9 +98,6 @@ const LandingPage = () => {
     <div className="min-h-screen bg-background text-green-400 relative overflow-hidden">
       {/* Hero Section */}
       <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Navigation */}
-        <Header navigate={navigate} />
-
         {/* Hero Content */}
         <HeroSection
           onStartJourney={handleStartJourney}
@@ -128,9 +123,6 @@ const LandingPage = () => {
         onStartJourney={handleStartJourney}
         onViewPricing={handleViewPricing}
       />
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };

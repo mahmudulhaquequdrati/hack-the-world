@@ -1,5 +1,4 @@
-import { Footer } from "@/components";
-import { Header, LoadingSkeleton } from "@/components/common";
+import { LoadingSkeleton } from "@/components/common";
 import {
   ModuleTree,
   OverviewHeader,
@@ -106,8 +105,6 @@ const CyberSecOverview = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-green-400 relative">
-        <Header navigate={navigate} />
-
         <div className="pt-20 px-6">
           <div className="mx-auto max-w-6xl">
             {/* Loading Header */}
@@ -143,8 +140,6 @@ const CyberSecOverview = () => {
 
   return (
     <div className="min-h-screen bg-black text-green-400 relative">
-      <Header navigate={navigate} />
-
       <div className="pt-20 px-6">
         <div className="mx-auto max-w-6xl">
           {/* Header */}
@@ -187,7 +182,6 @@ const CyberSecOverview = () => {
           </Tabs>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

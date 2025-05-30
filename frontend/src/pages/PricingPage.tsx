@@ -1,4 +1,3 @@
-import { Header } from "@/components/common/Header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -155,8 +154,6 @@ const PricingPage = () => {
 
   return (
     <div className="min-h-screen bg-black text-green-400">
-      <Header navigate={navigate} />
-
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 relative z-10">
         <div className="max-w-6xl mx-auto">

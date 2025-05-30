@@ -1,4 +1,3 @@
-import { Header } from "@/components/common/Header";
 import {
   AIPlayground,
   ContentSidebar,
@@ -393,8 +392,6 @@ drwxr-xr-x  2 user user 4096 Dec 16 14:32 Tools
 
   return (
     <div className="min-h-screen bg-black text-green-400 relative">
-      <Header navigate={navigate} />
-
       <div className="pb-5 pt-3 px-6">
         <div className="w-full px-2 mx-auto">
           <CourseHeader

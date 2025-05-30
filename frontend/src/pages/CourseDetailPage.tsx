@@ -1,5 +1,3 @@
-import { Footer } from "@/components";
-import { Header } from "@/components/common/Header";
 import {
   CourseFeatures,
   CourseHero,
@@ -102,8 +100,6 @@ const CourseDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-black text-green-400 relative">
-      <Header navigate={navigate} />
-
       <div className="pb-20 pt-5 px-6">
         <div className="w-full px-4 mx-auto">
           <div className="flex items-center gap-4">
@@ -159,9 +155,6 @@ const CourseDetailPage = () => {
           </CourseTabsContainer>
         </div>
       </div>
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };

@@ -1,4 +1,3 @@
-import { Header } from "@/components/common/Header";
 import { DashboardTabs, LearningDashboard } from "@/components/dashboard";
 import {
   ACHIEVEMENTS_DATA,
@@ -35,8 +34,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-black text-green-400">
-      <Header navigate={navigate} />
-
       <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
         <LearningDashboard enrolledModules={enrolledModules} />
 

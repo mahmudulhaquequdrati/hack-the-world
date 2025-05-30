@@ -29,25 +29,6 @@
   - **Dependencies**: Express server setup
   - **Files**: `server/src/middleware/security.ts`, `server/src/middleware/rateLimiter.ts`
 
-#### Frontend Foundation
-
-- [ ] **UI-001**: Set up component library (shadcn/ui)
-
-  - **Assignee**: Developer
-  - **Status**: Not Started
-  - **Due**: Next 2 days
-  - **Description**: Install and configure shadcn/ui components
-  - **Dependencies**: React setup (completed)
-  - **Files**: `frontend/src/components/ui/`
-
-- [ ] **AUTH-003**: Implement authentication integration
-  - **Assignee**: Developer
-  - **Status**: Not Started
-  - **Due**: Next 4 days
-  - **Description**: Login/register forms, JWT token handling, auth context
-  - **Dependencies**: Backend auth API
-  - **Files**: `frontend/src/context/AuthContext.tsx`, `frontend/src/lib/api.ts`
-
 ### 🟡 Medium Priority (Important)
 
 #### Testing Infrastructure
@@ -242,29 +223,52 @@
   - **Files**:
     - `server/src/routes/auth.js` - Complete Swagger documentation added
 
-- [x] **EMAIL-003**: Welcome Email White Background Styling
+- [x] **AUTH-004**: Fix user authentication on page refresh
+
   - **Completed**: Today
-  - **Description**: Updated welcome email template to use white background with cybersecurity theme colors
+  - **Description**: Implemented automatic user loading when token exists but user is null on page refresh
   - **Features Completed**:
-    - ✅ Redesigned welcome email with professional white background
-    - ✅ Updated color scheme to use green gradients that work well on white
-    - ✅ Enhanced typography with readable dark text colors
-    - ✅ Improved responsive design with mobile optimization
-    - ✅ Added modern gradient buttons with hover effects
-    - ✅ Enhanced features section with better visual hierarchy
-    - ✅ Added welcome message banner with professional styling
-    - ✅ Updated email footer with proper contact information
-    - ✅ Added comprehensive text fallback version
-    - ✅ Added testing coverage for welcome email styling
-    - ✅ All 41 authentication tests passing
-  - **Files**:
-    - `server/src/utils/emailService.js` - Updated sendWelcomeEmail method with white background styling
-    - `server/src/tests/auth.test.js` - Added tests for welcome email styling
-  - **Design Features**:
-    - 🎨 Professional white background with green accent gradients (#059669, #047857)
-    - 📱 Mobile-responsive design with proper viewport settings
-    - 🎯 Enhanced user onboarding experience with clear feature highlights
-    - 💌 Consistent branding with other email templates
+    - ✅ Created AuthLoader component that automatically fetches user data when token exists but user is null
+    - ✅ Added AuthLoader to App.tsx to run on application initialization
+    - ✅ Proper error handling to clear auth if user fetch fails
+    - ✅ Redux integration with setCredentials and clearAuth actions
+    - ✅ Conditional API call only when needed (token exists but no user)
+  - **Files**: `frontend/src/components/common/AuthLoader.tsx`, `frontend/src/App.tsx`
+
+- [x] **LAYOUT-001**: Implement global header and footer layout
+
+  - **Completed**: Today
+  - **Description**: Created layout wrapper component to make header and footer global across all pages
+  - **Features Completed**:
+    - ✅ Created Layout component with optional header and footer props
+    - ✅ Wrapped all routes in App.tsx with Layout component
+    - ✅ Removed individual Header and Footer imports from pages
+    - ✅ Maintained flexibility to hide header/footer for specific pages (auth pages, labs)
+    - ✅ Updated LandingPage, Dashboard, and CyberSecOverview to remove redundant header/footer
+  - **Files**: `frontend/src/components/layout/Layout.tsx`, `frontend/src/App.tsx`, multiple page files
+
+- [x] **UI-003**: Remove background matrix rain effects
+
+  - **Completed**: Today
+  - **Description**: Removed MatrixRain component from all pages to clean up UI
+  - **Features Completed**:
+    - ✅ Removed MatrixRain import and usage from App.tsx
+    - ✅ Simplified App.tsx structure without matrix effects
+    - ✅ Cleaner UI without distracting background animations
+    - ✅ Maintained cybersecurity theme without performance-heavy effects
+  - **Files**: `frontend/src/App.tsx`
+
+- [x] **ROUTING-002**: Create 404 Not Found page
+  - **Completed**: Today
+  - **Description**: Designed and implemented 404 page with cybersecurity theme
+  - **Features Completed**:
+    - ✅ Created NotFoundPage component with terminal-style design
+    - ✅ Cybersecurity-themed error messages and styling
+    - ✅ Terminal command simulation for error display
+    - ✅ Action buttons to navigate back to home or dashboard
+    - ✅ Added catch-all route (\*) in App.tsx for 404 handling
+    - ✅ Responsive design with mobile-friendly layout
+  - **Files**: `frontend/src/pages/NotFoundPage.tsx`, `frontend/src/App.tsx`
 
 ## In Review Tasks
 

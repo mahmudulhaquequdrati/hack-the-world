@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 /**
  * User Schema
@@ -464,6 +465,7 @@ userSchema.methods.toPublicJSON = function () {
   return {
     id: this._id,
     username: this.username,
+    email: this.email,
     profile: this.profile,
     experienceLevel: this.experienceLevel,
     stats: this.stats,

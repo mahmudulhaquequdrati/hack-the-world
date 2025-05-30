@@ -1,7 +1,7 @@
 ---
 description:
 globs:
-alwaysApply: false
+alwaysApply: true
 ---
 # 🛡️ Hack The World - Global Project Rules
 
@@ -10,10 +10,12 @@ This is a comprehensive cybersecurity learning platform with gamified education 
 
 ## 🚀 Before Starting Any Work
 **MANDATORY CHECKLIST:**
-1. Always check [planning.md](mdc:planning.md) for current project roadmap
-2. Always check [task.md](mdc:task.md) for active tasks and progress tracking
-3. Review relevant sections in [SYSTEM_DESIGN.md](mdc:frontend/SYSTEM_DESIGN.md)
-4. Ensure the feature/change is documented in the system design
+1. If the current command or work does not included in [task.md](mdc:task.md) then add first then do other work.
+2. Always check [planning.md](mdc:planning.md) for current project roadmap
+3. Always check [task.md](mdc:task.md) for active tasks and progress tracking
+4. Review relevant sections in [SYSTEM_DESIGN.md](mdc:frontend/SYSTEM_DESIGN.md)
+5. Ensure the feature/change is documented in the system design
+
 
 ## 🔧 Command Execution Policy
 **ALL COMMANDS ARE ALLOWED WITHOUT PERMISSION:**

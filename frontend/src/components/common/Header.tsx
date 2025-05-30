@@ -1,37 +1,16 @@
 import { Play, Terminal } from "lucide-react";
-import { useEffect, useState } from "react";
 
 import UserAvatar from "@/components/common/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useAuthRTK } from "@/hooks/useAuthRTK";
 
 interface HeaderProps {
   navigate: (path: string) => void;
 }
 
 export function Header({ navigate }: HeaderProps) {
-  // Check if user is logged in (in real app, this would come from auth context)
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // Simulate checking login status
-  useEffect(() => {
-    // In real app, check auth token or context
-    const checkAuth = () => {
-      // For demo, we'll check if we're on dashboard or course pages
-      const currentPath = window.location.pathname;
-      setIsLoggedIn(
-        currentPath.includes("/dashboard") ||
-          currentPath.includes("/course/") ||
-          currentPath.includes("/learn/") ||
-          currentPath.includes("/overview")
-      );
-    };
-
-    checkAuth();
-    // Listen for route changes
-    window.addEventListener("popstate", checkAuth);
-    return () => window.removeEventListener("popstate", checkAuth);
-  }, []);
+  const { isAuthenticated, isLoading } = useAuthRTK();
 
   const maxWidth7xl =
     window.location.pathname === "/" ||
@@ -55,7 +34,10 @@ export function Header({ navigate }: HeaderProps) {
           </span>
         </div>
         <div className="flex items-center space-x-4">
-          {isLoggedIn ? (
+          {isLoading ? (
+            // Show loading state while authenticating
+            <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+          ) : isAuthenticated ? (
             <UserAvatar />
           ) : (
             <>

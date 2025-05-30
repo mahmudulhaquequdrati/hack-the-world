@@ -1,8 +1,11 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuthRTK } from "@/hooks/useAuthRTK";
 import {
+  AlertCircle,
   ArrowLeft,
   Eye,
   EyeOff,
@@ -16,23 +19,45 @@ import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login, isLoading, error, isAuthenticated } = useAuthRTK();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
+    login: "",
     password: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState("");
+
+  // Redirect if already authenticated
+  if (isAuthenticated) {
+    navigate("/dashboard");
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLocalError("");
 
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate("/overview");
-    }, 2000);
+    // Validate form
+    if (!formData.login.trim() || !formData.password) {
+      setLocalError("Please enter both username/email and password");
+      return;
+    }
+
+    try {
+      await login({
+        login: formData.login.trim(),
+        password: formData.password,
+      });
+
+      // Successful login - navigate to dashboard
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      // Error is handled by the RTK Query hook
+      console.error("Login failed:", err);
+    }
   };
+
+  const displayError = error || localError;
 
   return (
     <div className="min-h-screen bg-black text-green-400 relative overflow-hidden flex items-center justify-center">
@@ -68,25 +93,36 @@ const LoginPage = () => {
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {/* Error Alert */}
+            {displayError && (
+              <Alert className="border-red-500/50 bg-red-500/10">
+                <AlertCircle className="h-4 w-4 text-red-400" />
+                <AlertDescription className="text-red-400">
+                  {displayError}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label
-                  htmlFor="email"
+                  htmlFor="login"
                   className="text-green-400 flex items-center"
                 >
                   <User className="w-4 h-4 mr-2" />
-                  Email
+                  Username or Email
                 </Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="agent@cybersec.academy"
-                  value={formData.email}
+                  id="login"
+                  type="text"
+                  placeholder="agent@cybersec.academy or cyberhacker2024"
+                  value={formData.login}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, email: e.target.value }))
+                    setFormData((prev) => ({ ...prev, login: e.target.value }))
                   }
-                  className="bg-black border-green-400/30 text-green-400 placeholder:text-green-400/50 focus:border-green-400"
+                  className="bg-black border-green-400/30 text-green-400 placeholder:text-green-400/50 focus:border-green-400 "
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -112,6 +148,7 @@ const LoginPage = () => {
                     }
                     className="bg-black border-green-400/30 text-green-400 placeholder:text-green-400/50 focus:border-green-400 pr-10"
                     required
+                    disabled={isLoading}
                   />
                   <Button
                     type="button"
@@ -119,6 +156,7 @@ const LoginPage = () => {
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 text-green-400/70 hover:text-green-400"
                     onClick={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -148,23 +186,35 @@ const LoginPage = () => {
               </Button>
             </form>
 
-            <div className="text-center">
+            <div className="text-center space-y-2">
               <p className="text-green-300/70 text-sm">
                 Don't have access credentials?{" "}
                 <button
                   onClick={() => navigate("/signup")}
                   className="text-green-400 hover:text-green-300 underline"
+                  disabled={isLoading}
                 >
                   Request Access
                 </button>
               </p>
+              <button
+                onClick={() => navigate("/forgot-password")}
+                className="text-green-400/70 hover:text-green-400 underline text-xs"
+                disabled={isLoading}
+              >
+                Forgot password?
+              </button>
             </div>
 
             {/* Terminal-style footer */}
             <div className="border-t border-green-400/30 pt-4">
               <div className="font-mono text-xs text-green-400/70">
-                <div>$ ssh agent@cybersec.academy</div>
-                <div>Connecting to secure terminal...</div>
+                <div>$ ssh {formData.login || "agent"}@cybersec.academy</div>
+                <div>
+                  {isLoading
+                    ? "Authenticating credentials..."
+                    : "Connecting to secure terminal..."}
+                </div>
                 <div className="flex items-center">
                   <span>Password: </span>
                   <span className="ml-2 text-green-400">
@@ -172,6 +222,11 @@ const LoginPage = () => {
                   </span>
                   <span className="terminal-cursor ml-1">|</span>
                 </div>
+                {displayError && (
+                  <div className="text-red-400 mt-1">
+                    ! Authentication failed: Access denied
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

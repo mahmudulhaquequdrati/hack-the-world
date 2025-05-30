@@ -1,0 +1,461 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# 🧪 Testing Rules & Requirements
+
+## 📋 Testing Philosophy
+**Every feature MUST be tested before it's considered complete.** No exceptions.
+
+## 🚫 Absolute Requirements
+- **NEVER** merge code without tests
+- **NEVER** implement features without corresponding test cases
+- **NEVER** skip testing for "simple" functions
+- **ALWAYS** achieve minimum 80% code coverage
+- **ALWAYS** test both success and failure scenarios
+
+## 🎯 Testing Standards
+
+### Frontend Testing Requirements
+#### Component Testing (React Testing Library)
+```typescript
+// MANDATORY: Every component must have these tests
+describe('ComponentName', () => {
+  // 1. Render test
+  it('should render without crashing', () => {
+    render(<ComponentName {...requiredProps} />);
+  });
+
+  // 2. Props test
+  it('should display correct data when props are passed', () => {
+    const mockData = { /* test data */ };
+    render(<ComponentName data={mockData} />);
+    expect(screen.getByText(mockData.title)).toBeInTheDocument();
+  });
+
+  // 3. Interaction test
+  it('should handle user interactions correctly', () => {
+    const mockHandler = jest.fn();
+    render(<ComponentName onAction={mockHandler} />);
+    fireEvent.click(screen.getByRole('button'));
+    expect(mockHandler).toHaveBeenCalledWith(expectedValue);
+  });
+
+  // 4. Error state test
+  it('should handle error states gracefully', () => {
+    render(<ComponentName {...propsWithError} />);
+    expect(screen.getByText(/error/i)).toBeInTheDocument();
+  });
+
+  // 5. Loading state test (if applicable)
+  it('should display loading state when data is being fetched', () => {
+    render(<ComponentName isLoading={true} />);
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+  });
+});
+```
+
+#### Hook Testing
+```typescript
+// MANDATORY: Every custom hook must be tested
+import { renderHook, act } from '@testing-library/react';
+
+describe('useCustomHook', () => {
+  it('should initialize with correct default values', () => {
+    const { result } = renderHook(() => useCustomHook());
+    expect(result.current.value).toBe(expectedDefault);
+  });
+
+  it('should update state correctly when action is called', () => {
+    const { result } = renderHook(() => useCustomHook());
+
+    act(() => {
+      result.current.updateValue('new value');
+    });
+
+    expect(result.current.value).toBe('new value');
+  });
+});
+```
+
+### Backend Testing Requirements
+#### API Endpoint Testing (Supertest)
+```typescript
+// MANDATORY: Every API endpoint must have these tests
+describe('GET /api/endpoint', () => {
+  // 1. Success scenario
+  it('should return data when valid request is made', async () => {
+    const response = await request(app)
+      .get('/api/endpoint')
+      .set('Authorization', `Bearer ${validToken}`)
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toBeDefined();
+  });
+
+  // 2. Authentication test
+  it('should return 401 when no token is provided', async () => {
+    await request(app)
+      .get('/api/endpoint')
+      .expect(401);
+  });
+
+  // 3. Invalid data test
+  it('should return 400 when invalid data is sent', async () => {
+    await request(app)
+      .post('/api/endpoint')
+      .send({ invalidField: 'value' })
+      .expect(400);
+  });
+
+  // 4. Resource not found test
+  it('should return 404 when resource does not exist', async () => {
+    await request(app)
+      .get('/api/endpoint/nonexistent-id')
+      .set('Authorization', `Bearer ${validToken}`)
+      .expect(404);
+  });
+});
+```
+
+#### Model Testing (Mongoose)
+```typescript
+// MANDATORY: Every Mongoose model must be tested
+describe('User Model', () => {
+  beforeEach(async () => {
+    await User.deleteMany({});
+  });
+
+  it('should create a valid user', async () => {
+    const userData = {
+      username: 'testuser',
+      email: 'test@example.com',
+      password: 'password123'
+    };
+
+    const user = new User(userData);
+    const savedUser = await user.save();
+
+    expect(savedUser._id).toBeDefined();
+    expect(savedUser.email).toBe(userData.email);
+  });
+
+  it('should not save user without required fields', async () => {
+    const user = new User({});
+
+    await expect(user.save()).rejects.toThrow();
+  });
+
+  it('should not save user with invalid email', async () => {
+    const userData = {
+      username: 'testuser',
+      email: 'invalid-email',
+      password: 'password123'
+    };
+
+    const user = new User(userData);
+    await expect(user.save()).rejects.toThrow();
+  });
+});
+```
+
+## 🔧 Test Commands & Setup
+
+### Frontend Test Commands
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests with coverage
+pnpm test:coverage
+
+# Run specific test file
+pnpm test ComponentName.test.tsx
+
+# Run tests for specific pattern
+pnpm test --grep="authentication"
+```
+
+### Backend Test Commands
+```bash
+# Run all tests
+pnpm test
+
+# Run unit tests only
+pnpm test:unit
+
+# Run integration tests only
+pnpm test:integration
+
+# Run tests with coverage
+pnpm test:coverage
+
+# Run specific test suite
+pnpm test auth.test.ts
+```
+
+## 📊 Coverage Requirements
+
+### Minimum Coverage Thresholds
+```json
+{
+  "coverageThreshold": {
+    "global": {
+      "branches": 80,
+      "functions": 80,
+      "lines": 80,
+      "statements": 80
+    }
+  }
+}
+```
+
+### Coverage Categories
+- **Critical Code**: 95%+ coverage (auth, payment, security)
+- **Business Logic**: 90%+ coverage (user management, course logic)
+- **UI Components**: 80%+ coverage (React components)
+- **Utility Functions**: 85%+ coverage (helpers, utils)
+
+## 🧪 Test Types & When to Use
+
+### Unit Tests
+**When**: Testing individual functions, components, or modules in isolation
+```typescript
+// Test individual functions
+describe('formatDate', () => {
+  it('should format date correctly', () => {
+    const date = new Date('2023-01-01');
+    expect(formatDate(date)).toBe('01/01/2023');
+  });
+});
+```
+
+### Integration Tests
+**When**: Testing interaction between multiple components/modules
+```typescript
+// Test API endpoints with database
+describe('User Registration Integration', () => {
+  it('should create user and return JWT token', async () => {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send(validUserData)
+      .expect(201);
+
+    expect(response.body.data.token).toBeDefined();
+
+    // Verify user was created in database
+    const user = await User.findOne({ email: validUserData.email });
+    expect(user).toBeTruthy();
+  });
+});
+```
+
+### End-to-End Tests
+**When**: Testing complete user workflows
+```typescript
+// Test complete user journey
+describe('Course Enrollment E2E', () => {
+  it('should allow user to register, login, and enroll in course', async () => {
+    // Register user
+    await request(app).post('/api/auth/register').send(userData);
+
+    // Login and get token
+    const loginResponse = await request(app).post('/api/auth/login').send(credentials);
+    const token = loginResponse.body.data.token;
+
+    // Enroll in course
+    await request(app)
+      .post('/api/modules/module-1/enroll')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(201);
+  });
+});
+```
+
+## 🚨 Testing Checklist
+
+### Before Writing Code
+- [ ] Write test cases first (TDD approach)
+- [ ] Define expected behavior clearly
+- [ ] Identify edge cases and error scenarios
+- [ ] Set up proper test data and mocks
+
+### During Development
+- [ ] Run tests frequently (every few changes)
+- [ ] Ensure tests pass before committing
+- [ ] Add tests for new functionality immediately
+- [ ] Update tests when changing existing code
+
+### Before Code Review
+- [ ] All tests passing
+- [ ] Coverage threshold met
+- [ ] No skipped or pending tests
+- [ ] Test names are descriptive and clear
+
+### Before Deployment
+- [ ] Full test suite passes
+- [ ] Integration tests pass
+- [ ] Performance tests within limits
+- [ ] Security tests pass
+
+## 🛠️ Test Utilities & Helpers
+
+### Common Test Utilities
+```typescript
+// src/tests/utils/testUtils.ts
+export const createMockUser = (overrides = {}) => ({
+  id: 'user-123',
+  username: 'testuser',
+  email: 'test@example.com',
+  ...overrides
+});
+
+export const createMockModule = (overrides = {}) => ({
+  id: 'module-123',
+  title: 'Test Module',
+  description: 'Test description',
+  ...overrides
+});
+
+// Custom render function with providers
+export const renderWithProviders = (ui, options = {}) => {
+  const Wrapper = ({ children }) => (
+    <AuthProvider>
+      <ProgressProvider>
+        {children}
+      </ProgressProvider>
+    </AuthProvider>
+  );
+
+  return render(ui, { wrapper: Wrapper, ...options });
+};
+```
+
+### Database Test Setup
+```typescript
+// server/src/tests/setup.ts
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
+let mongoServer;
+
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+  await mongoose.connect(mongoUri);
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
+});
+
+beforeEach(async () => {
+  const collections = mongoose.connection.collections;
+  for (const key in collections) {
+    await collections[key].deleteMany({});
+  }
+});
+```
+
+## 📈 Performance Testing
+
+### Frontend Performance Tests
+```typescript
+// Test component rendering performance
+describe('Performance Tests', () => {
+  it('should render large list efficiently', () => {
+    const start = performance.now();
+    render(<LargeList items={largeDataSet} />);
+    const end = performance.now();
+
+    expect(end - start).toBeLessThan(100); // 100ms threshold
+  });
+});
+```
+
+### Backend Performance Tests
+```typescript
+// Test API response times
+describe('API Performance', () => {
+  it('should respond within acceptable time limits', async () => {
+    const start = Date.now();
+
+    await request(app)
+      .get('/api/modules')
+      .expect(200);
+
+    const responseTime = Date.now() - start;
+    expect(responseTime).toBeLessThan(500); // 500ms threshold
+  });
+});
+```
+
+## 🔐 Security Testing
+
+### Authentication Tests
+```typescript
+describe('Security Tests', () => {
+  it('should prevent unauthorized access', async () => {
+    await request(app)
+      .get('/api/protected-endpoint')
+      .expect(401);
+  });
+
+  it('should validate JWT tokens correctly', async () => {
+    const invalidToken = 'invalid.jwt.token';
+
+    await request(app)
+      .get('/api/protected-endpoint')
+      .set('Authorization', `Bearer ${invalidToken}`)
+      .expect(401);
+  });
+});
+```
+
+### Input Validation Tests
+```typescript
+describe('Input Validation', () => {
+  it('should sanitize user input', async () => {
+    const maliciousInput = '<script>alert("xss")</script>';
+
+    const response = await request(app)
+      .post('/api/users')
+      .send({ username: maliciousInput })
+      .expect(400);
+
+    expect(response.body.message).toContain('validation error');
+  });
+});
+```
+
+## 📋 Test Maintenance
+
+### Regular Test Maintenance Tasks
+1. **Weekly**: Review and update flaky tests
+2. **Monthly**: Analyze coverage reports and identify gaps
+3. **Quarterly**: Review test performance and optimize slow tests
+4. **Release**: Full regression testing
+
+### Test Quality Standards
+- Tests should be independent and isolated
+- Tests should be deterministic (same input = same output)
+- Tests should be fast and efficient
+- Test names should clearly describe what is being tested
+- Tests should be maintainable and easy to understand
+
+## 🎯 Success Criteria
+
+### Definition of "Well Tested"
+- [ ] 80%+ code coverage achieved
+- [ ] All critical paths tested
+- [ ] Error scenarios covered
+- [ ] Performance within limits
+- [ ] Security vulnerabilities addressed
+- [ ] Tests are maintainable and readable
+- [ ] CI/CD pipeline includes all test types

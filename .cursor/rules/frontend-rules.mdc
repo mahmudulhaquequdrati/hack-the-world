@@ -1,0 +1,217 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# 🎨 Frontend Development Rules
+
+## 📁 Frontend Architecture
+Based on [SYSTEM_DESIGN.md](mdc:frontend/SYSTEM_DESIGN.md) Frontend Architecture section.
+
+### Directory Structure
+```
+frontend/src/
+├── components/
+│   ├── common/          # Shared reusable components
+│   ├── course/          # Course-related components
+│   ├── dashboard/       # Dashboard components
+│   ├── enrolled/        # Learning interface components
+│   ├── games/           # Game engine components
+│   ├── terminal/        # Terminal emulation components
+│   ├── effects/         # Visual effects components
+│   └── ui/              # Base UI components (shadcn/ui)
+├── pages/               # Page-level components
+├── lib/                 # Core utilities and data
+├── hooks/               # Custom React hooks
+└── context/             # React Context providers
+```
+
+## 🔧 Development Commands
+All commands can be executed without permission:
+```bash
+cd frontend
+pnpm install           # Install dependencies
+pnpm dev               # Start development server
+pnpm build             # Build for production
+pnpm test              # Run unit tests
+pnpm lint              # Run ESLint
+pnpm type-check        # TypeScript type checking
+```
+
+## 📊 Single Source of Truth
+**ALWAYS use [frontend/src/lib/appData.ts](mdc:frontend/src/lib/appData.ts) for:**
+- PHASES data structure
+- MODULES data structure
+- GAMES data structure
+- LABS data structure
+- ACHIEVEMENTS data structure
+
+## ⚛️ React Component Rules
+
+### Component Creation Standards
+- **ALWAYS** use React functional components
+- **ALWAYS** use TypeScript interfaces for props
+- **ALWAYS** use proper prop destructuring
+- **ALWAYS** implement proper error boundaries
+
+### Example Component Pattern:
+```typescript
+interface ComponentProps {
+  data: DataType;
+  onAction: (id: string) => void;
+  className?: string;
+}
+
+const Component: React.FC<ComponentProps> = ({
+  data,
+  onAction,
+  className = ""
+}) => {
+  // Component logic here
+  return (
+    <div className={`base-styles ${className}`}>
+      {/* Component JSX */}
+    </div>
+  );
+};
+
+export default Component;
+```
+
+## 🎨 Styling Guidelines
+- **ALWAYS** use Tailwind CSS for styling
+- **ALWAYS** follow cybersecurity theme colors:
+  - Primary: Green (#22C55E, #16A34A)
+  - Background: Dark (#0F172A, #1E293B)
+  - Text: Light grays and whites
+  - Accent: Matrix green effects
+
+### Cybersecurity Theme Classes
+```css
+/* Primary colors */
+.text-matrix-green { color: #00ff41; }
+.bg-dark-primary { background: #0f172a; }
+.bg-dark-secondary { background: #1e293b; }
+.border-matrix { border-color: #22c55e; }
+
+/* Effects */
+.glow-green { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+.matrix-text { font-family: 'Courier New', monospace; }
+```
+
+## 📋 State Management Rules
+
+### Context API Usage
+```typescript
+// Use Context for global state
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const ProgressContext = createContext<ProgressContextType | undefined>(undefined);
+
+// Custom hooks for context
+const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+};
+```
+
+### Local State Rules
+- Use `useState` for component-specific state
+- Use `useReducer` for complex state logic
+- Use `useMemo` and `useCallback` for performance optimization
+
+## 🔌 API Integration
+
+### API Client Pattern
+```typescript
+// Use [frontend/src/lib/api.ts](mdc:frontend/src/lib/api.ts)
+const api = {
+  get: (url: string) => fetch(`${BASE_URL}${url}`),
+  post: (url: string, data: any) => fetch(`${BASE_URL}${url}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+};
+```
+
+### Authentication Headers
+```typescript
+// Always include JWT token in authenticated requests
+headers: {
+  'Authorization': `Bearer ${token}`,
+  'Content-Type': 'application/json'
+}
+```
+
+## 🧪 Testing Requirements
+
+### Component Testing Pattern
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react';
+import Component from './Component';
+
+describe('Component', () => {
+  it('should render correctly', () => {
+    render(<Component data={mockData} onAction={mockFn} />);
+    expect(screen.getByText('Expected Text')).toBeInTheDocument();
+  });
+
+  it('should handle user interactions', () => {
+    const mockAction = jest.fn();
+    render(<Component data={mockData} onAction={mockAction} />);
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(mockAction).toHaveBeenCalledWith(expectedValue);
+  });
+});
+```
+
+### Testing Commands
+```bash
+pnpm test              # Run all tests
+pnpm test:watch        # Run tests in watch mode
+pnpm test:coverage     # Run tests with coverage
+```
+
+## 🚦 Routing Rules
+- Use React Router for navigation
+- Follow these route patterns:
+  - `/` - Landing page
+  - `/dashboard` - User dashboard
+  - `/course/:moduleId` - Course detail page
+  - `/enrolled/:moduleId` - Learning interface
+  - `/game/:gameId` - Game interface
+  - `/lab/:labId` - Lab interface
+
+## 📱 Responsive Design
+- **ALWAYS** implement mobile-first responsive design
+- **ALWAYS** test on multiple screen sizes
+- Use Tailwind responsive prefixes: `sm:`, `md:`, `lg:`, `xl:`
+
+## ⚡ Performance Rules
+- Use `React.lazy` for code splitting on routes
+- Use `React.memo` for expensive components
+- Optimize images with proper loading strategies
+- Implement virtual scrolling for large lists
+
+## 🔐 Security Rules
+- **NEVER** store sensitive data in localStorage without encryption
+- **ALWAYS** validate and sanitize user inputs
+- **ALWAYS** implement proper error handling
+- Use proper CORS configuration
+
+## 🎯 Component Library
+Use shadcn/ui components from [frontend/src/components/ui/](mdc:frontend/src/components/ui):
+- Button, Card, Dialog, Input, etc.
+- **ALWAYS** customize with cybersecurity theme
+- **ALWAYS** maintain accessibility standards
+
+## 📋 File Naming Conventions
+- Components: `PascalCase.tsx`
+- Hooks: `use*.ts`
+- Utilities: `camelCase.ts`
+- Types: `types.ts` or `*.types.ts`
+- Constants: `constants.ts` or `UPPER_SNAKE_CASE`

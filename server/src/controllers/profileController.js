@@ -211,35 +211,9 @@ const updateAvatar = asyncHandler(async (req, res, next) => {
   });
 });
 
-/**
- * @desc    Get user statistics
- * @route   GET /profile/stats
- * @access  Private
- */
-const getProfileStats = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.user.id).select(
-    "stats username email experienceLevel"
-  );
-
-  if (!user) {
-    return next(new ErrorResponse("User not found", 404));
-  }
-
-  res.status(200).json({
-    success: true,
-    message: "Profile statistics retrieved successfully",
-    data: {
-      stats: user.stats,
-      experienceLevel: user.experienceLevel,
-      username: user.username,
-    },
-  });
-});
-
 module.exports = {
   getProfile,
   changePassword,
   updateBasicProfile,
   updateAvatar,
-  getProfileStats,
 };

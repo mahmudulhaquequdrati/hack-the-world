@@ -40,7 +40,6 @@
     - `PUT /api/profile/change-password` - Change user password
     - `PUT /api/profile/basic` - Update basic profile information
     - `PUT /api/profile/avatar` - Update user avatar
-    - `GET /api/profile/stats` - Get user statistics
   - **Features Completed**:
     - ✅ Profile page with comprehensive user information display (avatar, name, experience level, bio, location, website, learning stats)
     - ✅ Settings page with secure password update functionality and real-time validation

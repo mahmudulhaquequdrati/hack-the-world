@@ -326,27 +326,6 @@ describe("Profile Controller", () => {
     });
   });
 
-  describe("GET /api/profile/stats", () => {
-    it("should get user statistics", async () => {
-      const response = await request(app)
-        .get("/api/profile/stats")
-        .set("Authorization", `Bearer ${authToken}`)
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.message).toBe(
-        "Profile statistics retrieved successfully"
-      );
-      expect(response.body.data.stats).toBeDefined();
-      expect(response.body.data.experienceLevel).toBeDefined();
-      expect(response.body.data.username).toBe(testUser.username);
-    });
-
-    it("should not get stats without authentication", async () => {
-      await request(app).get("/api/profile/stats").expect(401);
-    });
-  });
-
   describe("Error Handling", () => {
     it("should handle user not found gracefully", async () => {
       // Delete the user but use the token

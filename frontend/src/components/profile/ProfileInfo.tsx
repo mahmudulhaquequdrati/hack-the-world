@@ -136,27 +136,6 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user, className = "" }) => {
             <p className="text-gray-300 leading-relaxed">{user.profile.bio}</p>
           </div>
         )}
-
-        {/* Learning Stats */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-green-400 border-b border-green-500/30 pb-2 font-mono">
-            Learning Progress
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-black/30 rounded-lg p-3 border border-green-500/20">
-              <div className="text-2xl font-bold text-green-400 font-mono">
-                {user.stats.totalPoints}
-              </div>
-              <div className="text-sm text-gray-400">Total Points</div>
-            </div>
-            <div className="bg-black/30 rounded-lg p-3 border border-green-500/20">
-              <div className="text-2xl font-bold text-green-400 font-mono">
-                {user.stats.coursesCompleted}
-              </div>
-              <div className="text-sm text-gray-400">Courses Completed</div>
-            </div>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );

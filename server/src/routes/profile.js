@@ -4,7 +4,6 @@ const {
   changePassword,
   updateBasicProfile,
   updateAvatar,
-  getProfileStats,
 } = require("../controllers/profileController");
 const { protect } = require("../middleware/auth");
 const { validateRequest } = require("../middleware/validation");
@@ -378,70 +377,5 @@ router
 router
   .route("/avatar")
   .put(updateAvatarValidation, validateRequest, updateAvatar);
-
-/**
- * @swagger
- * /profile/stats:
- *   get:
- *     summary: Get user statistics
- *     description: Retrieve the authenticated user's learning statistics and progress
- *     tags: [Profile]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Profile statistics retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: object
- *                       properties:
- *                         stats:
- *                           type: object
- *                           properties:
- *                             totalPoints:
- *                               type: integer
- *                               example: 1250
- *                             level:
- *                               type: integer
- *                               example: 5
- *                             coursesCompleted:
- *                               type: integer
- *                               example: 3
- *                             labsCompleted:
- *                               type: integer
- *                               example: 12
- *                             gamesCompleted:
- *                               type: integer
- *                               example: 8
- *                             achievementsEarned:
- *                               type: integer
- *                               example: 15
- *                         experienceLevel:
- *                           type: string
- *                           enum: [beginner, intermediate, advanced, expert]
- *                           example: "intermediate"
- *                         username:
- *                           type: string
- *                           example: "johndoe"
- *       401:
- *         description: Unauthorized - Invalid or missing token
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
- *         description: User not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-router.route("/stats").get(getProfileStats);
 
 module.exports = router;

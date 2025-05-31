@@ -1,18 +1,10 @@
-
-<!--
-  This SVG uses CSS media queries to set the stroke color to white in dark mode and black in light mode.
--->
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-computer-icon lucide-computer">
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-terminal-icon lucide-square-terminal">
   <style>
     @media (prefers-color-scheme: dark) {
-      .lucide-computer-icon { stroke: white; }
+      .lucide-square-terminal-icon { stroke: white; }
     }
     @media (prefers-color-scheme: light) {
-      .lucide-computer-icon { stroke: black; }
+      .lucide-square-terminal-icon { stroke: green; }
     }
   </style>
-  <rect width="14" height="8" x="5" y="2" rx="2"/>
-  <rect width="20" height="8" x="2" y="14" rx="2"/>
-  <path d="M6 18h2"/>
-  <path d="M12 18h6"/>
-</svg>
+<path d="m7 11 2-2-2-2"/><path d="M11 13h4"/><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/></svg>

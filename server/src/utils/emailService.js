@@ -339,7 +339,7 @@ This email was sent to ${email}
             .cta-button {
               display: inline-block;
               background: linear-gradient(135deg, #16a34a, #22c55e);
-              color: #ffffff;
+              color: #ffffff !important;
               padding: 14px 28px;
               text-decoration: none;
               border-radius: 6px;

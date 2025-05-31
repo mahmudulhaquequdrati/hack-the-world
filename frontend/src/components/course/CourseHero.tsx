@@ -34,7 +34,7 @@ const CourseHero = ({ course }: CourseHeroProps) => {
           <div className="w-3 h-3 bg-green-500 rounded-full"></div>
         </div>
         <div className="text-green-400/60 text-xs font-mono">
-          cybersec-academy/course/
+          terminal-hacks/course/
           {course.title.toLowerCase().replace(/\s+/g, "-")}
         </div>
       </div>

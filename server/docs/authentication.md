@@ -44,7 +44,7 @@ Register a new user account.
 ```json
 {
   "username": "cyberhacker2024",
-  "email": "hacker@cybersec.com",
+  "email": "hacker@terminal-hacks.space",
   "password": "SecurePass123!",
   "firstName": "John",
   "lastName": "Doe",
@@ -62,7 +62,7 @@ Register a new user account.
     "user": {
       "id": "user_id",
       "username": "cyberhacker2024",
-      "email": "hacker@cybersec.com",
+      "email": "hacker@terminal-hacks.space",
       "profile": {
         "firstName": "John",
         "lastName": "Doe",
@@ -144,7 +144,7 @@ Authorization: Bearer <token>
     "user": {
       "id": "user_id",
       "username": "cyberhacker2024",
-      "email": "hacker@cybersec.com",
+      "email": "hacker@terminal-hacks.space",
       "profile": {
         "firstName": "John",
         "lastName": "Doe",
@@ -207,7 +207,7 @@ Send password reset email.
 
 ```json
 {
-  "email": "hacker@cybersec.com"
+  "email": "hacker@terminal-hacks.space"
 }
 ```
 
@@ -243,7 +243,7 @@ Reset password with token.
     "user": {
       "id": "user_id",
       "username": "cyberhacker2024",
-      "email": "hacker@cybersec.com",
+      "email": "hacker@terminal-hacks.space",
       "profile": {
         "firstName": "John",
         "lastName": "Doe",

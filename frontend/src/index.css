@@ -124,6 +124,97 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Fix autofill background to maintain cybersecurity theme */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px oklch(0.12 0 0) inset !important;
+    -webkit-text-fill-color: oklch(0.8 0.15 150) !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  /* For dark mode autofill */
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px oklch(0.12 0 0) inset !important;
+    -webkit-text-fill-color: oklch(0.8 0.15 150) !important;
+  }
+
+  /* Additional autofill fix for different browsers */
+  input:-moz-autofill {
+    background-color: oklch(0.12 0 0) !important;
+    color: oklch(0.8 0.15 150) !important;
+  }
+
+  /* Enhanced focus ring for autofill that works consistently */
+  input:-webkit-autofill:focus-visible {
+    outline: 2px solid oklch(0.7 0.2 150) !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Fallback focus ring for all inputs to ensure visibility */
+  input:focus-visible {
+    outline: 2px solid oklch(0.7 0.2 150);
+    outline-offset: 2px;
+  }
+
+  /* Override default focus styles for consistency */
+  input:focus {
+    outline: 2px solid oklch(0.7 0.2 150);
+    outline-offset: 2px;
+  }
+
+  /* Input cursor styling for cybersecurity theme */
+  input,
+  textarea {
+    caret-color: oklch(0.7 0.2 150);
+    cursor: text;
+  }
+
+  /* Ensure cursor is visible and themed */
+  input:focus,
+  textarea:focus {
+    caret-color: oklch(0.7 0.2 150);
+  }
+
+  /* For WebKit browsers - additional cursor styling */
+  input::-webkit-input-placeholder,
+  textarea::-webkit-input-placeholder {
+    color: oklch(0.5 0.1 150);
+  }
+
+  /* Ensure text selection is visible */
+  input::selection,
+  textarea::selection {
+    background-color: oklch(0.7 0.2 150 / 0.3);
+    color: oklch(0.9 0.15 150);
+  }
+
+  /* Force cursor visibility for all input states */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea {
+    caret-color: oklch(0.7 0.2 150) !important;
+    cursor: text !important;
+  }
+
+  /* Ensure cursor remains visible even when clicking in already focused input */
+  input:active,
+  textarea:active {
+    caret-color: oklch(0.7 0.2 150) !important;
+  }
+
+  /* Override any potential cursor hiding */
+  input:not(:disabled),
+  textarea:not(:disabled) {
+    cursor: text !important;
+  }
 }
 
 /* Matrix Rain Animation */

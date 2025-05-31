@@ -21,7 +21,7 @@ const TerminalLab = () => {
   const navigate = useNavigate();
   const [currentChallenge, setCurrentChallenge] = useState(0);
   const [terminalHistory, setTerminalHistory] = useState<string[]>([
-    "Welcome to CyberSec Terminal Lab",
+    "Welcome to Terminal Hacks Lab",
     "Type commands to complete challenges",
     "$ ",
   ]);
@@ -298,7 +298,7 @@ const TerminalLab = () => {
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   </div>
                   <span className="text-green-400 text-sm ml-4">
-                    Terminal - user@cybersec-lab
+                    Terminal - user@terminal-hacks-lab
                   </span>
                 </div>
               </CardHeader>

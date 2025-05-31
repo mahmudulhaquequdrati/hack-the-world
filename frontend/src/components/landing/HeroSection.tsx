@@ -24,10 +24,7 @@ const HeroSection = ({
         <div className="space-y-8 col-span-3">
           <div className="space-y-4 pt-10 lg:pt-0 text-center lg:text-left">
             <h1 className="text-3xl lg:text-6xl font-bold leading-tight text-green-400">
-              <TypewriterText
-                text="Welcome to CyberSec Training Academy"
-                speed={100}
-              />
+              <TypewriterText text="Welcome to Terminal Hacks" speed={100} />
             </h1>
             <p className="text-xl text-green-300/80 max-w-lg">
               The world's shortest cybersecurity training platform—get skilled,

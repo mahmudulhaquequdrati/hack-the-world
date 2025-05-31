@@ -2072,7 +2072,7 @@ export const getNormalizedCourseById = (courseId: string): Course | null => {
         : "Intermediate cybersecurity experience",
     certification: true,
     instructor: {
-      name: "CyberSec Expert",
+      name: "Terminal Hacks Expert",
       title: "Senior Security Specialist",
       avatar:
         "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150",

@@ -23,7 +23,7 @@
  *         email:
  *           type: string
  *           format: email
- *           example: 'hacker@cybersec.com'
+ *           example: 'hacker@terminal-hacks.space'
  *           description: 'User email address'
  *         profile:
  *           type: object
@@ -94,7 +94,7 @@
  *         email:
  *           type: string
  *           format: email
- *           example: 'hacker@cybersec.com'
+ *           example: 'hacker@terminal-hacks.space'
  *           description: 'Valid email address'
  *         password:
  *           type: string
@@ -161,7 +161,7 @@
  *         email:
  *           type: string
  *           format: email
- *           example: 'hacker@cybersec.com'
+ *           example: 'hacker@terminal-hacks.space'
  *           description: 'Email address to send reset instructions'
  *     ResetPasswordRequest:
  *       type: object
@@ -333,7 +333,7 @@ const resetPasswordValidation = [
  *               summary: Beginner user registration
  *               value:
  *                 username: 'cybernewbie2024'
- *                 email: 'newbie@cybersec.com'
+ *                 email: 'newbie@terminal-hacks.space'
  *                 password: 'SecurePass123!'
  *                 firstName: 'Alice'
  *                 lastName: 'Johnson'
@@ -342,7 +342,7 @@ const resetPasswordValidation = [
  *               summary: Advanced user registration
  *               value:
  *                 username: 'cyberexpert2024'
- *                 email: 'expert@cybersec.com'
+ *                 email: 'expert@terminal-hacks.space'
  *                 password: 'AdvancedPass456!'
  *                 firstName: 'Bob'
  *                 lastName: 'Smith'
@@ -427,7 +427,7 @@ router.post("/register", registerValidation, authController.register);
  *             email_login:
  *               summary: Login with email
  *               value:
- *                 login: 'hacker@cybersec.com'
+ *                 login: 'hacker@terminal-hacks.space'
  *                 password: 'SecurePass123!'
  *     responses:
  *       200:
@@ -527,7 +527,7 @@ router.post("/login", loginValidation, authController.login);
  *                 user:
  *                   id: '64a1b2c3d4e5f6789012345'
  *                   username: 'cyberhacker2024'
- *                   email: 'hacker@cybersec.com'
+ *                   email: 'hacker@terminal-hacks.space'
  *                   profile:
  *                     firstName: 'John'
  *                     lastName: 'Doe'
@@ -644,7 +644,7 @@ router.post("/logout", authController.logout);
  *           schema:
  *             $ref: '#/components/schemas/ForgotPasswordRequest'
  *           example:
- *             email: 'hacker@cybersec.com'
+ *             email: 'hacker@terminal-hacks.space'
  *     responses:
  *       200:
  *         description: Reset instructions sent (always returned for security)

@@ -12,6 +12,7 @@ const { specs, swaggerUi, swaggerOptions } = require("./src/config/swagger");
 
 // Import routes
 const authRoutes = require("./src/routes/auth");
+const profileRoutes = require("./src/routes/profile");
 const phaseRoutes = require("./src/routes/phases");
 const moduleRoutes = require("./src/routes/modules");
 const gameRoutes = require("./src/routes/games");
@@ -102,6 +103,7 @@ app.get("/health", (req, res) => {
 
 // API routes
 app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
 app.use("/api/phases", phaseRoutes);
 app.use("/api/modules", moduleRoutes);
 app.use("/api/games", gameRoutes);
@@ -120,6 +122,7 @@ app.get("/api", (req, res) => {
     documentation: "/api/docs",
     endpoints: {
       auth: "/api/auth",
+      profile: "/api/profile",
       phases: "/api/phases",
       modules: "/api/modules",
       games: "/api/games",

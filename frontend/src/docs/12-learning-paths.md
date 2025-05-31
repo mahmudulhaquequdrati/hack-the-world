@@ -49,14 +49,14 @@ interface Lesson {
 
 ```typescript
 const cybersecurityFundamentals: LearningPath = {
-  id: "cybersec-fundamentals",
+  id: "terminal-hacks-fundamentals",
   title: "Cybersecurity Fundamentals",
   difficulty: "beginner",
   estimatedDuration: "30 hours",
   prerequisites: [],
   modules: [
     {
-      id: "intro-cybersec",
+      id: "intro-terminal-hacks",
       title: "Introduction to Cybersecurity",
       lessons: [
         "What is Cybersecurity?",
@@ -76,7 +76,7 @@ const cybersecurityFundamentals: LearningPath = {
       ],
     },
     {
-      id: "system-security",
+      id: "system-terminal-hacks",
       title: "System Security",
       lessons: [
         "Operating System Hardening",
@@ -97,10 +97,10 @@ const ethicalHacking: LearningPath = {
   title: "Ethical Hacking & Penetration Testing",
   difficulty: "intermediate",
   estimatedDuration: "60 hours",
-  prerequisites: ["cybersec-fundamentals"],
+  prerequisites: ["terminal-hacks-fundamentals"],
   modules: [
     {
-      id: "recon-footprinting",
+      id: "recon-footprinting-terminal-hacks",
       title: "Reconnaissance & Footprinting",
       lessons: [
         "Information Gathering",
@@ -110,7 +110,7 @@ const ethicalHacking: LearningPath = {
       ],
     },
     {
-      id: "exploitation",
+      id: "exploitation-terminal-hacks",
       title: "Exploitation Techniques",
       lessons: [
         "Web Application Testing",
@@ -347,7 +347,7 @@ const careerTracks: CareerTrack[] = [
       "Threat Analysis",
       "Security Monitoring",
     ],
-    learningPaths: ["cybersec-fundamentals", "incident-response"],
+    learningPaths: ["terminal-hacks-fundamentals", "incident-response"],
     certifications: ["CompTIA Security+", "GCIH"],
     salaryRange: "$60,000 - $90,000",
     jobOutlook: "Excellent",
@@ -362,7 +362,7 @@ const careerTracks: CareerTrack[] = [
       "Report Writing",
       "Tool Proficiency",
     ],
-    learningPaths: ["ethical-hacking", "web-app-security"],
+    learningPaths: ["ethical-hacking-terminal-hacks", "web-app-security"],
     certifications: ["CEH", "OSCP", "CISSP"],
     salaryRange: "$80,000 - $130,000",
     jobOutlook: "Very High",
@@ -396,9 +396,9 @@ const securityPlusCert: Certification = {
   name: "CompTIA Security+",
   provider: "CompTIA",
   difficulty: "intermediate",
-  prerequisites: ["cybersec-fundamentals"],
+  prerequisites: ["terminal-hacks-fundamentals"],
   mappedLessons: [
-    "network-security-fundamentals",
+    "network-security-terminal-hacks",
     "cryptography-basics",
     "identity-access-management",
     "risk-management",

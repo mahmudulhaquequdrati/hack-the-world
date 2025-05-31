@@ -100,7 +100,7 @@ Phase Selection → Module Browsing → Course Details → Enrollment → Learni
 
 ```bash
 # Authentic cybersecurity terminal
-user@cybersec:~$ nmap -sS target.com
+user@terminal-hacks:~$ nmap -sS target.com
 Starting Nmap scan...
 Host is up (0.0010s latency).
 PORT     STATE SERVICE

@@ -292,7 +292,7 @@ const AIPlayground = ({
                   </div>
                 ))}
                 <div className="flex items-center text-green-400">
-                  <span>user@cybersec:~$ </span>
+                  <span>user@terminal-hacks:~$ </span>
                   <Input
                     value={terminalInput}
                     onChange={(e) => setTerminalInput(e.target.value)}

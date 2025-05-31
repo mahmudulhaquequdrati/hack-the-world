@@ -4,18 +4,22 @@ import ProtectedRoute from "@/components/common/ProtectedRoute";
 import ScrollToTop from "@/components/common/ScrollToTop";
 import Layout from "@/components/layout/Layout";
 import { Toaster } from "@/components/ui/sonner";
+import AboutPage from "@/pages/AboutPage";
 import CourseDetailPage from "@/pages/CourseDetailPage";
 import CyberSecOverview from "@/pages/CyberSecOverview";
 import Dashboard from "@/pages/Dashboard";
 import EnrolledCoursePage from "@/pages/EnrolledCoursePage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import GamePage from "@/pages/GamePage";
+import HowItWorksPage from "@/pages/HowItWorksPage";
 import LabPage from "@/pages/LabPage";
 import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import PlatformDemo from "@/pages/PlatformDemo";
 import PricingPage from "@/pages/PricingPage";
+import ProfilePage from "@/pages/ProfilePage";
+import SettingsPage from "@/pages/SettingsPage";
 import SignupPage from "@/pages/SignupPage";
 import SocialEngLab from "@/pages/SocialEngLab";
 import TerminalLab from "@/pages/TerminalLab";
@@ -73,10 +77,26 @@ function App() {
               }
             />
             <Route
+              path="/how-it-works"
+              element={
+                <Layout>
+                  <HowItWorksPage />
+                </Layout>
+              }
+            />
+            <Route
               path="/pricing"
               element={
                 <Layout>
                   <PricingPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/about"
+              element={
+                <Layout>
+                  <AboutPage />
                 </Layout>
               }
             />
@@ -104,6 +124,26 @@ function App() {
                 <Layout>
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <SettingsPage />
                   </ProtectedRoute>
                 </Layout>
               }

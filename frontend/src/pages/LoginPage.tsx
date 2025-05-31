@@ -115,7 +115,7 @@ const LoginPage = () => {
                 <Input
                   id="login"
                   type="text"
-                  placeholder="agent@cybersec.academy or cyberhacker2024"
+                  placeholder="agent@terminal-hacks.space"
                   value={formData.login}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, login: e.target.value }))
@@ -209,7 +209,9 @@ const LoginPage = () => {
             {/* Terminal-style footer */}
             <div className="border-t border-green-400/30 pt-4">
               <div className="font-mono text-xs text-green-400/70">
-                <div>$ ssh {formData.login || "agent"}@cybersec.academy</div>
+                <div>
+                  $ ssh {formData.login || "agent"}@terminal-hacks.space
+                </div>
                 <div>
                   {isLoading
                     ? "Authenticating credentials..."

@@ -241,7 +241,7 @@ const EnrolledCoursePage = () => {
     // Add user command to history
     setTerminalHistory((prev) => [
       ...prev,
-      { type: "command", content: `user@cybersec:~$ ${command}` },
+      { type: "command", content: `user@terminal-hacks:~$ ${command}` },
     ]);
 
     // Simulate AI response based on command

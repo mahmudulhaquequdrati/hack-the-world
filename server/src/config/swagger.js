@@ -98,7 +98,7 @@ Use the **"Try it out"** button on any endpoint below to interact with live data
             email: {
               type: "string",
               format: "email",
-              example: "hacker@cybersec.com",
+              example: "hacker@terminal-hacks.space",
             },
             role: {
               type: "string",

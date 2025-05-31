@@ -89,7 +89,7 @@ class EmailService {
             .reset-button {
               display: inline-block;
               background: linear-gradient(135deg, #16a34a, #22c55e);
-              color: #ffffff;
+              color: #ffffff !important;
               padding: 14px 28px;
               text-decoration: none;
               border-radius: 6px;
@@ -126,14 +126,15 @@ class EmailService {
               margin: 8px 0;
             }
             .url-box {
-              background-color: #f3f4f6;
+              background-color: #16a34a;
               border: 1px solid #d1d5db;
               border-radius: 4px;
+              color: #ffffff !important;
               padding: 12px;
               word-break: break-all;
-              color: #16a34a;
               font-weight: 600;
               margin: 15px 0;
+              text-decoration: underline;
             }
             .footer {
               margin-top: 30px;
@@ -147,6 +148,11 @@ class EmailService {
               color: #16a34a;
               font-weight: 600;
             }
+              a{
+                color: #ffffff !important;
+                text-decoration: none;
+              }
+
           </style>
         </head>
         <body>
@@ -164,7 +170,7 @@ class EmailService {
               <p>We received a request to reset your password for your <span class="cyber-accent">Hack The World</span> account. If you made this request, click the button below to reset your password:</p>
 
               <div style="text-align: center;">
-                <a href="${resetUrl}" class="reset-button" target="_blank" style="color: !#ffffff;">🔑 RESET PASSWORD</a>
+                <a href="${resetUrl}" class="reset-button" target="_blank" >🔑 RESET PASSWORD</a>
               </div>
 
               <p>Or copy and paste this link into your browser:</p>
@@ -403,7 +409,6 @@ This email was sent to ${email}
 
               <div style="text-align: center;">
                 <a href="${dashboardUrl}" class="cta-button">🚀 GO TO DASHBOARD</a>
-                <a href="${loginUrl}" class="cta-button">🔑 LOGIN PAGE</a>
               </div>
 
               <div class="security-tips">
@@ -598,7 +603,7 @@ This email was sent to ${email}
             .cta-button {
               display: inline-block;
               background: linear-gradient(135deg, #059669 0%, #047857 100%);
-              color: #ffffff;
+              color: #ffffff !important;
               padding: 16px 32px;
               text-decoration: none;
               border-radius: 8px;
@@ -636,6 +641,7 @@ This email was sent to ${email}
             .footer strong {
               color: #374151;
             }
+
             @media (max-width: 600px) {
               .content { padding: 30px 20px; }
               .header { padding: 30px 20px; }
@@ -649,6 +655,7 @@ This email was sent to ${email}
                 margin-left: auto;
                 margin-right: auto;
               }
+
             }
           </style>
         </head>
@@ -685,7 +692,6 @@ This email was sent to ${email}
 
               <div class="cta-section">
                 <a href="${dashboardUrl}" class="cta-button">🚀 START LEARNING</a>
-                <a href="${loginUrl}" class="cta-button">🔑 LOGIN TO PLATFORM</a>
               </div>
 
               <p style="color: #374151; text-align: center; margin-top: 30px;">

@@ -26,6 +26,7 @@ export interface User {
     achievementsEarned: number;
   };
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface AuthResponse {

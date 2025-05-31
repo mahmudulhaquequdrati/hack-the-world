@@ -264,11 +264,29 @@ export interface GameData {
 }
 
 export interface User {
-  name: string;
+  id: string;
+  username: string;
   email: string;
-  avatar?: string;
-  level?: string;
-  points?: number;
+  profile: {
+    firstName?: string;
+    lastName?: string;
+    displayName?: string;
+    avatar?: string;
+    bio?: string;
+    location?: string;
+    website?: string;
+  };
+  experienceLevel: "beginner" | "intermediate" | "advanced" | "expert";
+  stats: {
+    totalPoints: number;
+    level: number;
+    coursesCompleted: number;
+    labsCompleted: number;
+    gamesCompleted: number;
+    achievementsEarned: number;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ContextualContent {

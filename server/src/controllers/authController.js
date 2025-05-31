@@ -119,19 +119,6 @@ const login = async (req, res, next) => {
       throw new APIError("Invalid credentials", 401);
     }
 
-    // Check if account is locked
-    if (user.isLocked) {
-      throw new APIError(
-        "Account locked due to too many failed login attempts",
-        423
-      );
-    }
-
-    // Check if account is active
-    if (user.status !== "active") {
-      throw new APIError("Account is not active", 403);
-    }
-
     // Verify password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
@@ -149,7 +136,6 @@ const login = async (req, res, next) => {
 
     // Update last login and activity
     user.security.lastLogin = new Date();
-    user.activity.lastActiveAt = new Date();
     await user.save({ validateBeforeSave: false });
 
     res.json(createUserResponse(user, token));
@@ -175,12 +161,9 @@ const getCurrentUser = async (req, res, next) => {
 
     const user = await User.findById(decoded.userId);
 
-    if (!user || user.status !== "active") {
-      throw new APIError("User not found or inactive", 404);
+    if (!user) {
+      throw new APIError("User not found", 404);
     }
-
-    // Update last active timestamp
-    await user.updateLastActive();
 
     res.json({
       success: true,
@@ -313,7 +296,6 @@ const resetPassword = async (req, res, next) => {
 
     // Update last login
     user.security.lastLogin = new Date();
-    user.activity.lastActiveAt = new Date();
     await user.save({ validateBeforeSave: false });
 
     // Send password reset confirmation email

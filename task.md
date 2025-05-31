@@ -21,6 +21,36 @@
   - **Dependencies**: Authentication system (completed)
   - **Files**: `server/src/models/User.ts`, `server/src/controllers/userController.ts`
 
+- [x] **USER-002**: Clean up User model and remove unused fields
+
+  - **Assignee**: Developer
+  - **Status**: Completed
+  - **Completed**: Today
+  - **Description**: Simplified User model by removing unused fields that are not needed in current frontend implementation
+  - **Dependencies**: Profile system analysis (completed)
+  - **Files**: `server/src/models/User.js`, `frontend/src/features/auth/authApi.ts`, `frontend/src/lib/types.ts`, `frontend/src/lib/userData.ts`
+  - **Fields Removed**:
+    - ✅ `role` (not used in frontend - no role-based access)
+    - ✅ `status` (not displayed or used in UI)
+    - ✅ `security` object (complex fields not needed now)
+    - ✅ `virtual` methods (isLocked, loginAttempts - not used)
+    - ✅ Instance methods for password reset (not implemented in UI)
+    - ✅ Static methods (getLeaderboard - not used)
+  - **Fields Kept**:
+    - ✅ `username`, `email`, `password` (core authentication)
+    - ✅ `profile` object (used in ProfileInfo, EditProfileForm, UserAvatar)
+    - ✅ `experienceLevel` (displayed in UI)
+    - ✅ `stats` object (displayed in UserAvatar and dashboard)
+    - ✅ `createdAt`, `updatedAt` (displayed in ProfileInfo)
+    - ✅ Essential security fields: `passwordChangedAt`, `lastLogin`
+  - **Frontend Updates**: ✅ Updated TypeScript interfaces to match simplified model
+  - **Results**:
+    - Reduced User model from 295 lines to 179 lines (39% reduction)
+    - Removed 25+ unused fields and methods
+    - Simplified authentication logic while keeping all used functionality
+    - All TypeScript compilation passes without errors
+    - Frontend User interfaces synchronized across all files
+
 - [x] **PROFILE-001**: Simple Profile and Settings Pages
 
   - **Assignee**: Developer
@@ -169,12 +199,33 @@
     - ✅ **User experience**: Smooth password change without interruption to user session
 
 - [ ] **AUTH-002**: Implement security middleware stack
+
   - **Assignee**: Developer
   - **Status**: Not Started
   - **Due**: Next 3 days
   - **Description**: Rate limiting, CORS, helmet, validation middleware
   - **Dependencies**: Express server setup
   - **Files**: `server/src/middleware/security.ts`, `server/src/middleware/rateLimiter.ts`
+
+- [x] **AUTH-005**: Fix Password Reset Token Validation Issue
+
+  - **Assignee**: Developer
+  - **Status**: Completed
+  - **Completed**: Today
+  - **Description**: Fixed critical bug where password reset tokens from email always showed "Invalid or expired password reset token"
+  - **Root Cause**: Token generation method was returning hashed token instead of plain token, causing double-hashing mismatch
+  - **Dependencies**: Authentication system (AUTH-001)
+  - **Files**: `server/src/models/User.js`, `server/src/controllers/authController.js`
+  - **Fixes Applied**:
+    - ✅ Fixed `createPasswordResetToken()` method to return plain token for email
+    - ✅ Fixed `createPasswordResetToken()` method to store hashed version in database
+    - ✅ Fixed `forgotPassword()` function to send plain token in email (not hashed version)
+    - ✅ Maintained security by storing hashed token in database and hashing email token for comparison
+  - **Issue Details**:
+    - **Before**: Method returned hashed token → Email sent hashed token → Reset endpoint hashed it again → Double-hashed lookup failed
+    - **After**: Method returns plain token → Email sends plain token → Reset endpoint hashes once → Single-hashed lookup succeeds
+  - **Testing**: ✅ Token generation verified to work correctly with plain/hashed token separation
+  - **Result**: Password reset functionality now works correctly from email links
 
 ### 🟡 Medium Priority (Important)
 

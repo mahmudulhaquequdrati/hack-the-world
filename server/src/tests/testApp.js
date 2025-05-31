@@ -10,12 +10,14 @@ const errorHandler = require("../middleware/errorHandler");
 
 // Import routes
 const authRoutes = require("../routes/auth");
-const phaseRoutes = require("../routes/phases");
-const moduleRoutes = require("../routes/modules");
-const gameRoutes = require("../routes/games");
-const labRoutes = require("../routes/labs");
-const userRoutes = require("../routes/users");
-const achievementRoutes = require("../routes/achievements");
+const profileRoutes = require("../routes/profile");
+// TODO: Add these routes when they are created
+// const phaseRoutes = require("../routes/phases");
+// const moduleRoutes = require("../routes/modules");
+// const gameRoutes = require("../routes/games");
+// const labRoutes = require("../routes/labs");
+// const userRoutes = require("../routes/users");
+// const achievementRoutes = require("../routes/achievements");
 
 /**
  * Test App - Express app without server startup for testing
@@ -93,12 +95,7 @@ app.get("/health", (req, res) => {
 
 // API routes
 app.use("/api/auth", authRoutes);
-app.use("/api/phases", phaseRoutes);
-app.use("/api/modules", moduleRoutes);
-app.use("/api/games", gameRoutes);
-app.use("/api/labs", labRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/achievements", achievementRoutes);
+app.use("/api/profile", profileRoutes);
 
 // API documentation route
 app.get("/api", (req, res) => {
@@ -108,12 +105,7 @@ app.get("/api", (req, res) => {
     environment: "test",
     endpoints: {
       auth: "/api/auth",
-      phases: "/api/phases",
-      modules: "/api/modules",
-      games: "/api/games",
-      labs: "/api/labs",
-      users: "/api/users",
-      achievements: "/api/achievements",
+      profile: "/api/profile",
     },
   });
 });

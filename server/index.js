@@ -13,15 +13,9 @@ const { specs, swaggerUi, swaggerOptions } = require("./src/config/swagger");
 // Import routes
 const authRoutes = require("./src/routes/auth");
 const profileRoutes = require("./src/routes/profile");
-const phaseRoutes = require("./src/routes/phases");
-const moduleRoutes = require("./src/routes/modules");
-const gameRoutes = require("./src/routes/games");
-const labRoutes = require("./src/routes/labs");
-const userRoutes = require("./src/routes/users");
-const achievementRoutes = require("./src/routes/achievements");
 
 /**
- * Hack The World - Cybersecurity Learning Platform API
+ * Terminal Hacks - Terminal Hacks Learning Platform API
  * Express server with MongoDB and JWT authentication
  */
 const app = express();
@@ -104,12 +98,6 @@ app.get("/health", (req, res) => {
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
-app.use("/api/phases", phaseRoutes);
-app.use("/api/modules", moduleRoutes);
-app.use("/api/games", gameRoutes);
-app.use("/api/labs", labRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/achievements", achievementRoutes);
 
 // Swagger API Documentation
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(specs, swaggerOptions));
@@ -123,12 +111,6 @@ app.get("/api", (req, res) => {
     endpoints: {
       auth: "/api/auth",
       profile: "/api/profile",
-      phases: "/api/phases",
-      modules: "/api/modules",
-      games: "/api/games",
-      labs: "/api/labs",
-      users: "/api/users",
-      achievements: "/api/achievements",
     },
   });
 });

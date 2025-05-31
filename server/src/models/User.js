@@ -177,8 +177,10 @@ userSchema.pre("save", async function (next) {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
 
-    // Update password changed timestamp
-    this.passwordChangedAt = new Date();
+    // Update password changed timestamp only if it hasn't been manually set
+    if (!this.isModified("security.passwordChangedAt")) {
+      this.security.passwordChangedAt = new Date();
+    }
 
     next();
   } catch (error) {

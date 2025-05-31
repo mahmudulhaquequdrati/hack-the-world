@@ -88,6 +88,7 @@ const PasswordSettings: React.FC<PasswordSettingsProps> = ({
 
     try {
       await onPasswordUpdate(formData);
+
       // Clear form on success
       setFormData({
         currentPassword: "",

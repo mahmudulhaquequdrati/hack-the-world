@@ -62,17 +62,14 @@ const changePassword = asyncHandler(async (req, res, next) => {
   }
 
   // Check current password
-  const isCurrentPasswordCorrect = await bcrypt.compare(
-    currentPassword,
-    user.password
-  );
+  const isCurrentPasswordCorrect = await user.comparePassword(currentPassword);
 
   if (!isCurrentPasswordCorrect) {
     return next(new ErrorResponse("Current password is incorrect", 400));
   }
 
   // Check if new password is different from current
-  const isSamePassword = await bcrypt.compare(newPassword, user.password);
+  const isSamePassword = await user.comparePassword(newPassword);
 
   if (isSamePassword) {
     return next(
@@ -95,14 +92,19 @@ const changePassword = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Hash new password
-  const salt = await bcrypt.genSalt(12);
-  user.password = await bcrypt.hash(newPassword, salt);
+  // Set new password (pre-save middleware will handle hashing)
+  user.password = newPassword;
+
+  // Manually set passwordChangedAt to ensure it's before token generation
+  // Add a small buffer to avoid timing issues
+  const passwordChangeTime = new Date(Date.now() - 1000); // 1 second before now
+  user.security.passwordChangedAt = passwordChangeTime;
 
   // Save user
   await user.save();
 
   // Generate new JWT token (invalidates old token)
+  // Token will have iat > passwordChangedAt, so it will be valid
   const newToken = generateToken(user._id);
 
   // Log password change activity

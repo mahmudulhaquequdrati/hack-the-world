@@ -24,6 +24,7 @@ const baseQuery = fetchBaseQuery({
     // Add Authorization header for all non-public endpoints
     if (!publicEndpoints.includes(endpoint)) {
       const accessToken = getAccessToken();
+
       if (accessToken) {
         headers.set("Authorization", `Bearer ${accessToken}`);
       }

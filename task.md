@@ -207,7 +207,7 @@
   - **Completed**: Today
   - **Description**: Added comprehensive Swagger documentation for all authentication endpoints
   - **Features Completed**:
-    - ✅ Complete Swagger docs for all 8 auth endpoints (register, login, getCurrentUser, logout, forgotPassword, resetPassword, refreshToken, validateToken)
+    - ✅ Complete Swagger docs for all 6 auth endpoints (register, login, getCurrentUser, logout, forgotPassword, resetPassword)
     - ✅ Detailed security features documentation for each endpoint
     - ✅ Comprehensive request/response schemas with examples
     - ✅ Security requirements and rate limiting information
@@ -218,8 +218,6 @@
     - ✅ Frontend usage analysis completed
   - **Endpoint Usage Analysis**:
     - ✅ **USED IN FRONTEND**: register, login, getCurrentUser, logout, forgotPassword, resetPassword
-    - ⚠️ **LIMITED USAGE**: refreshToken (defined but not actively called in UI components)
-    - ⚠️ **LIMITED USAGE**: validateToken (auto-called by RTK Query but not used in UI logic)
   - **Files**:
     - `server/src/routes/auth.js` - Complete Swagger documentation added
 
@@ -441,10 +439,8 @@
 - ✅ POST /api/auth/register - User registration
 - ✅ POST /api/auth/login - User authentication
 - ✅ GET /api/auth/me - Get current user profile
-- ✅ POST /api/auth/refresh - Token refresh
 - ✅ POST /api/auth/logout - User logout
 - ✅ POST /api/auth/forgot-password - Password reset
-- ✅ GET /api/auth/validate-token - Token validation
 
 **Files Created/Modified:**
 

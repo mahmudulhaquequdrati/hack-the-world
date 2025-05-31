@@ -56,10 +56,6 @@ export interface ResetPasswordRequest {
   password: string;
 }
 
-export interface RefreshTokenRequest {
-  token: string;
-}
-
 export interface APIErrorResponse {
   success: false;
   message: string;
@@ -98,35 +94,6 @@ export const authApi = apiSlice.injectEndpoints({
       query: () => "/auth/me",
     }),
 
-    // Refresh token endpoint
-    refreshToken: builder.mutation<
-      { success: true; data: { token: string; expiresIn: string } },
-      RefreshTokenRequest
-    >({
-      query: (data) => ({
-        url: "/auth/refresh",
-        method: "POST",
-        body: data,
-      }),
-    }),
-
-    // Validate token endpoint
-    validateToken: builder.query<
-      {
-        success: true;
-        valid: true;
-        data: {
-          userId: string;
-          username: string;
-          role: string;
-          expiresAt: string;
-        };
-      },
-      void
-    >({
-      query: () => "/auth/validate-token",
-    }),
-
     // Forgot password endpoint
     forgotPassword: builder.mutation<
       { success: true; message: string },
@@ -162,8 +129,6 @@ export const {
   useRegisterMutation,
   useLoginMutation,
   useGetCurrentUserQuery,
-  useRefreshTokenMutation,
-  useValidateTokenQuery,
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useLogoutMutation,

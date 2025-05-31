@@ -220,14 +220,17 @@ Send password reset email.
 }
 ```
 
-### GET /api/auth/validate-token
+### POST /api/auth/reset-password
 
-Validate JWT token.
+Reset password with token.
 
-**Headers:**
+**Request Body:**
 
-```
-Authorization: Bearer <token>
+```json
+{
+  "token": "a1b2c3d4e5f6789012345678901234567890abcdef",
+  "password": "NewSecurePass123!"
+}
 ```
 
 **Response (200):**
@@ -235,12 +238,26 @@ Authorization: Bearer <token>
 ```json
 {
   "success": true,
-  "valid": true,
+  "message": "Password reset successfully",
   "data": {
-    "userId": "user_id",
-    "username": "cyberhacker2024",
-    "role": "student",
-    "expiresAt": "2024-01-22T10:30:00.000Z"
+    "user": {
+      "id": "user_id",
+      "username": "cyberhacker2024",
+      "email": "hacker@cybersec.com",
+      "profile": {
+        "firstName": "John",
+        "lastName": "Doe",
+        "displayName": "John Doe"
+      },
+      "experienceLevel": "beginner",
+      "stats": {
+        "totalPoints": 150,
+        "level": 2,
+        "coursesCompleted": 3
+      }
+    },
+    "token": "new_jwt_token",
+    "expiresIn": "7d"
   }
 }
 ```

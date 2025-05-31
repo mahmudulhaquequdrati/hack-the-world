@@ -9,10 +9,8 @@ import {
   useGetCurrentUserQuery,
   useLoginMutation,
   useLogoutMutation,
-  useRefreshTokenMutation,
   useRegisterMutation,
   useResetPasswordMutation,
-  useValidateTokenQuery,
   type APIErrorResponse,
   type AuthResponse,
   type LoginRequest,
@@ -20,7 +18,6 @@ import {
   type User,
 } from "@/features/auth/authApi";
 import {
-  clearAuth,
   logout as logoutAction,
   selectCurrentToken,
   selectCurrentUser,
@@ -53,15 +50,10 @@ export const useAuthRTK = () => {
     { isLoading: isResetPasswordLoading, error: resetPasswordError },
   ] = useResetPasswordMutation();
   const [logoutMutation] = useLogoutMutation();
-  const [refreshTokenMutation] = useRefreshTokenMutation();
 
   // Only run getCurrentUser query if we have a token
   const { error: getCurrentUserError, refetch: refetchCurrentUser } =
     useGetCurrentUserQuery(undefined, { skip: !token });
-
-  // Only run validate token if we have a token
-  const { data: tokenValidation, error: validateTokenError } =
-    useValidateTokenQuery(undefined, { skip: !token });
 
   // Register function
   const register = useCallback(
@@ -205,50 +197,6 @@ export const useAuthRTK = () => {
     }
   }, [refetchCurrentUser]);
 
-  // Refresh token function
-  const refreshToken = useCallback(async (): Promise<string> => {
-    if (!token) {
-      throw new Error("No token to refresh");
-    }
-
-    try {
-      const result = await refreshTokenMutation({ token }).unwrap();
-
-      // Update token in state
-      if (user) {
-        dispatch(
-          setCredentials({
-            user,
-            token: result.data.token,
-          })
-        );
-      }
-
-      return result.data.token;
-    } catch (error) {
-      // Clear auth state on refresh failure
-      dispatch(clearAuth());
-      const errorData = error as { data?: APIErrorResponse; message?: string };
-      throw new Error(
-        errorData?.data?.message || errorData?.message || "Token refresh failed"
-      );
-    }
-  }, [refreshTokenMutation, dispatch, token, user]);
-
-  // Validate token function
-  const validateToken = useCallback(async (): Promise<boolean> => {
-    if (!token) {
-      return false;
-    }
-
-    try {
-      return tokenValidation?.valid || false;
-    } catch (error) {
-      console.error("Token validation error:", error);
-      return false;
-    }
-  }, [token, tokenValidation]);
-
   // Clear error function
   const clearError = useCallback(() => {
     // Errors are handled by RTK Query, but we can provide a way to retry
@@ -287,8 +235,7 @@ export const useAuthRTK = () => {
     getErrorMessage(registerError) ||
     getErrorMessage(forgotPasswordError) ||
     getErrorMessage(resetPasswordError) ||
-    getErrorMessage(getCurrentUserError) ||
-    getErrorMessage(validateTokenError);
+    getErrorMessage(getCurrentUserError);
 
   return {
     // State
@@ -305,8 +252,6 @@ export const useAuthRTK = () => {
     forgotPassword,
     resetPassword,
     getCurrentUser,
-    refreshToken,
-    validateToken,
     clearError,
 
     // Additional RTK Query specific

@@ -159,49 +159,6 @@ const login = async (req, res, next) => {
 };
 
 /**
- * @desc    Refresh JWT token
- * @route   POST /api/auth/refresh
- * @access  Private
- */
-const refreshToken = async (req, res, next) => {
-  try {
-    const { token } = req.body;
-
-    if (!token) {
-      throw new APIError("Token is required", 400);
-    }
-
-    // Verify the existing token (even if expired)
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
-      ignoreExpiration: true,
-    });
-
-    // Find user
-    const user = await User.findById(decoded.userId);
-    if (!user || user.status !== "active") {
-      throw new APIError("User not found or inactive", 404);
-    }
-
-    // Generate new token
-    const newToken = generateToken(user._id);
-
-    res.json({
-      success: true,
-      message: "Token refreshed successfully",
-      data: {
-        token: newToken,
-        expiresIn: process.env.JWT_EXPIRES_IN || "7d",
-      },
-    });
-  } catch (error) {
-    if (error.name === "JsonWebTokenError") {
-      return next(new APIError("Invalid token", 401));
-    }
-    next(error);
-  }
-};
-
-/**
  * @desc    Get current user profile
  * @route   GET /api/auth/me
  * @access  Private
@@ -389,60 +346,11 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Validate JWT token
- * @route   GET /api/auth/validate-token
- * @access  Public
- */
-const validateToken = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.json({
-        success: false,
-        valid: false,
-        message: "No token provided",
-      });
-    }
-
-    const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.userId);
-    if (!user || user.status !== "active") {
-      return res.json({
-        success: false,
-        valid: false,
-        message: "User not found or inactive",
-      });
-    }
-
-    res.json({
-      success: true,
-      valid: true,
-      data: {
-        userId: user._id,
-        username: user.username,
-        role: user.role,
-        expiresAt: new Date(decoded.exp * 1000),
-      },
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      valid: false,
-      message: "Invalid or expired token",
-    });
-  }
-};
-
 module.exports = {
   register,
   login,
-  refreshToken,
   getCurrentUser,
   logout,
   forgotPassword,
   resetPassword,
-  validateToken,
 };

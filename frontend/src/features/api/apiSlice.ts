@@ -19,7 +19,6 @@ const baseQuery = fetchBaseQuery({
       "register",
       "forgot-password",
       "reset-password",
-      "validate-token",
     ];
 
     if (!publicEndpoints.includes(endpoint)) {

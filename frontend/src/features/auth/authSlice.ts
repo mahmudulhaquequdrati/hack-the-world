@@ -57,9 +57,6 @@ const authSlice = createSlice({
 
       // Clear token from localStorage
       localStorage.removeItem("hackToken");
-      // Remove old token names for cleanup (temporary migration code)
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
     },
 
     clearAuth: (state) => {
@@ -69,9 +66,6 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
 
       localStorage.removeItem("hackToken");
-      // Remove old token names for cleanup (temporary migration code)
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
     },
   },
 });

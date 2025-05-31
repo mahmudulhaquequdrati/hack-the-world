@@ -24,9 +24,7 @@ vi.mock("@/features/auth/authApi", () => ({
   useLogoutMutation: vi.fn(),
   useForgotPasswordMutation: vi.fn(),
   useResetPasswordMutation: vi.fn(),
-  useRefreshTokenMutation: vi.fn(),
   useGetCurrentUserQuery: vi.fn(),
-  useValidateTokenQuery: vi.fn(),
 }));
 
 // Mock data
@@ -96,53 +94,47 @@ const createWrapper = () => {
   );
 };
 
+// Import mocked authApi dynamically
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let mockAuthApi: any;
+
 describe("useAuthRTK", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     mockNavigate.mockClear();
     mockLocalStorage.getItem.mockClear();
     mockLocalStorage.setItem.mockClear();
     mockLocalStorage.removeItem.mockClear();
 
-    // Import mocked hooks
-    const authApi = require("@/features/auth/authApi");
+    // Import mocked hooks dynamically
+    mockAuthApi = await import("@/features/auth/authApi");
 
     // Default mock implementations
-    authApi.useLoginMutation.mockReturnValue([
+    mockAuthApi.useLoginMutation.mockReturnValue([
       vi.fn(),
       { isLoading: false, error: null, reset: vi.fn() },
     ]);
-    authApi.useRegisterMutation.mockReturnValue([
+    mockAuthApi.useRegisterMutation.mockReturnValue([
       vi.fn(),
       { isLoading: false, error: null, reset: vi.fn() },
     ]);
-    authApi.useLogoutMutation.mockReturnValue([
+    mockAuthApi.useLogoutMutation.mockReturnValue([
       vi.fn(),
       { isLoading: false, error: null, reset: vi.fn() },
     ]);
-    authApi.useForgotPasswordMutation.mockReturnValue([
+    mockAuthApi.useForgotPasswordMutation.mockReturnValue([
       vi.fn(),
       { isLoading: false, error: null, reset: vi.fn() },
     ]);
-    authApi.useResetPasswordMutation.mockReturnValue([
+    mockAuthApi.useResetPasswordMutation.mockReturnValue([
       vi.fn(),
       { isLoading: false, error: null, reset: vi.fn() },
     ]);
-    authApi.useRefreshTokenMutation.mockReturnValue([
-      vi.fn(),
-      { isLoading: false, error: null, reset: vi.fn() },
-    ]);
-    authApi.useGetCurrentUserQuery.mockReturnValue({
+    mockAuthApi.useGetCurrentUserQuery.mockReturnValue({
       error: null,
       refetch: vi.fn(),
       isLoading: false,
       data: null,
-    });
-    authApi.useValidateTokenQuery.mockReturnValue({
-      data: null,
-      error: null,
-      isLoading: false,
-      refetch: vi.fn(),
     });
   });
 
@@ -178,12 +170,11 @@ describe("useAuthRTK", () => {
 
   describe("Authentication Functions", () => {
     it("should handle successful login", async () => {
-      const authApi = require("@/features/auth/authApi");
       const mockMutation = vi.fn().mockResolvedValue({
         unwrap: () => Promise.resolve(mockAuthResponse),
       });
 
-      authApi.useLoginMutation.mockReturnValue([
+      mockAuthApi.useLoginMutation.mockReturnValue([
         mockMutation,
         { isLoading: false, error: null, reset: vi.fn() },
       ]);
@@ -212,12 +203,11 @@ describe("useAuthRTK", () => {
     });
 
     it("should handle logout", async () => {
-      const authApi = require("@/features/auth/authApi");
       const mockMutation = vi.fn().mockResolvedValue({
         unwrap: () => Promise.resolve({ success: true, message: "Logged out" }),
       });
 
-      authApi.useLogoutMutation.mockReturnValue([
+      mockAuthApi.useLogoutMutation.mockReturnValue([
         mockMutation,
         { isLoading: false, error: null, reset: vi.fn() },
       ]);
@@ -240,13 +230,12 @@ describe("useAuthRTK", () => {
 
   describe("Password Reset Functions", () => {
     it("should handle forgot password", async () => {
-      const authApi = require("@/features/auth/authApi");
       const mockMutation = vi.fn().mockResolvedValue({
         unwrap: () =>
           Promise.resolve({ success: true, message: "Reset email sent" }),
       });
 
-      authApi.useForgotPasswordMutation.mockReturnValue([
+      mockAuthApi.useForgotPasswordMutation.mockReturnValue([
         mockMutation,
         { isLoading: false, error: null, reset: vi.fn() },
       ]);
@@ -265,12 +254,11 @@ describe("useAuthRTK", () => {
     });
 
     it("should handle reset password", async () => {
-      const authApi = require("@/features/auth/authApi");
       const mockMutation = vi.fn().mockResolvedValue({
         unwrap: () => Promise.resolve(mockAuthResponse),
       });
 
-      authApi.useResetPasswordMutation.mockReturnValue([
+      mockAuthApi.useResetPasswordMutation.mockReturnValue([
         mockMutation,
         { isLoading: false, error: null, reset: vi.fn() },
       ]);
@@ -296,8 +284,7 @@ describe("useAuthRTK", () => {
 
   describe("Loading States", () => {
     it("should track loading state correctly", () => {
-      const authApi = require("@/features/auth/authApi");
-      authApi.useLoginMutation.mockReturnValue([
+      mockAuthApi.useLoginMutation.mockReturnValue([
         vi.fn(),
         { isLoading: true, error: null, reset: vi.fn() },
       ]);
@@ -312,13 +299,12 @@ describe("useAuthRTK", () => {
 
   describe("Error Handling", () => {
     it("should handle login errors correctly", async () => {
-      const authApi = require("@/features/auth/authApi");
       const mockError = {
         data: { message: "Invalid credentials" },
       };
       const mockMutation = vi.fn().mockRejectedValue(mockError);
 
-      authApi.useLoginMutation.mockReturnValue([
+      mockAuthApi.useLoginMutation.mockReturnValue([
         mockMutation,
         { isLoading: false, error: mockError, reset: vi.fn() },
       ]);
@@ -333,8 +319,8 @@ describe("useAuthRTK", () => {
             login: "test@example.com",
             password: "wrongpassword",
           });
-        } catch (error) {
-          expect(error.message).toBe("Invalid credentials");
+        } catch (error: unknown) {
+          expect((error as Error).message).toBe("Invalid credentials");
         }
       });
     });
@@ -342,12 +328,11 @@ describe("useAuthRTK", () => {
 
   describe("Security Best Practices", () => {
     it("should never store user data in localStorage", async () => {
-      const authApi = require("@/features/auth/authApi");
       const mockMutation = vi.fn().mockResolvedValue({
         unwrap: () => Promise.resolve(mockAuthResponse),
       });
 
-      authApi.useRegisterMutation.mockReturnValue([
+      mockAuthApi.useRegisterMutation.mockReturnValue([
         mockMutation,
         { isLoading: false, error: null, reset: vi.fn() },
       ]);

@@ -95,6 +95,11 @@ const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
+  // Preserve statusCode from custom ErrorResponse objects
+  if (err.statusCode) {
+    error.statusCode = err.statusCode;
+  }
+
   // Log error for debugging
   console.error("🚨 Error:", {
     message: err.message,
@@ -104,6 +109,14 @@ const errorHandler = (err, req, res, next) => {
     ip: req.ip,
     userAgent: req.get("User-Agent"),
   });
+
+  // Handle custom ErrorResponse objects (our module controller errors)
+  if (err.name === "ErrorResponse") {
+    return res.status(err.statusCode || 500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 
   // Mongoose bad ObjectId
   if (err.name === "CastError") error = handleCastErrorDB(error);

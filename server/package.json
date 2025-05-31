@@ -11,7 +11,14 @@
     "test:coverage": "jest --coverage",
     "test:auth": "jest --testPathPattern=auth",
     "test:phase": "jest --testPathPattern=phase",
-    "seed": "node src/utils/seedData.js"
+    "test:module": "jest --testPathPattern=module",
+    "seed": "node src/utils/seedData.js",
+    "seed:phases": "node scripts/seedPhases.js",
+    "seed:modules": "node scripts/seedModules.js",
+    "seed:modules:status": "node scripts/seedModules.js status",
+    "seed:modules:clear": "node scripts/seedModules.js clear",
+    "seed:modules:reseed": "node scripts/seedModules.js reseed",
+    "seed:all": "pnpm run seed:phases seed && pnpm run seed:modules seed"
   },
   "keywords": [
     "cybersecurity",

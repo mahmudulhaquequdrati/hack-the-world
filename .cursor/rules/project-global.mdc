@@ -66,7 +66,7 @@ hack-the-world/
 6. Verify feature works end-to-end
 
 ## 🎯 Quality Standards
-- Clean, readable code with proper TypeScript types
+- Clean, readable code with proper TypeScript types for frontend, JavaScript for backend/server
 - Consistent error handling patterns
 - Proper component organization
 - Security best practices implementation

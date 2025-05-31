@@ -10,6 +10,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:auth": "jest --testPathPattern=auth",
+    "test:phase": "jest --testPathPattern=phase",
     "seed": "node src/utils/seedData.js"
   },
   "keywords": [

@@ -1,0 +1,258 @@
+const express = require("express");
+const {
+  getPhases,
+  getPhase,
+  createPhase,
+  updatePhase,
+  deletePhase,
+} = require("../controllers/phaseController");
+
+const {
+  createPhaseValidation,
+  updatePhaseValidation,
+  phaseIdValidation,
+} = require("../middleware/validation/phaseValidation");
+
+// For future use when authentication is needed for admin operations
+// const { protect, authorize } = require('../middleware/auth');
+
+const router = express.Router();
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Phase:
+ *       type: object
+ *       required:
+ *         - phaseId
+ *         - title
+ *         - description
+ *         - icon
+ *         - color
+ *         - order
+ *       properties:
+ *         phaseId:
+ *           type: string
+ *           enum: [beginner, intermediate, advanced]
+ *           description: Unique identifier for the phase
+ *         title:
+ *           type: string
+ *           maxLength: 100
+ *           description: Display title for the phase
+ *         description:
+ *           type: string
+ *           maxLength: 500
+ *           description: Detailed description of the phase
+ *         icon:
+ *           type: string
+ *           maxLength: 50
+ *           description: Icon name for UI display
+ *         color:
+ *           type: string
+ *           pattern: '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
+ *           description: Hex color code for theming
+ *         order:
+ *           type: integer
+ *           minimum: 1
+ *           description: Display order for phases
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Phase creation timestamp
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Phase last update timestamp
+ *       example:
+ *         phaseId: "beginner"
+ *         title: "Beginner Phase"
+ *         description: "Foundation courses for cybersecurity beginners"
+ *         icon: "Lightbulb"
+ *         color: "#10B981"
+ *         order: 1
+ */
+
+/**
+ * @swagger
+ * /phases:
+ *   get:
+ *     summary: Get all phases
+ *     tags: [Phases]
+ *     responses:
+ *       200:
+ *         description: Phases retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 count:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Phase'
+ *   post:
+ *     summary: Create a new phase
+ *     tags: [Phases]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phaseId
+ *               - title
+ *               - description
+ *               - icon
+ *               - color
+ *               - order
+ *             properties:
+ *               phaseId:
+ *                 type: string
+ *                 enum: [beginner, intermediate, advanced]
+ *               title:
+ *                 type: string
+ *                 maxLength: 100
+ *               description:
+ *                 type: string
+ *                 maxLength: 500
+ *               icon:
+ *                 type: string
+ *                 maxLength: 50
+ *               color:
+ *                 type: string
+ *                 pattern: '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
+ *               order:
+ *                 type: integer
+ *                 minimum: 1
+ *     responses:
+ *       201:
+ *         description: Phase created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Phase'
+ *       400:
+ *         description: Validation error or phase already exists
+ */
+router.get("/", getPhases);
+
+router.post("/", createPhaseValidation, createPhase);
+
+/**
+ * @swagger
+ * /phases/{phaseId}:
+ *   get:
+ *     summary: Get a specific phase
+ *     tags: [Phases]
+ *     parameters:
+ *       - in: path
+ *         name: phaseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [beginner, intermediate, advanced]
+ *         description: Phase identifier
+ *     responses:
+ *       200:
+ *         description: Phase retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Phase'
+ *       404:
+ *         description: Phase not found
+ *   put:
+ *     summary: Update a specific phase
+ *     tags: [Phases]
+ *     parameters:
+ *       - in: path
+ *         name: phaseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [beginner, intermediate, advanced]
+ *         description: Phase identifier
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 maxLength: 100
+ *               description:
+ *                 type: string
+ *                 maxLength: 500
+ *               icon:
+ *                 type: string
+ *                 maxLength: 50
+ *               color:
+ *                 type: string
+ *                 pattern: '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
+ *               order:
+ *                 type: integer
+ *                 minimum: 1
+ *     responses:
+ *       200:
+ *         description: Phase updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Phase'
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: Phase not found
+ *   delete:
+ *     summary: Delete a specific phase
+ *     tags: [Phases]
+ *     parameters:
+ *       - in: path
+ *         name: phaseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [beginner, intermediate, advanced]
+ *         description: Phase identifier
+ *     responses:
+ *       200:
+ *         description: Phase deleted successfully
+ *       404:
+ *         description: Phase not found
+ */
+router.get("/:phaseId", phaseIdValidation, getPhase);
+router.put("/:phaseId", updatePhaseValidation, updatePhase);
+router.delete("/:phaseId", phaseIdValidation, deletePhase);
+
+module.exports = router;

@@ -13,7 +13,7 @@ const getAccessToken = () => {
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL || "http://localhost:5001/api",
   prepareHeaders: (headers, { endpoint }) => {
-    // Only add Authorization header if not public endpoints
+    // Public endpoints that don't need authorization
     const publicEndpoints = [
       "login",
       "register",
@@ -21,6 +21,7 @@ const baseQuery = fetchBaseQuery({
       "reset-password",
     ];
 
+    // Add Authorization header for all non-public endpoints
     if (!publicEndpoints.includes(endpoint)) {
       const accessToken = getAccessToken();
       if (accessToken) {
@@ -44,19 +45,6 @@ export const apiSlice = createApi({
     if ((result as { error?: FetchBaseQueryError })?.error?.status === 401) {
       // Clear auth data and redirect to login
       localStorage.removeItem("hackToken");
-      // Remove old token names for cleanup (temporary migration code)
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
-
-      // Only redirect if not already on a public page
-      if (
-        window.location.pathname !== "/login" &&
-        window.location.pathname !== "/signup" &&
-        window.location.pathname !== "/forgot-password" &&
-        !window.location.pathname.startsWith("/reset-password")
-      ) {
-        window.location.href = "/login";
-      }
     }
 
     return result;

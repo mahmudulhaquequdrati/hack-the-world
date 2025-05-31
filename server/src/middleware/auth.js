@@ -34,11 +34,6 @@ const protect = asyncHandler(async (req, res, next) => {
       return next(new ErrorResponse("No user found with this token", 404));
     }
 
-    // Check if user account is active
-    if (user.status !== "active") {
-      return next(new ErrorResponse("User account is not active", 401));
-    }
-
     // Check if password was changed after token was issued
     if (user.security.passwordChangedAt) {
       const changedTimestamp = Math.floor(
@@ -50,9 +45,6 @@ const protect = asyncHandler(async (req, res, next) => {
         );
       }
     }
-
-    // Update last active time
-    user.updateLastActive();
 
     // Attach user to request object
     req.user = user;

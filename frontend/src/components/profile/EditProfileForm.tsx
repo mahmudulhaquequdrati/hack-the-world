@@ -109,27 +109,36 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({
     }
 
     try {
-      // Filter out empty strings and send only changed fields
+      // Only send fields that have actual values
       const updateData: UpdateProfileRequest = {};
+
       Object.entries(formData).forEach(([key, value]) => {
+        const typedKey = key as keyof UpdateProfileRequest;
+        const currentValue =
+          user.profile[typedKey as keyof typeof user.profile];
+
         if (value && value.trim()) {
-          updateData[key as keyof UpdateProfileRequest] = value.trim();
-        } else if (value === "") {
-          // Allow clearing fields by sending empty string
-          updateData[key as keyof UpdateProfileRequest] = "";
+          // Send non-empty values
+          updateData[typedKey] = value.trim();
+        } else if (value === "" && currentValue && currentValue !== "") {
+          // Only send empty string if we're clearing a field that previously had a value
+          updateData[typedKey] = "";
         }
+        // Don't send anything if the field is empty and was already empty/undefined
       });
 
       await updateProfile(updateData).unwrap();
       // Success is handled by useEffect
     } catch (error: unknown) {
-      console.error("Failed to update profile:", error);
+      console.error("EditProfileForm: Failed to update profile:", error);
 
       // Handle validation errors from server
       if (error && typeof error === "object" && "data" in error) {
         const errorData = error.data as {
           errors?: Array<{ field?: string; msg: string }>;
+          message?: string;
         };
+
         if (errorData?.errors) {
           const serverErrors: Record<string, string> = {};
           errorData.errors.forEach((err) => {
@@ -138,7 +147,21 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({
             }
           });
           setErrors(serverErrors);
+        } else if (errorData?.message) {
+          setErrors({ form: errorData.message });
         }
+      } else if (error && typeof error === "object" && "status" in error) {
+        // Handle HTTP errors
+        const httpError = error as { status: number; data?: unknown };
+        if (httpError.status === 401) {
+          setErrors({ form: "Your session has expired. Please log in again." });
+        } else {
+          setErrors({
+            form: "An unexpected error occurred. Please try again.",
+          });
+        }
+      } else {
+        setErrors({ form: "An unexpected error occurred. Please try again." });
       }
     }
   };
@@ -197,6 +220,13 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({
 
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Form-level error display */}
+          {errors.form && (
+            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-red-400 text-sm">{errors.form}</p>
+            </div>
+          )}
+
           {/* Name Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">

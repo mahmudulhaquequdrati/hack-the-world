@@ -45,22 +45,35 @@ const mockUser: User = {
     achievementsEarned: 0,
   },
   createdAt: "2023-01-01T00:00:00.000Z",
+  updatedAt: "2023-01-01T00:00:00.000Z",
 };
 
 // Test store setup
-const createTestStore = () =>
+const createTestStore = (initialState = {}) =>
   configureStore({
     reducer: {
       api: apiSlice.reducer,
+      auth: (
+        state = { user: mockUser, token: "test-token", isAuthenticated: true }
+      ) => state,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(apiSlice.middleware),
+    preloadedState: {
+      auth: { user: mockUser, token: "test-token", isAuthenticated: true },
+      ...initialState,
+    },
   });
 
-const renderWithProvider = (component: React.ReactElement) => {
-  const store = createTestStore();
-  return render(<Provider store={store}>{component}</Provider>);
-};
+interface MockedProviderProps {
+  children: React.ReactNode;
+  store?: ReturnType<typeof createTestStore>;
+}
+
+const MockedProvider = ({
+  children,
+  store = createTestStore(),
+}: MockedProviderProps) => <Provider store={store}>{children}</Provider>;
 
 describe("EditProfileForm", () => {
   const mockOnCancel = vi.fn();
@@ -68,25 +81,34 @@ describe("EditProfileForm", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Set up localStorage mock
+    Object.defineProperty(window, "localStorage", {
+      value: {
+        getItem: vi.fn(() => "test-token"), // Mock token exists
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      },
+      writable: true,
+    });
+
+    // Default mock implementation
     mockUseUpdateProfileMutation.mockReturnValue([
       mockUpdateProfile,
-      {
-        isLoading: false,
-        isError: false,
-        isSuccess: false,
-        reset: vi.fn(),
-      },
-    ] as unknown as ReturnType<typeof useUpdateProfileMutation>);
+      { isLoading: false, isSuccess: false, error: null },
+    ]);
   });
 
   // 1. Render test
   it("should render without crashing", () => {
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     expect(screen.getByText("Edit Profile")).toBeInTheDocument();
@@ -97,12 +119,14 @@ describe("EditProfileForm", () => {
 
   // 2. Form fields test
   it("should display form fields with current user data", () => {
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     expect(screen.getByDisplayValue("John")).toBeInTheDocument();
@@ -117,12 +141,14 @@ describe("EditProfileForm", () => {
 
   // 3. Input interaction test
   it("should update form fields when user types", () => {
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     const firstNameInput = screen.getByDisplayValue("John");
@@ -133,12 +159,14 @@ describe("EditProfileForm", () => {
 
   // 4. Validation test
   it("should show validation error for invalid website URL", async () => {
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     const websiteInput = screen.getByDisplayValue("https://johndoe.com");
@@ -160,12 +188,14 @@ describe("EditProfileForm", () => {
   it("should call updateProfile and onSuccess when form is submitted successfully", async () => {
     mockUpdateProfile.mockResolvedValue({});
 
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     const firstNameInput = screen.getByDisplayValue("John");
@@ -189,12 +219,14 @@ describe("EditProfileForm", () => {
 
   // 6. Cancel functionality test
   it("should call onCancel when cancel button is clicked", () => {
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     const cancelButton = screen.getByText("Cancel");
@@ -215,12 +247,14 @@ describe("EditProfileForm", () => {
       },
     ] as unknown as ReturnType<typeof useUpdateProfileMutation>);
 
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     expect(screen.getByText("Updating...")).toBeInTheDocument();
@@ -229,12 +263,14 @@ describe("EditProfileForm", () => {
 
   // 8. Bio character count test
   it("should display bio character count", () => {
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     expect(screen.getByText("24/500")).toBeInTheDocument(); // "Cybersecurity enthusiast" is 24 chars
@@ -242,12 +278,14 @@ describe("EditProfileForm", () => {
 
   // 9. Field length validation test
   it("should show error for bio exceeding 500 characters", async () => {
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     const bioInput = screen.getByDisplayValue("Cybersecurity enthusiast");
@@ -274,12 +312,14 @@ describe("EditProfileForm", () => {
 
     mockUpdateProfile.mockRejectedValue(serverError);
 
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     const submitButton = screen.getByText("Save Changes");
@@ -292,12 +332,14 @@ describe("EditProfileForm", () => {
 
   it("should show unsaved changes badge when form is modified", async () => {
     const user = userEvent.setup();
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     // Initially no badge
@@ -313,12 +355,14 @@ describe("EditProfileForm", () => {
   });
 
   it("should disable save button when no changes are made", () => {
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     const saveButton = screen.getByRole("button", { name: /save changes/i });
@@ -327,12 +371,14 @@ describe("EditProfileForm", () => {
 
   it("should enable save button when changes are made", async () => {
     const user = userEvent.setup();
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     const firstNameInput = screen.getByLabelText("First Name");
@@ -349,12 +395,14 @@ describe("EditProfileForm", () => {
       { isLoading: true, isSuccess: false, isError: false },
     ]);
 
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     expect(screen.getByText("Updating...")).toBeInTheDocument();
@@ -375,12 +423,14 @@ describe("EditProfileForm", () => {
       { isLoading: false, isSuccess: true, isError: false },
     ]);
 
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     expect(screen.getByText("Profile Updated!")).toBeInTheDocument();
@@ -395,12 +445,14 @@ describe("EditProfileForm", () => {
     const user = userEvent.setup();
     mockUpdateProfile.mockResolvedValue({ data: { user: mockUser } });
 
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     // Modify first name
@@ -426,12 +478,14 @@ describe("EditProfileForm", () => {
 
   it("should validate website URL format", async () => {
     const user = userEvent.setup();
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     // Enter invalid website URL
@@ -456,12 +510,14 @@ describe("EditProfileForm", () => {
   });
 
   it("should show character count for bio field", () => {
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     expect(screen.getByText("24/500")).toBeInTheDocument(); // "Cybersecurity enthusiast" is 24 characters
@@ -469,12 +525,14 @@ describe("EditProfileForm", () => {
 
   it("should show warning color for bio when approaching limit", async () => {
     const user = userEvent.setup();
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     const bioInput = screen.getByLabelText("Bio");
@@ -487,12 +545,14 @@ describe("EditProfileForm", () => {
 
   it("should handle cancel button correctly", async () => {
     const user = userEvent.setup();
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     const cancelButton = screen.getByRole("button", { name: /cancel/i });
@@ -503,12 +563,14 @@ describe("EditProfileForm", () => {
 
   it("should clear field errors when user starts typing", async () => {
     const user = userEvent.setup();
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     // Enter invalid website URL to trigger error
@@ -547,12 +609,14 @@ describe("EditProfileForm", () => {
     const user = userEvent.setup();
     mockUpdateProfile.mockResolvedValue({ data: { user: mockUser } });
 
-    renderWithProvider(
-      <EditProfileForm
-        user={mockUser}
-        onCancel={mockOnCancel}
-        onSuccess={mockOnSuccess}
-      />
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
     );
 
     // Clear all optional fields
@@ -576,5 +640,331 @@ describe("EditProfileForm", () => {
         website: "",
       });
     });
+  });
+
+  it("should display token debug information in development", () => {
+    // Set NODE_ENV to development
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "development";
+
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={() => {}}
+          onSuccess={() => {}}
+        />
+      </MockedProvider>
+    );
+
+    expect(screen.getByText(/Debug - Token Status:/)).toBeInTheDocument();
+    expect(screen.getByText(/✓ Available/)).toBeInTheDocument();
+
+    // Restore original NODE_ENV
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it("should handle missing authentication token", () => {
+    // Mock store without token
+    const storeWithoutToken = createTestStore({
+      auth: { user: mockUser, token: null, isAuthenticated: false },
+    });
+
+    // Mock localStorage without token
+    Object.defineProperty(window, "localStorage", {
+      value: {
+        getItem: vi.fn(() => null), // No token
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      },
+      writable: true,
+    });
+
+    render(
+      <MockedProvider store={storeWithoutToken}>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
+    );
+
+    // Try to submit the form
+    const submitButton = screen.getByRole("button", { name: /save changes/i });
+    fireEvent.click(submitButton);
+
+    expect(
+      screen.getByText("You must be logged in to update your profile")
+    ).toBeInTheDocument();
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
+  });
+
+  it("should handle 401 unauthorized error", async () => {
+    const mockError = {
+      status: 401,
+      data: { message: "Unauthorized" },
+    };
+
+    mockUpdateProfile.mockRejectedValueOnce(mockError);
+    mockUseUpdateProfileMutation.mockReturnValue([
+      mockUpdateProfile,
+      { isLoading: false, isSuccess: false, error: mockError },
+    ]);
+
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
+    );
+
+    const firstNameInput = screen.getByLabelText("First Name");
+    await userEvent.clear(firstNameInput);
+    await userEvent.type(firstNameInput, "Jane");
+
+    const submitButton = screen.getByRole("button", { name: /save changes/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Your session has expired. Please log in again.")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("should call updateProfile and onSuccess when form is submitted successfully", async () => {
+    const mockOnSuccess = vi.fn();
+
+    mockUpdateProfile.mockResolvedValueOnce({
+      success: true,
+      message: "Profile updated successfully",
+      data: {
+        user: {
+          ...mockUser,
+          profile: { ...mockUser.profile, firstName: "Jane" },
+        },
+      },
+    });
+
+    mockUseUpdateProfileMutation.mockReturnValue([
+      mockUpdateProfile,
+      { isLoading: false, isSuccess: true, error: null },
+    ]);
+
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
+    );
+
+    const firstNameInput = screen.getByLabelText("First Name");
+    await userEvent.clear(firstNameInput);
+    await userEvent.type(firstNameInput, "Jane");
+
+    const submitButton = screen.getByRole("button", { name: /save changes/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockUpdateProfile).toHaveBeenCalledWith({
+        firstName: "Jane",
+        lastName: "Doe",
+        displayName: "John Doe",
+        bio: "Cybersecurity enthusiast",
+        location: "New York",
+        website: "https://johndoe.com",
+      });
+    });
+  });
+
+  it("should handle server validation errors", async () => {
+    const mockError = {
+      data: {
+        errors: [{ field: "firstName", msg: "First name is required" }],
+      },
+    };
+
+    mockUpdateProfile.mockRejectedValueOnce(mockError);
+
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
+    );
+
+    const firstNameInput = screen.getByLabelText("First Name");
+    await userEvent.clear(firstNameInput);
+
+    const submitButton = screen.getByRole("button", { name: /save changes/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("First name is required")).toBeInTheDocument();
+    });
+  });
+
+  it("should display unsaved changes badge when form has changes", async () => {
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
+    );
+
+    // Initially no unsaved changes badge
+    expect(screen.queryByText("Unsaved Changes")).not.toBeInTheDocument();
+
+    // Make a change
+    const firstNameInput = screen.getByLabelText("First Name");
+    await userEvent.clear(firstNameInput);
+    await userEvent.type(firstNameInput, "Jane");
+
+    // Now unsaved changes badge should appear
+    expect(screen.getByText("Unsaved Changes")).toBeInTheDocument();
+  });
+
+  it("should validate website URL format", async () => {
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
+    );
+
+    const websiteInput = screen.getByLabelText("Website");
+    await userEvent.clear(websiteInput);
+    await userEvent.type(websiteInput, "invalid-url");
+
+    const submitButton = screen.getByRole("button", { name: /save changes/i });
+    fireEvent.click(submitButton);
+
+    expect(
+      screen.getByText(
+        "Website must be a valid URL starting with http:// or https://"
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("should clear field errors when user starts typing", async () => {
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
+    );
+
+    const websiteInput = screen.getByLabelText("Website");
+    await userEvent.clear(websiteInput);
+    await userEvent.type(websiteInput, "invalid-url");
+
+    const submitButton = screen.getByRole("button", { name: /save changes/i });
+    fireEvent.click(submitButton);
+
+    expect(
+      screen.getByText(
+        "Website must be a valid URL starting with http:// or https://"
+      )
+    ).toBeInTheDocument();
+
+    // Start typing a valid URL
+    await userEvent.clear(websiteInput);
+    await userEvent.type(websiteInput, "https://valid-url.com");
+
+    // Error should be cleared
+    expect(
+      screen.queryByText(
+        "Website must be a valid URL starting with http:// or https://"
+      )
+    ).not.toBeInTheDocument();
+  });
+
+  it("should display character count for bio field", () => {
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
+    );
+
+    expect(screen.getByText("24/500")).toBeInTheDocument();
+  });
+
+  it("should warn when bio approaches character limit", async () => {
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
+    );
+
+    const bioTextarea = screen.getByLabelText("Bio");
+    await userEvent.clear(bioTextarea);
+    await userEvent.type(bioTextarea, "x".repeat(451)); // Over 450 characters
+
+    const characterCount = screen.getByText(/451\/500/);
+    expect(characterCount).toHaveClass("text-yellow-400");
+  });
+
+  it("should disable save button when no changes are made", () => {
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
+    );
+
+    const submitButton = screen.getByRole("button", { name: /save changes/i });
+    expect(submitButton).toBeDisabled();
+  });
+
+  it("should enable save button when changes are made", async () => {
+    render(
+      <MockedProvider>
+        <EditProfileForm
+          user={mockUser}
+          onCancel={mockOnCancel}
+          onSuccess={mockOnSuccess}
+        />
+      </MockedProvider>
+    );
+
+    const submitButton = screen.getByRole("button", { name: /save changes/i });
+    expect(submitButton).toBeDisabled();
+
+    const firstNameInput = screen.getByLabelText("First Name");
+    await userEvent.clear(firstNameInput);
+    await userEvent.type(firstNameInput, "Jane");
+
+    expect(submitButton).not.toBeDisabled();
   });
 });

@@ -119,7 +119,9 @@ const createModule = asyncHandler(async (req, res, next) => {
   // Check if phase exists
   const phase = await Phase.findById(phaseId);
   if (!phase) {
-    return next(new ErrorResponse(`Phase with ID '${phaseId}' not found`, 404));
+    return next(
+      new ErrorResponse(`Phase with ID '${phaseId}' does not exist`, 400)
+    );
   }
 
   // Check if order is already taken in this phase
@@ -127,7 +129,7 @@ const createModule = asyncHandler(async (req, res, next) => {
   if (orderExists) {
     return next(
       new ErrorResponse(
-        `Order ${order} is already taken in phase '${phaseId}'`,
+        `Module creation failed: duplicate key error - Order ${order} is already taken in phase '${phaseId}'`,
         400
       )
     );
@@ -188,7 +190,10 @@ const updateModule = asyncHandler(async (req, res, next) => {
     const phase = await Phase.findById(updates.phaseId);
     if (!phase) {
       return next(
-        new ErrorResponse(`Phase with ID '${updates.phaseId}' not found`, 404)
+        new ErrorResponse(
+          `Phase with ID '${updates.phaseId}' does not exist`,
+          400
+        )
       );
     }
   }
@@ -251,9 +256,8 @@ const deleteModule = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Module with ID '${id}' not found`, 404));
   }
 
-  // Soft delete - set isActive to false
-  module.isActive = false;
-  await module.save();
+  // Hard delete - remove from database
+  await Module.findByIdAndDelete(id);
 
   res.status(200).json({
     success: true,

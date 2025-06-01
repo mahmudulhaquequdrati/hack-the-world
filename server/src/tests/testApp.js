@@ -12,8 +12,8 @@ const errorHandler = require("../middleware/errorHandler");
 const authRoutes = require("../routes/auth");
 const profileRoutes = require("../routes/profile");
 const phaseRoutes = require("../routes/phase");
+const moduleRoutes = require("../routes/modules");
 // TODO: Add these routes when they are created
-// const moduleRoutes = require("../routes/modules");
 // const gameRoutes = require("../routes/games");
 // const labRoutes = require("../routes/labs");
 // const userRoutes = require("../routes/users");
@@ -117,6 +117,7 @@ if (process.env.NODE_ENV === "test") {
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/phases", phaseRoutes);
+app.use("/api/modules", moduleRoutes);
 
 // API documentation route
 app.get("/api", (req, res) => {
@@ -128,6 +129,7 @@ app.get("/api", (req, res) => {
       auth: "/api/auth",
       profile: "/api/profile",
       phases: "/api/phases",
+      modules: "/api/modules",
     },
   });
 });

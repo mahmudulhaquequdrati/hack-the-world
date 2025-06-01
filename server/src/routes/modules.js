@@ -12,6 +12,7 @@ const {
 
 // Import validation middleware (we'll create this)
 const { validateRequest } = require("../middleware/validation");
+const { protect, requireAdmin } = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -22,25 +23,24 @@ const router = express.Router();
  *     Module:
  *       type: object
  *       required:
- *         - moduleId
  *         - phaseId
  *         - title
  *         - description
  *         - icon
- *         - duration
  *         - difficulty
  *         - color
  *         - order
  *       properties:
- *         moduleId:
+ *         id:
  *           type: string
- *           description: Unique module identifier
- *           example: "foundations"
+ *           format: objectId
+ *           description: MongoDB ObjectId for the module
+ *           example: "60d5ecf8c72b3c001f8e4d23"
  *         phaseId:
  *           type: string
- *           enum: [beginner, intermediate, advanced]
- *           description: Reference to parent phase
- *           example: "beginner"
+ *           format: objectId
+ *           description: Reference to parent phase ObjectId
+ *           example: "60d5ecf8c72b3c001f8e4d22"
  *         title:
  *           type: string
  *           maxLength: 100
@@ -59,7 +59,7 @@ const router = express.Router();
  *         duration:
  *           type: string
  *           maxLength: 50
- *           description: Estimated duration
+ *           description: Estimated duration (auto-calculated)
  *           example: "4 hours"
  *         difficulty:
  *           type: string
@@ -74,13 +74,13 @@ const router = express.Router();
  *         path:
  *           type: string
  *           maxLength: 100
- *           description: Course detail page path
- *           example: "/course/foundations"
+ *           description: Course detail page path (auto-generated)
+ *           example: "/course/60d5ecf8c72b3c001f8e4d23"
  *         enrollPath:
  *           type: string
  *           maxLength: 100
- *           description: Enrollment path
- *           example: "/learn/foundations"
+ *           description: Enrollment path (auto-generated)
+ *           example: "/learn/60d5ecf8c72b3c001f8e4d23"
  *         order:
  *           type: number
  *           minimum: 1
@@ -101,12 +101,19 @@ const router = express.Router();
  *           type: array
  *           items:
  *             type: string
- *           description: Prerequisites for this module
+ *             format: objectId
+ *           description: Prerequisites module ObjectIds
  *         learningOutcomes:
  *           type: array
  *           items:
  *             type: string
  *           description: Expected learning outcomes
+ *         content:
+ *           type: object
+ *           description: Content arrays and statistics
+ *         contentStats:
+ *           type: object
+ *           description: Auto-calculated content statistics
  */
 
 /**
@@ -120,8 +127,8 @@ const router = express.Router();
  *         name: phase
  *         schema:
  *           type: string
- *           enum: [beginner, intermediate, advanced]
- *         description: Filter modules by phase
+ *           format: objectId
+ *         description: Filter modules by phase ObjectId
  *       - in: query
  *         name: grouped
  *         schema:
@@ -173,8 +180,9 @@ router.get("/", getModules);
  *                   items:
  *                     type: object
  *                     properties:
- *                       phaseId:
+ *                       id:
  *                         type: string
+ *                         format: objectId
  *                       title:
  *                         type: string
  *                       description:
@@ -198,11 +206,13 @@ router.get("/with-phases", getModulesWithPhases);
  *         required: true
  *         schema:
  *           type: string
- *           enum: [beginner, intermediate, advanced]
- *         description: Phase ID to get modules for
+ *           format: objectId
+ *         description: Phase ObjectId
  *     responses:
  *       200:
  *         description: Modules for phase retrieved successfully
+ *       400:
+ *         description: Invalid phase ObjectId format
  *       404:
  *         description: Phase not found
  */
@@ -210,108 +220,189 @@ router.get("/phase/:phaseId", getModulesByPhase);
 
 /**
  * @swagger
- * /modules/{moduleId}:
+ * /modules/{id}:
  *   get:
- *     summary: Get single module by ID
+ *     summary: Get a specific module
  *     tags: [Modules]
  *     parameters:
  *       - in: path
- *         name: moduleId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Module ID
+ *           format: objectId
+ *         description: Module ObjectId
  *     responses:
  *       200:
  *         description: Module retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Module'
+ *       400:
+ *         description: Invalid module ObjectId format
  *       404:
  *         description: Module not found
  */
-router.get("/:moduleId", getModule);
+router.get("/:id", getModule);
 
 /**
  * @swagger
  * /modules:
  *   post:
- *     summary: Create new module
+ *     summary: Create a new module
  *     tags: [Modules]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Module'
+ *             type: object
+ *             required:
+ *               - phaseId
+ *               - title
+ *               - description
+ *               - icon
+ *               - difficulty
+ *               - color
+ *               - order
+ *             properties:
+ *               phaseId:
+ *                 type: string
+ *                 format: objectId
+ *               title:
+ *                 type: string
+ *                 maxLength: 100
+ *               description:
+ *                 type: string
+ *                 maxLength: 500
+ *               icon:
+ *                 type: string
+ *                 maxLength: 50
+ *               difficulty:
+ *                 type: string
+ *                 enum: [Beginner, Intermediate, Advanced, Expert]
+ *               color:
+ *                 type: string
+ *                 maxLength: 50
+ *               order:
+ *                 type: number
+ *                 minimum: 1
+ *               topics:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               prerequisites:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: objectId
+ *               learningOutcomes:
+ *                 type: array
+ *                 items:
+ *                   type: string
  *     responses:
  *       201:
  *         description: Module created successfully
  *       400:
- *         description: Validation error or duplicate module
- *       401:
- *         description: Unauthorized
+ *         description: Validation error or duplicate order
  *       404:
  *         description: Phase not found
  */
-router.post("/", validateRequest("createModule"), createModule);
+router.post("/", protect, requireAdmin, createModule);
 
 /**
  * @swagger
- * /modules/{moduleId}:
+ * /modules/{id}:
  *   put:
- *     summary: Update module
+ *     summary: Update a module
  *     tags: [Modules]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: moduleId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Module ID to update
+ *           format: objectId
+ *         description: Module ObjectId
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Module'
+ *             type: object
+ *             properties:
+ *               phaseId:
+ *                 type: string
+ *                 format: objectId
+ *               title:
+ *                 type: string
+ *                 maxLength: 100
+ *               description:
+ *                 type: string
+ *                 maxLength: 500
+ *               icon:
+ *                 type: string
+ *                 maxLength: 50
+ *               difficulty:
+ *                 type: string
+ *                 enum: [Beginner, Intermediate, Advanced, Expert]
+ *               color:
+ *                 type: string
+ *                 maxLength: 50
+ *               order:
+ *                 type: number
+ *                 minimum: 1
+ *               topics:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               prerequisites:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: objectId
+ *               learningOutcomes:
+ *                 type: array
+ *                 items:
+ *                   type: string
  *     responses:
  *       200:
  *         description: Module updated successfully
  *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
+ *         description: Invalid ObjectId format or validation error
  *       404:
  *         description: Module or phase not found
- */
-router.put("/:moduleId", validateRequest("updateModule"), updateModule);
-
-/**
- * @swagger
- * /modules/{moduleId}:
  *   delete:
- *     summary: Delete module (soft delete)
+ *     summary: Delete a module (soft delete)
  *     tags: [Modules]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: moduleId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Module ID to delete
+ *           format: objectId
+ *         description: Module ObjectId
  *     responses:
  *       200:
  *         description: Module deleted successfully
- *       401:
- *         description: Unauthorized
+ *       400:
+ *         description: Invalid module ObjectId format
  *       404:
  *         description: Module not found
  */
-router.delete("/:moduleId", deleteModule);
+router
+  .route("/:id")
+  .put(protect, requireAdmin, updateModule)
+  .delete(protect, requireAdmin, deleteModule);
 
 /**
  * @swagger
@@ -319,22 +410,22 @@ router.delete("/:moduleId", deleteModule);
  *   put:
  *     summary: Reorder modules within a phase
  *     tags: [Modules]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: phaseId
  *         required: true
  *         schema:
  *           type: string
- *           enum: [beginner, intermediate, advanced]
- *         description: Phase ID
+ *           format: objectId
+ *         description: Phase ObjectId
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - moduleOrders
  *             properties:
  *               moduleOrders:
  *                 type: array
@@ -343,28 +434,18 @@ router.delete("/:moduleId", deleteModule);
  *                   properties:
  *                     moduleId:
  *                       type: string
+ *                       format: objectId
  *                     order:
  *                       type: number
- *             example:
- *               moduleOrders:
- *                 - moduleId: "foundations"
- *                   order: 1
- *                 - moduleId: "linux-basics"
- *                   order: 2
+ *                       minimum: 1
  *     responses:
  *       200:
  *         description: Module order updated successfully
  *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
+ *         description: Invalid ObjectId format or validation error
  *       404:
- *         description: Phase or modules not found
+ *         description: Phase not found or modules don't belong to phase
  */
-router.put(
-  "/phase/:phaseId/reorder",
-  validateRequest("reorderModules"),
-  reorderModules
-);
+router.put("/phase/:phaseId/reorder", protect, requireAdmin, reorderModules);
 
 module.exports = router;

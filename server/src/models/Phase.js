@@ -4,24 +4,12 @@ const mongoose = require("mongoose");
  * Phase Schema
  * Based on PHASES array from frontend appData.ts
  * Represents learning phases (Beginner, Intermediate, Advanced)
+ * Uses MongoDB ObjectId as primary identifier
  */
 const phaseSchema = new mongoose.Schema(
   {
-    // Unique identifier for the phase
-    phaseId: {
-      type: String,
-      required: [true, "Phase ID is required"],
-      unique: true,
-      trim: true,
-      set: function (value) {
-        // Convert to lowercase before validation
-        return value ? value.toLowerCase() : value;
-      },
-      enum: {
-        values: ["beginner", "intermediate", "advanced"],
-        message: "Phase ID must be one of: beginner, intermediate, advanced",
-      },
-    },
+    // MongoDB ObjectId will be used as the primary identifier
+    // Remove custom phaseId field - use _id instead
 
     // Phase title
     title: {
@@ -71,8 +59,8 @@ const phaseSchema = new mongoose.Schema(
     toJSON: {
       virtuals: true,
       transform: function (doc, ret) {
-        // Remove MongoDB's _id field from JSON output
-        delete ret._id;
+        // Include _id as id in JSON output for frontend compatibility
+        ret.id = ret._id;
         delete ret.__v;
         return ret;
       },
@@ -81,14 +69,14 @@ const phaseSchema = new mongoose.Schema(
   }
 );
 
-// No additional indexes needed - phaseId and order already have unique constraints
-// which automatically create single-field indexes in MongoDB
+// Index for order (unique constraint automatically creates index)
+// No additional indexes needed - order already has unique constraint
 
-// Pre-save middleware for validation
+// Pre-save middleware to prevent _id modification
 phaseSchema.pre("save", function (next) {
-  // Ensure phaseId is lowercase
-  if (this.phaseId) {
-    this.phaseId = this.phaseId.toLowerCase();
+  // Prevent modification of _id after document creation
+  if (!this.isNew && this.isModified("_id")) {
+    return next(new Error("Phase ID cannot be modified after creation"));
   }
   next();
 });

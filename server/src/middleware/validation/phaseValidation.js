@@ -1,4 +1,5 @@
 const { body, param, validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 
 const validateRequest = (req, res, next) => {
   const errors = validationResult(req);
@@ -13,14 +14,6 @@ const validateRequest = (req, res, next) => {
 };
 
 const createPhaseValidation = [
-  body("phaseId")
-    .notEmpty()
-    .withMessage("Phase ID is required")
-    .isIn(["beginner", "intermediate", "advanced"])
-    .withMessage("Phase ID must be one of: beginner, intermediate, advanced")
-    .trim()
-    .escape(),
-
   body("title")
     .notEmpty()
     .withMessage("Phase title is required")
@@ -63,16 +56,6 @@ const createPhaseValidation = [
 ];
 
 const updatePhaseValidation = [
-  param("phaseId")
-    .notEmpty()
-    .withMessage("Phase ID is required")
-    .isLength({ min: 1, max: 50 })
-    .withMessage("Phase ID must be between 1 and 50 characters")
-    .matches(/^[a-zA-Z0-9]+$/)
-    .withMessage("Phase ID can only contain letters and numbers")
-    .trim()
-    .escape(),
-
   body("title")
     .optional()
     .isLength({ min: 1, max: 100 })
@@ -111,16 +94,16 @@ const updatePhaseValidation = [
   validateRequest,
 ];
 
-const phaseIdValidation = [
-  param("phaseId")
+const objectIdValidation = [
+  param("id")
     .notEmpty()
-    .withMessage("Phase ID is required")
-    .isLength({ min: 1, max: 50 })
-    .withMessage("Phase ID must be between 1 and 50 characters")
-    .matches(/^[a-zA-Z0-9]+$/)
-    .withMessage("Phase ID can only contain letters and numbers")
-    .trim()
-    .escape(),
+    .withMessage("ID is required")
+    .custom((value) => {
+      if (!mongoose.Types.ObjectId.isValid(value)) {
+        throw new Error("Invalid ObjectId format");
+      }
+      return true;
+    }),
 
   validateRequest,
 ];
@@ -128,5 +111,5 @@ const phaseIdValidation = [
 module.exports = {
   createPhaseValidation,
   updatePhaseValidation,
-  phaseIdValidation,
+  objectIdValidation,
 };

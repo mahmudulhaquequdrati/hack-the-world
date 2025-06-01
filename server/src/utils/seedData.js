@@ -18,34 +18,25 @@ const { getDatabaseStatus, resetCollection } = require("./dbUtils");
 // Phase data (from appData.ts PHASES array)
 const PHASES_DATA = [
   {
-    phaseId: "beginner",
     title: "Beginner Phase",
     description: "Foundation courses for cybersecurity beginners",
     icon: "Lightbulb",
     color: "#10B981",
     order: 1,
-    estimatedDuration: "4-6 weeks",
-    difficultyLevel: 1,
   },
   {
-    phaseId: "intermediate",
     title: "Intermediate Phase",
     description: "Advanced security concepts and practical skills",
     icon: "Target",
     color: "#F59E0B",
     order: 2,
-    estimatedDuration: "6-8 weeks",
-    difficultyLevel: 3,
   },
   {
-    phaseId: "advanced",
     title: "Advanced Phase",
     description: "Expert-level security specializations",
     icon: "Brain",
     color: "#EF4444",
     order: 3,
-    estimatedDuration: "8-12 weeks",
-    difficultyLevel: 5,
   },
 ];
 
@@ -53,7 +44,6 @@ const PHASES_DATA = [
 const MODULES_DATA = [
   // Beginner Phase Modules
   {
-    id: "foundations",
     phaseId: "beginner",
     title: "Cybersecurity Fundamentals",
     description: "Essential concepts, terminology, and security principles",
@@ -88,7 +78,6 @@ const MODULES_DATA = [
     tags: ["fundamentals", "security", "basics"],
   },
   {
-    id: "linux-basics",
     phaseId: "beginner",
     title: "Linux Command Line Basics",
     description: "Master the terminal and basic command-line operations",
@@ -119,7 +108,6 @@ const MODULES_DATA = [
     tags: ["linux", "command-line", "terminal"],
   },
   {
-    id: "networking-basics",
     phaseId: "beginner",
     title: "Networking Fundamentals",
     description: "Understanding network protocols and basic concepts",
@@ -146,7 +134,6 @@ const MODULES_DATA = [
     tags: ["networking", "protocols", "tcp-ip"],
   },
   {
-    id: "web-security-intro",
     phaseId: "beginner",
     title: "Introduction to Web Security",
     description:
@@ -175,7 +162,6 @@ const MODULES_DATA = [
   },
   // Intermediate Phase Modules
   {
-    id: "penetration-testing",
     phaseId: "intermediate",
     title: "Penetration Testing Fundamentals",
     description: "Learn ethical hacking and penetration testing basics",
@@ -206,7 +192,6 @@ const MODULES_DATA = [
     tags: ["penetration-testing", "ethical-hacking", "reconnaissance"],
   },
   {
-    id: "web-application-security",
     phaseId: "intermediate",
     title: "Web Application Security",
     description: "Advanced web vulnerabilities and exploitation techniques",
@@ -261,12 +246,11 @@ async function seedPhases() {
   try {
     console.log("🌱 Seeding phases...");
 
-    await resetCollection(Phase, "phases");
+    await resetCollection(Phase, PHASES_DATA, "phases");
 
-    const phases = await Phase.insertMany(PHASES_DATA);
-    console.log(`✅ Created ${phases.length} phases`);
+    console.log(`✅ Created ${PHASES_DATA.length} phases`);
 
-    return phases;
+    return PHASES_DATA;
   } catch (error) {
     console.error("❌ Error seeding phases:", error.message);
     throw error;
@@ -280,18 +264,59 @@ async function seedModules() {
   try {
     console.log("🌱 Seeding modules...");
 
-    await resetCollection(Module, "modules");
-
-    // Remove path and enrollPath from seed data since they're no longer in schema
-    const cleanModuleData = MODULES_DATA.map((module) => {
-      const { path, enrollPath, ...cleanModule } = module;
-      return cleanModule;
+    // First, get all phases to map names to ObjectIds
+    const phases = await Phase.find({});
+    const phaseMap = {};
+    phases.forEach((phase) => {
+      // Map phase titles to ObjectIds
+      if (phase.title.includes("Beginner")) phaseMap["beginner"] = phase._id;
+      if (phase.title.includes("Intermediate"))
+        phaseMap["intermediate"] = phase._id;
+      if (phase.title.includes("Advanced")) phaseMap["advanced"] = phase._id;
     });
 
-    const modules = await Module.insertMany(cleanModuleData);
-    console.log(`✅ Created ${modules.length} modules`);
+    console.log("Phase mapping:", phaseMap);
 
-    return modules;
+    // Remove fields not in schema and restructure content to match schema
+    const cleanModuleData = MODULES_DATA.map((module) => {
+      const {
+        moduleId,
+        path,
+        enrollPath,
+        bgColor,
+        borderColor,
+        tags,
+        content,
+        ...cleanModule
+      } = module;
+
+      // Map string phaseId to ObjectId
+      const phaseObjectId = phaseMap[module.phaseId];
+      if (!phaseObjectId) {
+        throw new Error(`Phase not found for phaseId: ${module.phaseId}`);
+      }
+
+      // Restructure content to match schema (only videos, labs, games, documents arrays)
+      const cleanContent = {
+        videos: content?.videos || [],
+        labs: content?.labs || [],
+        games: content?.games || [],
+        documents: content?.documents || [],
+      };
+
+      return {
+        ...cleanModule,
+        phaseId: phaseObjectId, // Use ObjectId instead of string
+        content: cleanContent,
+        topics: tags || [], // Map tags to topics field in schema
+      };
+    });
+
+    await resetCollection(Module, cleanModuleData, "modules");
+
+    console.log(`✅ Created ${cleanModuleData.length} modules`);
+
+    return cleanModuleData;
   } catch (error) {
     console.error("❌ Error seeding modules:", error.message);
     throw error;

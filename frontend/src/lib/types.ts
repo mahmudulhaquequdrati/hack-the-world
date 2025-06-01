@@ -1,7 +1,7 @@
 import { LucideIcon } from "lucide-react";
 
 export interface Module {
-  id: string;
+  id: string; // MongoDB ObjectId as string
   title: string;
   description: string;
   icon: LucideIcon;
@@ -17,10 +17,11 @@ export interface Module {
   assets: number;
   enrolled: boolean;
   completed: boolean;
+  phaseId?: string; // MongoDB ObjectId as string - optional for backwards compatibility
 }
 
 export interface Phase {
-  id: string;
+  id: string; // MongoDB ObjectId as string
   title: string;
   description: string;
   icon: LucideIcon;

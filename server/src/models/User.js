@@ -92,6 +92,22 @@ const userSchema = new mongoose.Schema(
       default: "beginner",
     },
 
+    // User role - for access control
+    role: {
+      type: String,
+      enum: ["student", "admin"],
+      default: "student",
+    },
+
+    // Admin status - for admin account approval
+    adminStatus: {
+      type: String,
+      enum: ["pending", "active", "suspended"],
+      default: function () {
+        return this.role === "admin" ? "pending" : "active";
+      },
+    },
+
     // Learning statistics - displayed in UserAvatar and dashboard
     stats: {
       totalPoints: {
@@ -164,6 +180,9 @@ const userSchema = new mongoose.Schema(
 
 // Indexes for performance
 userSchema.index({ experienceLevel: 1 });
+userSchema.index({ role: 1 });
+userSchema.index({ adminStatus: 1 });
+userSchema.index({ role: 1, adminStatus: 1 }); // Compound index for admin queries
 userSchema.index({ "stats.totalPoints": -1 });
 userSchema.index({ createdAt: -1 });
 
@@ -226,6 +245,8 @@ userSchema.methods.toPublicJSON = function () {
     email: this.email,
     profile: this.profile,
     experienceLevel: this.experienceLevel,
+    role: this.role,
+    adminStatus: this.adminStatus,
     stats: this.stats,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,

@@ -54,7 +54,7 @@ hack-the-world/
 - **ALWAYS** prioritize reusable components
 
 ## 📊 Data Sources
-- **Single Source of Truth**: [frontend/src/lib/appData.ts](mdc:frontend/src/lib/appData.ts)
+<!-- - **Single Source of Truth**: [frontend/src/lib/appData.ts](mdc:frontend/src/lib/appData.ts) -->
 - **API Base URL**: `http://localhost:5001/api`
 - **Database**: MongoDB with Mongoose ODM
 

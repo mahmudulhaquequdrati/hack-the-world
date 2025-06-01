@@ -10,11 +10,10 @@ const {
 const {
   createPhaseValidation,
   updatePhaseValidation,
-  phaseIdValidation,
+  objectIdValidation,
 } = require("../middleware/validation/phaseValidation");
 
-// For future use when authentication is needed for admin operations
-// const { protect, authorize } = require('../middleware/auth');
+const { protect, requireAdmin } = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -25,17 +24,16 @@ const router = express.Router();
  *     Phase:
  *       type: object
  *       required:
- *         - phaseId
  *         - title
  *         - description
  *         - icon
  *         - color
  *         - order
  *       properties:
- *         phaseId:
+ *         id:
  *           type: string
- *           enum: [beginner, intermediate, advanced]
- *           description: Unique identifier for the phase
+ *           format: objectId
+ *           description: MongoDB ObjectId for the phase
  *         title:
  *           type: string
  *           maxLength: 100
@@ -65,7 +63,7 @@ const router = express.Router();
  *           format: date-time
  *           description: Phase last update timestamp
  *       example:
- *         phaseId: "beginner"
+ *         id: "60d5ecf8c72b3c001f8e4d23"
  *         title: "Beginner Phase"
  *         description: "Foundation courses for cybersecurity beginners"
  *         icon: "Lightbulb"
@@ -107,16 +105,12 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - phaseId
  *               - title
  *               - description
  *               - icon
  *               - color
  *               - order
  *             properties:
- *               phaseId:
- *                 type: string
- *                 enum: [beginner, intermediate, advanced]
  *               title:
  *                 type: string
  *                 maxLength: 100
@@ -151,22 +145,22 @@ const router = express.Router();
  */
 router.get("/", getPhases);
 
-router.post("/", createPhaseValidation, createPhase);
+router.post("/", protect, requireAdmin, createPhaseValidation, createPhase);
 
 /**
  * @swagger
- * /phases/{phaseId}:
+ * /phases/{id}:
  *   get:
  *     summary: Get a specific phase
  *     tags: [Phases]
  *     parameters:
  *       - in: path
- *         name: phaseId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *           enum: [beginner, intermediate, advanced]
- *         description: Phase identifier
+ *           format: objectId
+ *         description: MongoDB ObjectId of the phase
  *     responses:
  *       200:
  *         description: Phase retrieved successfully
@@ -181,6 +175,8 @@ router.post("/", createPhaseValidation, createPhase);
  *                   type: string
  *                 data:
  *                   $ref: '#/components/schemas/Phase'
+ *       400:
+ *         description: Invalid ObjectId format
  *       404:
  *         description: Phase not found
  *   put:
@@ -188,12 +184,12 @@ router.post("/", createPhaseValidation, createPhase);
  *     tags: [Phases]
  *     parameters:
  *       - in: path
- *         name: phaseId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *           enum: [beginner, intermediate, advanced]
- *         description: Phase identifier
+ *           format: objectId
+ *         description: MongoDB ObjectId of the phase
  *     requestBody:
  *       required: true
  *       content:
@@ -231,7 +227,7 @@ router.post("/", createPhaseValidation, createPhase);
  *                 data:
  *                   $ref: '#/components/schemas/Phase'
  *       400:
- *         description: Validation error
+ *         description: Invalid ObjectId format or validation error
  *       404:
  *         description: Phase not found
  *   delete:
@@ -239,20 +235,30 @@ router.post("/", createPhaseValidation, createPhase);
  *     tags: [Phases]
  *     parameters:
  *       - in: path
- *         name: phaseId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *           enum: [beginner, intermediate, advanced]
- *         description: Phase identifier
+ *           format: objectId
+ *         description: MongoDB ObjectId of the phase
  *     responses:
  *       200:
  *         description: Phase deleted successfully
+ *       400:
+ *         description: Invalid ObjectId format
  *       404:
  *         description: Phase not found
  */
-router.get("/:phaseId", phaseIdValidation, getPhase);
-router.put("/:phaseId", updatePhaseValidation, updatePhase);
-router.delete("/:phaseId", phaseIdValidation, deletePhase);
+router
+  .route("/:id")
+  .get(objectIdValidation, getPhase)
+  .put(
+    protect,
+    requireAdmin,
+    objectIdValidation,
+    updatePhaseValidation,
+    updatePhase
+  )
+  .delete(protect, requireAdmin, objectIdValidation, deletePhase);
 
 module.exports = router;

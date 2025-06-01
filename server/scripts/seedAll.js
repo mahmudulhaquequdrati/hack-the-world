@@ -9,17 +9,18 @@ const mongoose = require("mongoose");
 const database = require("../src/config/database");
 
 // Import seeding utilities
-const {
-  seedPhases,
-  reseedPhases,
-  getPhasesSummary,
-} = require("../src/utils/seedPhases");
-const {
-  seedModules,
-  clearModules,
-  reseedModules,
-  getModuleStatus,
-} = require("../src/utils/seedModules");
+// const {
+//   seedPhases,
+//   reseedPhases,
+//   getPhasesSummary,
+// } = require("../src/utils/seedPhases");
+// const {
+//   seedModules,
+//   clearModules,
+//   reseedModules,
+//   getModuleStatus,
+// } = require("../src/utils/seedModules");
+const { seedPhases, seedModules } = require("../src/utils/seedData");
 
 /**
  * 🛡️ Hack The World - Master Seeding CLI
@@ -78,25 +79,6 @@ async function clearAllData() {
   }
 }
 
-async function reseedAllData() {
-  console.log("🔄 RESEEDING ALL DATA");
-  console.log("====================");
-
-  try {
-    // Step 1: Clear all data
-    await clearAllData();
-
-    // Step 2: Seed all data
-    console.log("\n🌱 Starting fresh seeding...");
-    await seedAllData();
-
-    console.log("\n🎉 All data reseeded successfully!");
-  } catch (error) {
-    console.error("❌ Error during reseeding:", error.message);
-    throw error;
-  }
-}
-
 async function showAllStatus() {
   console.log("📊 DATABASE STATUS");
   console.log("=================");
@@ -150,10 +132,6 @@ async function main() {
         await clearAllData();
         break;
 
-      case "reseed":
-        await reseedAllData();
-        break;
-
       case "help":
       default:
         console.log("\n🛡️  Hack The World - Master Seeding CLI");
@@ -166,12 +144,10 @@ async function main() {
         console.log("  modules   - Seed modules only");
         console.log("  status    - Show status of all collections");
         console.log("  clear     - Clear all data from database");
-        console.log("  reseed    - Clear and reseed all data");
         console.log("  help      - Show this help message");
         console.log("\nExamples:");
         console.log("  pnpm run seed:all all");
         console.log("  pnpm run seed:all status");
-        console.log("  pnpm run seed:all reseed");
         return;
     }
 

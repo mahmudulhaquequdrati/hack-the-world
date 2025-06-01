@@ -2,6 +2,7 @@ const Module = require("../models/Module");
 const Phase = require("../models/Phase");
 const asyncHandler = require("../middleware/asyncHandler");
 const ErrorResponse = require("../utils/errorResponse");
+const mongoose = require("mongoose");
 
 /**
  * @desc    Get all modules
@@ -17,6 +18,10 @@ const getModules = asyncHandler(async (req, res, next) => {
     // Return modules grouped by phase
     modules = await Module.getGroupedByPhase();
   } else if (phase) {
+    // Validate phase ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(phase)) {
+      return next(new ErrorResponse(`Invalid phase ID format`, 400));
+    }
     // Return modules for specific phase
     modules = await Module.getByPhase(phase);
   } else {
@@ -49,7 +54,7 @@ const getModulesWithPhases = asyncHandler(async (req, res, next) => {
   // Combine phases with their modules
   const result = phases.map((phase) => ({
     ...phase.toJSON(),
-    modules: groupedModules[phase.phaseId]?.modules || [],
+    modules: groupedModules[phase._id.toString()]?.modules || [],
   }));
 
   res.status(200).json({
@@ -60,19 +65,22 @@ const getModulesWithPhases = asyncHandler(async (req, res, next) => {
 });
 
 /**
- * @desc    Get single module by moduleId
- * @route   GET /api/modules/:moduleId
+ * @desc    Get single module by id
+ * @route   GET /api/modules/:id
  * @access  Public
  */
 const getModule = asyncHandler(async (req, res, next) => {
-  const { moduleId } = req.params;
+  const { id } = req.params;
 
-  const module = await Module.findOne({ moduleId }).populate("phase");
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new ErrorResponse(`Invalid module ID format`, 400));
+  }
+
+  const module = await Module.findById(id).populate("phase");
 
   if (!module) {
-    return next(
-      new ErrorResponse(`Module with ID '${moduleId}' not found`, 404)
-    );
+    return next(new ErrorResponse(`Module with ID '${id}' not found`, 404));
   }
 
   res.status(200).json({
@@ -89,7 +97,6 @@ const getModule = asyncHandler(async (req, res, next) => {
  */
 const createModule = asyncHandler(async (req, res, next) => {
   const {
-    moduleId,
     phaseId,
     title,
     description,
@@ -97,8 +104,6 @@ const createModule = asyncHandler(async (req, res, next) => {
     duration,
     difficulty,
     color,
-    path,
-    enrollPath,
     order,
     topics,
     prerequisites,
@@ -106,18 +111,15 @@ const createModule = asyncHandler(async (req, res, next) => {
     content,
   } = req.body;
 
-  // Check if phase exists
-  const phase = await Phase.findOne({ phaseId });
-  if (!phase) {
-    return next(new ErrorResponse(`Phase with ID '${phaseId}' not found`, 404));
+  // Validate phaseId ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(phaseId)) {
+    return next(new ErrorResponse(`Invalid phase ID format`, 400));
   }
 
-  // Check if module with same moduleId already exists
-  const existingModule = await Module.findOne({ moduleId });
-  if (existingModule) {
-    return next(
-      new ErrorResponse(`Module with ID '${moduleId}' already exists`, 400)
-    );
+  // Check if phase exists
+  const phase = await Phase.findById(phaseId);
+  if (!phase) {
+    return next(new ErrorResponse(`Phase with ID '${phaseId}' not found`, 404));
   }
 
   // Check if order is already taken in this phase
@@ -132,7 +134,6 @@ const createModule = asyncHandler(async (req, res, next) => {
   }
 
   const module = await Module.create({
-    moduleId,
     phaseId,
     title,
     description,
@@ -140,8 +141,6 @@ const createModule = asyncHandler(async (req, res, next) => {
     duration,
     difficulty,
     color,
-    path,
-    enrollPath,
     order,
     topics,
     prerequisites,
@@ -161,24 +160,32 @@ const createModule = asyncHandler(async (req, res, next) => {
 
 /**
  * @desc    Update module
- * @route   PUT /api/modules/:moduleId
+ * @route   PUT /api/modules/:id
  * @access  Private (Admin only)
  */
 const updateModule = asyncHandler(async (req, res, next) => {
-  const { moduleId } = req.params;
+  const { id } = req.params;
   const updates = req.body;
 
-  let module = await Module.findOne({ moduleId });
+  // Validate module ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new ErrorResponse(`Invalid module ID format`, 400));
+  }
+
+  let module = await Module.findById(id);
 
   if (!module) {
-    return next(
-      new ErrorResponse(`Module with ID '${moduleId}' not found`, 404)
-    );
+    return next(new ErrorResponse(`Module with ID '${id}' not found`, 404));
   }
 
   // If updating phaseId, check if phase exists
-  if (updates.phaseId && updates.phaseId !== module.phaseId) {
-    const phase = await Phase.findOne({ phaseId: updates.phaseId });
+  if (updates.phaseId && updates.phaseId !== module.phaseId.toString()) {
+    // Validate phaseId ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(updates.phaseId)) {
+      return next(new ErrorResponse(`Invalid phase ID format`, 400));
+    }
+
+    const phase = await Phase.findById(updates.phaseId);
     if (!phase) {
       return next(
         new ErrorResponse(`Phase with ID '${updates.phaseId}' not found`, 404)
@@ -192,7 +199,7 @@ const updateModule = asyncHandler(async (req, res, next) => {
     const orderExists = await Module.findOne({
       phaseId,
       order: updates.order,
-      moduleId: { $ne: moduleId }, // Exclude current module
+      _id: { $ne: id }, // Exclude current module
     });
     if (orderExists) {
       return next(
@@ -206,7 +213,10 @@ const updateModule = asyncHandler(async (req, res, next) => {
 
   // Apply updates to the module object
   Object.keys(updates).forEach((key) => {
-    module[key] = updates[key];
+    if (key !== "_id" && key !== "id") {
+      // Prevent ID modification
+      module[key] = updates[key];
+    }
   });
 
   // Save the module (this triggers the middleware)
@@ -224,18 +234,21 @@ const updateModule = asyncHandler(async (req, res, next) => {
 
 /**
  * @desc    Delete module
- * @route   DELETE /api/modules/:moduleId
+ * @route   DELETE /api/modules/:id
  * @access  Private (Admin only)
  */
 const deleteModule = asyncHandler(async (req, res, next) => {
-  const { moduleId } = req.params;
+  const { id } = req.params;
 
-  const module = await Module.findOne({ moduleId });
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new ErrorResponse(`Invalid module ID format`, 400));
+  }
+
+  const module = await Module.findById(id);
 
   if (!module) {
-    return next(
-      new ErrorResponse(`Module with ID '${moduleId}' not found`, 404)
-    );
+    return next(new ErrorResponse(`Module with ID '${id}' not found`, 404));
   }
 
   // Soft delete - set isActive to false
@@ -257,8 +270,13 @@ const deleteModule = asyncHandler(async (req, res, next) => {
 const getModulesByPhase = asyncHandler(async (req, res, next) => {
   const { phaseId } = req.params;
 
+  // Validate phaseId ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(phaseId)) {
+    return next(new ErrorResponse(`Invalid phase ID format`, 400));
+  }
+
   // Check if phase exists
-  const phase = await Phase.findOne({ phaseId });
+  const phase = await Phase.findById(phaseId);
   if (!phase) {
     return next(new ErrorResponse(`Phase with ID '${phaseId}' not found`, 404));
   }
@@ -282,16 +300,30 @@ const reorderModules = asyncHandler(async (req, res, next) => {
   const { phaseId } = req.params;
   const { moduleOrders } = req.body; // Array of { moduleId, order }
 
+  // Validate phaseId ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(phaseId)) {
+    return next(new ErrorResponse(`Invalid phase ID format`, 400));
+  }
+
   // Check if phase exists
-  const phase = await Phase.findOne({ phaseId });
+  const phase = await Phase.findById(phaseId);
   if (!phase) {
     return next(new ErrorResponse(`Phase with ID '${phaseId}' not found`, 404));
   }
 
-  // Validate that all modules exist and belong to this phase
+  // Validate that all module IDs are valid ObjectIds
   const moduleIds = moduleOrders.map((item) => item.moduleId);
+  for (const moduleId of moduleIds) {
+    if (!mongoose.Types.ObjectId.isValid(moduleId)) {
+      return next(
+        new ErrorResponse(`Invalid module ID format: ${moduleId}`, 400)
+      );
+    }
+  }
+
+  // Validate that all modules exist and belong to this phase
   const modules = await Module.find({
-    moduleId: { $in: moduleIds },
+    _id: { $in: moduleIds },
     phaseId,
     isActive: true,
   });
@@ -307,7 +339,11 @@ const reorderModules = asyncHandler(async (req, res, next) => {
 
   // Update module orders
   const updatePromises = moduleOrders.map(({ moduleId, order }) =>
-    Module.findOneAndUpdate({ moduleId, phaseId }, { order }, { new: true })
+    Module.findOneAndUpdate(
+      { _id: moduleId, phaseId },
+      { order },
+      { new: true }
+    )
   );
 
   const updatedModules = await Promise.all(updatePromises);

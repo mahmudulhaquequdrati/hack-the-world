@@ -1,6 +1,7 @@
 const Phase = require("../models/Phase");
 const asyncHandler = require("../middleware/asyncHandler");
 const ErrorResponse = require("../utils/errorResponse");
+const mongoose = require("mongoose");
 
 // @desc    Get all phases
 // @route   GET /api/phases
@@ -17,15 +18,20 @@ const getPhases = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Get single phase
-// @route   GET /api/phases/:phaseId
+// @route   GET /api/phases/:id
 // @access  Public
 const getPhase = asyncHandler(async (req, res, next) => {
-  const { phaseId } = req.params;
+  const { id } = req.params;
 
-  const phase = await Phase.findOne({ phaseId });
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new ErrorResponse(`Invalid phase ID format`, 400));
+  }
+
+  const phase = await Phase.findById(id);
 
   if (!phase) {
-    return next(new ErrorResponse(`Phase with ID ${phaseId} not found`, 404));
+    return next(new ErrorResponse(`Phase with ID ${id} not found`, 404));
   }
 
   res.status(200).json({
@@ -39,15 +45,7 @@ const getPhase = asyncHandler(async (req, res, next) => {
 // @route   POST /api/phases
 // @access  Private/Admin
 const createPhase = asyncHandler(async (req, res, next) => {
-  const { phaseId, title, description, icon, color, order } = req.body;
-
-  // Check if phase with same phaseId already exists
-  const existingPhase = await Phase.findOne({ phaseId: phaseId.toLowerCase() });
-  if (existingPhase) {
-    return next(
-      new ErrorResponse(`Phase with ID ${phaseId} already exists`, 400)
-    );
-  }
+  const { title, description, icon, color, order } = req.body;
 
   // Check if phase with same order already exists
   const existingOrder = await Phase.findOne({ order });
@@ -58,7 +56,6 @@ const createPhase = asyncHandler(async (req, res, next) => {
   }
 
   const phase = await Phase.create({
-    phaseId,
     title,
     description,
     icon,
@@ -74,23 +71,28 @@ const createPhase = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Update phase
-// @route   PUT /api/phases/:phaseId
+// @route   PUT /api/phases/:id
 // @access  Private/Admin
 const updatePhase = asyncHandler(async (req, res, next) => {
-  const { phaseId } = req.params;
+  const { id } = req.params;
   const { title, description, icon, color, order } = req.body;
 
-  let phase = await Phase.findOne({ phaseId });
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new ErrorResponse(`Invalid phase ID format`, 400));
+  }
+
+  let phase = await Phase.findById(id);
 
   if (!phase) {
-    return next(new ErrorResponse(`Phase with ID ${phaseId} not found`, 404));
+    return next(new ErrorResponse(`Phase with ID ${id} not found`, 404));
   }
 
   // If updating order, check if new order already exists (and it's not the current phase)
   if (order && order !== phase.order) {
     const existingOrder = await Phase.findOne({
       order,
-      phaseId: { $ne: phaseId },
+      _id: { $ne: id },
     });
     if (existingOrder) {
       return next(
@@ -99,8 +101,8 @@ const updatePhase = asyncHandler(async (req, res, next) => {
     }
   }
 
-  phase = await Phase.findOneAndUpdate(
-    { phaseId },
+  phase = await Phase.findByIdAndUpdate(
+    id,
     { title, description, icon, color, order },
     {
       new: true,
@@ -116,18 +118,23 @@ const updatePhase = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Delete phase
-// @route   DELETE /api/phases/:phaseId
+// @route   DELETE /api/phases/:id
 // @access  Private/Admin
 const deletePhase = asyncHandler(async (req, res, next) => {
-  const { phaseId } = req.params;
+  const { id } = req.params;
 
-  const phase = await Phase.findOne({ phaseId });
-
-  if (!phase) {
-    return next(new ErrorResponse(`Phase with ID ${phaseId} not found`, 404));
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new ErrorResponse(`Invalid phase ID format`, 400));
   }
 
-  await Phase.findOneAndDelete({ phaseId });
+  const phase = await Phase.findById(id);
+
+  if (!phase) {
+    return next(new ErrorResponse(`Phase with ID ${id} not found`, 404));
+  }
+
+  await Phase.findByIdAndDelete(id);
 
   res.status(200).json({
     success: true,

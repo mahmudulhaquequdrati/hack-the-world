@@ -9,32 +9,18 @@ const {
  * Module Schema
  * Based on MODULES array from frontend appData.ts
  * Represents learning modules within phases (courses/modules)
- * Connected to Phase model via phaseId reference
+ * Uses MongoDB ObjectIds for both module and phase identification
  */
 const moduleSchema = new mongoose.Schema(
   {
-    // Custom module identifier (auto-generated from title)
-    moduleId: {
-      type: String,
-      required: [true, "Module ID is required"],
-      unique: true,
-      trim: true,
-      lowercase: true,
-      match: [
-        /^[a-z0-9-]+$/,
-        "Module ID can only contain lowercase letters, numbers, and hyphens",
-      ],
-    },
+    // MongoDB ObjectId will be used as the primary identifier
+    // Remove custom moduleId field - use _id instead
 
-    // Reference to parent phase
+    // Reference to parent phase using ObjectId
     phaseId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: [true, "Phase ID is required"],
       ref: "Phase",
-      enum: {
-        values: ["beginner", "intermediate", "advanced"],
-        message: "Phase ID must be one of: beginner, intermediate, advanced",
-      },
     },
 
     // Module title
@@ -121,8 +107,9 @@ const moduleSchema = new mongoose.Schema(
 
     // Prerequisites (optional - for future use)
     prerequisites: {
-      type: [String],
+      type: [mongoose.Schema.Types.ObjectId],
       default: [],
+      ref: "Module",
     },
 
     // Learning outcomes (optional - for future use)
@@ -206,14 +193,14 @@ const moduleSchema = new mongoose.Schema(
             if (documents.length === 0) return true;
 
             return documents.every(
-              (document) =>
-                typeof document === "string" &&
-                document.trim().length > 0 &&
-                document.length <= 100
+              (docId) =>
+                typeof docId === "string" &&
+                docId.trim().length > 0 &&
+                docId.length <= 100
             );
           },
           message:
-            "Each document must be a non-empty string with max 100 characters",
+            "Each document ID must be a non-empty string with max 100 characters",
         },
       },
     },
@@ -223,8 +210,8 @@ const moduleSchema = new mongoose.Schema(
     toJSON: {
       virtuals: true,
       transform: function (doc, ret) {
-        // Remove MongoDB's _id field from JSON output
-        delete ret._id;
+        // Include _id as id in JSON output for frontend compatibility
+        ret.id = ret._id;
         delete ret.__v;
         return ret;
       },
@@ -233,11 +220,6 @@ const moduleSchema = new mongoose.Schema(
   }
 );
 
-// Compound indexes for performance
-// moduleId already has unique constraint so no separate index needed
-moduleSchema.index({ phaseId: 1, moduleId: 1 });
-moduleSchema.index({ isActive: 1 });
-
 // Ensure unique order within each phase (this covers phaseId + order compound index)
 moduleSchema.index({ phaseId: 1, order: 1 }, { unique: true });
 
@@ -245,7 +227,7 @@ moduleSchema.index({ phaseId: 1, order: 1 }, { unique: true });
 moduleSchema.virtual("phase", {
   ref: "Phase",
   localField: "phaseId",
-  foreignField: "phaseId",
+  foreignField: "_id",
   justOne: true,
 });
 
@@ -269,7 +251,7 @@ moduleSchema.statics.getGroupedByPhase = async function () {
 
   const grouped = {};
   modules.forEach((module) => {
-    const phaseId = module.phaseId;
+    const phaseId = module.phaseId.toString();
     if (!grouped[phaseId]) {
       grouped[phaseId] = {
         phase: module.phase,
@@ -295,7 +277,7 @@ moduleSchema.statics.addContentToModule = async function (
     );
   }
 
-  const module = await this.findOne({ moduleId });
+  const module = await this.findById(moduleId);
   if (!module) {
     throw new Error(`Module with ID '${moduleId}' not found`);
   }
@@ -322,7 +304,7 @@ moduleSchema.statics.removeContentFromModule = async function (
     );
   }
 
-  const module = await this.findOne({ moduleId });
+  const module = await this.findById(moduleId);
   if (!module) {
     throw new Error(`Module with ID '${moduleId}' not found`);
   }
@@ -337,29 +319,30 @@ moduleSchema.statics.removeContentFromModule = async function (
   return module;
 };
 
-// Pre-save middleware to auto-generate moduleId from title
-moduleSchema.pre("save", function (next) {
-  // Auto-generate moduleId from title only if not provided (new docs without moduleId)
-  if (this.isNew && !this.moduleId) {
-    try {
-      this.moduleId = generateModuleId(this.title);
-    } catch (error) {
-      return next(error);
-    }
+// Pre-save middleware to auto-generate paths and validate phase exists
+moduleSchema.pre("save", async function (next) {
+  // Prevent modification of _id after document creation
+  if (!this.isNew && this.isModified("_id")) {
+    return next(new Error("Module ID cannot be modified after creation"));
   }
 
-  next();
-});
-
-// Pre-save middleware to validate phase exists
-moduleSchema.pre("save", async function (next) {
+  // Validate phase exists when phaseId is modified
   if (this.isModified("phaseId")) {
     const Phase = mongoose.model("Phase");
-    const phase = await Phase.findOne({ phaseId: this.phaseId });
+    const phase = await Phase.findById(this.phaseId);
     if (!phase) {
       return next(new Error(`Phase with ID '${this.phaseId}' does not exist`));
     }
   }
+
+  // Calculate estimated hours using helper function
+  try {
+    this.duration = calculateModuleDuration(this.content);
+  } catch (error) {
+    // If calculation fails, use default values
+    this.duration = "0 hours";
+  }
+
   next();
 });
 

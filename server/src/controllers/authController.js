@@ -42,8 +42,15 @@ const register = async (req, res, next) => {
       });
     }
 
-    const { username, email, password, firstName, lastName, experienceLevel } =
-      req.body;
+    const {
+      username,
+      email,
+      password,
+      firstName,
+      lastName,
+      experienceLevel,
+      role,
+    } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -55,6 +62,9 @@ const register = async (req, res, next) => {
       throw new APIError(`User with this ${field} already exists`, 400);
     }
 
+    // Determine user role and status
+    const userRole = role === "admin" ? "admin" : "student";
+
     // Create new user
     const user = new User({
       username,
@@ -65,6 +75,8 @@ const register = async (req, res, next) => {
         lastName,
       },
       experienceLevel: experienceLevel || "beginner",
+      role: userRole,
+      // adminStatus will be set automatically by the schema default function
     });
 
     await user.save();
@@ -125,6 +137,19 @@ const login = async (req, res, next) => {
         "Account temporarily locked due to too many failed login attempts",
         423
       );
+    }
+
+    // Check admin status for admin users
+    if (user.role === "admin" && user.adminStatus !== "active") {
+      let message = "Admin account not activated";
+      if (user.adminStatus === "pending") {
+        message =
+          "Admin account is pending approval. Please contact an administrator.";
+      } else if (user.adminStatus === "suspended") {
+        message =
+          "Admin account has been suspended. Please contact an administrator.";
+      }
+      throw new APIError(message, 403);
     }
 
     // Verify password

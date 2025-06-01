@@ -1,7 +1,32 @@
 const request = require("supertest");
 const app = require("./testApp");
 const Phase = require("../models/Phase");
-const { defaultPhases } = require("../utils/seedPhases");
+const mongoose = require("mongoose");
+
+// Default test phases without custom phaseId
+const defaultPhases = [
+  {
+    title: "Beginner Phase",
+    description: "Foundation courses for cybersecurity beginners",
+    icon: "Lightbulb",
+    color: "#10B981",
+    order: 1,
+  },
+  {
+    title: "Intermediate Phase",
+    description: "Advanced security concepts and practical skills",
+    icon: "Target",
+    color: "#F59E0B",
+    order: 2,
+  },
+  {
+    title: "Advanced Phase",
+    description: "Expert-level security specializations",
+    icon: "Brain",
+    color: "#EF4444",
+    order: 3,
+  },
+];
 
 describe("Phase API Endpoints", () => {
   beforeEach(async () => {
@@ -34,42 +59,52 @@ describe("Phase API Endpoints", () => {
       expect(response.body.data).toHaveLength(3);
 
       // Should be ordered by order field (1, 2, 3)
-      expect(response.body.data[0].phaseId).toBe("beginner");
-      expect(response.body.data[1].phaseId).toBe("intermediate");
-      expect(response.body.data[2].phaseId).toBe("advanced");
+      expect(response.body.data[0].title).toBe("Beginner Phase");
+      expect(response.body.data[1].title).toBe("Intermediate Phase");
+      expect(response.body.data[2].title).toBe("Advanced Phase");
 
-      // Should not have _id field
-      expect(response.body.data[0]._id).toBeUndefined();
+      // Should have id field (MongoDB ObjectId)
+      expect(response.body.data[0].id).toBeDefined();
+      expect(mongoose.Types.ObjectId.isValid(response.body.data[0].id)).toBe(
+        true
+      );
     });
   });
 
-  describe("GET /api/phases/:phaseId", () => {
+  describe("GET /api/phases/:id", () => {
+    let phaseId;
+
     beforeEach(async () => {
-      await Phase.create(defaultPhases[0]); // Create beginner phase
+      const phase = await Phase.create(defaultPhases[0]); // Create beginner phase
+      phaseId = phase._id.toString();
     });
 
-    it("should return specific phase by phaseId", async () => {
+    it("should return specific phase by id", async () => {
       const response = await request(app)
-        .get("/api/phases/beginner")
+        .get(`/api/phases/${phaseId}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.message).toBe("Phase retrieved successfully");
-      expect(response.body.data.phaseId).toBe("beginner");
+      expect(response.body.data.id).toBe(phaseId);
       expect(response.body.data.title).toBe("Beginner Phase");
-      expect(response.body.data._id).toBeUndefined();
     });
 
     it("should return 404 for non-existent phase", async () => {
-      const response = await request(app).get("/api/phases/expert").expect(404);
+      const nonExistentId = new mongoose.Types.ObjectId();
+      const response = await request(app)
+        .get(`/api/phases/${nonExistentId}`)
+        .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain("Phase with ID expert not found");
+      expect(response.body.message).toContain(
+        `Phase with ID ${nonExistentId} not found`
+      );
     });
 
-    it("should return 400 for invalid phaseId", async () => {
+    it("should return 400 for invalid ObjectId format", async () => {
       const response = await request(app)
-        .get("/api/phases/invalid-phase")
+        .get("/api/phases/invalid-id")
         .expect(400);
 
       expect(response.body.success).toBe(false);
@@ -81,12 +116,11 @@ describe("Phase API Endpoints", () => {
   describe("POST /api/phases", () => {
     it("should create a new phase with valid data", async () => {
       const newPhase = {
-        phaseId: "beginner",
-        title: "Beginner Phase",
-        description: "Foundation courses for cybersecurity beginners",
-        icon: "Lightbulb",
-        color: "#10B981",
-        order: 1,
+        title: "Expert Phase",
+        description: "Advanced cybersecurity specializations",
+        icon: "Crown",
+        color: "#8B5CF6",
+        order: 4,
       };
 
       const response = await request(app)
@@ -96,19 +130,19 @@ describe("Phase API Endpoints", () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.message).toBe("Phase created successfully");
-      expect(response.body.data.phaseId).toBe(newPhase.phaseId);
       expect(response.body.data.title).toBe(newPhase.title);
-      expect(response.body.data._id).toBeUndefined();
+      expect(response.body.data.id).toBeDefined();
+      expect(mongoose.Types.ObjectId.isValid(response.body.data.id)).toBe(true);
 
       // Verify phase was created in database
-      const createdPhase = await Phase.findOne({ phaseId: "beginner" });
+      const createdPhase = await Phase.findById(response.body.data.id);
       expect(createdPhase).toBeTruthy();
       expect(createdPhase.title).toBe(newPhase.title);
     });
 
     it("should return 400 when required fields are missing", async () => {
       const invalidPhase = {
-        phaseId: "beginner",
+        title: "Incomplete Phase",
         // Missing required fields
       };
 
@@ -123,28 +157,8 @@ describe("Phase API Endpoints", () => {
       expect(response.body.errors.length).toBeGreaterThan(0);
     });
 
-    it("should return 400 for invalid phaseId", async () => {
-      const invalidPhase = {
-        phaseId: "invalid-id",
-        title: "Test Phase",
-        description: "Test description",
-        icon: "Test",
-        color: "#FF0000",
-        order: 1,
-      };
-
-      const response = await request(app)
-        .post("/api/phases")
-        .send(invalidPhase)
-        .expect(400);
-
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe("Validation error");
-    });
-
     it("should return 400 for invalid color format", async () => {
       const invalidPhase = {
-        phaseId: "beginner",
         title: "Test Phase",
         description: "Test description",
         icon: "Test",
@@ -161,28 +175,13 @@ describe("Phase API Endpoints", () => {
       expect(response.body.message).toBe("Validation error");
     });
 
-    it("should return 400 when duplicate phaseId exists", async () => {
-      // Create first phase
-      await Phase.create(defaultPhases[0]);
-
-      // Try to create duplicate
-      const response = await request(app)
-        .post("/api/phases")
-        .send(defaultPhases[0])
-        .expect(400);
-
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain("already exists");
-    });
-
     it("should return 400 when duplicate order exists", async () => {
       // Create first phase
       await Phase.create(defaultPhases[0]);
 
       // Try to create phase with same order
       const duplicateOrderPhase = {
-        phaseId: "intermediate",
-        title: "Intermediate Phase",
+        title: "Duplicate Order Phase",
         description: "Test description",
         icon: "Target",
         color: "#F59E0B",
@@ -199,20 +198,23 @@ describe("Phase API Endpoints", () => {
     });
   });
 
-  describe("PUT /api/phases/:phaseId", () => {
+  describe("PUT /api/phases/:id", () => {
+    let phaseId;
+
     beforeEach(async () => {
-      await Phase.create(defaultPhases[0]); // Create beginner phase
+      const phase = await Phase.create(defaultPhases[0]);
+      phaseId = phase._id.toString();
     });
 
     it("should update phase with valid data", async () => {
       const updateData = {
         title: "Updated Beginner Phase",
         description: "Updated description",
-        color: "#22C55E",
+        color: "#059669",
       };
 
       const response = await request(app)
-        .put("/api/phases/beginner")
+        .put(`/api/phases/${phaseId}`)
         .send(updateData)
         .expect(200);
 
@@ -223,28 +225,25 @@ describe("Phase API Endpoints", () => {
       expect(response.body.data.color).toBe(updateData.color);
 
       // Verify update in database
-      const updatedPhase = await Phase.findOne({ phaseId: "beginner" });
+      const updatedPhase = await Phase.findById(phaseId);
       expect(updatedPhase.title).toBe(updateData.title);
     });
 
     it("should return 404 for non-existent phase", async () => {
-      const updateData = { title: "Updated Title" };
-
+      const nonExistentId = new mongoose.Types.ObjectId();
       const response = await request(app)
-        .put("/api/phases/nonexistent")
-        .send(updateData)
+        .put(`/api/phases/${nonExistentId}`)
+        .send({ title: "Updated Title" })
         .expect(404);
 
       expect(response.body.success).toBe(false);
       expect(response.body.message).toContain("not found");
     });
 
-    it("should return 400 for invalid color format", async () => {
-      const updateData = { color: "invalid-color" };
-
+    it("should return 400 for invalid ObjectId format", async () => {
       const response = await request(app)
-        .put("/api/phases/beginner")
-        .send(updateData)
+        .put("/api/phases/invalid-id")
+        .send({ title: "Updated Title" })
         .expect(400);
 
       expect(response.body.success).toBe(false);
@@ -253,13 +252,12 @@ describe("Phase API Endpoints", () => {
 
     it("should return 400 when updating to duplicate order", async () => {
       // Create second phase
-      await Phase.create(defaultPhases[1]);
+      const secondPhase = await Phase.create(defaultPhases[1]);
 
-      const updateData = { order: 2 }; // Order of intermediate phase
-
+      // Try to update first phase to have same order as second
       const response = await request(app)
-        .put("/api/phases/beginner")
-        .send(updateData)
+        .put(`/api/phases/${phaseId}`)
+        .send({ order: 2 })
         .expect(400);
 
       expect(response.body.success).toBe(false);
@@ -267,36 +265,40 @@ describe("Phase API Endpoints", () => {
     });
   });
 
-  describe("DELETE /api/phases/:phaseId", () => {
+  describe("DELETE /api/phases/:id", () => {
+    let phaseId;
+
     beforeEach(async () => {
-      await Phase.create(defaultPhases[0]); // Create beginner phase
+      const phase = await Phase.create(defaultPhases[0]);
+      phaseId = phase._id.toString();
     });
 
     it("should delete existing phase", async () => {
       const response = await request(app)
-        .delete("/api/phases/beginner")
+        .delete(`/api/phases/${phaseId}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.message).toBe("Phase deleted successfully");
 
       // Verify deletion in database
-      const deletedPhase = await Phase.findOne({ phaseId: "beginner" });
+      const deletedPhase = await Phase.findById(phaseId);
       expect(deletedPhase).toBeNull();
     });
 
     it("should return 404 for non-existent phase", async () => {
+      const nonExistentId = new mongoose.Types.ObjectId();
       const response = await request(app)
-        .delete("/api/phases/nonexistent")
+        .delete(`/api/phases/${nonExistentId}`)
         .expect(404);
 
       expect(response.body.success).toBe(false);
       expect(response.body.message).toContain("not found");
     });
 
-    it("should return 400 for invalid phaseId", async () => {
+    it("should return 400 for invalid ObjectId format", async () => {
       const response = await request(app)
-        .delete("/api/phases/invalid-phase-id")
+        .delete("/api/phases/invalid-id")
         .expect(400);
 
       expect(response.body.success).toBe(false);
@@ -305,34 +307,27 @@ describe("Phase API Endpoints", () => {
   });
 
   describe("Phase Model Validation", () => {
-    it("should automatically lowercase phaseId", async () => {
-      const phase = new Phase({
-        phaseId: "BEGINNER",
-        title: "Test Phase",
-        description: "Test description",
-        icon: "Test",
-        color: "#FF0000",
-        order: 1,
-      });
+    it("should prevent _id modification after creation", async () => {
+      const phase = await Phase.create(defaultPhases[0]);
+      const originalId = phase._id;
 
-      await phase.save();
-      expect(phase.phaseId).toBe("beginner");
-    });
+      // Try to modify _id
+      phase._id = new mongoose.Types.ObjectId();
 
-    it("should enforce unique phaseId constraint", async () => {
-      await Phase.create(defaultPhases[0]);
+      await expect(phase.save()).rejects.toThrow(
+        "Phase ID cannot be modified after creation"
+      );
 
-      const duplicatePhase = new Phase(defaultPhases[0]);
-
-      await expect(duplicatePhase.save()).rejects.toThrow();
+      // Verify _id wasn't changed in database
+      const unchangedPhase = await Phase.findById(originalId);
+      expect(unchangedPhase).toBeTruthy();
     });
 
     it("should enforce unique order constraint", async () => {
       await Phase.create(defaultPhases[0]);
 
       const duplicateOrderPhase = new Phase({
-        phaseId: "intermediate",
-        title: "Test Phase",
+        title: "Duplicate Order Phase",
         description: "Test description",
         icon: "Test",
         color: "#FF0000",
@@ -344,8 +339,7 @@ describe("Phase API Endpoints", () => {
 
     it("should validate color format", async () => {
       const invalidPhase = new Phase({
-        phaseId: "beginner",
-        title: "Test Phase",
+        title: "Invalid Color Phase",
         description: "Test description",
         icon: "Test",
         color: "invalid-color",
@@ -357,8 +351,7 @@ describe("Phase API Endpoints", () => {
 
     it("should enforce minimum order value", async () => {
       const invalidPhase = new Phase({
-        phaseId: "beginner",
-        title: "Test Phase",
+        title: "Invalid Order Phase",
         description: "Test description",
         icon: "Test",
         color: "#FF0000",
@@ -366,6 +359,16 @@ describe("Phase API Endpoints", () => {
       });
 
       await expect(invalidPhase.save()).rejects.toThrow();
+    });
+
+    it("should include id in JSON transformation", async () => {
+      const phase = await Phase.create(defaultPhases[0]);
+      const phaseJson = phase.toJSON();
+
+      expect(phaseJson.id).toBeDefined();
+      expect(phaseJson.id).toBe(phase._id.toString());
+      expect(phaseJson._id).toBeUndefined();
+      expect(phaseJson.__v).toBeUndefined();
     });
   });
 });
@@ -375,23 +378,22 @@ describe("Phase Seed Data", () => {
     expect(defaultPhases).toHaveLength(3);
 
     // Check beginner phase
-    expect(defaultPhases[0].phaseId).toBe("beginner");
+    expect(defaultPhases[0].title).toBe("Beginner Phase");
     expect(defaultPhases[0].order).toBe(1);
     expect(defaultPhases[0].color).toMatch(/^#[A-Fa-f0-9]{6}$/);
 
     // Check intermediate phase
-    expect(defaultPhases[1].phaseId).toBe("intermediate");
+    expect(defaultPhases[1].title).toBe("Intermediate Phase");
     expect(defaultPhases[1].order).toBe(2);
     expect(defaultPhases[1].color).toMatch(/^#[A-Fa-f0-9]{6}$/);
 
     // Check advanced phase
-    expect(defaultPhases[2].phaseId).toBe("advanced");
+    expect(defaultPhases[2].title).toBe("Advanced Phase");
     expect(defaultPhases[2].order).toBe(3);
     expect(defaultPhases[2].color).toMatch(/^#[A-Fa-f0-9]{6}$/);
 
     // Check all have required fields
     defaultPhases.forEach((phase) => {
-      expect(phase.phaseId).toBeDefined();
       expect(phase.title).toBeDefined();
       expect(phase.description).toBeDefined();
       expect(phase.icon).toBeDefined();

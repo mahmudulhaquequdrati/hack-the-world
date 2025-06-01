@@ -8,6 +8,7 @@ import {
   getNormalizedLabsByModule,
   getVideosCountForModule,
 } from "@/lib/appData";
+import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
 import { Module } from "@/lib/types";
 import { CheckCircle, Clock, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -39,7 +40,6 @@ const ModuleCard = ({
   onEnroll,
   isEnrolling,
 }: ModuleCardProps) => {
-  const [module, setModule] = useState(initialModule);
   const [stats, setStats] = useState<ModuleStatsType | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -51,9 +51,9 @@ const ModuleCard = ({
       await new Promise((resolve) => setTimeout(resolve, 500 + index * 200));
 
       // Get dynamic stats
-      const videosCount = getVideosCountForModule(module.id);
-      const labsData = getNormalizedLabsByModule(module.id);
-      const gamesData = getNormalizedGamesByModule(module.id);
+      const videosCount = getVideosCountForModule(initialModule.id);
+      const labsData = getNormalizedLabsByModule(initialModule.id);
+      const gamesData = getNormalizedGamesByModule(initialModule.id);
 
       setStats({
         videos: videosCount,
@@ -64,21 +64,21 @@ const ModuleCard = ({
     };
 
     loadModuleStats();
-  }, [module.id, index]);
+  }, [initialModule.id, index]);
 
   const handleEnroll = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
     // Call parent handler immediately - this will trigger the loading state
-    onEnroll(module.path);
+    onEnroll(getCoursePath(initialModule.id));
   };
 
   const handleNavigate = () => {
     // If enrolled, go to learning page; otherwise, go to course overview
-    if (module.enrolled) {
-      onNavigate(module.enrollPath);
+    if (initialModule.enrolled) {
+      onNavigate(getEnrollPath(initialModule.id));
     } else {
-      onNavigate(module.path);
+      onNavigate(getCoursePath(initialModule.id));
     }
   };
 
@@ -131,7 +131,7 @@ const ModuleCard = ({
         {/* Module Card */}
         <Card
           className={`
-            flex-1 ${module.bgColor} ${module.borderColor} border-2
+            flex-1 ${initialModule.bgColor} ${initialModule.borderColor} border-2
             hover:scale-[1.01] cursor-pointer transition-all duration-300
             relative ml-2 mb-4
           `}
@@ -148,8 +148,8 @@ const ModuleCard = ({
                       ${
                         isCompleted
                           ? "bg-green-400 text-black border-green-400"
-                          : module.enrolled
-                          ? `${module.bgColor} ${module.borderColor} ${module.color}`
+                          : initialModule.enrolled
+                          ? `${initialModule.bgColor} ${initialModule.borderColor} ${initialModule.color}`
                           : "bg-gray-600/20 border-gray-600/50 text-gray-400"
                       }
                     `}
@@ -157,7 +157,7 @@ const ModuleCard = ({
                     {isCompleted ? (
                       <CheckCircle className="w-4 h-4" />
                     ) : (
-                      <module.icon className="w-4 h-4" />
+                      <initialModule.icon className="w-4 h-4" />
                     )}
                   </div>
 
@@ -165,9 +165,9 @@ const ModuleCard = ({
                   <div className="font-mono">
                     <span className="text-green-400/70">📁</span>
                     <CardTitle
-                      className={`${module.color} text-base inline ml-1`}
+                      className={`${initialModule.color} text-base inline ml-1`}
                     >
-                      {module.title.toLowerCase().replace(/\s+/g, "_")}
+                      {initialModule.title.toLowerCase().replace(/\s+/g, "_")}
                     </CardTitle>
                   </div>
                 </div>
@@ -175,7 +175,7 @@ const ModuleCard = ({
 
               {/* Status badges */}
               <div className="flex items-center space-x-2">
-                {module.enrolled && (
+                {initialModule.enrolled && (
                   <Badge
                     variant="outline"
                     className="text-xs bg-green-400/10 border-green-400/50 text-green-400"
@@ -194,10 +194,10 @@ const ModuleCard = ({
                 <Badge
                   variant="outline"
                   className={`text-xs ${getDifficultyColor(
-                    module.difficulty
+                    initialModule.difficulty
                   )} border-current`}
                 >
-                  {module.difficulty.toUpperCase()}
+                  {initialModule.difficulty.toUpperCase()}
                 </Badge>
               </div>
             </div>
@@ -206,7 +206,7 @@ const ModuleCard = ({
           <CardContent className="pt-0">
             {/* Description */}
             <p className="text-green-300/70 text-sm mb-3 font-sans">
-              {module.description}
+              {initialModule.description}
             </p>
 
             {/* Progress Terminal Line */}
@@ -215,10 +215,12 @@ const ModuleCard = ({
                 <span className="text-green-400">$</span>
                 <span className="text-green-300/70">progress</span>
                 <span className="text-green-400">--check</span>
-                <span className="text-yellow-400">{module.progress}%</span>
+                <span className="text-yellow-400">
+                  {initialModule.progress}%
+                </span>
               </div>
               <Progress
-                value={module.progress}
+                value={initialModule.progress}
                 className="h-1 bg-black/50 border border-green-400/20 mt-1"
               />
             </div>
@@ -249,11 +251,13 @@ const ModuleCard = ({
             <div className="flex items-center space-x-4 mb-3 text-xs">
               <div className="flex items-center space-x-1">
                 <Clock className="w-3 h-3 text-green-300/70" />
-                <span className="text-green-300/70">{module.duration}</span>
+                <span className="text-green-300/70">
+                  {initialModule.duration}
+                </span>
               </div>
               <div className="flex-1">
                 <div className="flex flex-wrap gap-1">
-                  {module.topics.slice(0, 2).map((topic, topicIndex) => (
+                  {initialModule.topics.slice(0, 2).map((topic, topicIndex) => (
                     <Badge
                       key={topicIndex}
                       variant="outline"
@@ -262,12 +266,12 @@ const ModuleCard = ({
                       #{topic.toLowerCase().replace(/\s+/g, "_")}
                     </Badge>
                   ))}
-                  {module.topics.length > 2 && (
+                  {initialModule.topics.length > 2 && (
                     <Badge
                       variant="outline"
                       className="text-xs px-1 py-0 border-green-400/30 text-green-400 font-mono"
                     >
-                      +{module.topics.length - 2}
+                      +{initialModule.topics.length - 2}
                     </Badge>
                   )}
                 </div>
@@ -276,13 +280,13 @@ const ModuleCard = ({
 
             {/* Action buttons */}
             <div className="flex justify-between items-center pt-2 border-t border-green-400/20">
-              {module.enrolled ? (
+              {initialModule.enrolled ? (
                 <Button
                   size="sm"
                   className="bg-green-400 text-black hover:bg-green-300 font-mono text-xs"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onNavigate(module.enrollPath);
+                    onNavigate(getEnrollPath(initialModule.id));
                   }}
                 >
                   {">> continue"}

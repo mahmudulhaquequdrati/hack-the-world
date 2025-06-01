@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { getEnrollPath } from "@/lib/pathUtils";
 import { Module } from "@/lib/types";
-import { CheckCircle, Play } from "lucide-react";
+import { CheckCircle, PlayCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface ModuleProgressCardProps {
@@ -15,7 +16,7 @@ export const ModuleProgressCard = ({ module }: ModuleProgressCardProps) => {
   return (
     <Card
       className={`${module.bgColor} ${module.borderColor} border-2 hover:scale-[1.02] transition-all cursor-pointer`}
-      onClick={() => navigate(module.enrollPath)}
+      onClick={() => navigate(getEnrollPath(module.id))}
     >
       <CardHeader>
         <CardTitle
@@ -50,10 +51,10 @@ export const ModuleProgressCard = ({ module }: ModuleProgressCardProps) => {
             className="w-full bg-green-400 text-black hover:bg-green-300 font-mono"
             onClick={(e) => {
               e.stopPropagation();
-              navigate(module.enrollPath);
+              navigate(getEnrollPath(module.id));
             }}
           >
-            <Play className="w-4 h-4 mr-2" />
+            <PlayCircle className="w-4 h-4 mr-2" />
             {">> "}continue_learning
           </Button>
         </div>

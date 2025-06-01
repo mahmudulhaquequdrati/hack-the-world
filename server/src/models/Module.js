@@ -88,22 +88,6 @@ const moduleSchema = new mongoose.Schema(
       maxlength: [50, "Color class cannot exceed 50 characters"],
     },
 
-    // Course detail page path (auto-generated)
-    path: {
-      type: String,
-      required: false,
-      trim: true,
-      maxlength: [100, "Path cannot exceed 100 characters"],
-    },
-
-    // Enrollment/learning path (auto-generated)
-    enrollPath: {
-      type: String,
-      required: false,
-      trim: true,
-      maxlength: [100, "Enroll path cannot exceed 100 characters"],
-    },
-
     // Display order within phase
     order: {
       type: Number,
@@ -233,30 +217,6 @@ const moduleSchema = new mongoose.Schema(
         },
       },
     },
-
-    // Content statistics (automatically calculated)
-    contentStats: {
-      totalVideos: {
-        type: Number,
-        default: 0,
-      },
-      totalLabs: {
-        type: Number,
-        default: 0,
-      },
-      totalGames: {
-        type: Number,
-        default: 0,
-      },
-      totalDocuments: {
-        type: Number,
-        default: 0,
-      },
-      totalContent: {
-        type: Number,
-        default: 0,
-      },
-    },
   },
   {
     timestamps: true,
@@ -343,7 +303,7 @@ moduleSchema.statics.addContentToModule = async function (
   // Add content ID if not already present
   if (!module.content[contentType].includes(contentId)) {
     module.content[contentType].push(contentId);
-    await module.save(); // This will trigger content stats and duration update
+    await module.save();
   }
 
   return module;
@@ -371,7 +331,7 @@ moduleSchema.statics.removeContentFromModule = async function (
   const index = module.content[contentType].indexOf(contentId);
   if (index > -1) {
     module.content[contentType].splice(index, 1);
-    await module.save(); // This will trigger content stats and duration update
+    await module.save();
   }
 
   return module;
@@ -388,70 +348,6 @@ moduleSchema.pre("save", function (next) {
     }
   }
 
-  // Auto-generate paths if not provided
-  if (!this.path && this.moduleId) {
-    this.path = `/course/${this.moduleId}`;
-  }
-  if (!this.enrollPath && this.moduleId) {
-    this.enrollPath = `/learn/${this.moduleId}`;
-  }
-
-  next();
-});
-
-// Pre-save middleware to update content statistics and duration
-moduleSchema.pre("save", function (next) {
-  // Update content statistics whenever content arrays change
-  if (
-    this.isModified("content.videos") ||
-    this.isModified("content.labs") ||
-    this.isModified("content.games") ||
-    this.isModified("content.documents")
-  ) {
-    // Ensure content object exists
-    if (!this.content) {
-      this.content = {
-        videos: [],
-        labs: [],
-        games: [],
-        documents: [],
-      };
-    }
-
-    // Ensure content arrays exist
-    if (!this.content.videos) this.content.videos = [];
-    if (!this.content.labs) this.content.labs = [];
-    if (!this.content.games) this.content.games = [];
-    if (!this.content.documents) this.content.documents = [];
-
-    // Ensure contentStats object exists
-    if (!this.contentStats) {
-      this.contentStats = {
-        totalVideos: 0,
-        totalLabs: 0,
-        totalGames: 0,
-        totalDocuments: 0,
-        totalContent: 0,
-      };
-    }
-
-    // Update content statistics
-    this.contentStats.totalVideos = this.content.videos.length;
-    this.contentStats.totalLabs = this.content.labs.length;
-    this.contentStats.totalGames = this.content.games.length;
-    this.contentStats.totalDocuments = this.content.documents.length;
-    this.contentStats.totalContent =
-      this.content.videos.length +
-      this.content.labs.length +
-      this.content.games.length +
-      this.content.documents.length;
-
-    // Auto-calculate duration from content
-    this.duration = calculateModuleDuration(
-      this.content,
-      DEFAULT_CONTENT_DURATIONS
-    );
-  }
   next();
 });
 

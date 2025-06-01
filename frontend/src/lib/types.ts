@@ -12,8 +12,6 @@ export interface Module {
   bgColor: string;
   borderColor: string;
   topics: string[];
-  path: string;
-  enrollPath: string;
   labs: number;
   games: number;
   assets: number;
@@ -111,7 +109,6 @@ export interface Course {
   labsData: LabItem[];
   gamesData: GameItem[];
   assetsData: AssetItem[];
-  enrollPath: string;
 }
 
 // Enrolled Course Types

@@ -261,14 +261,10 @@ async function seedPhases() {
   try {
     console.log("🌱 Seeding phases...");
 
-    const existingPhases = await Phase.countDocuments();
-    if (existingPhases > 0) {
-      console.log(`⚠️  Found ${existingPhases} existing phases. Skipping.`);
-      return;
-    }
+    await resetCollection(Phase, "phases");
 
     const phases = await Phase.insertMany(PHASES_DATA);
-    console.log(`✅ Seeded ${phases.length} phases`);
+    console.log(`✅ Created ${phases.length} phases`);
 
     return phases;
   } catch (error) {
@@ -284,14 +280,16 @@ async function seedModules() {
   try {
     console.log("🌱 Seeding modules...");
 
-    const existingModules = await Module.countDocuments();
-    if (existingModules > 0) {
-      console.log(`⚠️  Found ${existingModules} existing modules. Skipping.`);
-      return;
-    }
+    await resetCollection(Module, "modules");
 
-    const modules = await Module.insertMany(MODULES_DATA);
-    console.log(`✅ Seeded ${modules.length} modules`);
+    // Remove path and enrollPath from seed data since they're no longer in schema
+    const cleanModuleData = MODULES_DATA.map((module) => {
+      const { path, enrollPath, ...cleanModule } = module;
+      return cleanModule;
+    });
+
+    const modules = await Module.insertMany(cleanModuleData);
+    console.log(`✅ Created ${modules.length} modules`);
 
     return modules;
   } catch (error) {

@@ -4,6 +4,7 @@ import {
   getAllModules,
   getEnrolledModules,
 } from "@/lib/appData";
+import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
 import { Module } from "@/lib/types";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,16 +19,12 @@ const Dashboard = () => {
 
   const handleModuleClick = (module: Module) => {
     if (module.enrolled) {
-      navigate(module.enrollPath, {
-        state: {
-          from: "dashboard",
-        },
+      navigate(getEnrollPath(module.id), {
+        state: { fromDashboard: true },
       });
     } else {
-      navigate(module.path, {
-        state: {
-          from: "dashboard",
-        },
+      navigate(getCoursePath(module.id), {
+        state: { fromDashboard: true },
       });
     }
   };

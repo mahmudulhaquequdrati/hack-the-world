@@ -2,53 +2,54 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const database = require("../config/database");
 
-// Import models
+// Import existing models only
 const Phase = require("../models/Phase");
 const Module = require("../models/Module");
-const Game = require("../models/Game");
-const Lab = require("../models/Lab");
 const User = require("../models/User");
+
+// Import utilities
+const { getDatabaseStatus, resetCollection } = require("./dbUtils");
 
 /**
  * Seed Data Utility
- * Populates the database with initial data from frontend appData.ts
+ * Populates the database with initial data
  */
 
 // Phase data (from appData.ts PHASES array)
 const PHASES_DATA = [
   {
-    id: "beginner",
+    phaseId: "beginner",
     title: "Beginner Phase",
     description: "Foundation courses for cybersecurity beginners",
     icon: "Lightbulb",
-    color: "text-green-400",
+    color: "#10B981",
     order: 1,
     estimatedDuration: "4-6 weeks",
     difficultyLevel: 1,
   },
   {
-    id: "intermediate",
+    phaseId: "intermediate",
     title: "Intermediate Phase",
     description: "Advanced security concepts and practical skills",
     icon: "Target",
-    color: "text-yellow-400",
+    color: "#F59E0B",
     order: 2,
     estimatedDuration: "6-8 weeks",
     difficultyLevel: 3,
   },
   {
-    id: "advanced",
+    phaseId: "advanced",
     title: "Advanced Phase",
     description: "Expert-level security specializations",
     icon: "Brain",
-    color: "text-red-400",
+    color: "#EF4444",
     order: 3,
     estimatedDuration: "8-12 weeks",
     difficultyLevel: 5,
   },
 ];
 
-// Module data (from appData.ts MODULES array)
+// Module data (from appData.ts MODULES array) - First 6 modules only for now
 const MODULES_DATA = [
   // Beginner Phase Modules
   {
@@ -71,6 +72,18 @@ const MODULES_DATA = [
       labsCount: 2,
       gamesCount: 3,
       assetsCount: 15,
+      videos: [
+        "intro-to-cybersecurity",
+        "security-frameworks",
+        "risk-management",
+      ],
+      labs: ["basic-security-assessment", "password-policy-lab"],
+      games: [
+        "security-policy-builder",
+        "threat-identification",
+        "risk-calculator",
+      ],
+      documents: ["cybersecurity-glossary", "security-standards-overview"],
     },
     tags: ["fundamentals", "security", "basics"],
   },
@@ -94,6 +107,14 @@ const MODULES_DATA = [
       labsCount: 2,
       gamesCount: 2,
       assetsCount: 12,
+      videos: [
+        "linux-introduction",
+        "file-system-navigation",
+        "text-manipulation",
+      ],
+      labs: ["command-line-basics", "file-permissions-lab"],
+      games: ["command-memory", "file-explorer"],
+      documents: ["linux-command-reference", "bash-scripting-basics"],
     },
     tags: ["linux", "command-line", "terminal"],
   },
@@ -117,6 +138,10 @@ const MODULES_DATA = [
       labsCount: 1,
       gamesCount: 2,
       assetsCount: 18,
+      videos: ["network-protocols", "tcp-ip-model", "routing-switching"],
+      labs: ["network-scanning-lab"],
+      games: ["protocol-stack", "network-topology"],
+      documents: ["networking-glossary", "port-reference"],
     },
     tags: ["networking", "protocols", "tcp-ip"],
   },
@@ -141,6 +166,10 @@ const MODULES_DATA = [
       labsCount: 0,
       gamesCount: 2,
       assetsCount: 14,
+      videos: ["web-fundamentals", "owasp-top-10", "secure-coding"],
+      labs: [],
+      games: ["vulnerability-hunter", "secure-code-review"],
+      documents: ["owasp-guide", "web-security-checklist"],
     },
     tags: ["web-security", "vulnerabilities", "owasp"],
   },
@@ -165,6 +194,14 @@ const MODULES_DATA = [
       labsCount: 0,
       gamesCount: 2,
       assetsCount: 25,
+      videos: [
+        "pentest-methodology",
+        "reconnaissance",
+        "vulnerability-assessment",
+      ],
+      labs: [],
+      games: ["reconnaissance-game", "exploit-challenge"],
+      documents: ["pentest-methodology", "tools-reference"],
     },
     tags: ["penetration-testing", "ethical-hacking", "reconnaissance"],
   },
@@ -188,567 +225,211 @@ const MODULES_DATA = [
       labsCount: 0,
       gamesCount: 2,
       assetsCount: 30,
+      videos: ["advanced-web-attacks", "sql-injection", "xss-prevention"],
+      labs: [],
+      games: ["web-exploit-challenge", "secure-coding-game"],
+      documents: ["web-security-advanced", "exploit-techniques"],
     },
     tags: ["web-security", "exploitation", "sql-injection"],
   },
 ];
 
-// Game data (from appData.ts GAMES array)
-const GAMES_DATA = [
-  // Foundations module games
-  {
-    id: "security-policy-builder",
-    moduleId: "foundations",
-    name: "Security Policy Builder",
-    description: "Interactive game to build security policies",
-    type: "Strategy",
-    maxPoints: 100,
-    timeLimit: "15 minutes",
-    difficulty: "Beginner",
-    category: "policy",
-    order: 1,
-    objectives: [
-      {
-        id: "spb-1",
-        objective: "Create comprehensive security policies",
-        points: 25,
-        order: 1,
-      },
-      {
-        id: "spb-2",
-        objective: "Identify policy gaps and weaknesses",
-        points: 25,
-        order: 2,
-      },
-      {
-        id: "spb-3",
-        objective: "Implement security controls",
-        points: 25,
-        order: 3,
-      },
-      {
-        id: "spb-4",
-        objective: "Test policy effectiveness",
-        points: 25,
-        order: 4,
-      },
-    ],
-    config: {
-      allowMultipleAttempts: true,
-      maxAttempts: 3,
-      passingScore: 70,
-      showHints: true,
-      showSolutions: false,
-    },
-    tags: ["policy", "governance", "strategy"],
-  },
-  {
-    id: "risk-matrix-challenge",
-    moduleId: "foundations",
-    name: "Risk Matrix Challenge",
-    description: "Calculate and prioritize security risks",
-    type: "Puzzle",
-    maxPoints: 150,
-    timeLimit: "12 minutes",
-    difficulty: "Beginner",
-    category: "risk-management",
-    order: 2,
-    objectives: [
-      {
-        id: "rmc-1",
-        objective: "Analyze security risks",
-        points: 40,
-        order: 1,
-      },
-      {
-        id: "rmc-2",
-        objective: "Calculate risk scores",
-        points: 40,
-        order: 2,
-      },
-      {
-        id: "rmc-3",
-        objective: "Prioritize risks by impact",
-        points: 35,
-        order: 3,
-      },
-      {
-        id: "rmc-4",
-        objective: "Create mitigation strategies",
-        points: 35,
-        order: 4,
-      },
-    ],
-    config: {
-      allowMultipleAttempts: true,
-      maxAttempts: 3,
-      passingScore: 75,
-      showHints: true,
-      showSolutions: false,
-    },
-    tags: ["risk-management", "analysis", "prioritization"],
-  },
-  // Linux basics module games
-  {
-    id: "command-master",
-    moduleId: "linux-basics",
-    name: "Command Line Master",
-    description: "Speed challenge for Linux command mastery",
-    type: "Speed Challenge",
-    maxPoints: 500,
-    timeLimit: "5 minutes",
-    difficulty: "Beginner",
-    category: "command-line",
-    order: 1,
-    objectives: [
-      {
-        id: "clm-1",
-        objective: "Execute basic file operations",
-        points: 100,
-        order: 1,
-      },
-      {
-        id: "clm-2",
-        objective: "Navigate directory structures",
-        points: 100,
-        order: 2,
-      },
-      {
-        id: "clm-3",
-        objective: "Use text processing commands",
-        points: 150,
-        order: 3,
-      },
-      {
-        id: "clm-4",
-        objective: "Manage file permissions",
-        points: 150,
-        order: 4,
-      },
-    ],
-    config: {
-      allowMultipleAttempts: true,
-      maxAttempts: 5,
-      passingScore: 60,
-      showHints: true,
-      showSolutions: false,
-    },
-    tags: ["linux", "command-line", "speed"],
-  },
-  // Networking basics module games
-  {
-    id: "packet-sniffer",
-    moduleId: "networking-basics",
-    name: "Packet Sniffer Challenge",
-    description: "Analyze network traffic to find threats",
-    type: "Analysis Game",
-    maxPoints: 400,
-    timeLimit: "8 minutes",
-    difficulty: "Intermediate",
-    category: "traffic-analysis",
-    order: 1,
-    objectives: [
-      {
-        id: "psc-1",
-        objective: "Capture network packets",
-        points: 100,
-        order: 1,
-      },
-      {
-        id: "psc-2",
-        objective: "Identify suspicious traffic",
-        points: 100,
-        order: 2,
-      },
-      {
-        id: "psc-3",
-        objective: "Analyze protocol headers",
-        points: 100,
-        order: 3,
-      },
-      {
-        id: "psc-4",
-        objective: "Generate security report",
-        points: 100,
-        order: 4,
-      },
-    ],
-    config: {
-      allowMultipleAttempts: true,
-      maxAttempts: 3,
-      passingScore: 70,
-      showHints: true,
-      showSolutions: false,
-    },
-    tags: ["networking", "analysis", "wireshark"],
-  },
-];
-
-// Lab data (from appData.ts LABS array)
-const LABS_DATA = [
-  // Foundations module labs
-  {
-    id: "risk-assessment-simulation",
-    moduleId: "foundations",
-    name: "Risk Assessment Simulation",
-    description: "Hands-on risk assessment of a fictional company",
-    difficulty: "Beginner",
-    duration: "45 min",
-    category: "risk-management",
-    order: 1,
-    objectives: [
-      {
-        id: "ras-obj-1",
-        objective: "Analyze company infrastructure for risks",
-        order: 1,
-      },
-      {
-        id: "ras-obj-2",
-        objective: "Calculate risk scores using standard matrices",
-        order: 2,
-      },
-      {
-        id: "ras-obj-3",
-        objective: "Prioritize risks based on business impact",
-        order: 3,
-      },
-      {
-        id: "ras-obj-4",
-        objective: "Create comprehensive risk report",
-        order: 4,
-      },
-    ],
-    steps: [
-      {
-        id: "ras-step-1",
-        title: "Environment Setup",
-        description:
-          "Set up the simulation environment and access company data",
-        order: 1,
-        instructions:
-          "Access the virtual company network and familiarize yourself with the infrastructure",
-        expectedOutput: "Successfully connected to simulation environment",
-        hints: [
-          {
-            text: "Check network documentation first",
-            showAfter: 60,
-          },
-        ],
-        validation: {
-          type: "manual",
-          criteria: "Environment setup completed",
-          autoCheck: false,
-        },
-      },
-      {
-        id: "ras-step-2",
-        title: "Asset Discovery",
-        description: "Identify and catalog all company assets",
-        order: 2,
-        instructions:
-          "Use provided tools to discover and document all digital assets",
-        expectedOutput: "Complete asset inventory list",
-        hints: [
-          {
-            text: "Don't forget cloud resources",
-            showAfter: 120,
-          },
-        ],
-        validation: {
-          type: "manual",
-          criteria: "Asset inventory completed",
-          autoCheck: false,
-        },
-      },
-    ],
-    config: {
-      environment: "virtual",
-      prerequisites: ["basic-security-knowledge"],
-      tools: [
-        {
-          name: "Risk Assessment Tool",
-          version: "1.0",
-          required: true,
-          downloadUrl: "/tools/risk-assessment-tool",
-        },
-      ],
-      estimatedTime: 45,
-      difficulty: 1,
-    },
-    resources: {
-      instructions: "Complete risk assessment following industry standards",
-      downloadableFiles: [
-        {
-          name: "Company Profile",
-          description: "Fictional company data for assessment",
-          url: "/downloads/company-profile.pdf",
-          size: "2.5 MB",
-          type: "documentation",
-        },
-      ],
-      references: [
-        {
-          title: "NIST Risk Management Framework",
-          url: "https://csrc.nist.gov/projects/risk-management",
-          type: "documentation",
-        },
-      ],
-    },
-    assessment: {
-      type: "manual",
-      passingCriteria: "Complete all objectives with accuracy",
-      rubric: [
-        {
-          criteria: "Risk identification",
-          maxPoints: 25,
-          description: "Accurately identify security risks",
-        },
-        {
-          criteria: "Risk calculation",
-          maxPoints: 25,
-          description: "Correctly calculate risk scores",
-        },
-      ],
-      submissionFormat: "report",
-    },
-    tags: ["risk-assessment", "simulation", "beginner"],
-  },
-  // Linux basics module labs
-  {
-    id: "file-system-mastery",
-    moduleId: "linux-basics",
-    name: "Linux File System Mastery",
-    description: "Master Linux file system navigation and operations",
-    difficulty: "Beginner",
-    duration: "40 min",
-    category: "file-system",
-    order: 1,
-    objectives: [
-      {
-        id: "fsm-obj-1",
-        objective: "Navigate complex directory structures",
-        order: 1,
-      },
-      {
-        id: "fsm-obj-2",
-        objective: "Master file and directory operations",
-        order: 2,
-      },
-      {
-        id: "fsm-obj-3",
-        objective: "Understand and modify permissions",
-        order: 3,
-      },
-      {
-        id: "fsm-obj-4",
-        objective: "Find and manipulate hidden files",
-        order: 4,
-      },
-    ],
-    steps: [
-      {
-        id: "fsm-step-1",
-        title: "Basic Navigation",
-        description: "Learn to navigate the Linux file system",
-        order: 1,
-        instructions:
-          "Use cd, ls, pwd commands to explore the directory structure",
-        expectedOutput: "Ability to navigate to any directory",
-        hints: [
-          {
-            text: "Use tab completion for faster navigation",
-            showAfter: 30,
-          },
-        ],
-        validation: {
-          type: "command",
-          criteria: "pwd returns /home/user/target",
-          autoCheck: true,
-        },
-      },
-    ],
-    config: {
-      environment: "virtual",
-      prerequisites: ["basic-linux-knowledge"],
-      tools: [
-        {
-          name: "Linux Terminal",
-          version: "Ubuntu 22.04",
-          required: true,
-        },
-      ],
-      estimatedTime: 40,
-      difficulty: 1,
-    },
-    resources: {
-      instructions: "Complete all file system exercises",
-      setupGuide: "Linux virtual machine will be provided",
-    },
-    assessment: {
-      type: "automated",
-      passingCriteria: "Complete all commands successfully",
-      submissionFormat: "screenshots",
-    },
-    tags: ["linux", "file-system", "hands-on"],
-  },
-];
-
 /**
- * Clear all existing data
+ * Clear all database collections
  */
 async function clearDatabase() {
-  console.log("🗑️  Clearing existing data...");
+  try {
+    console.log("🗑️  Clearing all database collections...");
 
-  await Phase.deleteMany({});
-  await Module.deleteMany({});
-  await Game.deleteMany({});
-  await Lab.deleteMany({});
+    const moduleResult = await Module.deleteMany({});
+    console.log(`   Cleared ${moduleResult.deletedCount} modules`);
 
-  console.log("✅ Database cleared");
+    const phaseResult = await Phase.deleteMany({});
+    console.log(`   Cleared ${phaseResult.deletedCount} phases`);
+
+    console.log("✅ Database cleared successfully");
+  } catch (error) {
+    console.error("❌ Error clearing database:", error.message);
+    throw error;
+  }
 }
 
 /**
- * Seed phases
+ * Seed phases into database
  */
 async function seedPhases() {
-  console.log("🌱 Seeding phases...");
+  try {
+    console.log("🌱 Seeding phases...");
 
-  for (const phaseData of PHASES_DATA) {
-    const phase = new Phase(phaseData);
-    await phase.save();
-    console.log(`   ✓ Created phase: ${phase.title}`);
+    const existingPhases = await Phase.countDocuments();
+    if (existingPhases > 0) {
+      console.log(`⚠️  Found ${existingPhases} existing phases. Skipping.`);
+      return;
+    }
+
+    const phases = await Phase.insertMany(PHASES_DATA);
+    console.log(`✅ Seeded ${phases.length} phases`);
+
+    return phases;
+  } catch (error) {
+    console.error("❌ Error seeding phases:", error.message);
+    throw error;
   }
-
-  console.log(`✅ Seeded ${PHASES_DATA.length} phases`);
 }
 
 /**
- * Seed modules
+ * Seed modules into database
  */
 async function seedModules() {
-  console.log("🌱 Seeding modules...");
+  try {
+    console.log("🌱 Seeding modules...");
 
-  for (const moduleData of MODULES_DATA) {
-    const module = new Module(moduleData);
-    await module.save();
-    console.log(`   ✓ Created module: ${module.title}`);
+    const existingModules = await Module.countDocuments();
+    if (existingModules > 0) {
+      console.log(`⚠️  Found ${existingModules} existing modules. Skipping.`);
+      return;
+    }
+
+    const modules = await Module.insertMany(MODULES_DATA);
+    console.log(`✅ Seeded ${modules.length} modules`);
+
+    return modules;
+  } catch (error) {
+    console.error("❌ Error seeding modules:", error.message);
+    throw error;
   }
-
-  console.log(`✅ Seeded ${MODULES_DATA.length} modules`);
 }
 
 /**
- * Seed games
- */
-async function seedGames() {
-  console.log("🌱 Seeding games...");
-
-  for (const gameData of GAMES_DATA) {
-    const game = new Game(gameData);
-    await game.save();
-    console.log(`   ✓ Created game: ${game.name}`);
-  }
-
-  console.log(`✅ Seeded ${GAMES_DATA.length} games`);
-}
-
-/**
- * Seed labs
- */
-async function seedLabs() {
-  console.log("🌱 Seeding labs...");
-
-  for (const labData of LABS_DATA) {
-    const lab = new Lab(labData);
-    await lab.save();
-    console.log(`   ✓ Created lab: ${lab.name}`);
-  }
-
-  console.log(`✅ Seeded ${LABS_DATA.length} labs`);
-}
-
-/**
- * Create admin user
+ * Create admin user for testing
  */
 async function createAdminUser() {
-  console.log("👤 Creating admin user...");
+  try {
+    console.log("👤 Creating admin user...");
 
-  const adminUser = new User({
-    username: "admin",
-    email: "admin@hacktheworld.com",
-    password: "HackTheWorld2024!",
-    role: "admin",
-    profile: {
-      firstName: "System",
-      lastName: "Administrator",
-      displayName: "Admin User",
-    },
-    experienceLevel: "expert",
-    status: "active",
-    security: {
-      emailVerified: true,
-    },
-  });
+    const adminUser = {
+      username: "admin",
+      email: "admin@hacktheworld.dev",
+      password: "SecurePass123!",
+      role: "admin",
+      profile: {
+        firstName: "Admin",
+        lastName: "User",
+        bio: "System administrator for Hack The World platform",
+        location: "Global",
+        website: "https://hacktheworld.dev",
+        socialLinks: {
+          linkedin: "https://linkedin.com/company/hacktheworld",
+          github: "https://github.com/hacktheworld",
+        },
+      },
+      preferences: {
+        emailNotifications: true,
+        theme: "dark",
+        language: "en",
+      },
+    };
 
-  await adminUser.save();
-  console.log("   ✓ Created admin user: admin@hacktheworld.com");
-  console.log("   ✓ Password: HackTheWorld2024!");
+    const existingAdmin = await User.findOne({ email: adminUser.email });
+    if (existingAdmin) {
+      console.log("⚠️  Admin user already exists. Skipping.");
+      return existingAdmin;
+    }
+
+    const admin = await User.create(adminUser);
+    console.log(`✅ Created admin user: ${admin.email}`);
+
+    return admin;
+  } catch (error) {
+    console.error("❌ Error creating admin user:", error.message);
+    throw error;
+  }
 }
 
 /**
- * Main seed function
+ * Seed all database collections
  */
 async function seedDatabase() {
   try {
-    console.log("🚀 Starting database seeding...");
-    console.log("=====================================");
+    console.log("🌱 Starting database seeding...");
+    console.log("================================");
 
-    // Connect to database
-    await database.connect();
-
-    // Clear existing data
-    await clearDatabase();
-
-    // Seed data in correct order (respecting foreign key relationships)
+    // Step 1: Seed phases first (modules depend on phases)
     await seedPhases();
+
+    // Step 2: Seed modules
     await seedModules();
-    await seedGames();
-    await seedLabs();
+
+    // Step 3: Create admin user
     await createAdminUser();
 
-    console.log("=====================================");
-    console.log("🎉 Database seeding completed successfully!");
-    console.log("");
-    console.log("📊 Summary:");
-    console.log(`   • ${PHASES_DATA.length} phases created`);
-    console.log(`   • ${MODULES_DATA.length} modules created`);
-    console.log(`   • ${GAMES_DATA.length} games created`);
-    console.log(`   • ${LABS_DATA.length} labs created`);
-    console.log("   • 1 admin user created");
-    console.log("");
-    console.log("🔐 Admin Credentials:");
-    console.log("   Email: admin@hacktheworld.com");
-    console.log("   Password: HackTheWorld2024!");
+    console.log("\n🎉 Database seeding completed successfully!");
+
+    // Show final status
+    await getDatabaseStatus();
   } catch (error) {
-    console.error("❌ Seeding failed:", error.message);
-    console.error(error.stack);
+    console.error("\n❌ Database seeding failed:", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Main function to run seeding
+ */
+async function main() {
+  try {
+    console.log("🔌 Connecting to database...");
+    await database.connect();
+    console.log("✅ Database connected");
+
+    // Get command line argument
+    const command = process.argv[2] || "seed";
+
+    switch (command) {
+      case "seed":
+        await seedDatabase();
+        break;
+
+      case "clear":
+        await clearDatabase();
+        break;
+
+      case "reseed":
+        console.log("🔄 Reseeding database...");
+        await clearDatabase();
+        await seedDatabase();
+        break;
+
+      case "status":
+        await getDatabaseStatus();
+        break;
+
+      default:
+        console.log("Usage: node seedData.js [seed|clear|reseed|status]");
+        break;
+    }
+  } catch (error) {
+    console.error("❌ Seeding error:", error.message);
     process.exit(1);
   } finally {
     await database.disconnect();
+    console.log("🔌 Database connection closed");
     process.exit(0);
   }
 }
 
-// Run seeding if called directly
-if (require.main === module) {
-  seedDatabase();
-}
-
+// Export functions for use in other scripts
 module.exports = {
   seedDatabase,
   clearDatabase,
+  seedPhases,
+  seedModules,
+  createAdminUser,
   PHASES_DATA,
   MODULES_DATA,
-  GAMES_DATA,
-  LABS_DATA,
 };
+
+// Run main function if this file is executed directly
+if (require.main === module) {
+  main();
+}

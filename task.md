@@ -29,7 +29,7 @@
 - **🎯 Frontend Enhancement**: 2 tasks (FE-ENH-001, FE-ENH-002) - 2-5 hours
 
 **🎯 Current Focus**: Complete SERVER foundation, then FRONTEND integration and enhancements
-**Next Priority**: Complete SRV-002 (Setup Seed Scripts & Utils) to continue server infrastructure
+**Next Priority**: Working on DOC-001 (Swagger API Documentation) - IN PROGRESS
 
 ---
 
@@ -38,8 +38,8 @@
 | Task ID     | Title                                        | Priority    | Status         | Assignee  | Due Date     | Progress | Dependencies | Estimated Hours | Details File                         |
 | ----------- | -------------------------------------------- | ----------- | -------------- | --------- | ------------ | -------- | ------------ | --------------- | ------------------------------------ |
 | **SRV-001** | **Fix SERVER Testing Environment**           | 🔴 Critical | ✅ Completed   | Developer | Jan 16, 2025 | 100%     | None         | 4-6 hours       | [tasks/SRV-001.md](tasks/SRV-001.md) |
-| **SRV-002** | **Setup SERVER Seed Scripts & Utils**        | 🔴 Critical | 📋 Not Started | Developer | Jan 17, 2025 | 0%       | SRV-001      | 3-4 hours       | [tasks/SRV-002.md](tasks/SRV-002.md) |
-| **DOC-001** | **Maintain Swagger API Documentation**       | 🟡 High     | 📋 Not Started | Developer | Jan 17, 2025 | 0%       | SRV-002      | 2-3 hours       | [tasks/DOC-001.md](tasks/DOC-001.md) |
+| **SRV-002** | **Setup SERVER Seed Scripts & Utils**        | 🔴 Critical | ✅ Completed   | Developer | Jan 17, 2025 | 100%     | SRV-001      | 3-4 hours       | [tasks/SRV-002.md](tasks/SRV-002.md) |
+| **DOC-001** | **Maintain Swagger API Documentation**       | 🟡 High     | 🔄 In Progress | Developer | Jan 17, 2025 | 0%       | SRV-002      | 2-3 hours       | [tasks/DOC-001.md](tasks/DOC-001.md) |
 | **CNT-001** | **Create ContentSection Model (SERVER)**     | 🟡 High     | 📋 Not Started | Developer | Jan 18, 2025 | 0%       | SRV-002      | 2-3 hours       | [tasks/CNT-001.md](tasks/CNT-001.md) |
 | **CNT-002** | **Create Video Model (SERVER)**              | 🟡 High     | 📋 Not Started | Developer | Jan 18, 2025 | 0%       | CNT-001      | 2-3 hours       | [tasks/CNT-002.md](tasks/CNT-002.md) |
 | **CNT-003** | **Create Lab Model (SERVER)**                | 🟡 High     | 📋 Not Started | Developer | Jan 19, 2025 | 0%       | CNT-001      | 2-3 hours       | [tasks/CNT-003.md](tasks/CNT-003.md) |

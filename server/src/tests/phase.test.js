@@ -1,33 +1,9 @@
 const request = require("supertest");
-const mongoose = require("mongoose");
-const { MongoMemoryServer } = require("mongodb-memory-server");
-const app = require("../../index");
+const app = require("./testApp");
 const Phase = require("../models/Phase");
 const { defaultPhases } = require("../utils/seedPhases");
 
 describe("Phase API Endpoints", () => {
-  let mongoServer;
-
-  beforeAll(async () => {
-    // Close any existing connections
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
-
-    // Create in-memory MongoDB instance
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-
-    // Connect to the in-memory database
-    await mongoose.connect(mongoUri);
-  });
-
-  afterAll(async () => {
-    // Clean up and close connections
-    await mongoose.disconnect();
-    await mongoServer.stop();
-  });
-
   beforeEach(async () => {
     // Clear the phases collection before each test
     await Phase.deleteMany({});

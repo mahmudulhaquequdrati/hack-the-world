@@ -6,7 +6,6 @@ const {
   updateAvatar,
 } = require("../controllers/profileController");
 const { protect } = require("../middleware/auth");
-const { validateRequest } = require("../middleware/validation");
 const {
   changePasswordValidation,
   updateBasicProfileValidation,
@@ -268,9 +267,7 @@ router.route("/").get(getProfile);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router
-  .route("/change-password")
-  .put(changePasswordValidation, validateRequest, changePassword);
+router.route("/change-password").put(changePasswordValidation, changePassword);
 
 /**
  * @swagger
@@ -321,9 +318,7 @@ router
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router
-  .route("/basic")
-  .put(updateBasicProfileValidation, validateRequest, updateBasicProfile);
+router.route("/basic").put(updateBasicProfileValidation, updateBasicProfile);
 
 /**
  * @swagger
@@ -374,8 +369,6 @@ router
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router
-  .route("/avatar")
-  .put(updateAvatarValidation, validateRequest, updateAvatar);
+router.route("/avatar").put(updateAvatarValidation, updateAvatar);
 
 module.exports = router;

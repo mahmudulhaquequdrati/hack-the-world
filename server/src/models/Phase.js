@@ -13,6 +13,10 @@ const phaseSchema = new mongoose.Schema(
       required: [true, "Phase ID is required"],
       unique: true,
       trim: true,
+      set: function (value) {
+        // Convert to lowercase before validation
+        return value ? value.toLowerCase() : value;
+      },
       enum: {
         values: ["beginner", "intermediate", "advanced"],
         message: "Phase ID must be one of: beginner, intermediate, advanced",
@@ -77,9 +81,8 @@ const phaseSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for performance
-phaseSchema.index({ phaseId: 1 });
-phaseSchema.index({ order: 1 });
+// No additional indexes needed - phaseId and order already have unique constraints
+// which automatically create single-field indexes in MongoDB
 
 // Pre-save middleware for validation
 phaseSchema.pre("save", function (next) {

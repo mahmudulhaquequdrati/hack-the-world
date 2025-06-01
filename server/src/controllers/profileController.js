@@ -41,19 +41,6 @@ const getProfile = asyncHandler(async (req, res, next) => {
 const changePassword = asyncHandler(async (req, res, next) => {
   const { currentPassword, newPassword } = req.body;
 
-  // Validation
-  if (!currentPassword || !newPassword) {
-    return next(
-      new ErrorResponse("Current password and new password are required", 400)
-    );
-  }
-
-  if (newPassword.length < 8) {
-    return next(
-      new ErrorResponse("New password must be at least 8 characters long", 400)
-    );
-  }
-
   // Get user with password field
   const user = await User.findById(req.user.id).select("+password");
 
@@ -75,18 +62,6 @@ const changePassword = asyncHandler(async (req, res, next) => {
     return next(
       new ErrorResponse(
         "New password must be different from current password",
-        400
-      )
-    );
-  }
-
-  // Validate new password strength
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])/;
-  if (!passwordRegex.test(newPassword)) {
-    return next(
-      new ErrorResponse(
-        "Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character",
         400
       )
     );
@@ -143,18 +118,7 @@ const updateBasicProfile = asyncHandler(async (req, res, next) => {
   if (displayName !== undefined) user.profile.displayName = displayName;
   if (bio !== undefined) user.profile.bio = bio;
   if (location !== undefined) user.profile.location = location;
-  if (website !== undefined) {
-    // Validate website URL if provided
-    if (website && !/^https?:\/\/.+/.test(website)) {
-      return next(
-        new ErrorResponse(
-          "Website must be a valid URL starting with http:// or https://",
-          400
-        )
-      );
-    }
-    user.profile.website = website;
-  }
+  if (website !== undefined) user.profile.website = website;
 
   // Save user
   await user.save();
@@ -178,17 +142,6 @@ const updateBasicProfile = asyncHandler(async (req, res, next) => {
  */
 const updateAvatar = asyncHandler(async (req, res, next) => {
   const { avatar } = req.body;
-
-  if (!avatar) {
-    return next(new ErrorResponse("Avatar URL is required", 400));
-  }
-
-  // Basic URL validation
-  try {
-    new URL(avatar);
-  } catch (error) {
-    return next(new ErrorResponse("Invalid avatar URL", 400));
-  }
 
   // Get current user
   const user = await User.findById(req.user.id);

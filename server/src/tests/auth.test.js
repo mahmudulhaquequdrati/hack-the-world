@@ -201,8 +201,8 @@ describe("🔐 Authentication Endpoints", () => {
         password: "wrongpassword",
       };
 
-      // Make multiple failed login attempts (assuming lockout after 5 attempts)
-      for (let i = 0; i < 5; i++) {
+      // Make multiple failed login attempts (assuming lockout after 10 attempts)
+      for (let i = 0; i < 10; i++) {
         await request(app)
           .post("/api/auth/login")
           .send(invalidData)

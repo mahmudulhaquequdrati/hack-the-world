@@ -64,8 +64,12 @@ const createPhaseValidation = [
 
 const updatePhaseValidation = [
   param("phaseId")
-    .isIn(["beginner", "intermediate", "advanced"])
-    .withMessage("Phase ID must be one of: beginner, intermediate, advanced")
+    .notEmpty()
+    .withMessage("Phase ID is required")
+    .isLength({ min: 1, max: 50 })
+    .withMessage("Phase ID must be between 1 and 50 characters")
+    .matches(/^[a-zA-Z0-9]+$/)
+    .withMessage("Phase ID can only contain letters and numbers")
     .trim()
     .escape(),
 
@@ -109,8 +113,12 @@ const updatePhaseValidation = [
 
 const phaseIdValidation = [
   param("phaseId")
-    .isIn(["beginner", "intermediate", "advanced"])
-    .withMessage("Phase ID must be one of: beginner, intermediate, advanced")
+    .notEmpty()
+    .withMessage("Phase ID is required")
+    .isLength({ min: 1, max: 50 })
+    .withMessage("Phase ID must be between 1 and 50 characters")
+    .matches(/^[a-zA-Z0-9]+$/)
+    .withMessage("Phase ID can only contain letters and numbers")
     .trim()
     .escape(),
 

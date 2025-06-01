@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       match: [
-        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
         "Please provide a valid email",
       ],
     },
@@ -139,6 +139,14 @@ const userSchema = new mongoose.Schema(
       lastLogin: {
         type: Date,
       },
+      loginAttempts: {
+        type: Number,
+        default: 0,
+      },
+      lockUntil: {
+        type: Date,
+        select: false,
+      },
     },
   },
   {
@@ -237,6 +245,35 @@ userSchema.methods.createPasswordResetToken = function () {
 
   // Return the plain token for the email
   return resetToken;
+};
+
+// Account lockout methods
+userSchema.methods.incrementLoginAttempts = async function () {
+  // If we have a previous lock that has expired, restart at 1
+  if (this.security.lockUntil && this.security.lockUntil < Date.now()) {
+    return this.updateOne({
+      $unset: { "security.lockUntil": 1 },
+      $set: { "security.loginAttempts": 1 },
+    });
+  }
+
+  const updates = { $inc: { "security.loginAttempts": 1 } };
+
+  // If we're hitting 11 attempts, lock for 1 hour (lock AFTER 10 attempts, on the 11th)
+  if (this.security.loginAttempts + 1 >= 11 && !this.security.lockUntil) {
+    updates.$set = { "security.lockUntil": Date.now() + 1 * 60 * 60 * 1000 }; // 1 hour
+  }
+
+  return this.updateOne(updates);
+};
+
+userSchema.methods.resetLoginAttempts = async function () {
+  return this.updateOne({
+    $unset: {
+      "security.loginAttempts": 1,
+      "security.lockUntil": 1,
+    },
+  });
 };
 
 // Static methods for common queries

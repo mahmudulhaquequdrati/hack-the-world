@@ -119,10 +119,33 @@ const login = async (req, res, next) => {
       throw new APIError("Invalid credentials", 401);
     }
 
+    // Check if account is locked
+    if (user.security.lockUntil && user.security.lockUntil > Date.now()) {
+      throw new APIError(
+        "Account temporarily locked due to too many failed login attempts",
+        423
+      );
+    }
+
     // Verify password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       await user.incrementLoginAttempts();
+
+      // Check if account should be locked after this failed attempt
+      const updatedUser = await User.findById(user._id).select(
+        "+security.lockUntil"
+      );
+      if (
+        updatedUser.security.lockUntil &&
+        updatedUser.security.lockUntil > Date.now()
+      ) {
+        throw new APIError(
+          "Account temporarily locked due to too many failed login attempts. Please try again in 1 hour.",
+          423
+        );
+      }
+
       throw new APIError("Invalid credentials", 401);
     }
 

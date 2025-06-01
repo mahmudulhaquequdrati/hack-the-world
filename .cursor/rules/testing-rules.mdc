@@ -14,6 +14,7 @@ alwaysApply: true
 - **NEVER** skip testing for "simple" functions
 - **ALWAYS** achieve minimum 80% code coverage
 - **ALWAYS** test both success and failure scenarios
+- **Always** test single first to make things more easier
 
 ## 🎯 Testing Standards
 

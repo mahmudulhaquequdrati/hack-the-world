@@ -1,4 +1,28 @@
-const { body } = require("express-validator");
+const { body, validationResult } = require("express-validator");
+
+/**
+ * Validation middleware to handle express-validator errors
+ * Should be used after validation chain
+ */
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const formattedErrors = errors.array().map((error) => ({
+      field: error.path || error.param,
+      msg: error.msg,
+      value: error.value,
+    }));
+
+    return res.status(400).json({
+      success: false,
+      message: "Validation error",
+      errors: formattedErrors,
+    });
+  }
+
+  next();
+};
 
 /**
  * Validation rules for changing password
@@ -14,6 +38,7 @@ const changePasswordValidation = [
     .withMessage(
       "Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character"
     ),
+  handleValidationErrors,
 ];
 
 /**
@@ -52,6 +77,7 @@ const updateBasicProfileValidation = [
     .withMessage(
       "Website must be a valid URL starting with http:// or https://"
     ),
+  handleValidationErrors,
 ];
 
 /**
@@ -63,6 +89,7 @@ const updateAvatarValidation = [
     .withMessage("Avatar URL is required")
     .isURL()
     .withMessage("Avatar must be a valid URL"),
+  handleValidationErrors,
 ];
 
 module.exports = {

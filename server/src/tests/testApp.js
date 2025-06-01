@@ -11,8 +11,8 @@ const errorHandler = require("../middleware/errorHandler");
 // Import routes
 const authRoutes = require("../routes/auth");
 const profileRoutes = require("../routes/profile");
+const phaseRoutes = require("../routes/phase");
 // TODO: Add these routes when they are created
-// const phaseRoutes = require("../routes/phases");
 // const moduleRoutes = require("../routes/modules");
 // const gameRoutes = require("../routes/games");
 // const labRoutes = require("../routes/labs");
@@ -96,6 +96,7 @@ app.get("/health", (req, res) => {
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/phases", phaseRoutes);
 
 // API documentation route
 app.get("/api", (req, res) => {
@@ -106,6 +107,7 @@ app.get("/api", (req, res) => {
     endpoints: {
       auth: "/api/auth",
       profile: "/api/profile",
+      phases: "/api/phases",
     },
   });
 });

@@ -274,12 +274,11 @@ const moduleSchema = new mongoose.Schema(
 );
 
 // Compound indexes for performance
-moduleSchema.index({ phaseId: 1, order: 1 });
-moduleSchema.index({ moduleId: 1 });
+// moduleId already has unique constraint so no separate index needed
 moduleSchema.index({ phaseId: 1, moduleId: 1 });
 moduleSchema.index({ isActive: 1 });
 
-// Ensure unique order within each phase
+// Ensure unique order within each phase (this covers phaseId + order compound index)
 moduleSchema.index({ phaseId: 1, order: 1 }, { unique: true });
 
 // Virtual to populate phase information
@@ -380,8 +379,8 @@ moduleSchema.statics.removeContentFromModule = async function (
 
 // Pre-save middleware to auto-generate moduleId from title
 moduleSchema.pre("save", function (next) {
-  // Auto-generate moduleId from title if not provided or if title changed
-  if (this.isNew || this.isModified("title")) {
+  // Auto-generate moduleId from title only if not provided (new docs without moduleId)
+  if (this.isNew && !this.moduleId) {
     try {
       this.moduleId = generateModuleId(this.title);
     } catch (error) {
@@ -409,6 +408,33 @@ moduleSchema.pre("save", function (next) {
     this.isModified("content.games") ||
     this.isModified("content.documents")
   ) {
+    // Ensure content object exists
+    if (!this.content) {
+      this.content = {
+        videos: [],
+        labs: [],
+        games: [],
+        documents: [],
+      };
+    }
+
+    // Ensure content arrays exist
+    if (!this.content.videos) this.content.videos = [];
+    if (!this.content.labs) this.content.labs = [];
+    if (!this.content.games) this.content.games = [];
+    if (!this.content.documents) this.content.documents = [];
+
+    // Ensure contentStats object exists
+    if (!this.contentStats) {
+      this.contentStats = {
+        totalVideos: 0,
+        totalLabs: 0,
+        totalGames: 0,
+        totalDocuments: 0,
+        totalContent: 0,
+      };
+    }
+
     // Update content statistics
     this.contentStats.totalVideos = this.content.videos.length;
     this.contentStats.totalLabs = this.content.labs.length;

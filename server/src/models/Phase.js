@@ -60,12 +60,21 @@ const phaseSchema = new mongoose.Schema(
       virtuals: true,
       transform: function (doc, ret) {
         // Include _id as id in JSON output for frontend compatibility
-        ret.id = ret._id;
+        ret.id = ret._id.toString();
+        delete ret._id;
         delete ret.__v;
         return ret;
       },
     },
-    toObject: { virtuals: true },
+    toObject: {
+      virtuals: true,
+      transform: function (doc, ret) {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
   }
 );
 

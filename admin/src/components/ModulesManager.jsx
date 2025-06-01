@@ -396,15 +396,14 @@ const ModulesManager = () => {
                       <td className="py-3 px-4">
                         <span
                           className={`px-2 py-1 rounded text-xs font-semibold ${
-                            module.phaseId === "beginner"
+                            module?.phase?.title?.includes("Beginner")
                               ? "bg-green-500/20 text-green-400"
-                              : module.phaseId === "intermediate"
+                              : module?.phase?.title?.includes("Intermediate")
                               ? "bg-yellow-500/20 text-yellow-400"
                               : "bg-red-500/20 text-red-400"
                           }`}
                         >
-                          {module.phaseId?.charAt(0).toUpperCase() +
-                            module.phaseId?.slice(1)}
+                          {module?.phase?.title}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-green-400 font-bold">

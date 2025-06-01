@@ -11,13 +11,14 @@
 
 ## 📈 TASK SUMMARY
 
-**Total Active Tasks**: 24 tasks (16 SERVER-SIDE + 8 FRONTEND)
-**Estimated Total Time**: 50-68 hours
-**Critical Path**: SRV-001 → SRV-002 → CNT series → API series → TRK series → Frontend Integration
+**Total Active Tasks**: 25 tasks (17 SERVER-SIDE + 8 FRONTEND)
+**Estimated Total Time**: 52-71 hours
+**Critical Path**: SRV-001 → SRV-002 → DOC-001 → CNT series → API series → TRK series → Frontend Integration
 
 **SERVER Task Breakdown by Type**:
 
 - **🏗️ Server Infrastructure**: 2 tasks (SRV-001, SRV-002) - 7-10 hours
+- **📖 Server Documentation**: 1 task (DOC-001) - 2-3 hours
 - **📊 Server Models**: 8 tasks (CNT-001 to CNT-006, TRK-001, TRK-002) - 16-24 hours
 - **🔌 Server APIs**: 6 tasks (API-001 to API-004, TRK-003, TRK-004) - 17-20 hours
 
@@ -32,22 +33,13 @@
 
 ---
 
-## 🚧 FUTURE FRONTEND TASKS (Not Created Yet)
-
-**Planned Frontend Task Categories**:
-
-- **🎨 FE-Components**: React component development
-- **📱 FE-Pages**: Page-level components and routing
-- **🎮 FE-Features**: Interactive features (games, terminal, etc.)
-- **🎯 FE-Integration**: Frontend-backend integration
-- **🧪 FE-Testing**: Frontend testing and validation
-
 ## 📊 ACTIVE SERVER TASKS (High Priority)
 
 | Task ID     | Title                                        | Priority    | Status         | Assignee  | Due Date     | Progress | Dependencies | Estimated Hours | Details File                         |
 | ----------- | -------------------------------------------- | ----------- | -------------- | --------- | ------------ | -------- | ------------ | --------------- | ------------------------------------ |
 | **SRV-001** | **Fix SERVER Testing Environment**           | 🔴 Critical | 🔄 In Progress | Developer | Jan 16, 2025 | 20%      | None         | 4-6 hours       | [tasks/SRV-001.md](tasks/SRV-001.md) |
 | **SRV-002** | **Setup SERVER Seed Scripts & Utils**        | 🔴 Critical | 📋 Not Started | Developer | Jan 17, 2025 | 0%       | SRV-001      | 3-4 hours       | [tasks/SRV-002.md](tasks/SRV-002.md) |
+| **DOC-001** | **Maintain Swagger API Documentation**       | 🟡 High     | 📋 Not Started | Developer | Jan 17, 2025 | 0%       | SRV-002      | 2-3 hours       | [tasks/DOC-001.md](tasks/DOC-001.md) |
 | **CNT-001** | **Create ContentSection Model (SERVER)**     | 🟡 High     | 📋 Not Started | Developer | Jan 18, 2025 | 0%       | SRV-002      | 2-3 hours       | [tasks/CNT-001.md](tasks/CNT-001.md) |
 | **CNT-002** | **Create Video Model (SERVER)**              | 🟡 High     | 📋 Not Started | Developer | Jan 18, 2025 | 0%       | CNT-001      | 2-3 hours       | [tasks/CNT-002.md](tasks/CNT-002.md) |
 | **CNT-003** | **Create Lab Model (SERVER)**                | 🟡 High     | 📋 Not Started | Developer | Jan 19, 2025 | 0%       | CNT-001      | 2-3 hours       | [tasks/CNT-003.md](tasks/CNT-003.md) |
@@ -129,17 +121,19 @@ SRV-001 (Testing Environment)
     ↓
 SRV-002 (Seed Scripts)
     ↓
+DOC-001 (Swagger Documentation Maintenance)
+    ↓
 CNT-001 (ContentSection Model)
     ↓
 [CNT-002, CNT-003, CNT-004, CNT-005] (Content Models - can be parallel)
     ↓
 CNT-006 (ContentAssets Model)
     ↓
-[API-001, API-002, API-003, API-004] (API Endpoints - can be parallel)
+[API-001, API-002, API-003, API-004] (API Endpoints - can be parallel) **[ALL MUST INCLUDE SWAGGER DOCS]**
     ↓
 [TRK-001, TRK-002] (Tracking Models - can be parallel)
     ↓
-[TRK-003, TRK-004] (Tracking APIs - can be parallel)
+[TRK-003, TRK-004] (Tracking APIs - can be parallel) **[ALL MUST INCLUDE SWAGGER DOCS]**
     ↓
 [FE-INT-001, FE-INT-002, FE-INT-003, FE-INT-004, FE-INT-005] (Frontend Integration - can be parallel)
     ↓
@@ -152,12 +146,14 @@ FE-TEST-001 (Frontend Testing - can run parallel with server tasks)
 **Parallel Development Opportunities**:
 
 - CNT-002 through CNT-005 can be developed simultaneously
-- API-001 through API-004 can be developed simultaneously
+- API-001 through API-004 can be developed simultaneously (ALL MUST INCLUDE SWAGGER DOCS)
 - TRK-001 and TRK-002 can be developed simultaneously
-- TRK-003 and TRK-004 can be developed simultaneously
+- TRK-003 and TRK-004 can be developed simultaneously (ALL MUST INCLUDE SWAGGER DOCS)
 - FE-INT-001 through FE-INT-005 can be developed simultaneously after APIs are ready
 - FE-ENH-001 and FE-ENH-002 can be developed simultaneously
 - FE-TEST-001 can be worked on independently
+
+**📖 SWAGGER DOCUMENTATION REQUIREMENT**: All API endpoint tasks (API-001, API-002, API-003, API-004, TRK-003, TRK-004) MUST include comprehensive Swagger/OpenAPI documentation following the established patterns in the existing codebase.
 
 This should significantly reduce development time through parallel work!
 
@@ -167,9 +163,9 @@ This should significantly reduce development time through parallel work!
 
 ### 🛠️ SERVER Task Progress Status:
 
-- **Active SERVER Tasks**: 16 (SRV-001 to TRK-004)
-- **Priority Distribution**: 2 Critical, 14 High Priority
-- **Estimated Completion**: 40-52 hours total development time
+- **Active SERVER Tasks**: 17 (SRV-001 to TRK-004, plus DOC-001)
+- **Priority Distribution**: 2 Critical, 15 High Priority
+- **Estimated Completion**: 42-55 hours total development time
 - **Dependencies**: Linear progression from server foundation to complete tracking system
 
 ### 📱 FRONTEND Task Progress Status:
@@ -245,6 +241,10 @@ All detailed task specifications are organized in the **[tasks/](tasks/)** folde
 - [SRV-001: Fix SERVER Testing Environment](tasks/SRV-001.md) - 🔴 Critical, In Progress
 - [SRV-002: Setup SERVER Seed Scripts & Utils](tasks/SRV-002.md) - 🔴 Critical
 
+### 📖 Server Documentation Tasks
+
+- [DOC-001: Maintain Swagger API Documentation](tasks/DOC-001.md) - 🟡 High Priority
+
 ### 📊 Server Model Tasks
 
 - [CNT-001: Create ContentSection Model (SERVER)](tasks/CNT-001.md) - Central content hub
@@ -256,14 +256,14 @@ All detailed task specifications are organized in the **[tasks/](tasks/)** folde
 - [TRK-001: Create UserEnrollment Model (SERVER)](tasks/TRK-001.md) - Enrollment tracking
 - [TRK-002: Create UserProgress Model (SERVER)](tasks/TRK-002.md) - Content progress tracking
 
-### 🔌 Server API Tasks
+### 🔌 Server API Tasks (ALL MUST INCLUDE SWAGGER DOCUMENTATION)
 
-- [API-001: Create Video API Endpoints (SERVER)](tasks/API-001.md) - Video CRUD operations
-- [API-002: Create Lab API Endpoints (SERVER)](tasks/API-002.md) - Lab CRUD operations
-- [API-003: Create Game API Endpoints (SERVER)](tasks/API-003.md) - Game CRUD operations
-- [API-004: Create Document API Endpoints (SERVER)](tasks/API-004.md) - Document CRUD operations
-- [TRK-003: Create Enrollment API Endpoints (SERVER)](tasks/TRK-003.md) - Enrollment APIs
-- [TRK-004: Create Progress Tracking API (SERVER)](tasks/TRK-004.md) - Progress tracking APIs
+- [API-001: Create Video API Endpoints (SERVER)](tasks/API-001.md) - Video CRUD operations + Swagger docs
+- [API-002: Create Lab API Endpoints (SERVER)](tasks/API-002.md) - Lab CRUD operations + Swagger docs
+- [API-003: Create Game API Endpoints (SERVER)](tasks/API-003.md) - Game CRUD operations + Swagger docs
+- [API-004: Create Document API Endpoints (SERVER)](tasks/API-004.md) - Document CRUD operations + Swagger docs
+- [TRK-003: Create Enrollment API Endpoints (SERVER)](tasks/TRK-003.md) - Enrollment APIs + Swagger docs
+- [TRK-004: Create Progress Tracking API (SERVER)](tasks/TRK-004.md) - Progress tracking APIs + Swagger docs
 
 ## 📱 CURRENT: FRONTEND TASKS
 

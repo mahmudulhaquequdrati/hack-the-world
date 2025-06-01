@@ -24,7 +24,7 @@ const ModulesManager = () => {
     description: "",
     icon: "",
     difficulty: "",
-    color: "",
+    color: "#00ff00",
     order: "",
     topics: "",
     isActive: true,
@@ -104,7 +104,7 @@ const ModulesManager = () => {
         description: module.description || "",
         icon: module.icon || "",
         difficulty: module.difficulty || "",
-        color: module.color || "",
+        color: module.color || "#00ff00",
         order: module.order?.toString() || "",
         topics: Array.isArray(module.topics) ? module.topics.join(", ") : "",
         isActive: module.isActive !== false,
@@ -117,7 +117,7 @@ const ModulesManager = () => {
         description: "",
         icon: "",
         difficulty: "",
-        color: "",
+        color: "#00ff00",
         order: "",
         topics: "",
         isActive: true,
@@ -164,6 +164,11 @@ const ModulesManager = () => {
       // Validate order is positive
       if (moduleData.order < 1) {
         throw new Error("Order must be a positive number");
+      }
+
+      // Validate color format
+      if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(moduleData.color)) {
+        throw new Error("Please enter a valid hex color code");
       }
 
       console.log("Submitting module data:", moduleData);
@@ -233,16 +238,6 @@ const ModulesManager = () => {
   };
 
   const difficultyLevels = ["Beginner", "Intermediate", "Advanced", "Expert"];
-  const colorOptions = [
-    "green",
-    "blue",
-    "purple",
-    "red",
-    "yellow",
-    "pink",
-    "indigo",
-    "gray",
-  ];
 
   return (
     <div className="space-y-6">
@@ -602,7 +597,7 @@ const ModulesManager = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-green-400 mb-2">
                     Icon *
@@ -637,24 +632,30 @@ const ModulesManager = () => {
                     ))}
                   </select>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-green-400 mb-2">
-                    Color Theme
-                  </label>
-                  <select
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-green-400 mb-2">
+                  Color (Hex) *
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="color"
                     name="color"
-                    className="input-field w-full"
+                    className="w-12 h-10 border border-gray-600 rounded cursor-pointer"
                     value={formData.color}
                     onChange={handleInputChange}
-                  >
-                    <option value="">Select Color</option>
-                    {colorOptions.map((color) => (
-                      <option key={color} value={color}>
-                        {color.charAt(0).toUpperCase() + color.slice(1)}
-                      </option>
-                    ))}
-                  </select>
+                  />
+                  <input
+                    type="text"
+                    name="color"
+                    required
+                    className="input-field flex-1"
+                    value={formData.color}
+                    onChange={handleInputChange}
+                    placeholder="#00ff00"
+                    pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+                    title="Enter a valid hex color code"
+                  />
                 </div>
               </div>
 

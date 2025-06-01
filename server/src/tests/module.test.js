@@ -62,7 +62,7 @@ describe("📚 Module System Tests", () => {
 
     // Create test module using the phase's ObjectId
     testModule = await Module.create({
-      phaseId: testPhase._id, // Use ObjectId instead of string
+      phaseId: testPhase.id, // Use ObjectId instead of string
       title: "Test Cybersecurity Foundations",
       description: "Essential concepts and terminology for testing",
       icon: "Shield",
@@ -96,12 +96,12 @@ describe("📚 Module System Tests", () => {
 
     it("should get modules by phase", async () => {
       const response = await request(app)
-        .get(`/api/modules?phase=${testPhase._id}`)
+        .get(`/api/modules?phase=${testPhase.id}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.length).toBe(1);
-      expect(response.body.data[0].phaseId).toBe(testPhase._id.toString());
+      expect(response.body.data[0].phaseId).toBe(testPhase.id.toString());
     });
 
     it("should get modules grouped by phase", async () => {
@@ -112,7 +112,7 @@ describe("📚 Module System Tests", () => {
       expect(response.body.success).toBe(true);
       expect(typeof response.body.data).toBe("object");
       // Check using ObjectId as key
-      const phaseKey = testPhase._id.toString();
+      const phaseKey = testPhase.id.toString();
       expect(response.body.data[phaseKey]).toBeDefined();
       expect(response.body.data[phaseKey].modules.length).toBe(1);
     });
@@ -132,25 +132,25 @@ describe("📚 Module System Tests", () => {
       expect(response.body.data.length).toBe(1);
 
       const phaseWithModules = response.body.data[0];
-      expect(phaseWithModules.id).toBe(testPhase._id.toString());
+      expect(phaseWithModules.id).toBe(testPhase.id.toString());
       expect(phaseWithModules.title).toBe("Beginner Phase");
       expect(Array.isArray(phaseWithModules.modules)).toBe(true);
       expect(phaseWithModules.modules.length).toBe(1);
-      expect(phaseWithModules.modules[0].id).toBe(testModule._id.toString());
+      expect(phaseWithModules.modules[0].id).toBe(testModule.id.toString());
     });
   });
 
   describe("GET /api/modules/:id", () => {
     it("should get single module by id", async () => {
       const response = await request(app)
-        .get(`/api/modules/${testModule._id}`)
+        .get(`/api/modules/${testModule.id}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.message).toBe("Module retrieved successfully");
-      expect(response.body.data.id).toBe(testModule._id.toString());
+      expect(response.body.data.id).toBe(testModule.id.toString());
       expect(response.body.data.title).toBe("Test Cybersecurity Foundations");
-      expect(response.body.data.phaseId).toBe(testPhase._id.toString());
+      expect(response.body.data.phaseId).toBe(testPhase.id.toString());
       expect(response.body.data.topics).toEqual([
         "Security Basics",
         "Threat Models",
@@ -171,7 +171,7 @@ describe("📚 Module System Tests", () => {
 
   describe("POST /api/modules", () => {
     const getValidModuleData = () => ({
-      phaseId: testPhase._id.toString(), // Use testPhase ObjectId
+      phaseId: testPhase.id.toString(), // Use testPhase ObjectId
       title: "New Test Module",
       description: "A new module for testing",
       icon: "Code",
@@ -193,7 +193,7 @@ describe("📚 Module System Tests", () => {
       expect(response.body.message).toBe("Module created successfully");
       expect(response.body.data.id).toBeDefined();
       expect(response.body.data.title).toBe("New Test Module");
-      expect(response.body.data.phaseId).toBe(testPhase._id.toString());
+      expect(response.body.data.phaseId).toBe(testPhase.id.toString());
     });
 
     it("should not create module with non-existent phase", async () => {
@@ -251,7 +251,7 @@ describe("📚 Module System Tests", () => {
       };
 
       const response = await request(app)
-        .put(`/api/modules/${testModule._id}`)
+        .put(`/api/modules/${testModule.id}`)
         .send(updateData)
         .expect(200);
 
@@ -268,7 +268,7 @@ describe("📚 Module System Tests", () => {
       };
 
       const response = await request(app)
-        .put(`/api/modules/${testModule._id}`)
+        .put(`/api/modules/${testModule.id}`)
         .send(updateData)
         .expect(400);
 
@@ -293,14 +293,14 @@ describe("📚 Module System Tests", () => {
   describe("DELETE /api/modules/:id", () => {
     it("should delete module", async () => {
       const response = await request(app)
-        .delete(`/api/modules/${testModule._id}`)
+        .delete(`/api/modules/${testModule.id}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.message).toBe("Module deleted successfully");
 
       // Verify module is actually deleted
-      const deletedModule = await Module.findById(testModule._id);
+      const deletedModule = await Module.findById(testModule.id);
       expect(deletedModule).toBeNull();
     });
 
@@ -318,12 +318,12 @@ describe("📚 Module System Tests", () => {
   describe("GET /api/modules/phase/:phaseId", () => {
     it("should get modules by phase", async () => {
       const response = await request(app)
-        .get(`/api/modules/phase/${testPhase._id}`)
+        .get(`/api/modules/phase/${testPhase.id}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.length).toBe(1);
-      expect(response.body.data[0].phaseId).toBe(testPhase._id.toString());
+      expect(response.body.data[0].phaseId).toBe(testPhase.id.toString());
     });
 
     it("should return empty array for phase with no modules", async () => {
@@ -337,7 +337,7 @@ describe("📚 Module System Tests", () => {
       });
 
       const response = await request(app)
-        .get(`/api/modules/phase/${emptyPhase._id}`)
+        .get(`/api/modules/phase/${emptyPhase.id}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -348,7 +348,7 @@ describe("📚 Module System Tests", () => {
   describe("Module Model Validation", () => {
     it("should auto-generate content arrays if not provided", async () => {
       const moduleData = {
-        phaseId: testPhase._id,
+        phaseId: testPhase.id,
         title: "Content Test Module",
         description: "Testing content arrays",
         icon: "Test",
@@ -367,7 +367,7 @@ describe("📚 Module System Tests", () => {
 
     it("should validate difficulty enum", async () => {
       const invalidData = {
-        phaseId: testPhase._id,
+        phaseId: testPhase.id,
         title: "Invalid Difficulty Module",
         description: "Testing invalid difficulty",
         icon: "Test",
@@ -381,7 +381,7 @@ describe("📚 Module System Tests", () => {
 
     it("should validate topics array", async () => {
       const moduleWithTopics = await Module.create({
-        phaseId: testPhase._id,
+        phaseId: testPhase.id,
         title: "Topics Test Module",
         description: "Testing topics validation",
         icon: "Test",
@@ -397,9 +397,9 @@ describe("📚 Module System Tests", () => {
 
   describe("Module Static Methods", () => {
     it("should get modules by phase using static method", async () => {
-      const modules = await Module.getByPhase(testPhase._id);
+      const modules = await Module.getByPhase(testPhase.id);
       expect(modules.length).toBe(1);
-      expect(modules[0].phaseId.toString()).toBe(testPhase._id.toString());
+      expect(modules[0].phaseId.toString()).toBe(testPhase.id.toString());
     });
 
     it("should get all modules with phases", async () => {
@@ -411,7 +411,7 @@ describe("📚 Module System Tests", () => {
 
     it("should get modules grouped by phase", async () => {
       const grouped = await Module.getGroupedByPhase();
-      const phaseKey = testPhase._id.toString();
+      const phaseKey = testPhase.id.toString();
       expect(grouped[phaseKey]).toBeDefined();
       expect(grouped[phaseKey].modules.length).toBe(1);
       expect(grouped[phaseKey].phase.title).toBe("Beginner Phase");
@@ -420,10 +420,10 @@ describe("📚 Module System Tests", () => {
 
   describe("Module-Phase Integration", () => {
     it("should populate phase information in module", async () => {
-      const module = await Module.findById(testModule._id).populate("phase");
+      const module = await Module.findById(testModule.id).populate("phase");
       expect(module.phase).toBeDefined();
       expect(module.phase.title).toBe("Beginner Phase");
-      expect(module.phase.id).toBe(testPhase._id.toString());
+      expect(module.phase.id).toBe(testPhase.id.toString());
     });
 
     it("should prevent creating module with non-existent phase", async () => {
@@ -469,18 +469,19 @@ describe("📚 Module System Tests", () => {
     describe("Content Fields in Module Creation", () => {
       it("should create module with content arrays", async () => {
         const moduleData = {
-          phaseId: testPhase._id,
-          title: "Content Rich Module",
-          description: "Module with various content types",
+          phaseId: testPhase.id,
+          title: "Content Test Module",
+          description: "Module with initial content",
           icon: "Content",
           difficulty: "Intermediate",
-          color: "text-purple-400",
+          color: "text-green-400",
           order: 7,
           content: {
             videos: ["video-1", "video-2"],
             labs: ["lab-1"],
-            games: ["game-1", "game-2", "game-3"],
+            games: [],
             documents: ["doc-1"],
+            estimatedHours: 4,
           },
         };
 
@@ -488,13 +489,14 @@ describe("📚 Module System Tests", () => {
 
         expect(module.content.videos).toEqual(["video-1", "video-2"]);
         expect(module.content.labs).toEqual(["lab-1"]);
-        expect(module.content.games).toEqual(["game-1", "game-2", "game-3"]);
+        expect(module.content.games).toEqual([]);
         expect(module.content.documents).toEqual(["doc-1"]);
+        expect(module.content.estimatedHours).toBe(4);
       });
 
       it("should create module with empty content arrays by default", async () => {
         const moduleData = {
-          phaseId: testPhase._id,
+          phaseId: testPhase.id,
           title: "Empty Content Module",
           description: "Module with default empty content",
           icon: "Empty",
@@ -515,7 +517,7 @@ describe("📚 Module System Tests", () => {
     describe("Content Validation", () => {
       it("should validate content array elements", async () => {
         const moduleData = {
-          phaseId: testPhase._id,
+          phaseId: testPhase.id,
           title: "Validation Test Module",
           description: "Testing content validation",
           icon: "Validate",
@@ -534,7 +536,7 @@ describe("📚 Module System Tests", () => {
       it("should handle very long content IDs", async () => {
         const longId = "a".repeat(150); // Too long (>100 characters)
         const moduleData = {
-          phaseId: testPhase._id,
+          phaseId: testPhase.id,
           title: "Long ID Test Module",
           description: "Testing very long content IDs",
           icon: "Long",
@@ -553,7 +555,7 @@ describe("📚 Module System Tests", () => {
     describe("Content Statistics Update", () => {
       it("should update content statistics when content is modified", async () => {
         const module = await Module.create({
-          phaseId: testPhase._id,
+          phaseId: testPhase.id,
           title: "Dynamic Content Module",
           description: "Module for testing dynamic content updates",
           icon: "Dynamic",
@@ -567,7 +569,7 @@ describe("📚 Module System Tests", () => {
         module.content.labs.push("new-lab-1");
         await module.save();
 
-        const updatedModule = await Module.findById(module._id);
+        const updatedModule = await Module.findById(module.id);
         expect(updatedModule.content.videos.length).toBe(2);
         expect(updatedModule.content.labs.length).toBe(1);
       });
@@ -576,7 +578,7 @@ describe("📚 Module System Tests", () => {
     describe("Static Methods for Content Management", () => {
       it("should add content to module using static method", async () => {
         const result = await Module.addContentToModule(
-          testModule._id,
+          testModule.id,
           "videos",
           "new-video-content"
         );
@@ -586,15 +588,11 @@ describe("📚 Module System Tests", () => {
 
       it("should not add duplicate content", async () => {
         // Add content first time
-        await Module.addContentToModule(
-          testModule._id,
-          "labs",
-          "duplicate-lab"
-        );
+        await Module.addContentToModule(testModule.id, "labs", "duplicate-lab");
 
         // Try to add same content again
         const result = await Module.addContentToModule(
-          testModule._id,
+          testModule.id,
           "labs",
           "duplicate-lab"
         );
@@ -609,14 +607,14 @@ describe("📚 Module System Tests", () => {
       it("should remove content from module using static method", async () => {
         // First add some content
         await Module.addContentToModule(
-          testModule._id,
+          testModule.id,
           "games",
           "removable-game"
         );
 
         // Then remove it
         const result = await Module.removeContentFromModule(
-          testModule._id,
+          testModule.id,
           "games",
           "removable-game"
         );
@@ -626,7 +624,7 @@ describe("📚 Module System Tests", () => {
 
       it("should handle removing non-existent content gracefully", async () => {
         const result = await Module.removeContentFromModule(
-          testModule._id,
+          testModule.id,
           "documents",
           "non-existent-doc"
         );
@@ -638,12 +636,12 @@ describe("📚 Module System Tests", () => {
 
       it("should validate content type in static methods", async () => {
         await expect(
-          Module.addContentToModule(testModule._id, "invalid-type", "content-1")
+          Module.addContentToModule(testModule.id, "invalid-type", "content-1")
         ).rejects.toThrow("Invalid content type");
 
         await expect(
           Module.removeContentFromModule(
-            testModule._id,
+            testModule.id,
             "invalid-type",
             "content-1"
           )
@@ -685,7 +683,7 @@ describe("📚 Module System Tests", () => {
         await testModule.save();
 
         const response = await request(app)
-          .get(`/api/modules/${testModule._id}`)
+          .get(`/api/modules/${testModule.id}`)
           .expect(200);
 
         expect(response.body.data.content).toBeDefined();

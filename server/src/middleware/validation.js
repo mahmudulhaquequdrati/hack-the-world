@@ -9,6 +9,16 @@ const {
   getModulesByPhaseValidation,
 } = require("./validation/moduleValidation");
 
+const {
+  createContentValidation,
+  updateContentValidation,
+  getContentValidation,
+  getContentByModuleValidation,
+  getContentByTypeValidation,
+  getAllContentValidation,
+  deleteContentValidation,
+} = require("./validation/contentValidation");
+
 /**
  * Validation middleware to handle express-validator errors
  * Should be used after validation chain
@@ -46,6 +56,15 @@ const validateRequest = (validationType) => {
     reorderModules: reorderModulesValidation,
     getModule: getModuleValidation,
     getModulesByPhase: getModulesByPhaseValidation,
+
+    // Content validations
+    createContent: createContentValidation,
+    updateContent: updateContentValidation,
+    getContent: getContentValidation,
+    getContentByModule: getContentByModuleValidation,
+    getContentByType: getContentByTypeValidation,
+    getAllContent: getAllContentValidation,
+    deleteContent: deleteContentValidation,
 
     // Add more validation types here as needed
     // Example: createUser: createUserValidation,

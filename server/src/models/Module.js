@@ -203,6 +203,13 @@ const moduleSchema = new mongoose.Schema(
             "Each document ID must be a non-empty string with max 100 characters",
         },
       },
+
+      // Estimated hours - automatically calculated from content duration
+      estimatedHours: {
+        type: Number,
+        default: 0,
+        min: [0, "Estimated hours cannot be negative"],
+      },
     },
   },
   {
@@ -342,14 +349,6 @@ moduleSchema.pre("save", async function (next) {
     if (!phase) {
       return next(new Error(`Phase with ID '${this.phaseId}' does not exist`));
     }
-  }
-
-  // Calculate estimated hours using helper function
-  try {
-    this.duration = calculateModuleDuration(this.content);
-  } catch (error) {
-    // If calculation fails, use default values
-    this.duration = "0 hours";
   }
 
   next();

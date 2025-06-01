@@ -2,13 +2,15 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const database = require("../config/database");
 
-// Import existing models only
+// Import existing models
 const Phase = require("../models/Phase");
 const Module = require("../models/Module");
 const User = require("../models/User");
+const Content = require("../models/Content");
 
 // Import utilities
 const { getDatabaseStatus, resetCollection } = require("./dbUtils");
+const { seedContent, generateContentStats } = require("./seedContent");
 
 /**
  * Seed Data Utility
@@ -224,13 +226,13 @@ const MODULES_DATA = [
  */
 async function clearDatabase() {
   try {
-    console.log("🗑️  Clearing all database collections...");
+    console.log("🗑️  Clearing database...");
 
-    const moduleResult = await Module.deleteMany({});
-    console.log(`   Cleared ${moduleResult.deletedCount} modules`);
-
-    const phaseResult = await Phase.deleteMany({});
-    console.log(`   Cleared ${phaseResult.deletedCount} phases`);
+    // Clear in reverse dependency order
+    await Content.deleteMany({});
+    await Module.deleteMany({});
+    await Phase.deleteMany({});
+    await User.deleteMany({});
 
     console.log("✅ Database cleared successfully");
   } catch (error) {
@@ -383,13 +385,27 @@ async function seedDatabase() {
     // Step 2: Seed modules
     await seedModules();
 
-    // Step 3: Create admin user
+    // Step 3: Seed content (depends on modules)
+    console.log("\n📚 Seeding content...");
+    await seedContent(false); // Don't reset, just add if not exists
+
+    // Step 4: Create admin user
     await createAdminUser();
 
     console.log("\n🎉 Database seeding completed successfully!");
 
-    // Show final status
+    // Show final status including content statistics
     await getDatabaseStatus();
+
+    // Show content statistics
+    const contentStats = await generateContentStats();
+    console.log("\n📊 Content Statistics:");
+    console.log(`   Total Content Items: ${contentStats.total}`);
+    console.log(`   Videos: ${contentStats.videos}`);
+    console.log(`   Labs: ${contentStats.labs}`);
+    console.log(`   Games: ${contentStats.games}`);
+    console.log(`   Documents: ${contentStats.documents}`);
+    console.log(`   Sections: ${contentStats.sections}`);
   } catch (error) {
     console.error("\n❌ Database seeding failed:", error.message);
     throw error;

@@ -75,7 +75,7 @@ const createTestRegularUser = async (userData = {}) => {
     username: "testuser",
     email: "testuser@test.com",
     password: "TestPassword123!",
-    role: "user",
+    role: "student",
     status: "active",
     profile: {
       firstName: "Test",

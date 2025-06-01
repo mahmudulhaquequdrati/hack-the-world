@@ -8,11 +8,6 @@ const APIError = require("../middleware/errorHandler");
  * Protect middleware - verifies JWT token and attaches user to request
  */
 const protect = asyncHandler(async (req, res, next) => {
-  // In test environment, check if user is already attached by test middleware
-  if (process.env.NODE_ENV === "test" && req.user) {
-    return next();
-  }
-
   let token;
 
   // Check for Authorization header

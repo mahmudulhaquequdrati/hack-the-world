@@ -13,6 +13,7 @@ const authRoutes = require("../routes/auth");
 const profileRoutes = require("../routes/profile");
 const phaseRoutes = require("../routes/phase");
 const moduleRoutes = require("../routes/modules");
+const contentRoutes = require("../routes/content");
 // TODO: Add these routes when they are created
 // const gameRoutes = require("../routes/games");
 // const labRoutes = require("../routes/labs");
@@ -93,31 +94,13 @@ app.get("/health", (req, res) => {
   });
 });
 
-// For testing purposes, create bypass middleware that simulates an admin user
-const testAuthBypass = (req, res, next) => {
-  if (process.env.NODE_ENV === "test") {
-    // Simulate an authenticated admin user for testing
-    req.user = {
-      id: "test-admin-id",
-      username: "testadmin",
-      email: "testadmin@test.com",
-      role: "admin",
-      adminStatus: "active",
-    };
-  }
-  next();
-};
-
-// Apply test auth bypass to API routes when in test mode
-if (process.env.NODE_ENV === "test") {
-  app.use("/api", testAuthBypass);
-}
-
-// API routes
+// API routes - NO AUTHENTICATION BYPASS
+// Let the actual auth middleware in routes handle authentication
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/phases", phaseRoutes);
 app.use("/api/modules", moduleRoutes);
+app.use("/api/content", contentRoutes);
 
 // API documentation route
 app.get("/api", (req, res) => {
@@ -130,6 +113,7 @@ app.get("/api", (req, res) => {
       profile: "/api/profile",
       phases: "/api/phases",
       modules: "/api/modules",
+      content: "/api/content",
     },
   });
 });

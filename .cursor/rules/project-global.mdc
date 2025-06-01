@@ -6,10 +6,11 @@ alwaysApply: true
 # 🛡️ Hack The World - Global Project Rules
 
 ## 📋 Project Overview
-This is a comprehensive cybersecurity learning platform with gamified education system. Follow the [SYSTEM_DESIGN.md](mdc:frontend/SYSTEM_DESIGN.md) as the single source of truth for all architectural decisions.
+This is a comprehensive cybersecurity learning platform with gamified education system. Follow the [SYSTEM_DESIGN.md](mdc:frontend/SYSTEM_DESIGN.md) as the single source of truth for all architectural decisions we cannot add things more but we can suggest more by optimizing not adding.
 
 ## 🚀 Before Starting Any Work
 **MANDATORY CHECKLIST:**
+0. If any time new tasks comes or we update anything (functionality or tasks) then dont forget to update everywhere, docs, [task.md](mdc:task.md), testing case so that all are syncronized.
 1. If the current command or work does not included in [task.md](mdc:task.md) then add first then do other work.
 2. Always check [planning.md](mdc:planning.md) for current project roadmap
 3. Always check [task.md](mdc:task.md) for active tasks and progress tracking

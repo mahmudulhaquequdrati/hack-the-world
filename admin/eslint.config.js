@@ -38,27 +38,4 @@ export default [
       ],
     },
   },
-  {
-    files: [
-      "**/*.test.{js,jsx}",
-      "**/test/**/*.{js,jsx}",
-      "**/src/test/**/*.{js,jsx}",
-    ],
-    languageOptions: {
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-        describe: "readonly",
-        it: "readonly",
-        test: "readonly",
-        expect: "readonly",
-        beforeAll: "readonly",
-        afterAll: "readonly",
-        beforeEach: "readonly",
-        afterEach: "readonly",
-        vi: "readonly",
-        global: "writable",
-      },
-    },
-  },
 ];

@@ -43,6 +43,7 @@ hack-the-world/
 - **MANDATORY**: Every feature must have unit tests
 - **MANDATORY**: Every API endpoint must have tests
 - **MANDATORY**: Every React component must be tested
+- **MANDATORY**: Testing does not apply on admin panel for now.
 - Run tests after any significant change: `pnpm test`
 - No feature is complete without passing tests
 

@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { modulesAPI, phasesAPI } from "../services/api";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -13,17 +14,19 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [phasesRes, modulesRes] = await Promise.allSettled([
-          axios.get("/phases"),
-          axios.get("/modules"),
+        const [modulesRes, phasesRes] = await Promise.allSettled([
+          modulesAPI.getAll(),
+          phasesAPI.getAll(),
         ]);
 
         setStats({
           totalPhases:
-            phasesRes.status === "fulfilled" ? phasesRes.value.data.length : 0,
+            phasesRes.status === "fulfilled"
+              ? phasesRes.value.data?.length || 0
+              : 0,
           totalModules:
             modulesRes.status === "fulfilled"
-              ? modulesRes.value.data.data?.length || 0
+              ? modulesRes.value.data?.length || 0
               : 0,
           loading: false,
           error: null,

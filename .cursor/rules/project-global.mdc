@@ -11,7 +11,6 @@ This is a comprehensive cybersecurity learning platform with gamified education 
 ## 🚀 Before Starting Any Work
 **MANDATORY CHECKLIST:**
  - Each time i say something update in the [task.md](mdc:task.md) first then after completing that update the [task.md](mdc:task.md) again.
- -  If any time new tasks comes or we update anything (functionality or tasks) then dont forget to update everywhere, docs, [task.md](mdc:task.md), testing case so that all are syncronized.
  -  If the current command or work does not included in [task.md](mdc:task.md) then add first then do other work.
  -  Always check [planning.md](mdc:planning.md) for current project roadmap
  -  Always check [task.md](mdc:task.md) for active tasks and progress tracking

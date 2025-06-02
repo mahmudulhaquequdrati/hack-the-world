@@ -16,6 +16,7 @@ const profileRoutes = require("./src/routes/profile");
 const phaseRoutes = require("./src/routes/phase");
 const moduleRoutes = require("./src/routes/modules");
 const contentRoutes = require("./src/routes/content");
+const enrollmentRoutes = require("./src/routes/enrollment");
 
 /**
  * Terminal Hacks - Terminal Hacks Learning Platform API
@@ -122,6 +123,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/phases", phaseRoutes);
 app.use("/api/modules", moduleRoutes);
 app.use("/api/content", contentRoutes);
+app.use("/api/enrollments", enrollmentRoutes);
 
 // Swagger API Documentation
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(specs, swaggerOptions));

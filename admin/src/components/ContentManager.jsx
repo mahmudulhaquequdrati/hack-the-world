@@ -1,7 +1,13 @@
 import {
   CheckCircleIcon,
+  ChevronRightIcon,
+  ClockIcon,
   ExclamationCircleIcon,
+  EyeIcon,
+  FolderIcon,
+  MagnifyingGlassIcon,
   PlusIcon,
+  SparklesIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
@@ -46,10 +52,15 @@ const ContentManager = () => {
   const [groupedContent, setGroupedContent] = useState({});
 
   const contentTypes = [
-    { value: "video", label: "Video", icon: "🎥" },
-    { value: "lab", label: "Lab", icon: "🧪" },
-    { value: "game", label: "Game", icon: "🎮" },
-    { value: "document", label: "Document", icon: "📄" },
+    { value: "video", label: "Video", icon: "🎥", color: "bg-blue-500" },
+    { value: "lab", label: "Lab", icon: "🧪", color: "bg-purple-500" },
+    { value: "game", label: "Game", icon: "🎮", color: "bg-green-500" },
+    {
+      value: "document",
+      label: "Document",
+      icon: "📄",
+      color: "bg-yellow-500",
+    },
   ];
 
   const difficulties = ["beginner", "intermediate", "advanced", "expert"];
@@ -424,85 +435,176 @@ const ContentManager = () => {
   );
 
   const renderContentList = () => (
-    <div className="bg-gray-800 rounded-lg overflow-hidden shadow border border-gray-600">
+    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl border border-cyan-500/30">
+      {/* Enhanced Table Header */}
+      <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 border-b border-cyan-500/30">
+        <div className="flex items-center">
+          <FolderIcon className="h-5 w-5 text-cyan-400 mr-2" />
+          <h3 className="text-lg font-semibold text-cyan-400">
+            Content Database
+          </h3>
+          <div className="ml-auto flex items-center space-x-4">
+            <span className="text-sm text-gray-400">
+              {content.length} items
+            </span>
+            <div className="h-4 w-px bg-gray-600"></div>
+            <ClockIcon className="h-4 w-4 text-gray-400" />
+            <span className="text-sm text-gray-400">
+              {content.reduce((total, item) => total + (item.duration || 0), 0)}{" "}
+              min total
+            </span>
+          </div>
+        </div>
+      </div>
+
       <table className="min-w-full divide-y divide-gray-700">
-        <thead className="bg-gray-700">
+        <thead className="bg-gray-700/50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-green-400 uppercase tracking-wider">
-              Content
+            <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+              Content Information
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-green-400 uppercase tracking-wider">
-              Type
+            <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+              Type & Duration
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-green-400 uppercase tracking-wider">
-              Module
+            <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+              Module & Section
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-green-400 uppercase tracking-wider">
-              Section
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-green-400 uppercase tracking-wider">
-              Duration
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-green-400 uppercase tracking-wider">
+            <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="bg-gray-800 divide-y divide-gray-700">
-          {content.map((item) => {
+        <tbody className="bg-gray-800 divide-y divide-gray-700/50">
+          {content.map((item, index) => {
             const module = modules.find((m) => m.id === item.module?.id);
             const contentType = contentTypes.find((t) => t.value === item.type);
 
             return (
-              <tr key={item.id} className="hover:bg-gray-700">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-green-400">
-                    {item.title}
+              <tr
+                key={item.id}
+                className="hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-600/30 transition-all duration-200 group"
+              >
+                <td className="px-6 py-4">
+                  <div className="flex items-start space-x-3">
+                    <div
+                      className={`flex-shrink-0 w-10 h-10 rounded-lg ${contentType?.color} flex items-center justify-center text-white font-bold text-lg shadow-lg`}
+                    >
+                      {contentType?.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-green-400 truncate group-hover:text-green-300 transition-colors">
+                        {item.title}
+                      </div>
+                      <div className="text-sm text-gray-400 mt-1 line-clamp-2">
+                        {item.description?.substring(0, 120)}
+                        {item.description?.length > 120 && "..."}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-400">
-                    {item.description?.substring(0, 100)}
-                    {item.description?.length > 100 && "..."}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="space-y-2">
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white shadow-sm ${contentType?.color}`}
+                    >
+                      {contentType?.label}
+                    </span>
+                    <div className="flex items-center text-xs text-gray-400">
+                      <ClockIcon className="h-3 w-3 mr-1" />
+                      {item.duration} min
+                    </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyber-green text-black">
-                    {contentType?.icon} {contentType?.label}
-                  </span>
+                <td className="px-6 py-4">
+                  <div className="space-y-1">
+                    <div className="text-sm text-gray-300 font-medium">
+                      {module?.title || "Unknown Module"}
+                    </div>
+                    <div className="flex items-center text-xs text-cyan-400">
+                      <FolderIcon className="h-3 w-3 mr-1" />
+                      {item.section || "No Section"}
+                    </div>
+                  </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                  {module?.title || "Unknown Module"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                  {item.section || "No Section"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                  {item.duration} min
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                  <button
-                    onClick={() => handleEdit(item)}
-                    className="text-cyber-green hover:text-green-300"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item, true)}
-                    className="text-red-600 hover:text-red-500"
-                  >
-                    Permanent
-                  </button>
+                <td className="px-6 py-4">
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200 flex items-center text-sm font-medium"
+                    >
+                      <svg
+                        className="h-4 w-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                    <div className="h-4 w-px bg-gray-600"></div>
+                    <button
+                      onClick={() => handleDelete(item)}
+                      className="text-yellow-400 hover:text-yellow-300 transition-colors duration-200 flex items-center text-sm font-medium"
+                    >
+                      <svg
+                        className="h-4 w-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item, true)}
+                      className="text-red-400 hover:text-red-300 transition-colors duration-200 flex items-center text-sm font-medium"
+                    >
+                      <svg
+                        className="h-4 w-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                      Permanent
+                    </button>
+                  </div>
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
+
+      {content.length === 0 && (
+        <div className="text-center py-12">
+          <FolderIcon className="mx-auto h-12 w-12 text-gray-400 opacity-50" />
+          <h3 className="mt-2 text-sm font-medium text-gray-400">
+            No content found
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Get started by creating your first content item.
+          </p>
+        </div>
+      )}
     </div>
   );
 
@@ -653,101 +755,165 @@ const ContentManager = () => {
   };
 
   const renderForm = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-600">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-green-400">
-              {editingContent ? "Edit Content" : "Create New Content"}
-            </h2>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-cyan-500/30 shadow-2xl transform animate-slideUp">
+        {/* Enhanced Header */}
+        <div className="p-6 border-b border-cyan-500/30 bg-gradient-to-r from-gray-900 to-gray-800">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-cyan-500 to-green-500 rounded-lg flex items-center justify-center mr-3">
+                {editingContent ? "✏️" : "➕"}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-cyan-400">
+                  {editingContent ? "Edit Content" : "Create New Content"}
+                </h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  {editingContent
+                    ? "Update content information"
+                    : "Add new learning content to the database"}
+                </p>
+              </div>
+            </div>
             <button
               onClick={() => {
                 setShowForm(false);
                 resetForm();
               }}
-              className="text-gray-400 hover:text-green-400"
+              className="text-gray-400 hover:text-red-400 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-700"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
+        </div>
 
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-green-400 mb-1">
-                  Module*
-                </label>
-                <select
-                  value={formData.moduleId}
-                  onChange={(e) => {
-                    console.log("Module selected:", e.target.value);
-                    setFormData((prev) => ({
-                      ...prev,
-                      moduleId: e.target.value,
-                    }));
-                  }}
-                  className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
-                  required
+        <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
+          {/* Module and Type Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+                <svg
+                  className="h-4 w-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <option value="">Select Module</option>
-                  {modules.map((module) => (
-                    <option key={module.id} value={module.id}>
-                      {module.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-green-400 mb-1">
-                  Content Type*
-                </label>
-                <select
-                  value={formData.type}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, type: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
-                  required
-                >
-                  {contentTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.icon} {type.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-green-400 mb-1">
-                Title*
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a1 1 0 011-1h2a1 1 0 011 1v2M7 7h10"
+                  />
+                </svg>
+                Module*
               </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, title: e.target.value }))
-                }
-                className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+              <select
+                value={formData.moduleId}
+                onChange={(e) => {
+                  console.log("Module selected:", e.target.value);
+                  setFormData((prev) => ({
+                    ...prev,
+                    moduleId: e.target.value,
+                  }));
+                }}
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
                 required
-                maxLength="100"
-              />
+              >
+                <option value="">Select Module</option>
+                {modules.map((module) => (
+                  <option key={module.id} value={module.id}>
+                    {module.title}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+                <svg
+                  className="h-4 w-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10M6 4v16a2 2 0 002 2h8a2 2 0 002-2V4M6 4H4a2 2 0 00-2 2v14a2 2 0 002 2h2"
+                  />
+                </svg>
+                Content Type*
+              </label>
+              <select
+                value={formData.type}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, type: e.target.value }))
+                }
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
+                required
+              >
+                {contentTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.icon} {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Title Input */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <svg
+                className="h-4 w-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
+              Title*
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
+              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
+              required
+              maxLength="100"
+              placeholder="Enter a descriptive title for your content..."
+            />
+          </div>
+
+          {/* Enhanced Section Input */}
+          <div className="relative">
+            <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <svg
+                className="h-4 w-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
+              Section*
+            </label>
 
             <div className="relative">
-              <label className="block text-sm font-medium text-green-400 mb-1">
-                Section*
-                <span className="ml-2 text-xs text-cyan-400">
-                  [Debug: moduleId={formData.moduleId ? "✓" : "✗"}, disabled=
-                  {!formData.moduleId ? "✓" : "✗"}]
-                </span>
-                {sectionLoading && (
-                  <span className="ml-2 text-xs text-gray-400">
-                    (Loading sections...)
-                  </span>
-                )}
-              </label>
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 value={sectionInputValue}
@@ -762,204 +928,309 @@ const ContentManager = () => {
                   handleSectionInputFocus();
                 }}
                 onBlur={handleSectionInputBlur}
-                className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                className="w-full pl-10 pr-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 required
                 maxLength="100"
                 placeholder={
                   formData.moduleId
-                    ? "Type to search existing sections or create new one"
-                    : "Select a module first to see available sections"
+                    ? "🔍 Search existing sections or create new one..."
+                    : "⚠️ Select a module first to manage sections"
                 }
                 disabled={!formData.moduleId}
               />
-              {showSectionDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
-                  {filteredSections.length > 0 ? (
-                    <>
-                      <div className="px-3 py-2 text-xs text-gray-400 bg-gray-800 border-b border-gray-600">
-                        Existing sections (click to select):
-                      </div>
-                      {filteredSections.map((section) => (
-                        <button
-                          key={section}
-                          type="button"
-                          onClick={() => handleSectionSelect(section)}
-                          className="w-full text-left px-4 py-2 text-green-400 hover:bg-gray-600 focus:bg-gray-600 focus:outline-none transition-colors duration-150"
-                        >
-                          📁 {section}
-                        </button>
-                      ))}
-                    </>
-                  ) : (
-                    <div className="px-4 py-3 text-sm text-gray-400">
-                      {sectionInputValue ? (
-                        <>
-                          <div className="text-cyan-400 mb-1">
-                            ✨ Create new section:
-                          </div>
-                          <div className="font-medium">
-                            "{sectionInputValue}"
-                          </div>
-                          <div className="text-xs mt-1">
-                            Press Enter or click outside to create
-                          </div>
-                        </>
-                      ) : (
-                        "No existing sections found. Type to create a new one."
-                      )}
-                    </div>
+              {formData.moduleId && !sectionLoading && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  {sectionInputValue && (
+                    <SparklesIcon className="h-4 w-4 text-cyan-400 animate-pulse" />
                   )}
                 </div>
               )}
-              {formData.moduleId &&
-                availableSections.length > 0 &&
-                !showSectionDropdown && (
-                  <div className="mt-1 text-xs text-gray-400">
-                    💡 {availableSections.length} existing section
-                    {availableSections.length !== 1 ? "s" : ""} available
+            </div>
+
+            {/* Enhanced Dropdown */}
+            {showSectionDropdown && (
+              <div className="absolute z-10 w-full mt-2 bg-gray-800 border border-cyan-500/50 rounded-lg shadow-2xl max-h-64 overflow-auto backdrop-blur-sm">
+                {/* Dropdown Header */}
+                <div className="px-4 py-2 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-cyan-500/30 rounded-t-lg">
+                  <div className="flex items-center text-xs text-cyan-400">
+                    <FolderIcon className="h-3 w-3 mr-1" />
+                    Section Management
+                  </div>
+                </div>
+
+                {filteredSections.length > 0 ? (
+                  <>
+                    <div className="px-4 py-2 text-xs text-gray-400 bg-gray-900/50 border-b border-gray-700 flex items-center">
+                      <EyeIcon className="h-3 w-3 mr-1" />
+                      Existing sections ({filteredSections.length}) - Click to
+                      select:
+                    </div>
+                    {filteredSections.map((section, index) => (
+                      <button
+                        key={section}
+                        type="button"
+                        onClick={() => handleSectionSelect(section)}
+                        className="w-full text-left px-4 py-3 text-green-400 hover:bg-gradient-to-r hover:from-gray-700 hover:to-gray-600 focus:bg-gradient-to-r focus:from-gray-700 focus:to-gray-600 focus:outline-none transition-all duration-150 border-l-2 border-transparent hover:border-cyan-400 flex items-center group"
+                      >
+                        <FolderIcon className="h-4 w-4 mr-3 text-cyan-400 group-hover:scale-110 transition-transform duration-150" />
+                        <span className="flex-1">{section}</span>
+                        <ChevronRightIcon className="h-3 w-3 text-gray-500 group-hover:text-cyan-400 transition-colors duration-150" />
+                      </button>
+                    ))}
+                  </>
+                ) : (
+                  <div className="px-4 py-4 text-sm">
+                    {sectionInputValue ? (
+                      <div className="text-center">
+                        <div className="flex items-center justify-center mb-2">
+                          <SparklesIcon className="h-5 w-5 text-cyan-400 animate-pulse mr-2" />
+                          <span className="text-cyan-400 font-medium">
+                            Create New Section
+                          </span>
+                        </div>
+                        <div className="bg-gradient-to-r from-cyan-900/20 to-green-900/20 border border-cyan-500/30 rounded-lg p-3 mb-2">
+                          <div className="font-medium text-white">
+                            "{sectionInputValue}"
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-400 flex items-center justify-center">
+                          <kbd className="px-2 py-1 bg-gray-700 rounded text-xs mr-1">
+                            Enter
+                          </kbd>
+                          <span>or click outside to create</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center text-gray-400">
+                        <FolderIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <div>No existing sections found</div>
+                        <div className="text-xs mt-1">
+                          Type to create a new section
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-green-400 mb-1">
-                Description*
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
-                required
-                maxLength="500"
-                rows="3"
-              />
-            </div>
-
-            {formData.type === "video" && (
-              <div>
-                <label className="block text-sm font-medium text-green-400 mb-1">
-                  Video URL*
-                </label>
-                <input
-                  type="url"
-                  value={formData.url}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, url: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
-                  required={formData.type === "video"}
-                  placeholder="https://example.com/video.mp4"
-                />
               </div>
             )}
+          </div>
 
-            {(formData.type === "lab" || formData.type === "game") && (
-              <div>
-                <label className="block text-sm font-medium text-green-400 mb-1">
-                  Instructions*
-                </label>
-                <textarea
-                  value={formData.instructions}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      instructions: e.target.value,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
-                  required={formData.type === "lab" || formData.type === "game"}
-                  maxLength="2000"
-                  rows="4"
-                  placeholder="Detailed instructions for the lab or game..."
+          {/* Description Input */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <svg
+                className="h-4 w-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                 />
-              </div>
-            )}
+              </svg>
+              Description*
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+              required
+              maxLength="500"
+              rows="3"
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-green-400 mb-1">
-                Duration (minutes)
+          {/* URL Input */}
+          {formData.type === "video" && (
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+                <svg
+                  className="h-4 w-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+                Video URL*
               </label>
               <input
-                type="number"
-                value={formData.duration}
+                type="url"
+                value={formData.url}
                 onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    duration: parseInt(e.target.value),
-                  }))
+                  setFormData((prev) => ({ ...prev, url: e.target.value }))
                 }
-                className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
-                min="1"
-                max="300"
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+                required={formData.type === "video"}
+                placeholder="https://example.com/video.mp4"
               />
             </div>
+          )}
 
-            <div>
-              <label className="block text-sm font-medium text-green-400 mb-1">
-                Resources (URLs or file paths)
+          {/* Instructions Input */}
+          {(formData.type === "lab" || formData.type === "game") && (
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+                <svg
+                  className="h-4 w-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+                Instructions*
               </label>
               <textarea
-                value={formData.resources.join("\n")}
+                value={formData.instructions}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    resources: e.target.value
-                      .split("\n")
-                      .filter((line) => line.trim() !== ""),
+                    instructions: e.target.value,
                   }))
                 }
-                className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
-                rows="3"
-                placeholder="Enter each resource URL or file path on a new line"
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+                required={formData.type === "lab" || formData.type === "game"}
+                maxLength="2000"
+                rows="4"
+                placeholder="Detailed instructions for the lab or game..."
               />
             </div>
+          )}
 
-            <div className="flex justify-end space-x-4 pt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  resetForm();
-                }}
-                className="px-4 py-2 text-green-400 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600"
+          {/* Duration Input */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <svg
+                className="h-4 w-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-cyber-green text-black rounded-md hover:bg-green-400 disabled:opacity-50"
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
+              Duration (minutes)
+            </label>
+            <input
+              type="number"
+              value={formData.duration}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  duration: parseInt(e.target.value),
+                }))
+              }
+              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+              min="1"
+              max="300"
+            />
+          </div>
+
+          {/* Resources Input */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <svg
+                className="h-4 w-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {loading ? "Saving..." : editingContent ? "Update" : "Create"}
-              </button>
-            </div>
-          </form>
-        </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
+              Resources (URLs or file paths)
+            </label>
+            <textarea
+              value={formData.resources.join("\n")}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  resources: e.target.value
+                    .split("\n")
+                    .filter((line) => line.trim() !== ""),
+                }))
+              }
+              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+              rows="3"
+              placeholder="Enter each resource URL or file path on a new line"
+            />
+          </div>
+
+          {/* Form Submission */}
+          <div className="flex justify-end space-x-4 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setShowForm(false);
+                resetForm();
+              }}
+              className="px-4 py-2 text-green-400 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-cyber-green text-black rounded-md hover:bg-green-400 disabled:opacity-50"
+            >
+              {loading ? "Saving..." : editingContent ? "Update" : "Create"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Enhanced Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-cyber-green">
-            [CONTENT MANAGEMENT]
-          </h1>
-          <p className="text-green-400 mt-2">
-            Manage learning content including videos, labs, games, and documents
-          </p>
+        <div className="flex items-center space-x-4">
+          <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-cyan-500 to-green-500 rounded-lg flex items-center justify-center shadow-lg">
+            <FolderIcon className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-green-400 bg-clip-text text-transparent">
+              [CONTENT MANAGEMENT]
+            </h1>
+            <p className="text-green-400 mt-1 flex items-center">
+              <SparklesIcon className="h-4 w-4 mr-2" />
+              Manage learning content including videos, labs, games, and
+              documents
+            </p>
+          </div>
         </div>
         <button
           onClick={() => setShowForm(true)}
           disabled={loading}
-          className="btn-primary flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200"
         >
           <PlusIcon className="w-5 h-5 mr-2" />
           Add Content
@@ -968,33 +1239,52 @@ const ContentManager = () => {
 
       {/* Success Message */}
       {success && (
-        <div className="bg-green-900/20 border border-green-500 text-green-400 px-4 py-3 rounded flex items-center">
-          <CheckCircleIcon className="w-5 h-5 mr-2" />
-          {success}
+        <div className="bg-gradient-to-r from-green-900/20 to-cyan-900/20 border border-green-500/50 text-green-400 px-6 py-4 rounded-lg flex items-center shadow-lg animate-slideUp">
+          <CheckCircleIcon className="w-6 h-6 mr-3 text-green-500" />
+          <div>
+            <div className="font-semibold">Success!</div>
+            <div className="text-sm">{success}</div>
+          </div>
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded flex items-center">
-          <ExclamationCircleIcon className="w-5 h-5 mr-2" />
-          {error}
+        <div className="bg-gradient-to-r from-red-900/20 to-orange-900/20 border border-red-500/50 text-red-400 px-6 py-4 rounded-lg flex items-center shadow-lg animate-slideUp">
+          <ExclamationCircleIcon className="w-6 h-6 mr-3 text-red-500" />
+          <div>
+            <div className="font-semibold">Error!</div>
+            <div className="text-sm">{error}</div>
+          </div>
         </div>
       )}
 
-      {/* Controls */}
-      <div className="bg-gray-800 p-6 rounded-lg shadow mb-6 border border-gray-600">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-4">
+      {/* Enhanced Controls */}
+      <div className="bg-gradient-to-br from-gray-800 to-gray-700 p-6 rounded-xl shadow-xl border border-cyan-500/30">
+        <div className="flex flex-wrap items-center justify-between gap-6">
+          <div className="flex flex-wrap items-center gap-6">
             {/* Content Type Filter */}
-            <div>
-              <label className="block text-sm font-medium text-green-400 mb-1">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+                <svg
+                  className="h-4 w-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10M6 4v16a2 2 0 002 2h8a2 2 0 002-2V4M6 4H4a2 2 0 00-2 2v14a2 2 0 002 2h2"
+                  />
+                </svg>
                 Filter by Type
               </label>
               <select
                 value={filters.type}
                 onChange={(e) => handleFilterChange("type", e.target.value)}
-                className="px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                className="px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
               >
                 <option value="">All Types</option>
                 {contentTypes.map((type) => (
@@ -1006,14 +1296,27 @@ const ContentManager = () => {
             </div>
 
             {/* Module Filter */}
-            <div>
-              <label className="block text-sm font-medium text-green-400 mb-1">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+                <svg
+                  className="h-4 w-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a1 1 0 011-1h2a1 1 0 011 1v2M7 7h10"
+                  />
+                </svg>
                 Filter by Module
               </label>
               <select
                 value={filters.moduleId}
                 onChange={(e) => handleFilterChange("moduleId", e.target.value)}
-                className="px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                className="px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
               >
                 <option value="">All Modules</option>
                 {modules.map((module) => (
@@ -1025,42 +1328,62 @@ const ContentManager = () => {
             </div>
 
             {/* View Mode */}
-            <div>
-              <label className="block text-sm font-medium text-green-400 mb-1">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+                <EyeIcon className="h-4 w-4 mr-2" />
                 View Mode
               </label>
-              <div className="flex rounded-md shadow-sm">
+              <div className="flex rounded-lg shadow-sm border border-gray-600 overflow-hidden">
                 <button
                   onClick={() => handleViewModeChange("list")}
-                  className={`px-3 py-2 text-sm rounded-l-md border ${
+                  className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     viewMode === "list"
-                      ? "bg-cyber-green text-black border-cyber-green"
-                      : "bg-gray-700 text-green-400 border-gray-600"
+                      ? "bg-gradient-to-r from-cyan-500 to-green-500 text-white shadow-lg"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
                   }`}
                 >
-                  List
+                  📋 List
                 </button>
                 <button
                   onClick={() => handleViewModeChange("groupedByModule")}
-                  className={`px-3 py-2 text-sm border-t border-r border-b ${
+                  className={`px-4 py-2 text-sm font-medium border-l border-gray-600 transition-all duration-200 ${
                     viewMode === "groupedByModule"
-                      ? "bg-cyber-green text-black border-cyber-green"
-                      : "bg-gray-700 text-green-400 border-gray-600"
+                      ? "bg-gradient-to-r from-cyan-500 to-green-500 text-white shadow-lg"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
                   }`}
                 >
-                  By Module
+                  📚 By Module
                 </button>
                 <button
                   onClick={() => handleViewModeChange("groupedByType")}
-                  className={`px-3 py-2 text-sm rounded-r-md border-t border-r border-b ${
+                  className={`px-4 py-2 text-sm font-medium border-l border-gray-600 transition-all duration-200 ${
                     viewMode === "groupedByType"
-                      ? "bg-cyber-green text-black border-cyber-green"
-                      : "bg-gray-700 text-green-400 border-gray-600"
+                      ? "bg-gradient-to-r from-cyan-500 to-green-500 text-white shadow-lg"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
                   }`}
                 >
-                  By Type
+                  🎯 By Type
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* Statistics */}
+          <div className="flex items-center space-x-6 text-sm">
+            <div className="flex items-center space-x-2 px-3 py-2 bg-gray-900/50 rounded-lg border border-gray-600">
+              <span className="text-gray-400">Total Items:</span>
+              <span className="font-bold text-cyan-400">{content.length}</span>
+            </div>
+            <div className="flex items-center space-x-2 px-3 py-2 bg-gray-900/50 rounded-lg border border-gray-600">
+              <ClockIcon className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-400">Total Time:</span>
+              <span className="font-bold text-green-400">
+                {content.reduce(
+                  (total, item) => total + (item.duration || 0),
+                  0
+                )}{" "}
+                min
+              </span>
             </div>
           </div>
         </div>
@@ -1068,9 +1391,9 @@ const ContentManager = () => {
 
       {/* Content Display */}
       {loading ? (
-        <div className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cyber-green"></div>
-          <p className="mt-2 text-green-400">Loading content...</p>
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-cyan-400 border-t-transparent shadow-lg"></div>
+          <p className="mt-4 text-cyan-400 font-medium">Loading content...</p>
         </div>
       ) : (
         <>

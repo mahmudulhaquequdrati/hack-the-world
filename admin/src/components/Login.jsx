@@ -122,9 +122,9 @@ const Login = () => {
               Default Admin Credentials:
             </p>
             <p className="text-xs text-gray-400">
-              Email: admin@hack-the-world.com
+              Email: admin@hacktheworld.dev
             </p>
-            <p className="text-xs text-gray-400">Password: admin123</p>
+            <p className="text-xs text-gray-400">Password: SecurePass123!</p>
             <p className="text-xs text-yellow-400 mt-2">
               Note: Run 'pnpm seed:admin' in server directory to create admin
               user

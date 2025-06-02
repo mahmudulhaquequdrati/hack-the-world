@@ -46,7 +46,7 @@ app.use(
 // Rate limiting
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 10000,
   message: {
     error: "Too many requests from this IP, please try again later.",
     retryAfter: Math.ceil(

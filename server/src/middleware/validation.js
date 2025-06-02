@@ -10,13 +10,13 @@ const {
 } = require("./validation/moduleValidation");
 
 const {
-  createContentValidation,
-  updateContentValidation,
-  getContentValidation,
-  getContentByModuleValidation,
-  getContentByTypeValidation,
-  getAllContentValidation,
-  deleteContentValidation,
+  createContentValidation: _createContentValidation,
+  updateContentValidation: _updateContentValidation,
+  getContentValidation: _getContentValidation,
+  getContentByModuleValidation: _getContentByModuleValidation,
+  getContentByTypeValidation: _getContentByTypeValidation,
+  getAllContentValidation: _getAllContentValidation,
+  deleteContentValidation: _deleteContentValidation,
 } = require("./validation/contentValidation");
 
 /**
@@ -42,6 +42,33 @@ const handleValidationErrors = (req, res, next) => {
 
   next();
 };
+
+// Add handleValidationErrors to content validation arrays
+const createContentValidation = [
+  ..._createContentValidation,
+  handleValidationErrors,
+];
+const updateContentValidation = [
+  ..._updateContentValidation,
+  handleValidationErrors,
+];
+const getContentValidation = [..._getContentValidation, handleValidationErrors];
+const getContentByModuleValidation = [
+  ..._getContentByModuleValidation,
+  handleValidationErrors,
+];
+const getContentByTypeValidation = [
+  ..._getContentByTypeValidation,
+  handleValidationErrors,
+];
+const getAllContentValidation = [
+  ..._getAllContentValidation,
+  handleValidationErrors,
+];
+const deleteContentValidation = [
+  ..._deleteContentValidation,
+  handleValidationErrors,
+];
 
 /**
  * Get validation rules based on validation type

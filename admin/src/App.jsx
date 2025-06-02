@@ -5,10 +5,11 @@ import {
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
+import ContentManager from "./components/ContentManager";
 import Dashboard from "./components/Dashboard";
 import Layout from "./components/Layout";
 import Login from "./components/Login";
-import ModulesManager from "./components/ModulesManager";
+import ModulesManagerEnhanced from "./components/ModulesManagerEnhanced";
 import PhasesManager from "./components/PhasesManager";
 import Register from "./components/Register";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -78,7 +79,8 @@ function App() {
             <Route index element={<Navigate to="/dashboard" />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="phases" element={<PhasesManager />} />
-            <Route path="modules" element={<ModulesManager />} />
+            <Route path="modules" element={<ModulesManagerEnhanced />} />
+            <Route path="content" element={<ContentManager />} />
           </Route>
         </Routes>
       </Router>

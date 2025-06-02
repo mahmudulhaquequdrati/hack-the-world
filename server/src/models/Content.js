@@ -86,6 +86,21 @@ const ContentSchema = new mongoose.Schema(
       default: {},
     },
 
+    // Resources array for additional learning materials
+    resources: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: function (arr) {
+          // Each resource must be a valid URL or file path
+          return arr.every(
+            (resource) => typeof resource === "string" && resource.length > 0
+          );
+        },
+        message: "Each resource must be a non-empty string",
+      },
+    },
+
     // Content status
     isActive: {
       type: Boolean,
@@ -120,14 +135,19 @@ ContentSchema.index({ moduleId: 1, section: 1 });
 ContentSchema.index({ type: 1 });
 ContentSchema.index({ moduleId: 1, isActive: 1 });
 
+// Virtual to populate module information
+ContentSchema.virtual("module", {
+  ref: "Module",
+  localField: "moduleId",
+  foreignField: "_id",
+  justOne: true,
+});
+
 // Static method to get content by module
 ContentSchema.statics.getByModule = function (moduleId) {
   return this.find({ moduleId, isActive: true })
-    .populate("moduleId", "id title")
-    .sort({
-      section: 1,
-      createdAt: 1,
-    });
+    .populate("module", "title")
+    .sort({ section: 1, createdAt: 1 });
 };
 
 // Static method to get content by type
@@ -135,14 +155,14 @@ ContentSchema.statics.getByType = function (type, moduleId = null) {
   const query = { type, isActive: true };
   if (moduleId) query.moduleId = moduleId;
   return this.find(query)
-    .populate("moduleId", "id title")
+    .populate("module", "title")
     .sort({ section: 1, createdAt: 1 });
 };
 
 // Static method to get content grouped by sections
 ContentSchema.statics.getByModuleGrouped = async function (moduleId) {
   const content = await this.find({ moduleId, isActive: true })
-    .populate("moduleId", "id title")
+    .populate("module", "title")
     .sort({
       section: 1,
       createdAt: 1,

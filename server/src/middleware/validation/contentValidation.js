@@ -1,5 +1,4 @@
 const { body, param, query } = require("express-validator");
-const { handleValidationErrors } = require("../validation");
 
 /**
  * Validation rules for creating content
@@ -74,8 +73,6 @@ const createContentValidation = [
     .optional()
     .isBoolean()
     .withMessage("isActive must be a boolean"),
-
-  handleValidationErrors,
 ];
 
 /**
@@ -146,8 +143,6 @@ const updateContentValidation = [
     .optional()
     .isBoolean()
     .withMessage("isActive must be a boolean"),
-
-  handleValidationErrors,
 ];
 
 /**
@@ -157,8 +152,6 @@ const getContentValidation = [
   param("id")
     .isMongoId()
     .withMessage("Content ID must be a valid MongoDB ObjectId"),
-
-  handleValidationErrors,
 ];
 
 /**
@@ -168,8 +161,6 @@ const getContentByModuleValidation = [
   param("moduleId")
     .isMongoId()
     .withMessage("Module ID must be a valid MongoDB ObjectId"),
-
-  handleValidationErrors,
 ];
 
 /**
@@ -184,8 +175,6 @@ const getContentByTypeValidation = [
     .optional()
     .isMongoId()
     .withMessage("Module ID must be a valid MongoDB ObjectId"),
-
-  handleValidationErrors,
 ];
 
 /**
@@ -202,6 +191,11 @@ const getAllContentValidation = [
     .isMongoId()
     .withMessage("Module ID must be a valid MongoDB ObjectId"),
 
+  query("isActive")
+    .optional()
+    .isBoolean()
+    .withMessage("isActive must be a boolean"),
+
   query("page")
     .optional()
     .isInt({ min: 1 })
@@ -211,8 +205,6 @@ const getAllContentValidation = [
     .optional()
     .isInt({ min: 1, max: 100 })
     .withMessage("Limit must be between 1 and 100"),
-
-  handleValidationErrors,
 ];
 
 /**
@@ -223,7 +215,10 @@ const deleteContentValidation = [
     .isMongoId()
     .withMessage("Content ID must be a valid MongoDB ObjectId"),
 
-  handleValidationErrors,
+  query("permanent")
+    .optional()
+    .isBoolean()
+    .withMessage("Permanent flag must be a boolean"),
 ];
 
 module.exports = {

@@ -196,6 +196,22 @@ const updateModule = asyncHandler(async (req, res, next) => {
         )
       );
     }
+
+    // If only changing phaseId (not order), auto-assign next available order in target phase
+    if (!updates.order || updates.order === module.order) {
+      const maxOrderInTargetPhase = await Module.findOne({
+        phaseId: updates.phaseId,
+      }).sort({ order: -1 });
+
+      const nextOrder = maxOrderInTargetPhase
+        ? maxOrderInTargetPhase.order + 1
+        : 1;
+      updates.order = nextOrder;
+
+      console.log(
+        `Auto-assigning order ${nextOrder} for module moving to phase ${updates.phaseId}`
+      );
+    }
   }
 
   // If updating order, check if new order is available in the phase

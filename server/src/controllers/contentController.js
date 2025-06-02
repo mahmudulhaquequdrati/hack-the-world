@@ -31,14 +31,9 @@ const getAllContent = asyncHandler(async (req, res, next) => {
     query.moduleId = moduleId;
   }
 
-  // Calculate pagination
-  const skip = (page - 1) * limit;
-
   const content = await Content.find(query)
-    .populate("moduleId", "_id title")
-    .sort({ moduleId: 1, section: 1, createdAt: 1 })
-    .limit(parseInt(limit))
-    .skip(skip);
+    .populate("module", "title")
+    .sort({ moduleId: 1, section: 1, createdAt: 1 });
 
   const total = await Content.countDocuments(query);
 
@@ -46,12 +41,6 @@ const getAllContent = asyncHandler(async (req, res, next) => {
     success: true,
     message: "Content retrieved successfully",
     data: content,
-    pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total,
-      pages: Math.ceil(total / limit),
-    },
   });
 });
 
@@ -69,8 +58,8 @@ const getContentById = asyncHandler(async (req, res, next) => {
   }
 
   const content = await Content.findOne({ _id: id, isActive: true }).populate(
-    "moduleId",
-    "_id title"
+    "module",
+    "title"
   );
 
   if (!content) {
@@ -185,7 +174,7 @@ const createContent = asyncHandler(async (req, res, next) => {
   const content = await Content.create(contentData);
 
   // Populate module information
-  await content.populate("moduleId", "_id title");
+  await content.populate("module", "title");
 
   res.status(201).json({
     success: true,
@@ -225,7 +214,7 @@ const updateContent = asyncHandler(async (req, res, next) => {
   const content = await Content.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true,
-  }).populate("moduleId", "_id title");
+  }).populate("module", "title");
 
   if (!content) {
     return next(new ErrorResponse("Content not found", 404));

@@ -168,22 +168,25 @@ const ContentManager = () => {
   const fetchAllContentGroupedByType = async () => {
     try {
       setLoading(true);
+
+      // Fetch all content in a single API call
+      const response = await contentAPI.getAll({
+        moduleId: filters.moduleId || undefined,
+      });
+      const allContent = response.data || [];
+
+      // Group content by type on the frontend
       const allGroupedContent = {};
 
-      // Get content for each type
-      for (const contentType of contentTypes) {
-        try {
-          const response = await contentAPI.getByType(
-            contentType.value,
-            filters.moduleId || null
-          );
-          if (response.data && response.data.length > 0) {
-            allGroupedContent[contentType.value] = response.data;
+      allContent.forEach((item) => {
+        const type = item.type;
+        if (type) {
+          if (!allGroupedContent[type]) {
+            allGroupedContent[type] = [];
           }
-        } catch (err) {
-          console.error(`Error fetching ${contentType.value} content:`, err);
+          allGroupedContent[type].push(item);
         }
-      }
+      });
 
       setGroupedContent(allGroupedContent);
     } catch (err) {
@@ -197,22 +200,35 @@ const ContentManager = () => {
   const fetchAllModulesGrouped = async () => {
     try {
       setLoading(true);
+
+      // Fetch all content in a single API call
+      const response = await contentAPI.getAll();
+      const allContent = response.data || [];
+
+      // Group content by module and section on the frontend
       const allGroupedContent = {};
 
-      // Get all modules and fetch grouped content for each
-      for (const module of modules) {
-        try {
-          const response = await contentAPI.getByModuleGrouped(module.id);
-          if (response.data && Object.keys(response.data).length > 0) {
-            allGroupedContent[module.id] = {
+      // Initialize modules that have content
+      allContent.forEach((item) => {
+        const moduleId = item.moduleId || item.module?.id;
+        const module = modules.find((m) => m.id === moduleId);
+
+        if (module && moduleId) {
+          if (!allGroupedContent[moduleId]) {
+            allGroupedContent[moduleId] = {
               module: module,
-              sections: response.data,
+              sections: {},
             };
           }
-        } catch (err) {
-          console.error(`Error fetching content for module ${module.id}:`, err);
+
+          const section = item.section || "No Section";
+          if (!allGroupedContent[moduleId].sections[section]) {
+            allGroupedContent[moduleId].sections[section] = [];
+          }
+
+          allGroupedContent[moduleId].sections[section].push(item);
         }
-      }
+      });
 
       setGroupedContent(allGroupedContent);
     } catch (err) {

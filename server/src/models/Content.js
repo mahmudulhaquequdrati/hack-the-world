@@ -180,6 +180,17 @@ ContentSchema.statics.getByModuleGrouped = async function (moduleId) {
   return sections;
 };
 
+// Static method to get distinct sections by module
+ContentSchema.statics.getSectionsByModule = async function (moduleId) {
+  const sections = await this.distinct("section", {
+    moduleId,
+    isActive: true,
+  });
+
+  // Return sorted array of unique section titles
+  return sections.sort();
+};
+
 // Helper function to update module content statistics
 async function updateModuleStats(moduleId) {
   const Module = mongoose.model("Module");

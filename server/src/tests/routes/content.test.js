@@ -633,4 +633,90 @@ describe("Content API Endpoints", () => {
       await request(app).get("/api/content/type/video").expect(401);
     });
   });
+
+  describe("GET /api/content/sections/by-module/:moduleId", () => {
+    beforeEach(async () => {
+      await Content.create([
+        { ...testContent, title: "Content 1", section: "Fundamentals" },
+        { ...testContent, title: "Content 2", section: "Practical Labs" },
+        { ...testContent, title: "Content 3", section: "Advanced Topics" },
+        { ...testContent, title: "Content 4", section: "Fundamentals" }, // Duplicate section
+        { ...testContent, title: "Content 5", section: "Practical Labs" }, // Duplicate section
+      ]);
+    });
+
+    it("should get distinct sections for a module", async () => {
+      const response = await request(app)
+        .get(`/api/content/sections/by-module/${testModule.id}`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.data).toHaveLength(3); // Should return unique sections only
+      expect(response.body.count).toBe(3);
+
+      // Should be alphabetically sorted
+      expect(response.body.data).toEqual([
+        "Advanced Topics",
+        "Fundamentals",
+        "Practical Labs",
+      ]);
+    });
+
+    it("should return empty array when module has no content", async () => {
+      // Clear content for the module
+      await Content.deleteMany({ moduleId: testModule.id });
+
+      const response = await request(app)
+        .get(`/api/content/sections/by-module/${testModule.id}`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.data).toHaveLength(0);
+      expect(response.body.count).toBe(0);
+    });
+
+    it("should only return sections from active content", async () => {
+      // Create inactive content with different section
+      await Content.create({
+        ...testContent,
+        title: "Inactive Content",
+        section: "Inactive Section",
+        isActive: false,
+      });
+
+      const response = await request(app)
+        .get(`/api/content/sections/by-module/${testModule.id}`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(3); // Should not include inactive section
+      expect(response.body.data).not.toContain("Inactive Section");
+    });
+
+    it("should return 400 for invalid module ID format", async () => {
+      await request(app)
+        .get("/api/content/sections/by-module/invalid-id")
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(400);
+    });
+
+    it("should return 404 for non-existent module", async () => {
+      const nonExistentModuleId = new mongoose.Types.ObjectId();
+      await request(app)
+        .get(`/api/content/sections/by-module/${nonExistentModuleId}`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(404);
+    });
+
+    it("should return 401 without authentication", async () => {
+      await request(app)
+        .get(`/api/content/sections/by-module/${testModule.id}`)
+        .expect(401);
+    });
+  });
 });

@@ -9,6 +9,7 @@ const {
   getContentByModule,
   getContentByModuleGrouped,
   getContentByType,
+  getSectionsByModule,
 } = require("../controllers/contentController");
 const { protect, authorize } = require("../middleware/auth");
 
@@ -663,6 +664,90 @@ router.get("/module/:moduleId/grouped", protect, getContentByModuleGrouped);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/type/:type", protect, getContentByType);
+
+/**
+ * @swagger
+ * /content/sections/by-module/{moduleId}:
+ *   get:
+ *     summary: 🏷️ Get distinct sections by module
+ *     description: |
+ *       Retrieve all unique section titles for a specific module. Essential for content creation interface with section auto-complete functionality.
+ *
+ *       **🔍 Section Discovery:**
+ *       - Returns distinct section names only
+ *       - Alphabetically sorted results
+ *       - Only includes active content sections
+ *       - Empty array if no sections found
+ *
+ *       **🎯 Use Cases:**
+ *       - Section auto-complete in admin panel
+ *       - Content organization insights
+ *       - Module structure overview
+ *       - Section-based navigation
+ *
+ *       **⚡ Performance:**
+ *       - Optimized distinct queries
+ *       - Minimal data transfer
+ *       - Fast section enumeration
+ *     tags: [📚 Content Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: moduleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Module ObjectId
+ *         example: "64a1b2c3d4e5f6789012346"
+ *     responses:
+ *       200:
+ *         description: Sections retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Sections for module retrieved successfully"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Fundamentals", "Practical Labs", "Advanced Topics"]
+ *                 count:
+ *                   type: number
+ *                   example: 3
+ *       400:
+ *         description: Invalid module ID format
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               success: false
+ *               message: 'Invalid module ID format'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Module not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               success: false
+ *               message: 'Module not found'
+ */
+router.get("/sections/by-module/:moduleId", protect, getSectionsByModule);
 
 /**
  * @swagger

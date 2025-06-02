@@ -152,6 +152,36 @@ const getContentByType = asyncHandler(async (req, res, next) => {
 });
 
 /**
+ * @desc    Get distinct sections by module
+ * @route   GET /api/content/sections/by-module/:moduleId
+ * @access  Private
+ */
+const getSectionsByModule = asyncHandler(async (req, res, next) => {
+  const { moduleId } = req.params;
+
+  // Validate moduleId ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(moduleId)) {
+    return next(new ErrorResponse("Invalid module ID format", 400));
+  }
+
+  // Check if module exists
+  const Module = require("../models/Module");
+  const module = await Module.findById(moduleId);
+  if (!module) {
+    return next(new ErrorResponse("Module not found", 404));
+  }
+
+  const sections = await Content.getSectionsByModule(moduleId);
+
+  res.status(200).json({
+    success: true,
+    message: `Sections for module retrieved successfully`,
+    data: sections,
+    count: sections.length,
+  });
+});
+
+/**
  * @desc    Create new content
  * @route   POST /api/content
  * @access  Private (Admin)
@@ -287,6 +317,7 @@ module.exports = {
   getContentByModule,
   getContentByModuleGrouped,
   getContentByType,
+  getSectionsByModule,
   createContent,
   updateContent,
   deleteContent,

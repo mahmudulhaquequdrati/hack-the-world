@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "../../test/utils/testUtils";
@@ -17,6 +18,7 @@ vi.mock("../../services/api", () => ({
     update: vi.fn(),
     delete: vi.fn(),
     permanentDelete: vi.fn(),
+    getSectionsByModule: vi.fn(),
   },
   modulesAPI: {
     getAll: vi.fn(),
@@ -72,6 +74,8 @@ const mockGroupedContentByModule = {
   "Core Concepts": [mockContent[1]],
 };
 
+const mockSections = ["Fundamentals", "Practical Labs", "Advanced Topics"];
+
 describe("ContentManager", () => {
   beforeEach(() => {
     // Reset all mocks before each test
@@ -87,6 +91,8 @@ describe("ContentManager", () => {
       success: true,
       data: mockContent,
     });
+
+    contentAPI.getSectionsByModule.mockResolvedValue({ data: mockSections });
   });
 
   describe("Initial Rendering", () => {
@@ -509,6 +515,341 @@ describe("ContentManager", () => {
           screen.getByText("Content created successfully")
         ).toBeInTheDocument();
       });
+    });
+  });
+
+  describe("Section Auto-complete Functionality", () => {
+    beforeEach(async () => {
+      render(<ContentManager />);
+
+      // Wait for initial load
+      await waitFor(() => {
+        expect(screen.getByText("[CONTENT MANAGEMENT]")).toBeInTheDocument();
+      });
+
+      // Open the form
+      const addButton = screen.getByText("Add Content");
+      fireEvent.click(addButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Create New Content")).toBeInTheDocument();
+      });
+    });
+
+    it("should disable section input when no module is selected", async () => {
+      const sectionInput = screen.getByPlaceholderText(
+        "Select a module first to see available sections"
+      );
+      expect(sectionInput).toBeDisabled();
+    });
+
+    it("should enable section input and fetch sections when module is selected", async () => {
+      const user = userEvent.setup();
+
+      // Select a module
+      const moduleSelect = screen.getByDisplayValue("Select Module");
+      await user.selectOptions(moduleSelect, "module-1");
+
+      await waitFor(() => {
+        expect(contentAPI.getSectionsByModule).toHaveBeenCalledWith("module-1");
+      });
+
+      const sectionInput = screen.getByPlaceholderText(
+        "Type to search existing sections or create new one"
+      );
+      expect(sectionInput).not.toBeDisabled();
+    });
+
+    it("should show existing sections in dropdown when typing", async () => {
+      const user = userEvent.setup();
+
+      // Select a module first
+      const moduleSelect = screen.getByDisplayValue("Select Module");
+      await user.selectOptions(moduleSelect, "module-1");
+
+      await waitFor(() => {
+        expect(contentAPI.getSectionsByModule).toHaveBeenCalled();
+      });
+
+      // Type in section input
+      const sectionInput = screen.getByPlaceholderText(
+        "Type to search existing sections or create new one"
+      );
+      await user.click(sectionInput);
+      await user.type(sectionInput, "Fun");
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Existing sections (click to select):")
+        ).toBeInTheDocument();
+        expect(screen.getByText("📁 Fundamentals")).toBeInTheDocument();
+      });
+    });
+
+    it("should filter sections based on input", async () => {
+      const user = userEvent.setup();
+
+      // Select a module
+      const moduleSelect = screen.getByDisplayValue("Select Module");
+      await user.selectOptions(moduleSelect, "module-1");
+
+      await waitFor(() => {
+        expect(contentAPI.getSectionsByModule).toHaveBeenCalled();
+      });
+
+      // Type specific text
+      const sectionInput = screen.getByPlaceholderText(
+        "Type to search existing sections or create new one"
+      );
+      await user.click(sectionInput);
+      await user.type(sectionInput, "Practical");
+
+      await waitFor(() => {
+        expect(screen.getByText("📁 Practical Labs")).toBeInTheDocument();
+        expect(screen.queryByText("📁 Fundamentals")).not.toBeInTheDocument();
+      });
+    });
+
+    it("should select section when clicked from dropdown", async () => {
+      const user = userEvent.setup();
+
+      // Select a module
+      const moduleSelect = screen.getByDisplayValue("Select Module");
+      await user.selectOptions(moduleSelect, "module-1");
+
+      await waitFor(() => {
+        expect(contentAPI.getSectionsByModule).toHaveBeenCalled();
+      });
+
+      // Click on section input to show dropdown
+      const sectionInput = screen.getByPlaceholderText(
+        "Type to search existing sections or create new one"
+      );
+      await user.click(sectionInput);
+
+      await waitFor(() => {
+        expect(screen.getByText("📁 Fundamentals")).toBeInTheDocument();
+      });
+
+      // Click on a section
+      const fundamentalsOption = screen.getByText("📁 Fundamentals");
+      await user.click(fundamentalsOption);
+
+      expect(sectionInput.value).toBe("Fundamentals");
+    });
+
+    it("should show create new section message for non-existing sections", async () => {
+      const user = userEvent.setup();
+
+      // Select a module
+      const moduleSelect = screen.getByDisplayValue("Select Module");
+      await user.selectOptions(moduleSelect, "module-1");
+
+      await waitFor(() => {
+        expect(contentAPI.getSectionsByModule).toHaveBeenCalled();
+      });
+
+      // Type a new section name
+      const sectionInput = screen.getByPlaceholderText(
+        "Type to search existing sections or create new one"
+      );
+      await user.click(sectionInput);
+      await user.type(sectionInput, "New Section");
+
+      await waitFor(() => {
+        expect(screen.getByText("✨ Create new section:")).toBeInTheDocument();
+        expect(screen.getByText('"New Section"')).toBeInTheDocument();
+      });
+    });
+
+    it("should show section count when available", async () => {
+      const user = userEvent.setup();
+
+      // Select a module
+      const moduleSelect = screen.getByDisplayValue("Select Module");
+      await user.selectOptions(moduleSelect, "module-1");
+
+      await waitFor(() => {
+        expect(contentAPI.getSectionsByModule).toHaveBeenCalled();
+      });
+
+      // Click away from section input to hide dropdown
+      const titleInput = screen.getByLabelText("Title*");
+      await user.click(titleInput);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("💡 3 existing sections available")
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Content Creation with Section", () => {
+    it("should create content with selected section", async () => {
+      const user = userEvent.setup();
+
+      contentAPI.create.mockResolvedValue({
+        data: {
+          id: "new-content",
+          title: "Test Content",
+          section: "Fundamentals",
+        },
+      });
+
+      render(<ContentManager />);
+
+      // Wait for initial load and open form
+      await waitFor(() => {
+        expect(screen.getByText("[CONTENT MANAGEMENT]")).toBeInTheDocument();
+      });
+
+      const addButton = screen.getByText("Add Content");
+      fireEvent.click(addButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Create New Content")).toBeInTheDocument();
+      });
+
+      // Fill in form
+      const moduleSelect = screen.getByDisplayValue("Select Module");
+      await user.selectOptions(moduleSelect, "module-1");
+
+      const titleInput = screen.getByLabelText("Title*");
+      await user.type(titleInput, "Test Content");
+
+      const descriptionInput = screen.getByLabelText("Description*");
+      await user.type(descriptionInput, "Test description");
+
+      // Wait for sections to load and select one
+      await waitFor(() => {
+        expect(contentAPI.getSectionsByModule).toHaveBeenCalled();
+      });
+
+      const sectionInput = screen.getByPlaceholderText(
+        "Type to search existing sections or create new one"
+      );
+      await user.click(sectionInput);
+
+      await waitFor(() => {
+        expect(screen.getByText("📁 Fundamentals")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText("📁 Fundamentals"));
+
+      // Submit form
+      const submitButton = screen.getByText("Create");
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(contentAPI.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            moduleId: "module-1",
+            title: "Test Content",
+            description: "Test description",
+            section: "Fundamentals",
+          })
+        );
+      });
+    });
+
+    it("should handle section loading state", async () => {
+      const user = userEvent.setup();
+
+      // Mock slow API response
+      contentAPI.getSectionsByModule.mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve({ data: mockSections }), 100)
+          )
+      );
+
+      render(<ContentManager />);
+
+      await waitFor(() => {
+        expect(screen.getByText("[CONTENT MANAGEMENT]")).toBeInTheDocument();
+      });
+
+      const addButton = screen.getByText("Add Content");
+      fireEvent.click(addButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Create New Content")).toBeInTheDocument();
+      });
+
+      // Select module to trigger loading
+      const moduleSelect = screen.getByDisplayValue("Select Module");
+      await user.selectOptions(moduleSelect, "module-1");
+
+      // Check loading state
+      expect(screen.getByText("(Loading sections...)")).toBeInTheDocument();
+
+      // Wait for loading to complete
+      await waitFor(() => {
+        expect(
+          screen.queryByText("(Loading sections...)")
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Edit Content with Section", () => {
+    it("should populate section field when editing content", async () => {
+      render(<ContentManager />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Introduction to Cybersecurity")
+        ).toBeInTheDocument();
+      });
+
+      // Click edit button for first content item
+      const editButtons = screen.getAllByText("Edit");
+      fireEvent.click(editButtons[0]);
+
+      await waitFor(() => {
+        expect(screen.getByText("Edit Content")).toBeInTheDocument();
+      });
+
+      // Check that section field is populated
+      const sectionInput = screen.getByDisplayValue("Fundamentals");
+      expect(sectionInput).toBeInTheDocument();
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should handle section fetch error gracefully", async () => {
+      const user = userEvent.setup();
+
+      contentAPI.getSectionsByModule.mockRejectedValue(new Error("API Error"));
+
+      render(<ContentManager />);
+
+      await waitFor(() => {
+        expect(screen.getByText("[CONTENT MANAGEMENT]")).toBeInTheDocument();
+      });
+
+      const addButton = screen.getByText("Add Content");
+      fireEvent.click(addButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Create New Content")).toBeInTheDocument();
+      });
+
+      // Select module
+      const moduleSelect = screen.getByDisplayValue("Select Module");
+      await user.selectOptions(moduleSelect, "module-1");
+
+      // API should be called and fail, but UI should still work
+      await waitFor(() => {
+        expect(contentAPI.getSectionsByModule).toHaveBeenCalled();
+      });
+
+      // Section input should still be enabled
+      const sectionInput = screen.getByPlaceholderText(
+        "Type to search existing sections or create new one"
+      );
+      expect(sectionInput).not.toBeDisabled();
     });
   });
 });

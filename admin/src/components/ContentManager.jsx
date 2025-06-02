@@ -14,6 +14,12 @@ const ContentManager = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Section auto-complete state
+  const [availableSections, setAvailableSections] = useState([]);
+  const [sectionLoading, setSectionLoading] = useState(false);
+  const [showSectionDropdown, setShowSectionDropdown] = useState(false);
+  const [sectionInputValue, setSectionInputValue] = useState("");
+
   // Filters (removed pagination)
   const [filters, setFilters] = useState({
     type: "",
@@ -70,6 +76,29 @@ const ContentManager = () => {
     fetchModules();
   }, []);
 
+  useEffect(() => {
+    if (filters.type || filters.moduleId) {
+      if (filters.type && !filters.moduleId) {
+        fetchContentByType(filters.type);
+      } else if (filters.moduleId && !filters.type) {
+        fetchContentByModule(filters.moduleId);
+      } else if (filters.type && filters.moduleId) {
+        fetchContentByType(filters.type, filters.moduleId);
+      }
+    } else {
+      fetchContent();
+    }
+  }, [filters]);
+
+  // Fetch available sections when module is selected
+  useEffect(() => {
+    if (formData.moduleId) {
+      fetchSectionsByModule(formData.moduleId);
+    } else {
+      setAvailableSections([]);
+    }
+  }, [formData.moduleId]);
+
   const fetchModules = async () => {
     try {
       const response = await modulesAPI.getAll();
@@ -97,19 +126,42 @@ const ContentManager = () => {
     }
   };
 
-  const fetchContentByType = async (type) => {
+  const fetchContentByType = async (type, moduleId = null) => {
     try {
       setLoading(true);
-      const response = await contentAPI.getByType(
-        type,
-        filters.moduleId || null
-      );
+      const response = await contentAPI.getByType(type, moduleId);
       setGroupedContent({ [type]: response.data || [] });
     } catch (err) {
       console.error("Error fetching content by type:", err);
       setError("Failed to fetch content by type");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchContentByModule = async (moduleId) => {
+    try {
+      setLoading(true);
+      const response = await contentAPI.getByModule(moduleId);
+      setContent(response.data || []);
+    } catch (err) {
+      console.error("Error fetching content for module:", err);
+      setError("Failed to fetch content for module");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSectionsByModule = async (moduleId) => {
+    try {
+      setSectionLoading(true);
+      const response = await contentAPI.getSectionsByModule(moduleId);
+      setAvailableSections(response.data || []);
+    } catch (err) {
+      console.error("Failed to fetch sections:", err);
+      setAvailableSections([]);
+    } finally {
+      setSectionLoading(false);
     }
   };
 
@@ -201,6 +253,10 @@ const ContentManager = () => {
       resources: [],
     });
     setEditingContent(null);
+    // Reset section auto-complete state
+    setSectionInputValue("");
+    setShowSectionDropdown(false);
+    setAvailableSections([]);
   };
 
   const handleFormSubmit = async (e) => {
@@ -274,6 +330,8 @@ const ContentManager = () => {
       duration: contentItem.duration || 1,
       resources: contentItem.resources || [],
     });
+    // Set section input value for auto-complete
+    setSectionInputValue(contentItem.section || "");
     setShowForm(true);
   };
 
@@ -315,6 +373,39 @@ const ContentManager = () => {
       setLoading(false);
     }
   };
+
+  const handleSectionInputChange = (e) => {
+    const value = e.target.value;
+    setSectionInputValue(value);
+    setFormData((prev) => ({ ...prev, section: value }));
+    // Show dropdown when typing (if module is selected)
+    if (formData.moduleId) {
+      setShowSectionDropdown(true);
+    }
+  };
+
+  const handleSectionSelect = (section) => {
+    setSectionInputValue(section);
+    setFormData((prev) => ({ ...prev, section }));
+    setShowSectionDropdown(false);
+  };
+
+  const handleSectionInputFocus = () => {
+    // Always show dropdown when focused (if module is selected)
+    // This allows creating new sections even when no existing sections
+    if (formData.moduleId) {
+      setShowSectionDropdown(true);
+    }
+  };
+
+  const handleSectionInputBlur = () => {
+    // Delay hiding dropdown to allow for clicks
+    setTimeout(() => setShowSectionDropdown(false), 200);
+  };
+
+  const filteredSections = availableSections.filter((section) =>
+    section.toLowerCase().includes(sectionInputValue.toLowerCase())
+  );
 
   const renderContentList = () => (
     <div className="bg-gray-800 rounded-lg overflow-hidden shadow border border-gray-600">
@@ -572,12 +663,13 @@ const ContentManager = () => {
                 </label>
                 <select
                   value={formData.moduleId}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    console.log("Module selected:", e.target.value);
                     setFormData((prev) => ({
                       ...prev,
                       moduleId: e.target.value,
-                    }))
-                  }
+                    }));
+                  }}
                   className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
                   required
                 >
@@ -627,21 +719,90 @@ const ContentManager = () => {
               />
             </div>
 
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-green-400 mb-1">
                 Section*
+                <span className="ml-2 text-xs text-cyan-400">
+                  [Debug: moduleId={formData.moduleId ? "✓" : "✗"}, disabled=
+                  {!formData.moduleId ? "✓" : "✗"}]
+                </span>
+                {sectionLoading && (
+                  <span className="ml-2 text-xs text-gray-400">
+                    (Loading sections...)
+                  </span>
+                )}
               </label>
               <input
                 type="text"
-                value={formData.section}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, section: e.target.value }))
-                }
+                value={sectionInputValue}
+                onChange={handleSectionInputChange}
+                onFocus={() => {
+                  console.log(
+                    "Section input focused, moduleId:",
+                    formData.moduleId,
+                    "disabled:",
+                    !formData.moduleId
+                  );
+                  handleSectionInputFocus();
+                }}
+                onBlur={handleSectionInputBlur}
                 className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
                 required
                 maxLength="100"
-                placeholder="e.g., Introduction, Core Concepts, Advanced Topics"
+                placeholder={
+                  formData.moduleId
+                    ? "Type to search existing sections or create new one"
+                    : "Select a module first to see available sections"
+                }
+                disabled={!formData.moduleId}
               />
+              {showSectionDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
+                  {filteredSections.length > 0 ? (
+                    <>
+                      <div className="px-3 py-2 text-xs text-gray-400 bg-gray-800 border-b border-gray-600">
+                        Existing sections (click to select):
+                      </div>
+                      {filteredSections.map((section) => (
+                        <button
+                          key={section}
+                          type="button"
+                          onClick={() => handleSectionSelect(section)}
+                          className="w-full text-left px-4 py-2 text-green-400 hover:bg-gray-600 focus:bg-gray-600 focus:outline-none transition-colors duration-150"
+                        >
+                          📁 {section}
+                        </button>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-gray-400">
+                      {sectionInputValue ? (
+                        <>
+                          <div className="text-cyan-400 mb-1">
+                            ✨ Create new section:
+                          </div>
+                          <div className="font-medium">
+                            "{sectionInputValue}"
+                          </div>
+                          <div className="text-xs mt-1">
+                            Press Enter or click outside to create
+                          </div>
+                        </>
+                      ) : (
+                        "No existing sections found. Type to create a new one."
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              {formData.moduleId &&
+                availableSections.length > 0 &&
+                !showSectionDropdown && (
+                  <div className="mt-1 text-xs text-gray-400">
+                    💡 {availableSections.length} existing section
+                    {availableSections.length !== 1 ? "s" : ""} available
+                  </div>
+                )}
             </div>
 
             <div>

@@ -152,7 +152,7 @@ export const contentAPI = {
     return response.data;
   },
 
-  // Get content by module ID
+  // Get content by module ID (not used yet)
   getByModule: async (moduleId) => {
     const response = await axios.get(`/content/module/${moduleId}`);
     return response.data;
@@ -168,6 +168,12 @@ export const contentAPI = {
   getByType: async (type, moduleId = null) => {
     const params = moduleId ? { moduleId } : {};
     const response = await axios.get(`/content/type/${type}`, { params });
+    return response.data;
+  },
+
+  // Get distinct sections by module
+  getSectionsByModule: async (moduleId) => {
+    const response = await axios.get(`/content/sections/by-module/${moduleId}`);
     return response.data;
   },
 

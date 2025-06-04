@@ -577,7 +577,7 @@ const MyLabs = () => {
                     <div className="flex items-center space-x-2">
                       {module && (
                         <Link
-                          to={`/modules/${module.id}`}
+                          to={`/content/${lab.id}`}
                           className="text-xs text-green-400 hover:text-cyber-green transition-colors"
                           title="View Module"
                         >

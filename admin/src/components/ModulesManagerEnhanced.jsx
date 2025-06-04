@@ -3,15 +3,20 @@ import {
   ArrowUpIcon,
   ChartBarIcon,
   CheckCircleIcon,
+  CheckIcon,
   ExclamationCircleIcon,
   EyeIcon,
   PencilIcon,
   PlusIcon,
   TrashIcon,
+  UserGroupIcon,
+  UserPlusIcon,
+  UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
-import { modulesAPI, phasesAPI } from "../services/api";
+import { Link } from "react-router-dom";
+import { authAPI, enrollmentAPI, modulesAPI, phasesAPI } from "../services/api";
 
 const ModulesManagerEnhanced = () => {
   const [modules, setModules] = useState([]);
@@ -25,6 +30,13 @@ const ModulesManagerEnhanced = () => {
   const [editingModule, setEditingModule] = useState(null);
   const [viewMode, setViewMode] = useState("list"); // list, grouped (removed stats)
   const [selectedPhase, setSelectedPhase] = useState("");
+  const [enrolling, setEnrolling] = useState(false);
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [selectedModuleForEnroll, setSelectedModuleForEnroll] = useState(null);
+  const [enrollmentStats, setEnrollmentStats] = useState({});
+  const [users, setUsers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [formData, setFormData] = useState({
     phaseId: "",
     title: "",
@@ -88,6 +100,17 @@ const ModulesManagerEnhanced = () => {
       if (modulesRes.status === "rejected" && phasesRes.status === "rejected") {
         setError(
           "Failed to load data. Please check your connection and authentication."
+        );
+      }
+
+      // Fetch enrollment stats for all modules (non-blocking)
+      if (
+        modulesRes.status === "fulfilled" &&
+        modulesRes.value.data?.length > 0
+      ) {
+        // Don't await this to avoid blocking the main UI
+        fetchAllEnrollmentStats().catch((err) =>
+          console.warn("Failed to fetch enrollment stats:", err)
         );
       }
     } catch (error) {
@@ -179,7 +202,7 @@ const ModulesManagerEnhanced = () => {
       const sortedModules = phaseModules.sort((a, b) => a.order - b.order);
 
       // Find current module index
-      const currentIndex = sortedModules.findIndex((m) => m._id === moduleId);
+      const currentIndex = sortedModules.findIndex((m) => m.id === moduleId);
       if (currentIndex === -1) return;
 
       // Calculate new position
@@ -197,7 +220,7 @@ const ModulesManagerEnhanced = () => {
         }
 
         return {
-          moduleId: module._id,
+          moduleId: module.id,
           order: newOrder,
         };
       });
@@ -293,11 +316,8 @@ const ModulesManagerEnhanced = () => {
       console.log("Submitting module data:", moduleData);
 
       if (editingModule) {
-        console.log("Updating module:", editingModule.id || editingModule._id);
-        const response = await modulesAPI.update(
-          editingModule.id || editingModule._id,
-          moduleData
-        );
+        console.log("Updating module:", editingModule.id);
+        const response = await modulesAPI.update(editingModule.id, moduleData);
         console.log("Update response:", response);
         setSuccess("Module updated successfully!");
       } else {
@@ -343,6 +363,7 @@ const ModulesManagerEnhanced = () => {
       setError("");
 
       console.log("Deleting module:", module.id);
+      console.log("Deleting module:", module);
       const response = await modulesAPI.delete(module.id);
       console.log("Delete response:", response);
 
@@ -350,28 +371,248 @@ const ModulesManagerEnhanced = () => {
       await fetchData();
     } catch (error) {
       console.error("Error deleting module:", error);
-
-      let errorMessage = "Failed to delete module";
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-
-      setError(errorMessage);
+      setError("Failed to delete module");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Enrollment functions
+  const handleEnrollClick = (module) => {
+    setSelectedModuleForEnroll(module);
+    setShowEnrollModal(true);
+    setError("");
+    setSuccess("");
+    setSelectedUserId(""); // Reset user selection
+    fetchUsersForEnrollment(); // Load users when modal opens
+  };
+
+  const fetchUsersForEnrollment = async () => {
+    try {
+      setLoadingUsers(true);
+      // Note: This would typically be a /users endpoint, but for now we'll use current user
+      // In a real admin panel, you'd have a users management endpoint
+      const currentUser = await authAPI.getCurrentUser();
+      if (currentUser.success) {
+        setUsers([
+          {
+            id: currentUser.data.id,
+            username: currentUser.data.username,
+            email: currentUser.data.email,
+            role: currentUser.data.role,
+          },
+        ]);
+        setSelectedUserId(currentUser.data.id); // Auto-select current user for demo
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setError("Failed to load users for enrollment");
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleEnrollConfirm = async () => {
+    if (!selectedModuleForEnroll || !selectedUserId) {
+      setError("Please select a user for enrollment");
+      return;
+    }
+
+    try {
+      setEnrolling(true);
+      setError("");
+
+      // Create enrollment with improved error handling
+      const response = await enrollmentAPI.create(selectedModuleForEnroll.id);
+
+      if (response.success) {
+        setSuccess(
+          `Successfully enrolled user in ${selectedModuleForEnroll.title}`
+        );
+        setShowEnrollModal(false);
+        setSelectedModuleForEnroll(null);
+        setSelectedUserId("");
+
+        // Refresh enrollment stats and module data
+        await Promise.all([
+          fetchEnrollmentStats(selectedModuleForEnroll.id),
+          fetchData(), // Refresh all data to show updated enrollment counts
+        ]);
+      } else {
+        setError(response.message || "Failed to enroll user in module");
+      }
+    } catch (error) {
+      console.error("Error enrolling in module:", error);
+
+      // Enhanced error handling based on server response
+      if (error.response?.status === 400) {
+        const errorMsg =
+          error.response?.data?.message ||
+          "User already enrolled in this module";
+        setError(errorMsg);
+      } else if (error.response?.status === 404) {
+        setError("Module not found or has been deleted");
+      } else if (error.response?.status === 401) {
+        setError("Authentication required. Please log in again");
+      } else if (error.response?.status === 403) {
+        setError("You don't have permission to enroll users");
+      } else {
+        setError("Failed to enroll user in module. Please try again.");
+      }
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  const closeEnrollModal = () => {
+    setShowEnrollModal(false);
+    setSelectedModuleForEnroll(null);
+    setSelectedUserId("");
+    setUsers([]);
+    setError("");
+    setSuccess("");
+  };
+
+  const fetchEnrollmentStats = async (moduleId) => {
+    try {
+      // Get module enrollment statistics for admin
+      const response = await enrollmentAPI.getModuleStats(moduleId);
+      if (response.success) {
+        setEnrollmentStats((prev) => ({
+          ...prev,
+          [moduleId]: response.data || {},
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching enrollment stats:", error);
+      // Don't show error for stats as it's not critical
+    }
+  };
+
+  // Enhanced function to fetch all enrollment stats for visible modules
+  const fetchAllEnrollmentStats = async () => {
+    try {
+      const moduleIds = modules.map((module) => module.id);
+      const statsPromises = moduleIds.map((moduleId) =>
+        fetchEnrollmentStats(moduleId).catch((err) => {
+          console.warn(`Failed to fetch stats for module ${moduleId}:`, err);
+          return null;
+        })
+      );
+      await Promise.all(statsPromises);
+    } catch (error) {
+      console.error("Error fetching enrollment stats for modules:", error);
+    }
+  };
+
+  // Helper function to render enrollment status badge
+  const getEnrollmentStatusBadge = (stats) => {
+    if (!stats || stats.totalEnrollments === 0) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-600 text-gray-300">
+          No Enrollments
+        </span>
+      );
+    }
+
+    const {
+      totalEnrollments,
+      activeEnrollments,
+      completedEnrollments,
+      pausedEnrollments,
+      droppedEnrollments,
+    } = stats;
+
+    return (
+      <div className="flex flex-wrap gap-1">
+        {/* Total Badge */}
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-600 text-white">
+          Total: {totalEnrollments}
+        </span>
+
+        {/* Active Badge */}
+        {activeEnrollments > 0 && (
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-600 text-white">
+            Active: {activeEnrollments}
+          </span>
+        )}
+
+        {/* Completed Badge */}
+        {completedEnrollments > 0 && (
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-cyan-600 text-white">
+            Completed: {completedEnrollments}
+          </span>
+        )}
+
+        {/* Paused Badge */}
+        {pausedEnrollments > 0 && (
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-600 text-white">
+            Paused: {pausedEnrollments}
+          </span>
+        )}
+
+        {/* Dropped Badge */}
+        {droppedEnrollments > 0 && (
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-600 text-white">
+            Dropped: {droppedEnrollments}
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  // Helper function to get enrollment status icon
+  const getEnrollmentStatusIcon = (stats) => {
+    if (!stats || stats.totalEnrollments === 0) {
+      return <UserGroupIcon className="w-4 h-4 text-gray-400" />;
+    }
+
+    const { activeEnrollments, completedEnrollments } = stats;
+
+    if (completedEnrollments > activeEnrollments) {
+      return <CheckIcon className="w-4 h-4 text-cyan-400" />;
+    } else if (activeEnrollments > 0) {
+      return <UserGroupIcon className="w-4 h-4 text-green-400" />;
+    } else {
+      return <UserGroupIcon className="w-4 h-4 text-yellow-400" />;
     }
   };
 
   const renderModuleStats = (module) => {
     const content = module.content || {};
     const contentStats = module.contentStats || {};
+    const enrollStats = enrollmentStats[module.id] || {};
 
     return (
       <div className="text-xs text-gray-400 mt-1">
-        <div>Videos: {content.videos?.length || 0}</div>
-        <div>Labs: {content.labs?.length || 0}</div>
-        <div>Games: {content.games?.length || 0}</div>
-        <div>Total Duration: {contentStats.totalDuration || 0} min</div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <div>Videos: {content.videos?.length || 0}</div>
+            <div>Labs: {content.labs?.length || 0}</div>
+            <div>Games: {content.games?.length || 0}</div>
+            <div>Duration: {contentStats.totalDuration || 0} min</div>
+          </div>
+          <div>
+            <div className="text-cyan-400">
+              Enrolled: {enrollStats.totalEnrollments || 0}
+            </div>
+            {enrollStats.activeEnrollments !== undefined && (
+              <div className="text-green-400">
+                Active: {enrollStats.activeEnrollments}
+              </div>
+            )}
+            {enrollStats.completedEnrollments !== undefined && (
+              <div className="text-blue-400">
+                Completed: {enrollStats.completedEnrollments}
+              </div>
+            )}
+            {enrollStats.averageProgress !== undefined && (
+              <div className="text-yellow-400">
+                Avg Progress: {Math.round(enrollStats.averageProgress)}%
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   };
@@ -402,6 +643,9 @@ const ModulesManagerEnhanced = () => {
                 Content Stats
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-green-400 uppercase tracking-wider">
+                Enrollment Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-green-400 uppercase tracking-wider">
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-green-400 uppercase tracking-wider">
@@ -411,17 +655,23 @@ const ModulesManagerEnhanced = () => {
           </thead>
           <tbody className="bg-gray-800 divide-y divide-gray-600">
             {filteredModules.map((module) => {
+              const enrollStats = enrollmentStats[module.id] || {};
               return (
                 <tr
-                  key={module._id}
+                  key={module.id}
                   className="hover:bg-gray-700/20 transition-colors"
                 >
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-green-400">
-                      {module.title}
-                    </div>
-                    <div className="text-sm text-gray-400 truncate max-w-xs">
-                      {module.description}
+                    <div className="flex items-center space-x-2">
+                      <div>
+                        <div className="text-sm font-medium text-green-400">
+                          {module.title}
+                        </div>
+                        <div className="text-sm text-gray-400 truncate max-w-xs">
+                          {module.description}
+                        </div>
+                      </div>
+                      {getEnrollmentStatusIcon(enrollStats)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-400">
@@ -448,7 +698,7 @@ const ModulesManagerEnhanced = () => {
                       <div className="flex flex-col">
                         <button
                           onClick={() =>
-                            handleReorder(module.phaseId, module._id, "up")
+                            handleReorder(module.phaseId, module.id, "up")
                           }
                           disabled={saving}
                           className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
@@ -457,7 +707,7 @@ const ModulesManagerEnhanced = () => {
                         </button>
                         <button
                           onClick={() =>
-                            handleReorder(module.phaseId, module._id, "down")
+                            handleReorder(module.phaseId, module.id, "down")
                           }
                           disabled={saving}
                           className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
@@ -470,6 +720,21 @@ const ModulesManagerEnhanced = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-green-400">
                     {renderModuleStats(module)}
                   </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col space-y-2">
+                      {getEnrollmentStatusBadge(enrollStats)}
+
+                      {/* Quick Stats */}
+                      {enrollStats.totalEnrollments > 0 && (
+                        <div className="text-xs text-gray-400">
+                          Completion: {enrollStats.completionRate || 0}%
+                          {enrollStats.averageProgress !== undefined && (
+                            <> • Avg: {enrollStats.averageProgress}%</>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {module.isActive ? (
                       <CheckCircleIcon className="h-5 w-5 text-green-600" />
@@ -478,6 +743,21 @@ const ModulesManagerEnhanced = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <Link
+                      to={`/modules/${module.id}`}
+                      className="text-blue-400 hover:text-blue-300 mr-4"
+                      title="View Details"
+                    >
+                      <EyeIcon className="h-4 w-4 inline" />
+                    </Link>
+                    <button
+                      onClick={() => handleEnrollClick(module)}
+                      className="text-purple-400 hover:text-purple-300 mr-4"
+                      title="Enroll User"
+                      disabled={saving}
+                    >
+                      <UserPlusIcon className="h-4 w-4 inline" />
+                    </button>
                     <button
                       onClick={() => openModal(module)}
                       className="text-cyber-green hover:text-green-300 mr-4"
@@ -505,7 +785,7 @@ const ModulesManagerEnhanced = () => {
     <div className="space-y-6">
       {modulesWithPhases.map((phase) => (
         <div
-          key={phase._id}
+          key={phase.id}
           className="bg-gray-800 p-6 rounded-lg shadow border border-gray-600"
         >
           <h3 className="text-lg font-medium text-green-400 mb-4">
@@ -513,77 +793,122 @@ const ModulesManagerEnhanced = () => {
           </h3>
           {phase.modules && phase.modules.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {phase.modules.map((module) => (
-                <div
-                  key={module._id}
-                  className="border border-gray-600 rounded-lg p-4 bg-gray-700"
-                >
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-medium text-green-400">
-                      {module.title}
-                    </h4>
-                    <span className="text-xs text-gray-400">
-                      #{module.order}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-400 mt-1">
-                    {module.description}
-                  </p>
-                  <div className="mt-2">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        module.difficulty === "Beginner"
-                          ? "bg-green-100 text-green-800"
-                          : module.difficulty === "Intermediate"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : module.difficulty === "Advanced"
-                          ? "bg-orange-100 text-orange-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {module.difficulty}
-                    </span>
-                  </div>
-                  {renderModuleStats(module)}
-                  <div className="flex justify-between items-center mt-3">
-                    <div className="flex space-x-1">
-                      <button
-                        onClick={() =>
-                          handleReorder(phase._id, module._id, "up")
-                        }
-                        disabled={saving}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
-                      >
-                        <ArrowUpIcon className="h-3 w-3" />
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleReorder(phase._id, module._id, "down")
-                        }
-                        disabled={saving}
-                        className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
-                      >
-                        <ArrowDownIcon className="h-3 w-3" />
-                      </button>
+              {phase.modules.map((module) => {
+                const enrollStats = enrollmentStats[module.id] || {};
+                return (
+                  <div
+                    key={module.id}
+                    className="border border-gray-600 rounded-lg p-4 bg-gray-700"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center space-x-2">
+                        <h4 className="font-medium text-green-400">
+                          {module.title}
+                        </h4>
+                        {getEnrollmentStatusIcon(enrollStats)}
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        #{module.order}
+                      </span>
                     </div>
-                    <div className="space-x-2">
-                      <button
-                        onClick={() => openModal(module)}
-                        className="text-xs text-cyber-green hover:text-green-300"
+                    <p className="text-sm text-gray-400 mt-1 mb-2">
+                      {module.description}
+                    </p>
+
+                    {/* Difficulty Badge */}
+                    <div className="mb-3">
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          module.difficulty === "Beginner"
+                            ? "bg-green-100 text-green-800"
+                            : module.difficulty === "Intermediate"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : module.difficulty === "Advanced"
+                            ? "bg-orange-100 text-orange-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
                       >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(module)}
-                        className="text-xs text-red-400 hover:text-red-300"
-                        disabled={saving}
-                      >
-                        Delete
-                      </button>
+                        {module.difficulty}
+                      </span>
+                    </div>
+
+                    {/* Content Stats */}
+                    {renderModuleStats(module)}
+
+                    {/* Enrollment Status Section */}
+                    <div className="mt-3 mb-3 p-2 bg-gray-800 rounded-md">
+                      <div className="text-xs font-medium text-gray-400 mb-1">
+                        Enrollment Status
+                      </div>
+                      {getEnrollmentStatusBadge(enrollStats)}
+
+                      {/* Enhanced enrollment information */}
+                      {enrollStats.totalEnrollments > 0 && (
+                        <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
+                          <span>{enrollStats.totalEnrollments} enrolled</span>
+                          <span>
+                            {enrollStats.completionRate || 0}% completion
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex justify-between items-center mt-3">
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() =>
+                            handleReorder(phase.id, module.id, "up")
+                          }
+                          disabled={saving}
+                          className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                        >
+                          <ArrowUpIcon className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleReorder(phase.id, module.id, "down")
+                          }
+                          disabled={saving}
+                          className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                        >
+                          <ArrowDownIcon className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <div className="space-x-2">
+                        <Link
+                          to={`/modules/${module.id}`}
+                          className="text-xs text-blue-400 hover:text-blue-300"
+                          title="View Details"
+                        >
+                          View
+                        </Link>
+                        <button
+                          onClick={() => handleEnrollClick(module)}
+                          className="text-xs text-purple-400 hover:text-purple-300"
+                          disabled={saving}
+                          title="Enroll User"
+                        >
+                          Enroll
+                        </button>
+                        <button
+                          onClick={() => openModal(module)}
+                          className="text-xs text-cyber-green hover:text-green-300"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(module)}
+                          className="text-xs text-red-400 hover:text-red-300"
+                          disabled={saving}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-gray-400">No modules found in this phase</p>
@@ -650,7 +975,7 @@ const ModulesManagerEnhanced = () => {
               >
                 <option value="">All Phases</option>
                 {phases.map((phase) => (
-                  <option key={phase._id} value={phase._id}>
+                  <option key={phase.id} value={phase.id}>
                     {phase.title}
                   </option>
                 ))}
@@ -954,6 +1279,158 @@ const ModulesManagerEnhanced = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enrollment Modal */}
+      {showEnrollModal && selectedModuleForEnroll && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-lg max-w-lg w-full border border-gray-600">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-green-400 flex items-center">
+                  <UserPlusIcon className="h-6 w-6 mr-2" />
+                  Enroll User in Module
+                </h2>
+                <button
+                  onClick={closeEnrollModal}
+                  className="text-gray-400 hover:text-green-400"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Module Information */}
+              <div className="mb-6">
+                <div className="bg-gray-700 p-4 rounded-lg mb-4">
+                  <h3 className="text-lg font-medium text-green-400 mb-2">
+                    {selectedModuleForEnroll.title}
+                  </h3>
+                  <p className="text-gray-300 text-sm mb-3">
+                    {selectedModuleForEnroll.description}
+                  </p>
+                  <div className="flex items-center space-x-4 text-sm">
+                    <span className="text-blue-400">
+                      Phase: {selectedModuleForEnroll.phase?.title || "N/A"}
+                    </span>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        selectedModuleForEnroll.difficulty === "Beginner"
+                          ? "bg-green-100 text-green-800"
+                          : selectedModuleForEnroll.difficulty ===
+                            "Intermediate"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : selectedModuleForEnroll.difficulty === "Advanced"
+                          ? "bg-orange-100 text-orange-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {selectedModuleForEnroll.difficulty}
+                    </span>
+                  </div>
+
+                  {/* Enrollment Statistics */}
+                  {enrollmentStats[selectedModuleForEnroll.id] && (
+                    <div className="mt-3 pt-3 border-t border-gray-600">
+                      <div className="text-xs text-gray-400">
+                        <span className="text-cyan-400">
+                          Current Enrollments:{" "}
+                        </span>
+                        {enrollmentStats[selectedModuleForEnroll.id]
+                          .totalEnrollments || 0}
+                        {enrollmentStats[selectedModuleForEnroll.id]
+                          .activeEnrollments && (
+                          <span className="ml-2">
+                            (
+                            <span className="text-green-400">
+                              {
+                                enrollmentStats[selectedModuleForEnroll.id]
+                                  .activeEnrollments
+                              }{" "}
+                              active
+                            </span>
+                            )
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* User Selection */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-green-400 mb-2">
+                    <UsersIcon className="h-4 w-4 inline mr-1" />
+                    Select User to Enroll
+                  </label>
+                  {loadingUsers ? (
+                    <div className="flex items-center text-gray-400 text-sm">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-400 mr-2"></div>
+                      Loading users...
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedUserId}
+                      onChange={(e) => setSelectedUserId(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400 bg-gray-700 text-green-400"
+                      disabled={users.length === 0}
+                    >
+                      <option value="">Select a user...</option>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.username} ({user.email}) - {user.role}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {users.length === 0 && !loadingUsers && (
+                    <p className="text-xs text-yellow-400 mt-1">
+                      Note: In a full admin panel, this would show all system
+                      users. Currently showing logged-in admin only.
+                    </p>
+                  )}
+                </div>
+
+                <p className="text-gray-400 text-sm">
+                  This will create a new enrollment record and allow the user to
+                  access the module content.
+                </p>
+              </div>
+
+              {error && (
+                <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded mb-4">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={closeEnrollModal}
+                  className="px-4 py-2 text-green-400 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600"
+                  disabled={enrolling}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEnrollConfirm}
+                  disabled={enrolling || !selectedUserId || loadingUsers}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-500 disabled:opacity-50 flex items-center"
+                >
+                  {enrolling ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Enrolling...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlusIcon className="h-4 w-4 mr-2" />
+                      Confirm Enrollment
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -202,6 +202,71 @@ export const contentAPI = {
   },
 };
 
+// Enrollment API
+export const enrollmentAPI = {
+  // Create enrollment (enroll user in module)
+  create: async (moduleId) => {
+    const response = await axios.post("/enrollments", { moduleId });
+    return response.data;
+  },
+
+  // Get user enrollments
+  getUserEnrollments: async (params = {}) => {
+    const response = await axios.get("/enrollments", { params });
+    return response.data;
+  },
+
+  // Get enrollment by module
+  getByModule: async (moduleId) => {
+    const response = await axios.get(`/enrollments/module/${moduleId}`);
+    return response.data;
+  },
+
+  // Update enrollment progress
+  updateProgress: async (enrollmentId, completedSections) => {
+    const response = await axios.put(`/enrollments/${enrollmentId}/progress`, {
+      completedSections,
+    });
+    return response.data;
+  },
+
+  // Pause enrollment
+  pause: async (enrollmentId) => {
+    const response = await axios.put(`/enrollments/${enrollmentId}/pause`);
+    return response.data;
+  },
+
+  // Resume enrollment
+  resume: async (enrollmentId) => {
+    const response = await axios.put(`/enrollments/${enrollmentId}/resume`);
+    return response.data;
+  },
+
+  // Complete enrollment
+  complete: async (enrollmentId) => {
+    const response = await axios.put(`/enrollments/${enrollmentId}/complete`);
+    return response.data;
+  },
+
+  // Unenroll (delete enrollment)
+  delete: async (enrollmentId) => {
+    const response = await axios.delete(`/enrollments/${enrollmentId}`);
+    return response.data;
+  },
+
+  // Admin: Get all enrollments
+  getAllAdmin: async (params = {}) => {
+    const response = await axios.get("/enrollments/admin/all", { params });
+    return response.data;
+  },
+
+  // Admin: Get module enrollment statistics
+  getModuleStats: async (moduleId) => {
+    const response = await axios.get(`/enrollments/admin/stats/${moduleId}`);
+    return response.data;
+  },
+};
+
 // Auth API
 export const authAPI = {
   login: async (credentials) => {
@@ -228,9 +293,45 @@ export const authAPI = {
   },
 };
 
+// Progress API
+export const progressAPI = {
+  // Get user's overall progress
+  getUserProgress: async (userId, params = {}) => {
+    const response = await axios.get(`/progress/${userId}`, { params });
+    return response.data;
+  },
+
+  // Get module-specific progress for a user
+  getUserModuleProgress: async (userId, moduleId) => {
+    const response = await axios.get(`/progress/${userId}/${moduleId}`);
+    return response.data;
+  },
+
+  // Update content progress
+  updateProgress: async (progressData) => {
+    const response = await axios.post("/progress", progressData);
+    return response.data;
+  },
+
+  // Mark content as completed
+  markContentCompleted: async (progressId, score = null) => {
+    const data = score !== null ? { score } : {};
+    const response = await axios.put(`/progress/${progressId}/complete`, data);
+    return response.data;
+  },
+
+  // Get module progress statistics
+  getModuleStats: async (moduleId) => {
+    const response = await axios.get(`/progress/stats/${moduleId}`);
+    return response.data;
+  },
+};
+
 export default {
   phases: phasesAPI,
   modules: modulesAPI,
   content: contentAPI,
+  enrollment: enrollmentAPI,
   auth: authAPI,
+  progress: progressAPI,
 };

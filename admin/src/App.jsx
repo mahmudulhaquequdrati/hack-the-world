@@ -5,11 +5,17 @@ import {
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
+import ContentDetailView from "./components/ContentDetailView";
 import ContentManager from "./components/ContentManager";
+import ContentProgressDetailView from "./components/ContentProgressDetailView";
 import Dashboard from "./components/Dashboard";
+import EnrollmentTrackingPage from "./components/EnrollmentTrackingPage";
 import Layout from "./components/Layout";
 import Login from "./components/Login";
+import ModuleDetailView from "./components/ModuleDetailView";
+import ModuleProgressDetailView from "./components/ModuleProgressDetailView";
 import ModulesManagerEnhanced from "./components/ModulesManagerEnhanced";
+import PhaseDetailView from "./components/PhaseDetailView";
 import PhasesManager from "./components/PhasesManager";
 import Register from "./components/Register";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -79,8 +85,20 @@ function App() {
             <Route index element={<Navigate to="/dashboard" />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="phases" element={<PhasesManager />} />
+            <Route path="phases/:phaseId" element={<PhaseDetailView />} />
             <Route path="modules" element={<ModulesManagerEnhanced />} />
+            <Route path="modules/:moduleId" element={<ModuleDetailView />} />
+            <Route
+              path="modules/:moduleId/progress"
+              element={<ModuleProgressDetailView />}
+            />
             <Route path="content" element={<ContentManager />} />
+            <Route path="content/:contentId" element={<ContentDetailView />} />
+            <Route
+              path="content/:contentId/progress"
+              element={<ContentProgressDetailView />}
+            />
+            <Route path="enrollments" element={<EnrollmentTrackingPage />} />
           </Route>
         </Routes>
       </Router>

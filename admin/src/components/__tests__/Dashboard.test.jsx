@@ -1,393 +1,719 @@
-import { screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mockAPI, mockAPIErrors } from "../../test/mocks/api";
-import { renderWithRouter } from "../../test/utils/testUtils";
+import * as api from "../../services/api";
 import Dashboard from "../Dashboard";
 
-// Mock the API service
+// Mock the API modules
 vi.mock("../../services/api", () => ({
-  phasesAPI: mockAPI.phases,
-  modulesAPI: mockAPI.modules,
+  contentAPI: {
+    getAll: vi.fn(),
+  },
+  enrollmentAPI: {
+    getModuleStats: vi.fn(),
+    getAllAdmin: vi.fn(),
+  },
+  modulesAPI: {
+    getAll: vi.fn(),
+  },
+  phasesAPI: {
+    getAll: vi.fn(),
+  },
 }));
 
-// Mock react-router-dom useNavigate
-const mockNavigate = vi.fn();
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom");
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
+// Test wrapper component
+const TestWrapper = ({ children }) => <BrowserRouter>{children}</BrowserRouter>;
 
-describe("Dashboard", () => {
+describe("Dashboard Component", () => {
   beforeEach(() => {
-    // Clear all mocks before each test
     vi.clearAllMocks();
-    // Reset localStorage
-    localStorage.clear();
   });
 
-  describe("Component Rendering", () => {
-    it("should render without crashing", async () => {
-      renderWithRouter(<Dashboard />);
-
-      expect(screen.getByText("Admin Dashboard")).toBeInTheDocument();
-      expect(
-        screen.getByText("Welcome to the Admin Panel")
-      ).toBeInTheDocument();
-
-      // Wait for data to load
-      await waitFor(() => {
-        expect(mockAPI.phases.getAll).toHaveBeenCalledTimes(1);
-        expect(mockAPI.modules.getAll).toHaveBeenCalledTimes(1);
-      });
+  const mockApiResponses = () => {
+    api.phasesAPI.getAll.mockResolvedValue({
+      success: true,
+      data: [
+        { id: "1", title: "Phase 1" },
+        { id: "2", title: "Phase 2" },
+      ],
     });
 
-    it("should display loading state while fetching data", async () => {
-      // Mock delayed responses
-      mockAPI.phases.getAll.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
-      mockAPI.modules.getAll.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
+    api.modulesAPI.getAll.mockResolvedValue({
+      success: true,
+      data: [
+        { id: "module1", title: "Module 1", phaseId: "1" },
+        { id: "module2", title: "Module 2", phaseId: "2" },
+      ],
+    });
 
-      renderWithRouter(<Dashboard />);
+    api.contentAPI.getAll.mockResolvedValue({
+      success: true,
+      data: [
+        { id: "content1", title: "Content 1", moduleId: "module1" },
+        { id: "content2", title: "Content 2", moduleId: "module2" },
+      ],
+    });
 
-      expect(screen.getByText("Loading...")).toBeInTheDocument();
-
-      await waitFor(
-        () => {
-          expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+    api.enrollmentAPI.getModuleStats.mockResolvedValue({
+      success: true,
+      data: {
+        stats: {
+          totalEnrollments: 10,
+          activeEnrollments: 7,
         },
-        { timeout: 200 }
+      },
+    });
+
+    api.enrollmentAPI.getAllAdmin.mockResolvedValue({
+      success: true,
+      data: [
+        {
+          id: "enrollment1",
+          userId: { _id: "user1", username: "testuser1" },
+          moduleId: { _id: "module1", title: "Module 1" },
+          status: "active",
+          progressPercentage: 75,
+          enrolledAt: "2025-01-20T10:00:00Z",
+          lastAccessedAt: "2025-01-25T15:30:00Z",
+        },
+        {
+          id: "enrollment2",
+          userId: { _id: "user2", username: "testuser2" },
+          moduleId: { _id: "module2", title: "Module 2" },
+          status: "completed",
+          progressPercentage: 100,
+          enrolledAt: "2025-01-18T09:00:00Z",
+          lastAccessedAt: "2025-01-24T14:20:00Z",
+        },
+        {
+          id: "enrollment3",
+          userId: { _id: "user3", username: "testuser3" },
+          moduleId: { _id: "module1", title: "Module 1" },
+          status: "paused",
+          progressPercentage: 30,
+          enrolledAt: "2025-01-19T11:00:00Z",
+          lastAccessedAt: "2025-01-23T16:45:00Z",
+        },
+      ],
+    });
+  };
+
+  describe("Basic Dashboard Functionality", () => {
+    it("should render dashboard header", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
       );
+
+      expect(screen.getByText("[ADMIN DASHBOARD]")).toBeInTheDocument();
+      expect(
+        screen.getByText("Hack The World - Content Management System")
+      ).toBeInTheDocument();
     });
 
-    it("should display quick actions section", async () => {
-      renderWithRouter(<Dashboard />);
+    it("should display mode toggle buttons", async () => {
+      mockApiResponses();
 
-      await waitFor(() => {
-        expect(screen.getByText("Quick Actions")).toBeInTheDocument();
-        expect(screen.getByText("Manage Phases")).toBeInTheDocument();
-        expect(screen.getByText("Manage Modules")).toBeInTheDocument();
-      });
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      expect(screen.getByText("Overview")).toBeInTheDocument();
+      expect(screen.getByText("Analytics")).toBeInTheDocument();
+      expect(screen.getByText("Performance")).toBeInTheDocument();
     });
 
-    it("should display system overview section", async () => {
-      renderWithRouter(<Dashboard />);
+    it("should load and display basic statistics", async () => {
+      mockApiResponses();
 
-      await waitFor(() => {
-        expect(screen.getByText("System Overview")).toBeInTheDocument();
-        expect(screen.getByText("Current Date")).toBeInTheDocument();
-        expect(screen.getByText("Admin Panel")).toBeInTheDocument();
-      });
-    });
-
-    it("should display error message when data fails to load", async () => {
-      mockAPI.phases.getAll.mockRejectedValue(mockAPIErrors.serverError);
-      mockAPI.modules.getAll.mockRejectedValue(mockAPIErrors.serverError);
-
-      renderWithRouter(<Dashboard />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/error loading data/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe("Statistics Display", () => {
-    it("should display statistics cards after data loads", async () => {
-      renderWithRouter(<Dashboard />);
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
 
       await waitFor(() => {
         expect(screen.getByText("Total Phases")).toBeInTheDocument();
         expect(screen.getByText("Total Modules")).toBeInTheDocument();
-        expect(screen.getByText("Active Modules")).toBeInTheDocument();
+        expect(screen.getByText("Total Content")).toBeInTheDocument();
         expect(screen.getByText("Total Enrollments")).toBeInTheDocument();
-      });
-    });
-
-    it("should calculate statistics correctly", async () => {
-      renderWithRouter(<Dashboard />);
-
-      await waitFor(() => {
-        // Check calculated values from mock data
-        expect(screen.getByText("2")).toBeInTheDocument(); // Total phases
-        expect(screen.getByText("2")).toBeInTheDocument(); // Total modules
-        expect(screen.getByText("239")).toBeInTheDocument(); // Total enrollments (150 + 89)
-      });
-    });
-
-    it("should display statistics with proper icons", async () => {
-      renderWithRouter(<Dashboard />);
-
-      await waitFor(() => {
-        // Statistics cards should be rendered
-        expect(screen.getByText("Total Phases")).toBeInTheDocument();
-        expect(screen.getByText("Total Modules")).toBeInTheDocument();
+        expect(screen.getByText("Active Students")).toBeInTheDocument();
       });
 
-      // Check that cards have proper styling classes
-      const phasesCard = screen.getByText("Total Phases").closest("div");
-      const modulesCard = screen.getByText("Total Modules").closest("div");
-
-      expect(phasesCard).toHaveClass("bg-blue-500");
-      expect(modulesCard).toHaveClass("bg-green-500");
-    });
-  });
-
-  describe("Navigation", () => {
-    it("should navigate to phases page when Manage Phases is clicked", async () => {
-      const user = userEvent.setup();
-      renderWithRouter(<Dashboard />);
-
+      // Wait for statistics to load
       await waitFor(() => {
-        expect(screen.getByText("Manage Phases")).toBeInTheDocument();
-      });
-
-      const managePhasesButton = screen.getByText("Manage Phases");
-      await user.click(managePhasesButton);
-
-      expect(mockNavigate).toHaveBeenCalledWith("/phases");
-    });
-
-    it("should navigate to modules page when Manage Modules is clicked", async () => {
-      const user = userEvent.setup();
-      renderWithRouter(<Dashboard />);
-
-      await waitFor(() => {
-        expect(screen.getByText("Manage Modules")).toBeInTheDocument();
-      });
-
-      const manageModulesButton = screen.getByText("Manage Modules");
-      await user.click(manageModulesButton);
-
-      expect(mockNavigate).toHaveBeenCalledWith("/modules");
-    });
-
-    it("should have proper button styling for navigation buttons", async () => {
-      renderWithRouter(<Dashboard />);
-
-      await waitFor(() => {
-        expect(screen.getByText("Manage Phases")).toBeInTheDocument();
-      });
-
-      const managePhasesButton = screen.getByText("Manage Phases");
-      const manageModulesButton = screen.getByText("Manage Modules");
-
-      expect(managePhasesButton).toHaveClass("bg-blue-600");
-      expect(manageModulesButton).toHaveClass("bg-green-600");
-    });
-  });
-
-  describe("Date Display", () => {
-    it("should display current date correctly", async () => {
-      const mockDate = new Date("2023-12-25");
-      vi.setSystemTime(mockDate);
-
-      renderWithRouter(<Dashboard />);
-
-      await waitFor(() => {
-        // Should display formatted date
-        expect(screen.getByText("12/25/2023")).toBeInTheDocument();
-      });
-
-      vi.useRealTimers();
-    });
-
-    it("should display date in correct format", async () => {
-      renderWithRouter(<Dashboard />);
-
-      await waitFor(() => {
-        // Check for date pattern (MM/DD/YYYY)
-        const dateElements = screen.getAllByText(/\d{1,2}\/\d{1,2}\/\d{4}/);
-        expect(dateElements.length).toBeGreaterThan(0);
+        expect(screen.getByText("2")).toBeInTheDocument(); // Total Phases
       });
     });
   });
 
-  describe("Data Loading States", () => {
-    it("should show loading spinner for phases and modules", async () => {
-      // Mock long loading times
-      mockAPI.phases.getAll.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 1000))
-      );
-      mockAPI.modules.getAll.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 1000))
+  describe("Mode Switching", () => {
+    it("should switch to analytics mode", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
       );
 
-      renderWithRouter(<Dashboard />);
-
-      // Should show loading state
-      expect(screen.getByText("Loading...")).toBeInTheDocument();
-
-      // Quick actions should still be visible
-      expect(screen.getByText("Quick Actions")).toBeInTheDocument();
-    });
-
-    it("should handle partial data loading failures gracefully", async () => {
-      // Only phases fail to load
-      mockAPI.phases.getAll.mockRejectedValue(mockAPIErrors.serverError);
-      // Modules load successfully
-      mockAPI.modules.getAll.mockResolvedValue({ success: true, data: [] });
-
-      renderWithRouter(<Dashboard />);
+      const analyticsButton = screen.getByText("Analytics");
+      fireEvent.click(analyticsButton);
 
       await waitFor(() => {
-        // Should still show some content
-        expect(screen.getByText("Quick Actions")).toBeInTheDocument();
-        // But should show error for failed data
-        expect(screen.getByText(/error loading data/i)).toBeInTheDocument();
+        expect(screen.getByText("Progress Distribution")).toBeInTheDocument();
+        expect(
+          screen.getByText("Completion Trends (7 Days)")
+        ).toBeInTheDocument();
+        expect(screen.getByText("User Engagement")).toBeInTheDocument();
+        expect(screen.getByText("Recent Activity")).toBeInTheDocument();
+      });
+    });
+
+    it("should switch to performance mode", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const performanceButton = screen.getByText("Performance");
+      fireEvent.click(performanceButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Top Performing Modules")).toBeInTheDocument();
+        expect(screen.getByText("User Engagement")).toBeInTheDocument();
+        expect(screen.getByText("Recent Activity")).toBeInTheDocument();
+      });
+    });
+
+    it("should switch to insights mode", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const insightsButton = screen.getByText("Insights");
+      fireEvent.click(insightsButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Learning Insights")).toBeInTheDocument();
+        expect(screen.getByText("Time-Based Analytics")).toBeInTheDocument();
+        expect(screen.getByText("Predictive Metrics")).toBeInTheDocument();
+        expect(screen.getByText("System Health")).toBeInTheDocument();
+      });
+    });
+
+    it("should switch to alerts mode", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const alertsButton = screen.getByText("Alerts");
+      fireEvent.click(alertsButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("🚨 Performance Alerts")).toBeInTheDocument();
+        expect(
+          screen.getByText("💻 System Health Monitor")
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText("🎯 Risk Assessment & Recommendations")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should display enhanced statistics in analytics mode", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const analyticsButton = screen.getByText("Analytics");
+      fireEvent.click(analyticsButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Avg Progress")).toBeInTheDocument();
+        expect(screen.getByText("Completion Rate")).toBeInTheDocument();
+        const retentionCards = screen.getAllByText("Retention Rate");
+        expect(retentionCards.length).toBeGreaterThan(0);
       });
     });
   });
 
-  describe("Responsive Design", () => {
-    it("should have proper responsive classes", async () => {
-      renderWithRouter(<Dashboard />);
+  describe("Progress Statistics", () => {
+    it("should display progress distribution chart", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const analyticsButton = screen.getByText("Analytics");
+      fireEvent.click(analyticsButton);
 
       await waitFor(() => {
-        expect(screen.getByText("Admin Dashboard")).toBeInTheDocument();
+        expect(screen.getByText("Progress Distribution")).toBeInTheDocument();
+        expect(screen.getByText("0-25%")).toBeInTheDocument();
+        expect(screen.getByText("26-50%")).toBeInTheDocument();
+        expect(screen.getByText("51-75%")).toBeInTheDocument();
+        expect(screen.getByText("76-99%")).toBeInTheDocument();
+        expect(screen.getByText("100%")).toBeInTheDocument();
       });
-
-      // Check for responsive grid classes
-      const quickActionsSection = screen
-        .getByText("Quick Actions")
-        .closest("div");
-      const statisticsSection = screen
-        .getByText("Total Phases")
-        .closest("div").parentElement;
-
-      expect(quickActionsSection).toHaveClass("grid");
-      expect(statisticsSection).toHaveClass("grid");
     });
 
-    it("should display cards in proper grid layout", async () => {
-      renderWithRouter(<Dashboard />);
+    it("should display user engagement metrics", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const analyticsButton = screen.getByText("Analytics");
+      fireEvent.click(analyticsButton);
 
       await waitFor(() => {
-        expect(screen.getByText("Total Phases")).toBeInTheDocument();
+        expect(screen.getByText("User Engagement")).toBeInTheDocument();
+        expect(screen.getByText("Total Users")).toBeInTheDocument();
+        expect(screen.getByText("Active Users")).toBeInTheDocument();
+        expect(screen.getByText("Completed Users")).toBeInTheDocument();
+      });
+    });
+
+    it("should display recent activity", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const analyticsButton = screen.getByText("Analytics");
+      fireEvent.click(analyticsButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Recent Activity")).toBeInTheDocument();
+        expect(screen.getByText("testuser1")).toBeInTheDocument();
+        expect(screen.getByText("testuser2")).toBeInTheDocument();
+        expect(screen.getByText("testuser3")).toBeInTheDocument();
+      });
+    });
+
+    it("should display module performance in performance mode", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const performanceButton = screen.getByText("Performance");
+      fireEvent.click(performanceButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Top Performing Modules")).toBeInTheDocument();
+        expect(screen.getByText("Module 1")).toBeInTheDocument();
+        expect(screen.getByText("Module 2")).toBeInTheDocument();
+      });
+    });
+
+    it("should display completion trends chart", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const analyticsButton = screen.getByText("Analytics");
+      fireEvent.click(analyticsButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Completion Trends (7 Days)")
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Enhanced Dashboard Features", () => {
+    it("should display learning insights correctly", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const insightsButton = screen.getByText("Insights");
+      fireEvent.click(insightsButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Average Time to Completion")
+        ).toBeInTheDocument();
+        expect(screen.getByText("Most Popular Modules")).toBeInTheDocument();
+        expect(screen.getByText("Peak Learning Days")).toBeInTheDocument();
+        expect(screen.getByText("Difficulty Analysis")).toBeInTheDocument();
+      });
+    });
+
+    it("should display time-based analytics", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const insightsButton = screen.getByText("Insights");
+      fireEvent.click(insightsButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("This Week")).toBeInTheDocument();
+        expect(screen.getByText("This Month")).toBeInTheDocument();
+        expect(screen.getByText("Growth Rate")).toBeInTheDocument();
+      });
+    });
+
+    it("should display predictive metrics", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const insightsButton = screen.getByText("Insights");
+      fireEvent.click(insightsButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Predicted Completions Next 7 Days")
+        ).toBeInTheDocument();
+        expect(screen.getByText("Projected Growth Rate")).toBeInTheDocument();
+        expect(screen.getByText("Risk of Dropout")).toBeInTheDocument();
+        expect(
+          screen.getByText("Estimated Completion Rate")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should display system health metrics", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const insightsButton = screen.getByText("Insights");
+      fireEvent.click(insightsButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Data Quality")).toBeInTheDocument();
+        expect(screen.getByText("API Performance")).toBeInTheDocument();
+        expect(screen.getByText("Database Health")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Performance Alerts System", () => {
+    it("should display performance alerts when issues exist", async () => {
+      // Mock data with low completion rates to trigger alerts
+      api.enrollmentAPI.getAllAdmin.mockResolvedValue({
+        success: true,
+        data: [
+          ...Array.from({ length: 10 }, (_, i) => ({
+            id: `enrollment${i}`,
+            userId: { _id: `user${i}`, username: `testuser${i}` },
+            moduleId: { _id: "module1", title: "Low Performance Module" },
+            status: "active",
+            progressPercentage: 15, // Low progress to trigger alert
+            enrolledAt: "2025-01-20T10:00:00Z",
+            lastAccessedAt: "2025-01-25T15:30:00Z",
+          })),
+        ],
       });
 
-      // Statistics cards should be in a grid
-      const statsContainer = screen
-        .getByText("Total Phases")
-        .closest("div").parentElement;
-      expect(statsContainer).toHaveClass(
-        "grid-cols-1",
-        "md:grid-cols-2",
-        "lg:grid-cols-4"
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
       );
+
+      const alertsButton = screen.getByText("Alerts");
+      fireEvent.click(alertsButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("🚨 Performance Alerts")).toBeInTheDocument();
+      });
+    });
+
+    it("should display no alerts message when system is healthy", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const alertsButton = screen.getByText("Alerts");
+      fireEvent.click(alertsButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("No performance alerts at this time")
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText("System is operating normally")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should display system health monitor", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const alertsButton = screen.getByText("Alerts");
+      fireEvent.click(alertsButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("💻 System Health Monitor")
+        ).toBeInTheDocument();
+        expect(screen.getByText("Data Quality")).toBeInTheDocument();
+        expect(screen.getByText("API Performance")).toBeInTheDocument();
+        expect(screen.getByText("Database")).toBeInTheDocument();
+      });
+    });
+
+    it("should display risk assessment and recommendations", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const alertsButton = screen.getByText("Alerts");
+      fireEvent.click(alertsButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("🎯 Risk Assessment & Recommendations")
+        ).toBeInTheDocument();
+        expect(screen.getByText("⚠️ Identified Risks")).toBeInTheDocument();
+        expect(
+          screen.getByText("💡 Optimization Opportunities")
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Advanced Analytics", () => {
+    it("should calculate progress distribution correctly", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const analyticsButton = screen.getByText("Analytics");
+      fireEvent.click(analyticsButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Progress Distribution")).toBeInTheDocument();
+      });
+    });
+
+    it("should display module performance charts", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const performanceButton = screen.getByText("Performance");
+      fireEvent.click(performanceButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Top Performing Modules")).toBeInTheDocument();
+        const moduleElements = screen.getAllByText("Module 1");
+        expect(moduleElements.length).toBeGreaterThan(0);
+      });
+    });
+
+    it("should show enhanced completion trends with real data", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const analyticsButton = screen.getByText("Analytics");
+      fireEvent.click(analyticsButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Completion Trends (7 Days)")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should display user engagement metrics", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const analyticsButton = screen.getByText("Analytics");
+      fireEvent.click(analyticsButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("User Engagement")).toBeInTheDocument();
+        expect(screen.getByText("Total Users")).toBeInTheDocument();
+        expect(screen.getByText("Active Users")).toBeInTheDocument();
+        expect(screen.getByText("Completed Users")).toBeInTheDocument();
+        const retentionRateElements = screen.getAllByText("Retention Rate");
+        expect(retentionRateElements.length).toBeGreaterThan(0);
+      });
     });
   });
 
   describe("Error Handling", () => {
-    it("should display specific error messages for different failure types", async () => {
-      mockAPI.phases.getAll.mockRejectedValue(mockAPIErrors.networkError);
+    it("should handle API errors gracefully", async () => {
+      api.enrollmentAPI.getAllAdmin.mockRejectedValue(new Error("API Error"));
+      mockApiResponses();
 
-      renderWithRouter(<Dashboard />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/error loading data/i)).toBeInTheDocument();
-      });
-    });
-
-    it("should allow retry after error", async () => {
-      // First call fails
-      mockAPI.phases.getAll.mockRejectedValueOnce(mockAPIErrors.serverError);
-      // Second call succeeds
-      mockAPI.phases.getAll.mockResolvedValueOnce({
-        success: true,
-        data: [],
-      });
-
-      renderWithRouter(<Dashboard />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/error loading data/i)).toBeInTheDocument();
-      });
-
-      // The component should attempt to reload or handle retry
-      expect(mockAPI.phases.getAll).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("Accessibility", () => {
-    it("should have proper ARIA labels and roles", async () => {
-      renderWithRouter(<Dashboard />);
-
-      await waitFor(() => {
-        expect(screen.getByText("Admin Dashboard")).toBeInTheDocument();
-      });
-
-      // Check for proper heading hierarchy
-      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-        "Admin Dashboard"
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
       );
-      expect(
-        screen.getByRole("heading", { level: 2, name: /quick actions/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("heading", { level: 2, name: /system overview/i })
-      ).toBeInTheDocument();
-    });
 
-    it("should support keyboard navigation", async () => {
-      const user = userEvent.setup();
-      renderWithRouter(<Dashboard />);
+      // Should still render without crashing
+      expect(screen.getByText("[ADMIN DASHBOARD]")).toBeInTheDocument();
 
       await waitFor(() => {
-        expect(screen.getByText("Manage Phases")).toBeInTheDocument();
+        // Component should still function despite API error
+        expect(screen.getByText("Overview")).toBeInTheDocument();
       });
-
-      // Tab through interactive elements
-      await user.tab();
-      expect(screen.getByText("Manage Phases")).toHaveFocus();
-
-      await user.tab();
-      expect(screen.getByText("Manage Modules")).toHaveFocus();
     });
 
-    it("should have proper color contrast for statistics cards", async () => {
-      renderWithRouter(<Dashboard />);
+    it("should show loading state initially", () => {
+      mockApiResponses();
 
-      await waitFor(() => {
-        expect(screen.getByText("Total Phases")).toBeInTheDocument();
-      });
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
 
-      // Check that text colors provide sufficient contrast
-      const phasesCard = screen.getByText("Total Phases").closest("div");
-      expect(phasesCard).toHaveClass("text-white"); // Good contrast with blue background
+      // Statistics cards should show loading state
+      const loadingElements = screen.getAllByText("...");
+      expect(loadingElements.length).toBeGreaterThan(0);
     });
   });
 
-  describe("Performance", () => {
-    it("should only fetch data once on mount", async () => {
-      renderWithRouter(<Dashboard />);
+  describe("Real-time Data Processing", () => {
+    it("should process enrollment data for analytics", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
 
       await waitFor(() => {
-        expect(mockAPI.phases.getAll).toHaveBeenCalledTimes(1);
-        expect(mockAPI.modules.getAll).toHaveBeenCalledTimes(1);
-      });
-
-      // Should not fetch again
-      await waitFor(() => {
-        expect(mockAPI.phases.getAll).toHaveBeenCalledTimes(1);
-        expect(mockAPI.modules.getAll).toHaveBeenCalledTimes(1);
+        expect(api.enrollmentAPI.getAllAdmin).toHaveBeenCalledWith({
+          limit: 1000,
+        });
       });
     });
 
-    it("should not cause memory leaks with async operations", async () => {
-      const { unmount } = renderWithRouter(<Dashboard />);
+    it("should calculate completion trends from real data", async () => {
+      mockApiResponses();
 
-      // Unmount component while async operations might be pending
-      unmount();
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
 
-      // Should not cause any errors or warnings
-      expect(vi.getConsoleErrors?.()).toHaveLength(0);
+      const analyticsButton = screen.getByText("Analytics");
+      fireEvent.click(analyticsButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Completion Trends (7 Days)")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should generate performance alerts based on real metrics", async () => {
+      mockApiResponses();
+
+      render(
+        <TestWrapper>
+          <Dashboard />
+        </TestWrapper>
+      );
+
+      const alertsButton = screen.getByText("Alerts");
+      fireEvent.click(alertsButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("🚨 Performance Alerts")).toBeInTheDocument();
+      });
     });
   });
 });

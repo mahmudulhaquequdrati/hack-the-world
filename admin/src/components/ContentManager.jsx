@@ -11,6 +11,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { contentAPI, modulesAPI } from "../services/api";
 
 const ContentManager = () => {
@@ -528,6 +529,14 @@ const ContentManager = () => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center space-x-3">
+                    <Link
+                      to={`/content/${item.id}`}
+                      className="text-green-400 hover:text-green-300 transition-colors duration-200 flex items-center text-sm font-medium"
+                    >
+                      <EyeIcon className="h-4 w-4 mr-1" />
+                      View Details
+                    </Link>
+                    <div className="h-4 w-px bg-gray-600"></div>
                     <button
                       onClick={() => handleEdit(item)}
                       className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200 flex items-center text-sm font-medium"
@@ -654,6 +663,12 @@ const ContentManager = () => {
                               {item.duration} min
                             </span>
                             <div className="space-x-2">
+                              <Link
+                                to={`/content/${item.id}`}
+                                className="text-xs text-green-400 hover:text-green-300"
+                              >
+                                View Details
+                              </Link>
                               <button
                                 onClick={() => handleEdit(item)}
                                 className="text-xs text-cyber-green hover:text-green-300"
@@ -725,6 +740,12 @@ const ContentManager = () => {
                           {item.duration} min
                         </span>
                         <div className="space-x-2">
+                          <Link
+                            to={`/content/${item.id}`}
+                            className="text-xs text-green-400 hover:text-green-300"
+                          >
+                            View Details
+                          </Link>
                           <button
                             onClick={() => handleEdit(item)}
                             className="text-xs text-cyber-green hover:text-green-300"

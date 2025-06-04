@@ -2,11 +2,13 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   ChartBarIcon,
-  Cog6ToothIcon,
+  ChevronRightIcon,
   CubeIcon,
   DocumentIcon,
   FolderIcon,
+  HomeIcon,
   UserIcon,
+  UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import React, { useState } from "react";
@@ -23,9 +25,64 @@ const Layout = () => {
     { name: "Phases", href: "/phases", icon: CubeIcon },
     { name: "Modules", href: "/modules", icon: DocumentIcon },
     { name: "Content", href: "/content", icon: FolderIcon },
+    { name: "Enrollments", href: "/enrollments", icon: UsersIcon },
   ];
 
   const isActive = (href) => location.pathname === href;
+
+  // Generate breadcrumbs based on current path
+  const generateBreadcrumbs = () => {
+    const pathnames = location.pathname.split("/").filter((x) => x);
+    const breadcrumbs = [
+      { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
+    ];
+
+    let currentPath = "";
+    pathnames.forEach((pathname, index) => {
+      currentPath += `/${pathname}`;
+
+      // Skip the dashboard segment as it's already in the breadcrumbs
+      if (pathname === "dashboard") return;
+
+      const navItem = navigation.find((nav) => nav.href === currentPath);
+      if (navItem) {
+        breadcrumbs.push({
+          name: navItem.name,
+          href: currentPath,
+          icon: navItem.icon,
+        });
+      } else {
+        // Handle detail pages
+        if (pathname.match(/^[a-f0-9]{24}$/)) {
+          // MongoDB ObjectId pattern
+          const detailType = pathnames[index - 1];
+          if (detailType === "phases") {
+            breadcrumbs.push({
+              name: "Phase Details",
+              href: currentPath,
+              icon: CubeIcon,
+            });
+          } else if (detailType === "modules") {
+            breadcrumbs.push({
+              name: "Module Details",
+              href: currentPath,
+              icon: DocumentIcon,
+            });
+          } else if (detailType === "content") {
+            breadcrumbs.push({
+              name: "Content Details",
+              href: currentPath,
+              icon: FolderIcon,
+            });
+          }
+        }
+      }
+    });
+
+    return breadcrumbs;
+  };
+
+  const breadcrumbs = generateBreadcrumbs();
 
   return (
     <div className="min-h-screen bg-gray-900 flex">
@@ -169,6 +226,40 @@ const Layout = () => {
         </div>
 
         <div className="p-4 lg:p-8">
+          {/* Breadcrumb Navigation */}
+          {breadcrumbs.length > 1 && (
+            <nav className="flex mb-6" aria-label="Breadcrumb">
+              <ol className="inline-flex items-center space-x-1 md:space-x-3">
+                {breadcrumbs.map((crumb, index) => {
+                  const Icon = crumb.icon;
+                  const isLast = index === breadcrumbs.length - 1;
+
+                  return (
+                    <li key={crumb.href} className="inline-flex items-center">
+                      {index > 0 && (
+                        <ChevronRightIcon className="w-4 h-4 text-gray-500 mx-2" />
+                      )}
+                      {isLast ? (
+                        <span className="inline-flex items-center text-sm font-medium text-cyber-green">
+                          <Icon className="w-4 h-4 mr-1" />
+                          {crumb.name}
+                        </span>
+                      ) : (
+                        <Link
+                          to={crumb.href}
+                          className="inline-flex items-center text-sm font-medium text-green-400 hover:text-cyber-green transition-colors"
+                        >
+                          <Icon className="w-4 h-4 mr-1" />
+                          {crumb.name}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </nav>
+          )}
+
           <Outlet />
         </div>
       </div>

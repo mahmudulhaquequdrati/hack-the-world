@@ -19,6 +19,14 @@ const {
   deleteContentValidation: _deleteContentValidation,
 } = require("./validation/contentValidation");
 
+const {
+  updateProgressValidation: _updateProgressValidation,
+  markCompletedValidation: _markCompletedValidation,
+  getUserProgressValidation: _getUserProgressValidation,
+  getModuleProgressValidation: _getModuleProgressValidation,
+  getModuleStatsValidation: _getModuleStatsValidation,
+} = require("./validation/progressValidation");
+
 /**
  * Validation middleware to handle express-validator errors
  * Should be used after validation chain
@@ -70,6 +78,28 @@ const deleteContentValidation = [
   handleValidationErrors,
 ];
 
+// Add handleValidationErrors to progress validation arrays
+const updateProgressValidation = [
+  ..._updateProgressValidation,
+  handleValidationErrors,
+];
+const markCompletedValidation = [
+  ..._markCompletedValidation,
+  handleValidationErrors,
+];
+const getUserProgressValidation = [
+  ..._getUserProgressValidation,
+  handleValidationErrors,
+];
+const getModuleProgressValidation = [
+  ..._getModuleProgressValidation,
+  handleValidationErrors,
+];
+const getModuleStatsValidation = [
+  ..._getModuleStatsValidation,
+  handleValidationErrors,
+];
+
 /**
  * Get validation rules based on validation type
  * @param {string} validationType - Type of validation to apply
@@ -92,6 +122,13 @@ const validateRequest = (validationType) => {
     getContentByType: getContentByTypeValidation,
     getAllContent: getAllContentValidation,
     deleteContent: deleteContentValidation,
+
+    // Progress validations
+    updateProgress: updateProgressValidation,
+    markCompleted: markCompletedValidation,
+    getUserProgress: getUserProgressValidation,
+    getModuleProgress: getModuleProgressValidation,
+    getModuleStats: getModuleStatsValidation,
 
     // Add more validation types here as needed
     // Example: createUser: createUserValidation,

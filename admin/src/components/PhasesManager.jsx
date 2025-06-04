@@ -1,12 +1,14 @@
 import {
   CheckCircleIcon,
   ExclamationCircleIcon,
+  EyeIcon,
   PencilIcon,
   PlusIcon,
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { phasesAPI } from "../services/api";
 
 const PhasesManager = () => {
@@ -278,6 +280,13 @@ const PhasesManager = () => {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex space-x-2">
+                          <Link
+                            to={`/phases/${phase.id}`}
+                            className="text-green-400 hover:text-green-300 transition-colors p-1 rounded hover:bg-green-400/10"
+                            title="View Phase Details"
+                          >
+                            <EyeIcon className="w-5 h-5" />
+                          </Link>
                           <button
                             onClick={() => openModal(phase)}
                             className="text-blue-400 hover:text-blue-300 transition-colors p-1 rounded hover:bg-blue-400/10"

@@ -27,7 +27,7 @@ const EnrollmentTrackingPage = () => {
 
   // UI state
   const [selectedEnrollments, setSelectedEnrollments] = useState([]);
-  const [viewMode, setViewMode] = useState("list"); // list, grid, stats, modules, analytics
+  const [viewMode, setViewMode] = useState("grid"); // Default to grid view - list, grid, stats, modules, analytics
   const [refreshing, setRefreshing] = useState(false);
   const [progressModalOpen, setProgressModalOpen] = useState(false);
   const [selectedEnrollmentForProgress, setSelectedEnrollmentForProgress] =
@@ -988,46 +988,50 @@ const EnrollmentTrackingPage = () => {
   const renderFilters = () => (
     <div className="mb-8 space-y-6">
       {/* View Mode Tabs */}
-      <div className="flex items-center gap-2 p-1 bg-gray-800 rounded-lg w-fit">
+      <div className="flex flex-wrap items-center gap-2 p-1 bg-gray-800 rounded-lg w-full sm:w-fit">
         <button
           onClick={() => setViewMode("list")}
-          className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+          className={`px-3 sm:px-4 py-2 rounded-md transition-colors duration-200 text-sm sm:text-base flex-1 sm:flex-none ${
             viewMode === "list"
               ? "bg-cyan-600 text-white"
               : "text-gray-400 hover:text-white hover:bg-gray-700"
           }`}
         >
-          📋 Enrollments List
+          <span className="hidden sm:inline">📋 Enrollments List</span>
+          <span className="sm:hidden">📋 List</span>
         </button>
         <button
           onClick={() => setViewMode("grid")}
-          className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+          className={`px-3 sm:px-4 py-2 rounded-md transition-colors duration-200 text-sm sm:text-base flex-1 sm:flex-none ${
             viewMode === "grid"
               ? "bg-cyan-600 text-white"
               : "text-gray-400 hover:text-white hover:bg-gray-700"
           }`}
         >
-          📱 Enrollments Grid
+          <span className="hidden sm:inline">📱 Enrollments Grid</span>
+          <span className="sm:hidden">📱 Grid</span>
         </button>
         <button
           onClick={() => setViewMode("modules")}
-          className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+          className={`px-3 sm:px-4 py-2 rounded-md transition-colors duration-200 text-sm sm:text-base flex-1 sm:flex-none ${
             viewMode === "modules"
               ? "bg-cyan-600 text-white"
               : "text-gray-400 hover:text-white hover:bg-gray-700"
           }`}
         >
-          📚 Enrolled Modules
+          <span className="hidden sm:inline">📚 Enrolled Modules</span>
+          <span className="sm:hidden">📚 Modules</span>
         </button>
         <button
           onClick={() => setViewMode("analytics")}
-          className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+          className={`px-3 sm:px-4 py-2 rounded-md transition-colors duration-200 text-sm sm:text-base flex-1 sm:flex-none ${
             viewMode === "analytics"
               ? "bg-cyan-600 text-white"
               : "text-gray-400 hover:text-white hover:bg-gray-700"
           }`}
         >
-          📊 Analytics
+          <span className="hidden sm:inline">📊 Analytics</span>
+          <span className="sm:hidden">📊 Analytics</span>
         </button>
       </div>
 
@@ -2202,19 +2206,19 @@ const EnrollmentTrackingPage = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
                 Enrollment Tracking
               </h1>
-              <p className="text-gray-400">
+              <p className="text-gray-400 text-sm sm:text-base">
                 Monitor and manage student enrollments across all modules
               </p>
             </div>
             <div className="flex items-center gap-4">
               <Link
                 to="/dashboard"
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200"
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 w-full sm:w-auto text-center"
               >
                 Back to Dashboard
               </Link>

@@ -251,6 +251,95 @@ const unenrollUser = asyncHandler(async (req, res, next) => {
 // Admin-only endpoints
 
 /**
+ * @desc    Get enrollments for a specific user (Admin only)
+ * @route   GET /api/enrollments/user/:userId
+ * @access  Private/Admin
+ */
+const getUserEnrollmentsByUserId = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+  const { status, populate, page = 1, limit = 20 } = req.query;
+
+  // Check if user exists (basic validation)
+  const User = require("../models/User");
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new ErrorResponse("User not found", 404));
+  }
+
+  // Build query options
+  const options = {};
+  if (status) options.status = status;
+  if (populate === "true") options.populate = true;
+
+  // Add pagination
+  const skip = (page - 1) * limit;
+  options.skip = skip;
+  options.limit = Number(limit);
+
+  const [enrollments, total] = await Promise.all([
+    UserEnrollment.getUserEnrollments(userId, options),
+    UserEnrollment.countDocuments({
+      userId,
+      ...(status && { status }),
+    }),
+  ]);
+
+  res.status(200).json({
+    success: true,
+    message: "User enrollments retrieved successfully",
+    count: enrollments.length,
+    total,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      pages: Math.ceil(total / limit),
+    },
+    data: enrollments,
+  });
+});
+
+/**
+ * @desc    Get current user enrollments (alias endpoint)
+ * @route   GET /api/enrollments/user/me
+ * @access  Private
+ */
+const getCurrentUserEnrollments = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+  const { status, populate, page = 1, limit = 20 } = req.query;
+
+  // Build query options
+  const options = {};
+  if (status) options.status = status;
+  if (populate === "true") options.populate = true;
+
+  // Add pagination
+  const skip = (page - 1) * limit;
+  options.skip = skip;
+  options.limit = Number(limit);
+
+  const [enrollments, total] = await Promise.all([
+    UserEnrollment.getUserEnrollments(userId, options),
+    UserEnrollment.countDocuments({
+      userId,
+      ...(status && { status }),
+    }),
+  ]);
+
+  res.status(200).json({
+    success: true,
+    message: "Current user enrollments retrieved successfully",
+    count: enrollments.length,
+    total,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      pages: Math.ceil(total / limit),
+    },
+    data: enrollments,
+  });
+});
+
+/**
  * @desc    Get all enrollments (Admin only)
  * @route   GET /api/enrollments/admin/all
  * @access  Private/Admin
@@ -355,4 +444,6 @@ module.exports = {
   unenrollUser,
   getAllEnrollments,
   getModuleEnrollmentStats,
+  getUserEnrollmentsByUserId,
+  getCurrentUserEnrollments,
 };

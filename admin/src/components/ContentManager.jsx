@@ -49,7 +49,7 @@ const ContentManager = () => {
   });
 
   // View modes (removed groupedBySection)
-  const [viewMode, setViewMode] = useState("list"); // list, groupedByModule, groupedByType
+  const [viewMode, setViewMode] = useState("groupedByModule"); // Default to grid-like grouped view
   const [groupedContent, setGroupedContent] = useState({});
 
   const contentTypes = [
@@ -68,6 +68,10 @@ const ContentManager = () => {
 
   useEffect(() => {
     fetchModules();
+  }, []);
+
+  // Separate useEffect for content loading based on view mode and dependencies
+  useEffect(() => {
     if (viewMode === "list") {
       fetchContent();
     } else if (viewMode === "groupedByModule") {
@@ -81,26 +85,7 @@ const ContentManager = () => {
         fetchAllContentGroupedByType();
       }
     }
-  }, [filters, viewMode]);
-
-  useEffect(() => {
-    // Fetch modules separately and then trigger appropriate content fetch
-    fetchModules();
-  }, []);
-
-  useEffect(() => {
-    if (filters.type || filters.moduleId) {
-      if (filters.type && !filters.moduleId) {
-        fetchContentByType(filters.type);
-      } else if (filters.moduleId && !filters.type) {
-        fetchContentByModule(filters.moduleId);
-      } else if (filters.type && filters.moduleId) {
-        fetchContentByType(filters.type, filters.moduleId);
-      }
-    } else {
-      fetchContent();
-    }
-  }, [filters]);
+  }, [filters, viewMode, modules]); // Added modules to dependency array
 
   // Fetch available sections when module is selected
   useEffect(() => {
@@ -436,20 +421,18 @@ const ContentManager = () => {
   );
 
   const renderContentList = () => (
-    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl border border-cyan-500/30">
-      {/* Enhanced Table Header */}
-      <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 border-b border-cyan-500/30">
-        <div className="flex items-center">
-          <FolderIcon className="h-5 w-5 text-cyan-400 mr-2" />
-          <h3 className="text-lg font-semibold text-cyan-400">
-            Content Database
+    <div className="bg-gray-800 rounded-lg shadow border border-gray-600 overflow-hidden">
+      {/* Header with statistics */}
+      <div className="bg-gradient-to-r from-gray-700 to-gray-600 px-4 sm:px-6 py-4 border-b border-gray-600">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h3 className="text-lg font-semibold text-cyan-400 flex items-center">
+            <FolderIcon className="h-5 w-5 mr-2" />
+            Content Library
           </h3>
-          <div className="ml-auto flex items-center space-x-4">
-            <span className="text-sm text-gray-400">
-              {content.length} items
+          <div className="flex flex-col sm:flex-row gap-3 text-sm">
+            <span className="text-gray-300">
+              {content.length} item{content.length !== 1 ? "s" : ""}
             </span>
-            <div className="h-4 w-px bg-gray-600"></div>
-            <ClockIcon className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-gray-400">
               {content.reduce((total, item) => total + (item.duration || 0), 0)}{" "}
               min total
@@ -458,150 +441,228 @@ const ContentManager = () => {
         </div>
       </div>
 
-      <table className="min-w-full divide-y divide-gray-700">
-        <thead className="bg-gray-700/50">
-          <tr>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
-              Content Information
-            </th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
-              Type & Duration
-            </th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
-              Module & Section
-            </th>
-            <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-gray-800 divide-y divide-gray-700/50">
-          {content.map((item, index) => {
-            const module = modules.find((m) => m.id === item.module?.id);
-            const contentType = contentTypes.find((t) => t.value === item.type);
+      {/* Desktop Table View */}
+      <div className="hidden lg:block overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-700">
+          <thead className="bg-gray-700/50">
+            <tr>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+                Content Information
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+                Type & Duration
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+                Module & Section
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-gray-800 divide-y divide-gray-700/50">
+            {content.map((item, index) => {
+              const module = modules.find((m) => m.id === item.module?.id);
+              const contentType = contentTypes.find(
+                (t) => t.value === item.type
+              );
 
-            return (
-              <tr
-                key={item.id}
-                className="hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-600/30 transition-all duration-200 group"
-              >
-                <td className="px-6 py-4">
-                  <div className="flex items-start space-x-3">
-                    <div
-                      className={`flex-shrink-0 w-10 h-10 rounded-lg ${contentType?.color} flex items-center justify-center text-white font-bold text-lg shadow-lg`}
-                    >
-                      {contentType?.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-green-400 truncate group-hover:text-green-300 transition-colors">
-                        {item.title}
+              return (
+                <tr
+                  key={item.id}
+                  className="hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-600/30 transition-all duration-200 group"
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-start space-x-3">
+                      <div
+                        className={`flex-shrink-0 w-10 h-10 rounded-lg ${contentType?.color} flex items-center justify-center text-white font-bold text-lg shadow-lg`}
+                      >
+                        {contentType?.icon}
                       </div>
-                      <div className="text-sm text-gray-400 mt-1 line-clamp-2">
-                        {item.description?.substring(0, 120)}
-                        {item.description?.length > 120 && "..."}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-green-400 truncate group-hover:text-green-300 transition-colors">
+                          {item.title}
+                        </div>
+                        <div className="text-sm text-gray-400 mt-1 line-clamp-2">
+                          {item.description?.substring(0, 120)}
+                          {item.description?.length > 120 && "..."}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="space-y-2">
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white shadow-sm ${contentType?.color}`}
-                    >
-                      {contentType?.label}
-                    </span>
-                    <div className="flex items-center text-xs text-gray-400">
-                      <ClockIcon className="h-3 w-3 mr-1" />
-                      {item.duration} min
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="space-y-1">
-                    <div className="text-sm text-gray-300 font-medium">
-                      {module?.title || "Unknown Module"}
-                    </div>
-                    <div className="flex items-center text-xs text-cyan-400">
-                      <FolderIcon className="h-3 w-3 mr-1" />
-                      {item.section || "No Section"}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-3">
-                    <Link
-                      to={`/content/${item.id}`}
-                      className="text-green-400 hover:text-green-300 transition-colors duration-200 flex items-center text-sm font-medium"
-                    >
-                      <EyeIcon className="h-4 w-4 mr-1" />
-                      View Details
-                    </Link>
-                    <div className="h-4 w-px bg-gray-600"></div>
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200 flex items-center text-sm font-medium"
-                    >
-                      <svg
-                        className="h-4 w-4 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="space-y-2">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white shadow-sm ${contentType?.color}`}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                      Edit
-                    </button>
-                    <div className="h-4 w-px bg-gray-600"></div>
-                    <button
-                      onClick={() => handleDelete(item)}
-                      className="text-yellow-400 hover:text-yellow-300 transition-colors duration-200 flex items-center text-sm font-medium"
-                    >
-                      <svg
-                        className="h-4 w-4 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                        {contentType?.label}
+                      </span>
+                      <div className="flex items-center text-xs text-gray-400">
+                        <ClockIcon className="h-3 w-3 mr-1" />
+                        {item.duration} min
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="space-y-1">
+                      <div className="text-sm text-gray-300 font-medium">
+                        {module?.title || "Unknown Module"}
+                      </div>
+                      <div className="flex items-center text-xs text-cyan-400">
+                        <FolderIcon className="h-3 w-3 mr-1" />
+                        {item.section || "No Section"}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-3">
+                      <Link
+                        to={`/content/${item.id}`}
+                        className="text-green-400 hover:text-green-300 transition-colors duration-200 flex items-center text-sm font-medium"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                      Delete
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item, true)}
-                      className="text-red-400 hover:text-red-300 transition-colors duration-200 flex items-center text-sm font-medium"
-                    >
-                      <svg
-                        className="h-4 w-4 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                        <EyeIcon className="h-4 w-4 mr-1" />
+                        View
+                      </Link>
+                      <div className="h-4 w-px bg-gray-600"></div>
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200 flex items-center text-sm font-medium"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      Permanent
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                        <svg
+                          className="h-4 w-4 mr-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                        Edit
+                      </button>
+                      <div className="h-4 w-px bg-gray-600"></div>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        className="text-red-400 hover:text-red-300 transition-colors duration-200 flex items-center text-sm font-medium"
+                      >
+                        <svg
+                          className="h-4 w-4 mr-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-4 p-4">
+        {content.map((item) => {
+          const module = modules.find((m) => m.id === item.module?.id);
+          const contentType = contentTypes.find((t) => t.value === item.type);
+
+          return (
+            <div
+              key={item.id}
+              className="bg-gray-700/30 rounded-lg p-4 space-y-3 border border-gray-600"
+            >
+              {/* Header with type and actions */}
+              <div className="flex items-center justify-between">
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white shadow-sm ${contentType?.color}`}
+                >
+                  {contentType?.icon} {contentType?.label}
+                </span>
+                <div className="flex gap-2">
+                  <Link
+                    to={`/content/${item.id}`}
+                    className="p-2 text-green-400 hover:text-green-300 transition-colors"
+                    title="View Details"
+                  >
+                    <EyeIcon className="w-4 h-4" />
+                  </Link>
+                  <button
+                    onClick={() => handleEdit(item)}
+                    className="p-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+                    title="Edit Content"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item)}
+                    className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                    title="Delete Content"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Content Information */}
+              <div>
+                <h3 className="font-medium text-green-400 mb-1">
+                  {item.title}
+                </h3>
+                <p className="text-gray-300 text-sm mb-2">{item.description}</p>
+              </div>
+
+              {/* Metadata */}
+              <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                <span className="flex items-center">
+                  <ClockIcon className="h-3 w-3 mr-1" />
+                  {item.duration} min
+                </span>
+                <span className="flex items-center">
+                  <FolderIcon className="h-3 w-3 mr-1" />
+                  {module?.title || "Unknown Module"}
+                </span>
+                <span>{item.section || "No Section"}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {content.length === 0 && (
         <div className="text-center py-12">
@@ -623,7 +684,7 @@ const ContentManager = () => {
         {Object.entries(groupedContent).map(([moduleId, moduleData]) => (
           <div
             key={moduleId}
-            className="bg-gray-800 p-6 rounded-lg shadow border border-gray-600"
+            className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow border border-gray-600"
           >
             <h3 className="text-lg font-medium text-green-400 mb-4">
               {moduleData.module?.title || "Unknown Module"}
@@ -637,7 +698,7 @@ const ContentManager = () => {
                     📁 {sectionName} ({sectionContent.length} items)
                   </h4>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {sectionContent.map((item) => {
                       const contentType = contentTypes.find(
                         (t) => t.value === item.type
@@ -645,39 +706,39 @@ const ContentManager = () => {
                       return (
                         <div
                           key={item.id}
-                          className="border border-gray-600 rounded-lg p-4 bg-gray-700"
+                          className="border border-gray-600 rounded-lg p-4 bg-gray-700 hover:bg-gray-650 transition-colors duration-200"
                         >
                           <div className="flex justify-between items-start mb-2">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyber-green text-black">
                               {contentType?.icon} {contentType?.label}
                             </span>
                           </div>
-                          <h5 className="font-medium text-green-400">
+                          <h5 className="font-medium text-green-400 mb-1 line-clamp-2">
                             {item.title}
                           </h5>
-                          <p className="text-sm text-gray-400 mt-1">
+                          <p className="text-sm text-gray-400 mt-1 mb-3 line-clamp-2">
                             {item.description}
                           </p>
-                          <div className="flex justify-between items-center mt-3">
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                             <span className="text-xs text-gray-500">
                               {item.duration} min
                             </span>
-                            <div className="space-x-2">
+                            <div className="flex gap-2">
                               <Link
                                 to={`/content/${item.id}`}
-                                className="text-xs text-green-400 hover:text-green-300"
+                                className="text-xs text-green-400 hover:text-green-300 transition-colors"
                               >
-                                View Details
+                                View
                               </Link>
                               <button
                                 onClick={() => handleEdit(item)}
-                                className="text-xs text-cyber-green hover:text-green-300"
+                                className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => handleDelete(item)}
-                                className="text-xs text-red-400 hover:text-red-300"
+                                className="text-xs text-red-400 hover:text-red-300 transition-colors"
                               >
                                 Delete
                               </button>
@@ -692,14 +753,22 @@ const ContentManager = () => {
             )}
 
             {Object.keys(moduleData.sections || {}).length === 0 && (
-              <p className="text-gray-500">No content found in this module</p>
+              <p className="text-gray-500 text-center py-4">
+                No content found in this module
+              </p>
             )}
           </div>
         ))}
 
         {Object.keys(groupedContent).length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-500">No modules with content found</p>
+            <FolderIcon className="mx-auto h-12 w-12 text-gray-400 opacity-50 mb-4" />
+            <p className="text-gray-500 text-lg">
+              No modules with content found
+            </p>
+            <p className="text-gray-600 text-sm mt-2">
+              Start by creating some content for your modules
+            </p>
           </div>
         )}
       </div>
@@ -714,51 +783,57 @@ const ContentManager = () => {
           return (
             <div
               key={typeName}
-              className="bg-gray-800 p-6 rounded-lg shadow border border-gray-600"
+              className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow border border-gray-600"
             >
-              <h3 className="text-lg font-medium text-green-400 mb-4">
-                {contentType?.icon} {contentType?.label} ({items.length})
+              <h3 className="text-lg font-medium text-green-400 mb-4 flex items-center">
+                <span className="mr-2">{contentType?.icon}</span>
+                {contentType?.label} ({items.length})
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {items.map((item) => {
                   const module = modules.find((m) => m.id === item.moduleId);
                   return (
                     <div
                       key={item.id}
-                      className="border border-gray-600 rounded-lg p-4 bg-gray-700"
+                      className="border border-gray-600 rounded-lg p-4 bg-gray-700 hover:bg-gray-650 transition-colors duration-200"
                     >
-                      <h4 className="font-medium text-green-400">
+                      <h4 className="font-medium text-green-400 mb-1 line-clamp-2">
                         {item.title}
                       </h4>
-                      <p className="text-sm text-gray-400 mt-1">
+                      <p className="text-sm text-gray-400 mt-1 mb-3 line-clamp-2">
                         {item.description}
                       </p>
-                      <div className="flex justify-between items-center mt-3">
-                        <span className="text-xs text-gray-500">
-                          {module?.title || "Unknown Module"} • {item.section} •{" "}
-                          {item.duration} min
-                        </span>
-                        <div className="space-x-2">
-                          <Link
-                            to={`/content/${item.id}`}
-                            className="text-xs text-green-400 hover:text-green-300"
-                          >
-                            View Details
-                          </Link>
-                          <button
-                            onClick={() => handleEdit(item)}
-                            className="text-xs text-cyber-green hover:text-green-300"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item)}
-                            className="text-xs text-red-400 hover:text-red-300"
-                          >
-                            Delete
-                          </button>
+                      <div className="space-y-2 mb-3">
+                        <div className="text-xs text-gray-500">
+                          📚 {module?.title || "Unknown Module"}
                         </div>
+                        <div className="text-xs text-cyan-400">
+                          📁 {item.section || "No Section"}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          ⏱️ {item.duration} min
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Link
+                          to={`/content/${item.id}`}
+                          className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                        >
+                          View
+                        </Link>
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item)}
+                          className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   );
@@ -766,11 +841,23 @@ const ContentManager = () => {
               </div>
 
               {items.length === 0 && (
-                <p className="text-gray-500">No {typeName} content found</p>
+                <p className="text-gray-500 text-center py-4">
+                  No {typeName} content found
+                </p>
               )}
             </div>
           );
         })}
+
+        {Object.keys(groupedContent).length === 0 && (
+          <div className="text-center py-8">
+            <FolderIcon className="mx-auto h-12 w-12 text-gray-400 opacity-50 mb-4" />
+            <p className="text-gray-500 text-lg">No content found</p>
+            <p className="text-gray-600 text-sm mt-2">
+              Start by creating some content for your modules
+            </p>
+          </div>
+        )}
       </div>
     );
   };
@@ -1232,16 +1319,16 @@ const ContentManager = () => {
   return (
     <div className="space-y-6">
       {/* Enhanced Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div className="flex items-center space-x-4">
           <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-cyan-500 to-green-500 rounded-lg flex items-center justify-center shadow-lg">
             <FolderIcon className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-green-400 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-green-400 bg-clip-text text-transparent">
               [CONTENT MANAGEMENT]
             </h1>
-            <p className="text-green-400 mt-1 flex items-center">
+            <p className="text-green-400 mt-1 flex items-center text-sm sm:text-base">
               <SparklesIcon className="h-4 w-4 mr-2" />
               Manage learning content including videos, labs, games, and
               documents
@@ -1251,7 +1338,7 @@ const ContentManager = () => {
         <button
           onClick={() => setShowForm(true)}
           disabled={loading}
-          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200"
+          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200 w-full sm:w-auto"
         >
           <PlusIcon className="w-5 h-5 mr-2" />
           Add Content
@@ -1260,8 +1347,8 @@ const ContentManager = () => {
 
       {/* Success Message */}
       {success && (
-        <div className="bg-gradient-to-r from-green-900/20 to-cyan-900/20 border border-green-500/50 text-green-400 px-6 py-4 rounded-lg flex items-center shadow-lg animate-slideUp">
-          <CheckCircleIcon className="w-6 h-6 mr-3 text-green-500" />
+        <div className="bg-gradient-to-r from-green-900/20 to-cyan-900/20 border border-green-500/50 text-green-400 px-4 sm:px-6 py-4 rounded-lg flex items-center shadow-lg animate-slideUp">
+          <CheckCircleIcon className="w-6 h-6 mr-3 text-green-500 flex-shrink-0" />
           <div>
             <div className="font-semibold">Success!</div>
             <div className="text-sm">{success}</div>
@@ -1271,8 +1358,8 @@ const ContentManager = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-gradient-to-r from-red-900/20 to-orange-900/20 border border-red-500/50 text-red-400 px-6 py-4 rounded-lg flex items-center shadow-lg animate-slideUp">
-          <ExclamationCircleIcon className="w-6 h-6 mr-3 text-red-500" />
+        <div className="bg-gradient-to-r from-red-900/20 to-orange-900/20 border border-red-500/50 text-red-400 px-4 sm:px-6 py-4 rounded-lg flex items-center shadow-lg animate-slideUp">
+          <ExclamationCircleIcon className="w-6 h-6 mr-3 text-red-500 flex-shrink-0" />
           <div>
             <div className="font-semibold">Error!</div>
             <div className="text-sm">{error}</div>
@@ -1281,9 +1368,9 @@ const ContentManager = () => {
       )}
 
       {/* Enhanced Controls */}
-      <div className="bg-gradient-to-br from-gray-800 to-gray-700 p-6 rounded-xl shadow-xl border border-cyan-500/30">
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <div className="flex flex-wrap items-center gap-6">
+      <div className="bg-gradient-to-br from-gray-800 to-gray-700 p-4 sm:p-6 rounded-xl shadow-xl border border-cyan-500/30">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap xl:items-center gap-4 lg:gap-6">
             {/* Content Type Filter */}
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-cyan-400 flex items-center">
@@ -1305,7 +1392,7 @@ const ContentManager = () => {
               <select
                 value={filters.type}
                 onChange={(e) => handleFilterChange("type", e.target.value)}
-                className="px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
+                className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
               >
                 <option value="">All Types</option>
                 {contentTypes.map((type) => (
@@ -1337,7 +1424,7 @@ const ContentManager = () => {
               <select
                 value={filters.moduleId}
                 onChange={(e) => handleFilterChange("moduleId", e.target.value)}
-                className="px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
+                className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
               >
                 <option value="">All Modules</option>
                 {modules.map((module) => (
@@ -1349,7 +1436,7 @@ const ContentManager = () => {
             </div>
 
             {/* View Mode */}
-            <div className="space-y-2">
+            <div className="space-y-2 sm:col-span-2 lg:col-span-1">
               <label className="block text-sm font-semibold text-cyan-400 flex items-center">
                 <EyeIcon className="h-4 w-4 mr-2" />
                 View Mode
@@ -1357,7 +1444,7 @@ const ContentManager = () => {
               <div className="flex rounded-lg shadow-sm border border-gray-600 overflow-hidden">
                 <button
                   onClick={() => handleViewModeChange("list")}
-                  className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-200 ${
                     viewMode === "list"
                       ? "bg-gradient-to-r from-cyan-500 to-green-500 text-white shadow-lg"
                       : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
@@ -1367,30 +1454,30 @@ const ContentManager = () => {
                 </button>
                 <button
                   onClick={() => handleViewModeChange("groupedByModule")}
-                  className={`px-4 py-2 text-sm font-medium border-l border-gray-600 transition-all duration-200 ${
+                  className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium border-l border-gray-600 transition-all duration-200 ${
                     viewMode === "groupedByModule"
                       ? "bg-gradient-to-r from-cyan-500 to-green-500 text-white shadow-lg"
                       : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
                   }`}
                 >
-                  📚 By Module
+                  📚 Module
                 </button>
                 <button
                   onClick={() => handleViewModeChange("groupedByType")}
-                  className={`px-4 py-2 text-sm font-medium border-l border-gray-600 transition-all duration-200 ${
+                  className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium border-l border-gray-600 transition-all duration-200 ${
                     viewMode === "groupedByType"
                       ? "bg-gradient-to-r from-cyan-500 to-green-500 text-white shadow-lg"
                       : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
                   }`}
                 >
-                  🎯 By Type
+                  🎯 Type
                 </button>
               </div>
             </div>
           </div>
 
           {/* Statistics */}
-          <div className="flex items-center space-x-6 text-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 text-sm">
             <div className="flex items-center space-x-2 px-3 py-2 bg-gray-900/50 rounded-lg border border-gray-600">
               <span className="text-gray-400">Total Items:</span>
               <span className="font-bold text-cyan-400">{content.length}</span>

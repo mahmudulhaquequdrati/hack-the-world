@@ -11,6 +11,8 @@ const {
   unenrollUser,
   getAllEnrollments,
   getModuleEnrollmentStats,
+  getUserEnrollmentsByUserId,
+  getCurrentUserEnrollments,
 } = require("../controllers/enrollmentController");
 const { protect, authorize } = require("../middleware/auth");
 
@@ -70,7 +72,7 @@ router.use(protect);
 
 /**
  * @swagger
- * /api/enrollments:
+ * /enrollments:
  *   post:
  *     summary: Enroll user in a module
  *     tags: [Enrollments]
@@ -117,7 +119,7 @@ router.post(
 
 /**
  * @swagger
- * /api/enrollments:
+ * /enrollments:
  *   get:
  *     summary: Get user enrollments
  *     tags: [Enrollments]
@@ -161,7 +163,7 @@ router.get("/", getUserEnrollments);
 
 /**
  * @swagger
- * /api/enrollments/module/{moduleId}:
+ * /enrollments/module/{moduleId}:
  *   get:
  *     summary: Get specific enrollment by module
  *     tags: [Enrollments]
@@ -201,7 +203,7 @@ router.get(
 
 /**
  * @swagger
- * /api/enrollments/{enrollmentId}/progress:
+ * /enrollments/{enrollmentId}/progress:
  *   put:
  *     summary: Update enrollment progress
  *     tags: [Enrollments]
@@ -261,7 +263,7 @@ router.put(
 
 /**
  * @swagger
- * /api/enrollments/{enrollmentId}/pause:
+ * /enrollments/{enrollmentId}/pause:
  *   put:
  *     summary: Pause enrollment
  *     tags: [Enrollments]
@@ -290,7 +292,7 @@ router.put(
 
 /**
  * @swagger
- * /api/enrollments/{enrollmentId}/resume:
+ * /enrollments/{enrollmentId}/resume:
  *   put:
  *     summary: Resume enrollment
  *     tags: [Enrollments]
@@ -319,7 +321,7 @@ router.put(
 
 /**
  * @swagger
- * /api/enrollments/{enrollmentId}/complete:
+ * /enrollments/{enrollmentId}/complete:
  *   put:
  *     summary: Complete enrollment
  *     tags: [Enrollments]
@@ -348,7 +350,7 @@ router.put(
 
 /**
  * @swagger
- * /api/enrollments/{enrollmentId}:
+ * /enrollments/{enrollmentId}:
  *   delete:
  *     summary: Unenroll from module
  *     tags: [Enrollments]
@@ -377,10 +379,168 @@ router.delete(
   unenrollUser
 );
 
+// User-specific routes
+/**
+ * @swagger
+ * /enrollments/user/me:
+ *   get:
+ *     summary: Get current user enrollments (alias endpoint)
+ *     tags: [Enrollments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, completed, paused, dropped]
+ *         description: Filter by enrollment status
+ *       - in: query
+ *         name: populate
+ *         schema:
+ *           type: boolean
+ *         description: Whether to populate module details
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: number
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: number
+ *           default: 20
+ *         description: Items per page
+ *     responses:
+ *       200:
+ *         description: Current user enrollments retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Current user enrollments retrieved successfully
+ *                 count:
+ *                   type: number
+ *                   example: 5
+ *                 total:
+ *                   type: number
+ *                   example: 12
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: number
+ *                       example: 1
+ *                     limit:
+ *                       type: number
+ *                       example: 20
+ *                     pages:
+ *                       type: number
+ *                       example: 1
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Enrollment'
+ */
+router.get("/user/me", getCurrentUserEnrollments);
+
+/**
+ * @swagger
+ * /enrollments/user/{userId}:
+ *   get:
+ *     summary: Get enrollments for a specific user (Admin only)
+ *     tags: [Enrollments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, completed, paused, dropped]
+ *         description: Filter by enrollment status
+ *       - in: query
+ *         name: populate
+ *         schema:
+ *           type: boolean
+ *         description: Whether to populate module details
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: number
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: number
+ *           default: 20
+ *         description: Items per page
+ *     responses:
+ *       200:
+ *         description: User enrollments retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: User enrollments retrieved successfully
+ *                 count:
+ *                   type: number
+ *                   example: 5
+ *                 total:
+ *                   type: number
+ *                   example: 12
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: number
+ *                       example: 1
+ *                     limit:
+ *                       type: number
+ *                       example: 20
+ *                     pages:
+ *                       type: number
+ *                       example: 1
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Enrollment'
+ *       404:
+ *         description: User not found
+ *       403:
+ *         description: Access denied - Admin only
+ */
+router.get(
+  "/user/:userId",
+  [param("userId").isMongoId().withMessage("Valid user ID is required")],
+  authorize("admin"),
+  getUserEnrollmentsByUserId
+);
+
 // Admin routes
 /**
  * @swagger
- * /api/enrollments/admin/all:
+ * /enrollments/admin/all:
  *   get:
  *     summary: Get all enrollments (Admin only)
  *     tags: [Enrollments]
@@ -451,7 +611,7 @@ router.get("/admin/all", authorize("admin"), getAllEnrollments);
 
 /**
  * @swagger
- * /api/enrollments/admin/stats/{moduleId}:
+ * /enrollments/admin/stats/{moduleId}:
  *   get:
  *     summary: Get module enrollment statistics (Admin only)
  *     tags: [Enrollments]

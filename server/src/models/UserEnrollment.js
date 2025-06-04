@@ -123,6 +123,15 @@ UserEnrollmentSchema.statics.getUserEnrollments = function (
     query.populate("moduleId");
   }
 
+  // Add pagination support
+  if (options.skip !== undefined) {
+    query.skip(options.skip);
+  }
+
+  if (options.limit !== undefined) {
+    query.limit(options.limit);
+  }
+
   return query.sort({ enrolledAt: -1 });
 };
 

@@ -5,6 +5,8 @@ const {
   updateProgress,
   markContentCompleted,
   getModuleProgressStats,
+  getUserLabsProgress,
+  getUserGamesProgress,
 } = require("../controllers/progressController");
 const { protect } = require("../middleware/auth");
 const { validateRequest } = require("../middleware/validation");
@@ -64,6 +66,352 @@ const router = express.Router();
  *           type: string
  *           format: date-time
  */
+
+/**
+ * @swagger
+ * /progress/{userId}/labs:
+ *   get:
+ *     summary: Get user's labs progress across all enrolled modules
+ *     tags: [Progress]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *       - in: query
+ *         name: moduleId
+ *         schema:
+ *           type: string
+ *         description: Filter by specific module ID
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [not-started, in-progress, completed]
+ *         description: Filter by progress status
+ *     responses:
+ *       200:
+ *         description: User labs progress retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     labs:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                           section:
+ *                             type: string
+ *                           duration:
+ *                             type: number
+ *                           instructions:
+ *                             type: string
+ *                           metadata:
+ *                             type: object
+ *                           module:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                               title:
+ *                                 type: string
+ *                               difficulty:
+ *                                 type: string
+ *                           progress:
+ *                             type: object
+ *                             properties:
+ *                               status:
+ *                                 type: string
+ *                               progressPercentage:
+ *                                 type: number
+ *                               timeSpent:
+ *                                 type: number
+ *                               score:
+ *                                 type: number
+ *                               maxScore:
+ *                                 type: number
+ *                     statistics:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: number
+ *                         completed:
+ *                           type: number
+ *                         inProgress:
+ *                           type: number
+ *                         notStarted:
+ *                           type: number
+ *                         averageProgress:
+ *                           type: number
+ *                         totalTimeSpent:
+ *                           type: number
+ *                         averageScore:
+ *                           type: number
+ *                     modules:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *       400:
+ *         description: Invalid user ID format
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not authorized to access this progress
+ *       404:
+ *         description: User not found
+ */
+router.get("/:userId/labs", protect, getUserLabsProgress);
+
+/**
+ * @swagger
+ * /progress/{userId}/games:
+ *   get:
+ *     summary: Get user's games progress across all enrolled modules
+ *     tags: [Progress]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *       - in: query
+ *         name: moduleId
+ *         schema:
+ *           type: string
+ *         description: Filter by specific module ID
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [not-started, in-progress, completed]
+ *         description: Filter by progress status
+ *     responses:
+ *       200:
+ *         description: User games progress retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     games:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                           section:
+ *                             type: string
+ *                           duration:
+ *                             type: number
+ *                           instructions:
+ *                             type: string
+ *                           metadata:
+ *                             type: object
+ *                             properties:
+ *                               difficulty:
+ *                                 type: string
+ *                               gameType:
+ *                                 type: string
+ *                               levels:
+ *                                 type: number
+ *                               scoring:
+ *                                 type: object
+ *                           module:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                               title:
+ *                                 type: string
+ *                               difficulty:
+ *                                 type: string
+ *                           progress:
+ *                             type: object
+ *                             properties:
+ *                               status:
+ *                                 type: string
+ *                               progressPercentage:
+ *                                 type: number
+ *                               timeSpent:
+ *                                 type: number
+ *                               score:
+ *                                 type: number
+ *                               maxScore:
+ *                                 type: number
+ *                               pointsEarned:
+ *                                 type: number
+ *                     statistics:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: number
+ *                         completed:
+ *                           type: number
+ *                         inProgress:
+ *                           type: number
+ *                         notStarted:
+ *                           type: number
+ *                         averageProgress:
+ *                           type: number
+ *                         totalTimeSpent:
+ *                           type: number
+ *                         averageScore:
+ *                           type: number
+ *                         totalPoints:
+ *                           type: number
+ *                     modules:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *       400:
+ *         description: Invalid user ID format
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not authorized to access this progress
+ *       404:
+ *         description: User not found
+ */
+router.get("/:userId/games", protect, getUserGamesProgress);
+
+/**
+ * @swagger
+ * /progress/stats/{moduleId}:
+ *   get:
+ *     summary: Get module progress statistics
+ *     tags: [Progress]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: moduleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Module ID
+ *     responses:
+ *       200:
+ *         description: Module progress statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     module:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         title:
+ *                           type: string
+ *                         description:
+ *                           type: string
+ *                     overview:
+ *                       type: object
+ *                       properties:
+ *                         totalUsers:
+ *                           type: number
+ *                         totalContent:
+ *                           type: number
+ *                         totalProgress:
+ *                           type: number
+ *                     progressByStatus:
+ *                       type: object
+ *                       properties:
+ *                         completed:
+ *                           type: number
+ *                         inProgress:
+ *                           type: number
+ *                         notStarted:
+ *                           type: number
+ *                     completionRates:
+ *                       type: object
+ *                       properties:
+ *                         video:
+ *                           type: number
+ *                         lab:
+ *                           type: number
+ *                         game:
+ *                           type: number
+ *                         document:
+ *                           type: number
+ *                     averageTimeSpent:
+ *                       type: object
+ *                       properties:
+ *                         video:
+ *                           type: number
+ *                         lab:
+ *                           type: number
+ *                         game:
+ *                           type: number
+ *                         document:
+ *                           type: number
+ *                     userProgressSummary:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           user:
+ *                             type: object
+ *                           completionPercentage:
+ *                             type: number
+ *                           completedContent:
+ *                             type: number
+ *                           totalTimeSpent:
+ *                             type: number
+ *                           enrollment:
+ *                             type: object
+ *       400:
+ *         description: Invalid module ID format
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not authorized to view progress statistics
+ *       404:
+ *         description: Module not found
+ */
+router.get("/stats/:moduleId", protect, getModuleProgressStats);
 
 /**
  * @swagger
@@ -336,110 +684,5 @@ router.post("/", protect, validateRequest("updateProgress"), updateProgress);
  *         description: Progress record not found
  */
 router.put("/:id/complete", protect, markContentCompleted);
-
-/**
- * @swagger
- * /progress/stats/{moduleId}:
- *   get:
- *     summary: Get module progress statistics
- *     tags: [Progress]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: moduleId
- *         required: true
- *         schema:
- *           type: string
- *         description: Module ID
- *     responses:
- *       200:
- *         description: Module progress statistics retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     module:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: string
- *                         title:
- *                           type: string
- *                         description:
- *                           type: string
- *                     overview:
- *                       type: object
- *                       properties:
- *                         totalUsers:
- *                           type: number
- *                         totalContent:
- *                           type: number
- *                         totalProgress:
- *                           type: number
- *                     progressByStatus:
- *                       type: object
- *                       properties:
- *                         completed:
- *                           type: number
- *                         inProgress:
- *                           type: number
- *                         notStarted:
- *                           type: number
- *                     completionRates:
- *                       type: object
- *                       properties:
- *                         video:
- *                           type: number
- *                         lab:
- *                           type: number
- *                         game:
- *                           type: number
- *                         document:
- *                           type: number
- *                     averageTimeSpent:
- *                       type: object
- *                       properties:
- *                         video:
- *                           type: number
- *                         lab:
- *                           type: number
- *                         game:
- *                           type: number
- *                         document:
- *                           type: number
- *                     userProgressSummary:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           user:
- *                             type: object
- *                           completionPercentage:
- *                             type: number
- *                           completedContent:
- *                             type: number
- *                           totalTimeSpent:
- *                             type: number
- *                           enrollment:
- *                             type: object
- *       400:
- *         description: Invalid module ID format
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Not authorized to view progress statistics
- *       404:
- *         description: Module not found
- */
-router.get("/stats/:moduleId", protect, getModuleProgressStats);
 
 module.exports = router;

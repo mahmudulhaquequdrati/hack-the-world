@@ -1,12 +1,15 @@
 import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
+  BeakerIcon,
+  BookmarkIcon,
   ChartBarIcon,
   ChevronRightIcon,
   CubeIcon,
   DocumentIcon,
   FolderIcon,
   HomeIcon,
+  PuzzlePieceIcon,
   UserIcon,
   UsersIcon,
   XMarkIcon,
@@ -26,6 +29,9 @@ const Layout = () => {
     { name: "Modules", href: "/modules", icon: DocumentIcon },
     { name: "Content", href: "/content", icon: FolderIcon },
     { name: "Enrollments", href: "/enrollments", icon: UsersIcon },
+    { name: "My Enrollments", href: "/my-enrollments", icon: BookmarkIcon },
+    { name: "My Labs", href: "/my-labs", icon: BeakerIcon },
+    { name: "My Games", href: "/my-games", icon: PuzzlePieceIcon },
   ];
 
   const isActive = (href) => location.pathname === href;

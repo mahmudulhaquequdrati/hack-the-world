@@ -1,6 +1,8 @@
 import {
   ArrowLeftIcon,
   BeakerIcon,
+  BookmarkIcon,
+  BookmarkSlashIcon,
   BookOpenIcon,
   ChartBarIcon,
   CheckCircleIcon,
@@ -16,6 +18,7 @@ import {
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   contentAPI,
   enrollmentAPI,
@@ -24,6 +27,7 @@ import {
 } from "../services/api";
 
 const ModuleDetailView = () => {
+  const { user } = useAuth(); // Get current user from auth context
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const [module, setModule] = useState(null);
@@ -31,6 +35,7 @@ const ModuleDetailView = () => {
   const [content, setContent] = useState([]);
   const [contentGrouped, setContentGrouped] = useState({});
   const [enrollmentStats, setEnrollmentStats] = useState(null);
+  const [userEnrollmentStatus, setUserEnrollmentStatus] = useState(null);
   const [statistics, setStatistics] = useState({
     totalContent: 0,
     videoCount: 0,
@@ -92,6 +97,25 @@ const ModuleDetailView = () => {
         setEnrollmentStats(enrollmentStatsResponse.data);
       } catch (enrollmentError) {
         console.warn("Could not fetch enrollment stats:", enrollmentError);
+      }
+
+      // Fetch current user's enrollment status for this module
+      if (user?.id) {
+        try {
+          const userEnrollmentsResponse =
+            await enrollmentAPI.getUserEnrollments();
+          if (userEnrollmentsResponse.success && userEnrollmentsResponse.data) {
+            const userEnrollment = userEnrollmentsResponse.data.find(
+              (enrollment) => enrollment.moduleId === moduleId
+            );
+            setUserEnrollmentStatus(userEnrollment || null);
+          }
+        } catch (userEnrollmentError) {
+          console.warn(
+            "Could not fetch user enrollment status:",
+            userEnrollmentError
+          );
+        }
       }
 
       // Calculate statistics
@@ -273,6 +297,63 @@ const ModuleDetailView = () => {
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-600 text-white">
             Dropped: {droppedEnrollments}
           </span>
+        )}
+      </div>
+    );
+  };
+
+  // Helper function to render current user enrollment status
+  const getCurrentUserEnrollmentBadge = () => {
+    if (!userEnrollmentStatus) {
+      return (
+        <div className="flex items-center text-sm text-gray-500">
+          <BookmarkSlashIcon className="w-4 h-4 mr-2" />
+          <span>You are not enrolled in this module</span>
+        </div>
+      );
+    }
+
+    const statusColors = {
+      active: "text-green-400 bg-green-900/20 border-green-500/30",
+      completed: "text-cyan-400 bg-cyan-900/20 border-cyan-500/30",
+      paused: "text-yellow-400 bg-yellow-900/20 border-yellow-500/30",
+      dropped: "text-red-400 bg-red-900/20 border-red-500/30",
+    };
+
+    const colorClass =
+      statusColors[userEnrollmentStatus.status] || statusColors.active;
+
+    return (
+      <div className="space-y-2">
+        <div
+          className={`flex items-center text-sm px-3 py-2 rounded-lg border ${colorClass}`}
+        >
+          <BookmarkIcon className="w-4 h-4 mr-2" />
+          <span>You are {userEnrollmentStatus.status} in this module</span>
+        </div>
+
+        {userEnrollmentStatus.progress > 0 && (
+          <div className="text-sm text-gray-400">
+            <div className="flex items-center justify-between mb-1">
+              <span>Your Progress:</span>
+              <span className="font-medium text-cyber-green">
+                {userEnrollmentStatus.progress}%
+              </span>
+            </div>
+            <div className="bg-gray-700 rounded-full h-2">
+              <div
+                className="bg-gradient-to-r from-green-400 to-cyan-400 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${userEnrollmentStatus.progress}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        {userEnrollmentStatus.enrollmentDate && (
+          <div className="text-xs text-gray-500">
+            Enrolled:{" "}
+            {new Date(userEnrollmentStatus.enrollmentDate).toLocaleDateString()}
+          </div>
         )}
       </div>
     );
@@ -610,6 +691,19 @@ const ModuleDetailView = () => {
         </div>
       )}
 
+      {/* Current User Enrollment Status */}
+      {user && (
+        <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-cyan-400 flex items-center">
+              <BookmarkIcon className="w-5 h-5 mr-2" />
+              My Enrollment Status
+            </h3>
+          </div>
+          {getCurrentUserEnrollmentBadge()}
+        </div>
+      )}
+
       {/* Content List */}
       <div className="bg-gray-800 border border-gray-700 rounded-lg">
         <div className="px-6 py-4 border-b border-gray-700">
@@ -764,23 +858,33 @@ const ModuleDetailView = () => {
               <ChartBarIcon className="w-5 h-5 mr-3" />
               View Progress Details
             </Link>
-            <button
-              onClick={handleEnrollment}
-              disabled={enrolling}
-              className="flex items-center w-full px-4 py-2 text-left text-purple-400 hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
-            >
-              {enrolling ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-400 mr-3"></div>
-                  Enrolling User...
-                </>
-              ) : (
-                <>
-                  <UserPlusIcon className="w-5 h-5 mr-3" />
-                  Enroll User in Module
-                </>
-              )}
-            </button>
+            {userEnrollmentStatus ? (
+              <button
+                disabled
+                className="flex items-center w-full px-4 py-2 text-left text-gray-400 cursor-not-allowed rounded transition-colors opacity-75"
+              >
+                <BookmarkIcon className="w-5 h-5 mr-3" />
+                Already Enrolled in Module
+              </button>
+            ) : (
+              <button
+                onClick={handleEnrollment}
+                disabled={enrolling}
+                className="flex items-center w-full px-4 py-2 text-left text-purple-400 hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
+              >
+                {enrolling ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-400 mr-3"></div>
+                    Enrolling User...
+                  </>
+                ) : (
+                  <>
+                    <UserPlusIcon className="w-5 h-5 mr-3" />
+                    Enroll User in Module
+                  </>
+                )}
+              </button>
+            )}
             {phase && (
               <Link
                 to={`/phases/${phase.id}`}

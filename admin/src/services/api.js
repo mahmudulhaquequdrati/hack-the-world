@@ -325,6 +325,18 @@ export const progressAPI = {
     const response = await axios.get(`/progress/stats/${moduleId}`);
     return response.data;
   },
+
+  // Get user's labs progress across all enrolled modules
+  getUserLabsProgress: async (userId, params = {}) => {
+    const response = await axios.get(`/progress/${userId}/labs`, { params });
+    return response.data;
+  },
+
+  // Get user's games progress across all enrolled modules
+  getUserGamesProgress: async (userId, params = {}) => {
+    const response = await axios.get(`/progress/${userId}/games`, { params });
+    return response.data;
+  },
 };
 
 export default {

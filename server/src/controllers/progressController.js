@@ -564,10 +564,551 @@ const getModuleProgressStats = asyncHandler(async (req, res, next) => {
   });
 });
 
+/**
+ * @desc    Get user's labs progress across all enrolled modules
+ * @route   GET /api/progress/:userId/labs
+ * @access  Private
+ */
+const getUserLabsProgress = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+  const { moduleId, status } = req.query;
+
+  // Validate userId is a valid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return next(new ErrorResponse("Invalid user ID format", 400));
+  }
+
+  // Check if user exists
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new ErrorResponse("User not found", 404));
+  }
+
+  // Authorization: Users can only access their own progress, admins can access any
+  if (req.user.role !== "admin" && req.user.id !== userId) {
+    return next(
+      new ErrorResponse("Not authorized to access this progress", 403)
+    );
+  }
+
+  // Get user's enrollments to filter only enrolled modules
+  const enrollments = await UserEnrollment.find({
+    userId,
+    status: { $in: ["active", "completed"] },
+  }).populate("moduleId", "title description difficulty phase");
+
+  if (enrollments.length === 0) {
+    return res.status(200).json({
+      success: true,
+      message: "User labs progress retrieved successfully",
+      data: {
+        labs: [],
+        statistics: {
+          total: 0,
+          completed: 0,
+          inProgress: 0,
+          notStarted: 0,
+          averageProgress: 0,
+          totalTimeSpent: 0,
+          averageScore: 0,
+        },
+        modules: [],
+      },
+    });
+  }
+
+  const enrolledModuleIds = enrollments.map((e) => e.moduleId._id);
+
+  // Build query for labs content
+  let contentQuery = {
+    moduleId: { $in: enrolledModuleIds },
+    type: "lab",
+    isActive: true,
+  };
+
+  if (moduleId) {
+    if (!mongoose.Types.ObjectId.isValid(moduleId)) {
+      return next(new ErrorResponse("Invalid module ID format", 400));
+    }
+    contentQuery.moduleId = moduleId;
+  }
+
+  // Get all lab content from enrolled modules
+  const labContent = await Content.find(contentQuery)
+    .populate("moduleId", "title description difficulty phase")
+    .sort({ moduleId: 1, createdAt: 1 });
+
+  if (labContent.length === 0) {
+    return res.status(200).json({
+      success: true,
+      message: "User labs progress retrieved successfully",
+      data: {
+        labs: [],
+        statistics: {
+          total: 0,
+          completed: 0,
+          inProgress: 0,
+          notStarted: 0,
+          averageProgress: 0,
+          totalTimeSpent: 0,
+          averageScore: 0,
+        },
+        modules: enrollments.map((e) => e.moduleId),
+      },
+    });
+  }
+
+  const labContentIds = labContent.map((content) => content._id);
+
+  // Get user progress for these labs
+  let progressQuery = {
+    userId,
+    contentId: { $in: labContentIds },
+    contentType: "lab",
+  };
+
+  if (status) {
+    progressQuery.status = status;
+  }
+
+  const labProgress = await UserProgress.find(progressQuery)
+    .populate(
+      "contentId",
+      "title description section duration instructions metadata"
+    )
+    .sort({ updatedAt: -1 });
+
+  // Create a map of progress by content ID for efficient lookup
+  const progressMap = new Map();
+  labProgress.forEach((p) => {
+    progressMap.set(p.contentId._id.toString(), p);
+  });
+
+  // Build complete labs data with progress information
+  const labsWithProgress = labContent.map((lab) => {
+    const progress = progressMap.get(lab._id.toString());
+
+    return {
+      id: lab._id,
+      title: lab.title,
+      description: lab.description,
+      section: lab.section,
+      duration: lab.duration,
+      instructions: lab.instructions,
+      metadata: lab.metadata,
+      module: {
+        id: lab.moduleId._id,
+        title: lab.moduleId.title,
+        description: lab.moduleId.description,
+        difficulty: lab.moduleId.difficulty,
+        phase: lab.moduleId.phase,
+      },
+      progress: progress
+        ? {
+            id: progress._id,
+            status: progress.status,
+            progressPercentage: progress.progressPercentage,
+            startedAt: progress.startedAt,
+            completedAt: progress.completedAt,
+            timeSpent: progress.timeSpent,
+            score: progress.score,
+            maxScore: progress.maxScore,
+            updatedAt: progress.updatedAt,
+          }
+        : {
+            status: "not-started",
+            progressPercentage: 0,
+            startedAt: null,
+            completedAt: null,
+            timeSpent: 0,
+            score: null,
+            maxScore: null,
+          },
+    };
+  });
+
+  // Filter by status if specified
+  let filteredLabs = labsWithProgress;
+  if (status) {
+    filteredLabs = labsWithProgress.filter(
+      (lab) => lab.progress.status === status
+    );
+  }
+
+  // Calculate statistics
+  const totalLabs = labsWithProgress.length;
+  const completedLabs = labsWithProgress.filter(
+    (lab) => lab.progress.status === "completed"
+  ).length;
+  const inProgressLabs = labsWithProgress.filter(
+    (lab) => lab.progress.status === "in-progress"
+  ).length;
+  const notStartedLabs = labsWithProgress.filter(
+    (lab) => lab.progress.status === "not-started"
+  ).length;
+
+  const averageProgress =
+    totalLabs > 0
+      ? Math.round(
+          labsWithProgress.reduce(
+            (sum, lab) => sum + lab.progress.progressPercentage,
+            0
+          ) / totalLabs
+        )
+      : 0;
+
+  const totalTimeSpent = labsWithProgress.reduce(
+    (sum, lab) => sum + lab.progress.timeSpent,
+    0
+  );
+
+  const labsWithScores = labsWithProgress.filter(
+    (lab) => lab.progress.score !== null
+  );
+  const averageScore =
+    labsWithScores.length > 0
+      ? Math.round(
+          labsWithScores.reduce((sum, lab) => sum + lab.progress.score, 0) /
+            labsWithScores.length
+        )
+      : 0;
+
+  // Group labs by module for better organization
+  const labsByModule = enrollments.map((enrollment) => {
+    const moduleLabs = filteredLabs.filter(
+      (lab) => lab.module.id.toString() === enrollment.moduleId._id.toString()
+    );
+
+    return {
+      module: enrollment.moduleId,
+      enrollment: {
+        status: enrollment.status,
+        enrolledAt: enrollment.enrolledAt,
+        progressPercentage: enrollment.progressPercentage,
+      },
+      labs: moduleLabs,
+      statistics: {
+        total: moduleLabs.length,
+        completed: moduleLabs.filter(
+          (lab) => lab.progress.status === "completed"
+        ).length,
+        inProgress: moduleLabs.filter(
+          (lab) => lab.progress.status === "in-progress"
+        ).length,
+        notStarted: moduleLabs.filter(
+          (lab) => lab.progress.status === "not-started"
+        ).length,
+      },
+    };
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "User labs progress retrieved successfully",
+    data: {
+      labs: filteredLabs,
+      statistics: {
+        total: totalLabs,
+        completed: completedLabs,
+        inProgress: inProgressLabs,
+        notStarted: notStartedLabs,
+        averageProgress,
+        totalTimeSpent,
+        averageScore,
+      },
+      modules: labsByModule,
+    },
+  });
+});
+
+/**
+ * @desc    Get user's games progress across all enrolled modules
+ * @route   GET /api/progress/:userId/games
+ * @access  Private
+ */
+const getUserGamesProgress = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+  const { moduleId, status } = req.query;
+
+  // Validate userId is a valid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return next(new ErrorResponse("Invalid user ID format", 400));
+  }
+
+  // Check if user exists
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new ErrorResponse("User not found", 404));
+  }
+
+  // Authorization: Users can only access their own progress, admins can access any
+  if (req.user.role !== "admin" && req.user.id !== userId) {
+    return next(
+      new ErrorResponse("Not authorized to access this progress", 403)
+    );
+  }
+
+  // Get user's enrollments to filter only enrolled modules
+  const enrollments = await UserEnrollment.find({
+    userId,
+    status: { $in: ["active", "completed"] },
+  }).populate("moduleId", "title description difficulty phase");
+
+  if (enrollments.length === 0) {
+    return res.status(200).json({
+      success: true,
+      message: "User games progress retrieved successfully",
+      data: {
+        games: [],
+        statistics: {
+          total: 0,
+          completed: 0,
+          inProgress: 0,
+          notStarted: 0,
+          averageProgress: 0,
+          totalTimeSpent: 0,
+          averageScore: 0,
+          totalPoints: 0,
+        },
+        modules: [],
+      },
+    });
+  }
+
+  const enrolledModuleIds = enrollments.map((e) => e.moduleId._id);
+
+  // Build query for games content
+  let contentQuery = {
+    moduleId: { $in: enrolledModuleIds },
+    type: "game",
+    isActive: true,
+  };
+
+  if (moduleId) {
+    if (!mongoose.Types.ObjectId.isValid(moduleId)) {
+      return next(new ErrorResponse("Invalid module ID format", 400));
+    }
+    contentQuery.moduleId = moduleId;
+  }
+
+  // Get all game content from enrolled modules
+  const gameContent = await Content.find(contentQuery)
+    .populate("moduleId", "title description difficulty phase")
+    .sort({ moduleId: 1, createdAt: 1 });
+
+  if (gameContent.length === 0) {
+    return res.status(200).json({
+      success: true,
+      message: "User games progress retrieved successfully",
+      data: {
+        games: [],
+        statistics: {
+          total: 0,
+          completed: 0,
+          inProgress: 0,
+          notStarted: 0,
+          averageProgress: 0,
+          totalTimeSpent: 0,
+          averageScore: 0,
+          totalPoints: 0,
+        },
+        modules: enrollments.map((e) => e.moduleId),
+      },
+    });
+  }
+
+  const gameContentIds = gameContent.map((content) => content._id);
+
+  // Get user progress for these games
+  let progressQuery = {
+    userId,
+    contentId: { $in: gameContentIds },
+    contentType: "game",
+  };
+
+  if (status) {
+    progressQuery.status = status;
+  }
+
+  const gameProgress = await UserProgress.find(progressQuery)
+    .populate(
+      "contentId",
+      "title description section duration instructions metadata"
+    )
+    .sort({ updatedAt: -1 });
+
+  // Create a map of progress by content ID for efficient lookup
+  const progressMap = new Map();
+  gameProgress.forEach((p) => {
+    progressMap.set(p.contentId._id.toString(), p);
+  });
+
+  // Build complete games data with progress information
+  const gamesWithProgress = gameContent.map((game) => {
+    const progress = progressMap.get(game._id.toString());
+
+    // Extract game-specific metadata
+    const gameMetadata = game.metadata || {};
+    const scoring = gameMetadata.scoring || {};
+    const pointsEarned = progress?.score || 0;
+
+    return {
+      id: game._id,
+      title: game.title,
+      description: game.description,
+      section: game.section,
+      duration: game.duration,
+      instructions: game.instructions,
+      metadata: {
+        ...gameMetadata,
+        difficulty: gameMetadata.difficulty || "beginner",
+        gameType: gameMetadata.gameType || "challenge",
+        levels: gameMetadata.levels || 1,
+        scoring: scoring,
+      },
+      module: {
+        id: game.moduleId._id,
+        title: game.moduleId.title,
+        description: game.moduleId.description,
+        difficulty: game.moduleId.difficulty,
+        phase: game.moduleId.phase,
+      },
+      progress: progress
+        ? {
+            id: progress._id,
+            status: progress.status,
+            progressPercentage: progress.progressPercentage,
+            startedAt: progress.startedAt,
+            completedAt: progress.completedAt,
+            timeSpent: progress.timeSpent,
+            score: progress.score,
+            maxScore: progress.maxScore,
+            pointsEarned: pointsEarned,
+            updatedAt: progress.updatedAt,
+          }
+        : {
+            status: "not-started",
+            progressPercentage: 0,
+            startedAt: null,
+            completedAt: null,
+            timeSpent: 0,
+            score: null,
+            maxScore: null,
+            pointsEarned: 0,
+          },
+    };
+  });
+
+  // Filter by status if specified
+  let filteredGames = gamesWithProgress;
+  if (status) {
+    filteredGames = gamesWithProgress.filter(
+      (game) => game.progress.status === status
+    );
+  }
+
+  // Calculate statistics
+  const totalGames = gamesWithProgress.length;
+  const completedGames = gamesWithProgress.filter(
+    (game) => game.progress.status === "completed"
+  ).length;
+  const inProgressGames = gamesWithProgress.filter(
+    (game) => game.progress.status === "in-progress"
+  ).length;
+  const notStartedGames = gamesWithProgress.filter(
+    (game) => game.progress.status === "not-started"
+  ).length;
+
+  const averageProgress =
+    totalGames > 0
+      ? Math.round(
+          gamesWithProgress.reduce(
+            (sum, game) => sum + game.progress.progressPercentage,
+            0
+          ) / totalGames
+        )
+      : 0;
+
+  const totalTimeSpent = gamesWithProgress.reduce(
+    (sum, game) => sum + game.progress.timeSpent,
+    0
+  );
+
+  const gamesWithScores = gamesWithProgress.filter(
+    (game) => game.progress.score !== null
+  );
+  const averageScore =
+    gamesWithScores.length > 0
+      ? Math.round(
+          gamesWithScores.reduce((sum, game) => sum + game.progress.score, 0) /
+            gamesWithScores.length
+        )
+      : 0;
+
+  const totalPoints = gamesWithProgress.reduce(
+    (sum, game) => sum + game.progress.pointsEarned,
+    0
+  );
+
+  // Group games by module for better organization
+  const gamesByModule = enrollments.map((enrollment) => {
+    const moduleGames = filteredGames.filter(
+      (game) => game.module.id.toString() === enrollment.moduleId._id.toString()
+    );
+
+    return {
+      module: enrollment.moduleId,
+      enrollment: {
+        status: enrollment.status,
+        enrolledAt: enrollment.enrolledAt,
+        progressPercentage: enrollment.progressPercentage,
+      },
+      games: moduleGames,
+      statistics: {
+        total: moduleGames.length,
+        completed: moduleGames.filter(
+          (game) => game.progress.status === "completed"
+        ).length,
+        inProgress: moduleGames.filter(
+          (game) => game.progress.status === "in-progress"
+        ).length,
+        notStarted: moduleGames.filter(
+          (game) => game.progress.status === "not-started"
+        ).length,
+        totalPoints: moduleGames.reduce(
+          (sum, game) => sum + game.progress.pointsEarned,
+          0
+        ),
+      },
+    };
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "User games progress retrieved successfully",
+    data: {
+      games: filteredGames,
+      statistics: {
+        total: totalGames,
+        completed: completedGames,
+        inProgress: inProgressGames,
+        notStarted: notStartedGames,
+        averageProgress,
+        totalTimeSpent,
+        averageScore,
+        totalPoints,
+      },
+      modules: gamesByModule,
+    },
+  });
+});
+
 module.exports = {
   getUserProgress,
   getUserModuleProgress,
   updateProgress,
   markContentCompleted,
   getModuleProgressStats,
+  getUserLabsProgress,
+  getUserGamesProgress,
 };

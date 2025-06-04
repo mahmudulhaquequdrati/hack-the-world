@@ -14,6 +14,8 @@ const profileRoutes = require("../routes/profile");
 const phaseRoutes = require("../routes/phase");
 const moduleRoutes = require("../routes/modules");
 const contentRoutes = require("../routes/content");
+const enrollmentRoutes = require("../routes/enrollment");
+const progressRoutes = require("../routes/progress");
 // TODO: Add these routes when they are created
 // const gameRoutes = require("../routes/games");
 // const labRoutes = require("../routes/labs");
@@ -101,6 +103,8 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/phases", phaseRoutes);
 app.use("/api/modules", moduleRoutes);
 app.use("/api/content", contentRoutes);
+app.use("/api/enrollments", enrollmentRoutes);
+app.use("/api/progress", progressRoutes);
 
 // API documentation route
 app.get("/api", (req, res) => {
@@ -114,6 +118,8 @@ app.get("/api", (req, res) => {
       phases: "/api/phases",
       modules: "/api/modules",
       content: "/api/content",
+      enrollment: "/api/enrollments",
+      progress: "/api/progress",
     },
   });
 });

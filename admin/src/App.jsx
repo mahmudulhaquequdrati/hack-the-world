@@ -15,6 +15,9 @@ import Login from "./components/Login";
 import ModuleDetailView from "./components/ModuleDetailView";
 import ModuleProgressDetailView from "./components/ModuleProgressDetailView";
 import ModulesManagerEnhanced from "./components/ModulesManagerEnhanced";
+import MyEnrollments from "./components/MyEnrollments";
+import MyGames from "./components/MyGames";
+import MyLabs from "./components/MyLabs";
 import PhaseDetailView from "./components/PhaseDetailView";
 import PhasesManager from "./components/PhasesManager";
 import Register from "./components/Register";
@@ -99,6 +102,9 @@ function App() {
               element={<ContentProgressDetailView />}
             />
             <Route path="enrollments" element={<EnrollmentTrackingPage />} />
+            <Route path="my-enrollments" element={<MyEnrollments />} />
+            <Route path="my-labs" element={<MyLabs />} />
+            <Route path="my-games" element={<MyGames />} />
           </Route>
         </Routes>
       </Router>

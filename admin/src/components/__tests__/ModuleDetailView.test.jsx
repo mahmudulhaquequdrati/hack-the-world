@@ -131,7 +131,7 @@ describe("ModuleDetailView", () => {
     });
 
     // Check basic module information
-    expect(screen.getByText("Test Module")).toBeInTheDocument();
+    expect(screen.getAllByText("Test Module")[0]).toBeInTheDocument();
     expect(
       screen.getByText("This is a test module for cybersecurity learning")
     ).toBeInTheDocument();
@@ -262,7 +262,7 @@ describe("ModuleDetailView", () => {
     });
 
     // Should not crash and should still display module info
-    expect(screen.getByText("Test Module")).toBeInTheDocument();
+    expect(screen.getAllByText("Test Module")[0]).toBeInTheDocument();
     // Phase link should not be present in breadcrumb
     expect(screen.queryByText("Foundation Phase")).not.toBeInTheDocument();
   });

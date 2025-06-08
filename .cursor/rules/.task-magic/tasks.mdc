@@ -54,7 +54,7 @@ When working with the task system, the agent should always follow these best pra
    Ensure directories like `.ai/memory/` and `.ai/memory/tasks/` are conceptually present (they will be created by `edit_file` if needed when the first archived task is written there).
    Ensure the log file `.ai/memory/TASKS_LOG.md` exists (or will be created) by using `file_search` and then `edit_file` if it needs to be initialized or appended to.
 
-**Note:** Following these practices, leveraging tools like `file_search`, `list_dir`, `read_file`, `edit_file`, and `delete_file`, prevents errors and ensures smooth operation of the task system.
+**Note:** Following these practices, leveraging tools like `file_search`, `list_dir`, `read_file`, `edit_file`, and `delete_file`, prevents errors and ensures smooth operation of the task system. after completing each tasks dont forget to send it in memory `.ai/memory/tasks/`
 
 ## Task File Format
 

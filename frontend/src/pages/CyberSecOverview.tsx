@@ -12,7 +12,6 @@ import {
   useEnrollInModuleMutation,
   useGetPhasesWithModulesQuery,
 } from "@/features/api/apiSlice";
-import { getNormalizedPhases, getNormalizedUserStats } from "@/lib/appData";
 import { COMPLETED_MODULES } from "@/lib/constants";
 import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
 import { Module, Phase } from "@/lib/types";
@@ -23,7 +22,7 @@ const CyberSecOverview = () => {
   const navigate = useNavigate();
   const completedModules = [...COMPLETED_MODULES];
 
-  // Single comprehensive RTK Query hook - with fallback to local data
+  // Single comprehensive RTK Query hook
   const {
     data: phasesWithModules = [],
     isLoading: dataLoading,
@@ -33,33 +32,13 @@ const CyberSecOverview = () => {
 
   const [enrollInModule] = useEnrollInModuleMutation();
 
-  // Use fallback data from appData.ts when API fails or is loading
-  const fallbackPhases = useMemo(() => getNormalizedPhases(), []);
-  const fallbackUserStats = useMemo(() => getNormalizedUserStats(), []);
+  // Set active phase to the first phase when data loads
+  const [activePhase, setActivePhase] = useState("");
 
-  // Use fallback data to get the first phase ID as default
-  const [activePhase, setActivePhase] = useState(
-    fallbackPhases.length > 0 ? fallbackPhases[0].id : ""
-  );
-
-  // Determine if we should use API data or fallback data
-  const shouldUseFallback = dataError || dataLoading;
-
-  // Select data source based on API availability
-  const activePhases = shouldUseFallback ? fallbackPhases : phasesWithModules;
-
-  // Data processing - simplified since comprehensive API should return processed data
+  // Data processing - use only API data
   const phasesData = useMemo(() => {
-    if (shouldUseFallback) {
-      // Use the already processed fallback data with modules included
-      return fallbackPhases.map((phase: Phase) => ({
-        ...phase,
-        modules: phase.modules || [],
-      }));
-    }
-
     // Use API data (should already be processed with modules, stats, and progress)
-    return activePhases
+    return phasesWithModules
       .map((phase: Phase) => {
         // If API returns modules with the phase, use them directly
         const phaseModules = (phase.modules || [])
@@ -122,30 +101,18 @@ const CyberSecOverview = () => {
         };
       })
       .sort((a: Phase, b: Phase) => (a.order || 0) - (b.order || 0));
-  }, [shouldUseFallback, fallbackPhases, activePhases]);
+  }, [phasesWithModules]);
 
-  // Set default active phase to the first phase when data loads (if no default set)
+  // Set default active phase to the first phase when data loads
   useEffect(() => {
-    if (phasesData.length > 0) {
-      // If the default phase ID doesn't exist in the data, use the first phase
-      const phaseExists = phasesData.find((phase) => phase.id === activePhase);
-      if (!phaseExists) {
-        setActivePhase(phasesData[0].id);
-      }
+    if (phasesData.length > 0 && !activePhase) {
+      setActivePhase(phasesData[0].id);
     }
   }, [phasesData, activePhase]);
 
-  // Calculate overall progress
+  // Calculate overall progress from API data only
   const overallProgress = useMemo(() => {
     if (!phasesData.length) return 0;
-
-    if (shouldUseFallback) {
-      // Use fallback stats for progress calculation
-      const stats = fallbackUserStats;
-      return (
-        Math.round((stats.completedCourses / stats.enrolledCourses) * 100) || 0
-      );
-    }
 
     // Use API data for progress calculation
     const totalModules = phasesData.reduce(
@@ -161,14 +128,10 @@ const CyberSecOverview = () => {
     return totalModules > 0
       ? Math.round((completedModules / totalModules) * 100)
       : 0;
-  }, [phasesData, shouldUseFallback, fallbackUserStats]);
+  }, [phasesData]);
 
-  // Only show loading if API is loading AND we don't have fallback data
-  const loading = !shouldUseFallback && dataLoading;
-  const error =
-    !shouldUseFallback && dataError
-      ? "Failed to load course data. Using offline data."
-      : null;
+  const loading = dataLoading;
+  const error = dataError ? "Failed to load course data." : null;
 
   const handleModuleNavigation = (path: string) => {
     navigate(path);

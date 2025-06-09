@@ -129,22 +129,356 @@ The Module System manages cybersecurity learning modules within the platform's h
   "message": "Phases with modules retrieved successfully",
   "data": [
     {
-      "id": "64a1b2c3d4e5f6789012345",
-      "title": "Foundation Phase",
-      "description": "Basic cybersecurity concepts",
+      "title": "Beginner Phase",
+      "description": "Foundation courses for cybersecurity beginners",
       "icon": "Lightbulb",
       "color": "#10B981",
       "order": 1,
+      "createdAt": "2025-06-01T22:44:12.445Z",
+      "updatedAt": "2025-06-01T22:44:12.445Z",
+      "id": "683cd7bc4a5fe993dadde577",
       "modules": [
         {
-          "id": "64a1b2c3d4e5f6789012346",
+          "content": {
+            "videos": [
+              "683cd7bc4a5fe993dadde586",
+              "683cd7bc4a5fe993dadde587"
+            ],
+            "labs": [
+              "683cd7bc4a5fe993dadde588"
+            ],
+            "games": [
+              "683cd7bc4a5fe993dadde589"
+            ],
+            "documents": [],
+            "estimatedHours": 2
+          },
+          "phaseId": "683cd7bc4a5fe993dadde577",
           "title": "Cybersecurity Fundamentals",
-          "description": "Learn the basics",
-          "difficulty": "beginner",
-          "duration": "4 hours",
-          "order": 1
+          "description": "Essential concepts, terminology, and security principles",
+          "icon": "Shield",
+          "duration": "2-3 weeks",
+          "difficulty": "Beginner",
+          "color": "text-blue-400",
+          "order": 1,
+          "topics": [
+            "fundamentals",
+            "security",
+            "basics"
+          ],
+          "isActive": true,
+          "prerequisites": [],
+          "learningOutcomes": [],
+          "createdAt": "2025-06-01T22:44:12.635Z",
+          "updatedAt": "2025-06-01T22:44:12.959Z",
+          "phase": {
+            "title": "Beginner Phase",
+            "description": "Foundation courses for cybersecurity beginners",
+            "icon": "Lightbulb",
+            "color": "#10B981",
+            "order": 1,
+            "createdAt": "2025-06-01T22:44:12.445Z",
+            "updatedAt": "2025-06-01T22:44:12.445Z",
+            "id": "683cd7bc4a5fe993dadde577"
+          },
+          "id": "683cd7bc4a5fe993dadde57d"
+        },
+        {
+          "content": {
+            "videos": [
+              "683cd7bc4a5fe993dadde58a"
+            ],
+            "labs": [
+              "683cd7bc4a5fe993dadde58b"
+            ],
+            "games": [
+              "683cd7bc4a5fe993dadde58c"
+            ],
+            "documents": [],
+            "estimatedHours": 2
+          },
+          "phaseId": "683cd7bc4a5fe993dadde577",
+          "title": "Linux Command Line Basics",
+          "description": "Master the terminal and basic command-line operations",
+          "icon": "Terminal",
+          "duration": "2-3 weeks",
+          "difficulty": "Beginner",
+          "color": "text-green-400",
+          "order": 2,
+          "topics": [
+            "linux",
+            "command-line",
+            "terminal"
+          ],
+          "isActive": true,
+          "prerequisites": [],
+          "learningOutcomes": [],
+          "createdAt": "2025-06-01T22:44:12.636Z",
+          "updatedAt": "2025-06-01T22:44:13.081Z",
+          "phase": {
+            "title": "Beginner Phase",
+            "description": "Foundation courses for cybersecurity beginners",
+            "icon": "Lightbulb",
+            "color": "#10B981",
+            "order": 1,
+            "createdAt": "2025-06-01T22:44:12.445Z",
+            "updatedAt": "2025-06-01T22:44:12.445Z",
+            "id": "683cd7bc4a5fe993dadde577"
+          },
+          "id": "683cd7bc4a5fe993dadde57e"
+        },
+        {
+          "content": {
+            "videos": [
+              "683cd7bc4a5fe993dadde58d"
+            ],
+            "labs": [
+              "683cd7bc4a5fe993dadde58e"
+            ],
+            "games": [],
+            "documents": [],
+            "estimatedHours": 2
+          },
+          "phaseId": "683cd7bc4a5fe993dadde577",
+          "title": "Networking Fundamentals",
+          "description": "Understanding network protocols and basic concepts",
+          "icon": "Network",
+          "duration": "3-4 weeks",
+          "difficulty": "Beginner",
+          "color": "text-purple-400",
+          "order": 3,
+          "topics": [
+            "networking",
+            "protocols",
+            "tcp-ip"
+          ],
+          "isActive": true,
+          "prerequisites": [],
+          "learningOutcomes": [],
+          "createdAt": "2025-06-01T22:44:12.636Z",
+          "updatedAt": "2025-06-01T22:44:13.203Z",
+          "phase": {
+            "title": "Beginner Phase",
+            "description": "Foundation courses for cybersecurity beginners",
+            "icon": "Lightbulb",
+            "color": "#10B981",
+            "order": 1,
+            "createdAt": "2025-06-01T22:44:12.445Z",
+            "updatedAt": "2025-06-01T22:44:12.445Z",
+            "id": "683cd7bc4a5fe993dadde577"
+          },
+          "id": "683cd7bc4a5fe993dadde57f"
+        },
+        {
+          "content": {
+            "videos": [
+              "web-fundamentals",
+              "owasp-top-10",
+              "secure-coding"
+            ],
+            "labs": [],
+            "games": [
+              "vulnerability-hunter",
+              "secure-code-review"
+            ],
+            "documents": [
+              "owasp-guide",
+              "web-security-checklist"
+            ],
+            "estimatedHours": 0
+          },
+          "phaseId": "683cd7bc4a5fe993dadde577",
+          "title": "Introduction to Web Security",
+          "description": "Basic web application security concepts and common vulnerabilities",
+          "icon": "Shield",
+          "duration": "2-3 weeks",
+          "difficulty": "Beginner",
+          "color": "text-cyan-400",
+          "order": 4,
+          "topics": [
+            "web-security",
+            "vulnerabilities",
+            "owasp"
+          ],
+          "isActive": true,
+          "prerequisites": [],
+          "learningOutcomes": [],
+          "createdAt": "2025-06-01T22:44:12.636Z",
+          "updatedAt": "2025-06-01T22:44:12.636Z",
+          "phase": {
+            "title": "Beginner Phase",
+            "description": "Foundation courses for cybersecurity beginners",
+            "icon": "Lightbulb",
+            "color": "#10B981",
+            "order": 1,
+            "createdAt": "2025-06-01T22:44:12.445Z",
+            "updatedAt": "2025-06-01T22:44:12.445Z",
+            "id": "683cd7bc4a5fe993dadde577"
+          },
+          "id": "683cd7bc4a5fe993dadde580"
         }
       ]
+    },
+    {
+      "title": "Intermediate Phase",
+      "description": "Advanced security concepts and practical skills",
+      "icon": "Target",
+      "color": "#F59E0B",
+      "order": 2,
+      "createdAt": "2025-06-01T22:44:12.445Z",
+      "updatedAt": "2025-06-01T22:44:12.445Z",
+      "id": "683cd7bc4a5fe993dadde578",
+      "modules": [
+        {
+          "content": {
+            "videos": [
+              "683cd7bc4a5fe993dadde58f"
+            ],
+            "labs": [
+              "683cd7bc4a5fe993dadde590"
+            ],
+            "games": [
+              "683cd7bc4a5fe993dadde591"
+            ],
+            "documents": [],
+            "estimatedHours": 3
+          },
+          "phaseId": "683cd7bc4a5fe993dadde578",
+          "title": "Penetration Testing Fundamentals",
+          "description": "Learn ethical hacking and penetration testing basics",
+          "icon": "Target",
+          "duration": "4-5 weeks",
+          "difficulty": "Intermediate",
+          "color": "text-red-400",
+          "order": 1,
+          "topics": [
+            "penetration-testing",
+            "ethical-hacking",
+            "reconnaissance"
+          ],
+          "isActive": true,
+          "prerequisites": [],
+          "learningOutcomes": [],
+          "createdAt": "2025-06-01T22:44:12.636Z",
+          "updatedAt": "2025-06-01T22:44:13.327Z",
+          "phase": {
+            "title": "Intermediate Phase",
+            "description": "Advanced security concepts and practical skills",
+            "icon": "Target",
+            "color": "#F59E0B",
+            "order": 2,
+            "createdAt": "2025-06-01T22:44:12.445Z",
+            "updatedAt": "2025-06-01T22:44:12.445Z",
+            "id": "683cd7bc4a5fe993dadde578"
+          },
+          "id": "683cd7bc4a5fe993dadde581"
+        },
+        {
+          "content": {
+            "videos": [
+              "advanced-web-attacks",
+              "sql-injection",
+              "xss-prevention"
+            ],
+            "labs": [],
+            "games": [
+              "web-exploit-challenge",
+              "secure-coding-game"
+            ],
+            "documents": [
+              "web-security-advanced",
+              "exploit-techniques"
+            ],
+            "estimatedHours": 0
+          },
+          "phaseId": "683cd7bc4a5fe993dadde578",
+          "title": "Web Application Security",
+          "description": "Advanced web vulnerabilities and exploitation techniques",
+          "icon": "Code",
+          "duration": "5-6 weeks",
+          "difficulty": "Intermediate",
+          "color": "text-cyan-400",
+          "order": 3,
+          "topics": [
+            "web-security",
+            "exploitation",
+            "sql-injection"
+          ],
+          "isActive": true,
+          "prerequisites": [],
+          "learningOutcomes": [],
+          "createdAt": "2025-06-01T22:44:12.636Z",
+          "updatedAt": "2025-06-01T22:44:12.636Z",
+          "phase": {
+            "title": "Intermediate Phase",
+            "description": "Advanced security concepts and practical skills",
+            "icon": "Target",
+            "color": "#F59E0B",
+            "order": 2,
+            "createdAt": "2025-06-01T22:44:12.445Z",
+            "updatedAt": "2025-06-01T22:44:12.445Z",
+            "id": "683cd7bc4a5fe993dadde578"
+          },
+          "id": "683cd7bc4a5fe993dadde582"
+        },
+        {
+          "content": {
+            "videos": [
+              "683e136b96e5237b1631c845"
+            ],
+            "labs": [
+              "683e145896e5237b1631c91d"
+            ],
+            "games": [
+              "683deff5cb451602923a908f"
+            ],
+            "documents": [],
+            "estimatedHours": 1
+          },
+          "phaseId": "683cd7bc4a5fe993dadde578",
+          "title": "fuck",
+          "description": "you",
+          "icon": "Shield",
+          "duration": "0 hours",
+          "difficulty": "Beginner",
+          "color": "#00ff00",
+          "order": 4,
+          "topics": [
+            "fundamentals",
+            "security",
+            "basics"
+          ],
+          "isActive": true,
+          "prerequisites": [],
+          "learningOutcomes": [
+            "Something"
+          ],
+          "createdAt": "2025-06-02T18:26:11.486Z",
+          "updatedAt": "2025-06-02T21:15:04.182Z",
+          "phase": {
+            "title": "Intermediate Phase",
+            "description": "Advanced security concepts and practical skills",
+            "icon": "Target",
+            "color": "#F59E0B",
+            "order": 2,
+            "createdAt": "2025-06-01T22:44:12.445Z",
+            "updatedAt": "2025-06-01T22:44:12.445Z",
+            "id": "683cd7bc4a5fe993dadde578"
+          },
+          "id": "683decc30454f27021708533"
+        }
+      ]
+    },
+    {
+      "title": "Advanced Phase",
+      "description": "Expert-level security specializations",
+      "icon": "Brain",
+      "color": "#EF4444",
+      "order": 3,
+      "createdAt": "2025-06-01T22:44:12.446Z",
+      "updatedAt": "2025-06-01T22:44:12.446Z",
+      "id": "683cd7bc4a5fe993dadde579",
+      "modules": []
     }
   ]
 }

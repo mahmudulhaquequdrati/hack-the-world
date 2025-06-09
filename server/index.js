@@ -108,7 +108,7 @@ if (process.env.NODE_ENV === "development") {
 // =============================================================================
 
 // Health check
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "OK",
     timestamp: new Date().toISOString(),
@@ -179,7 +179,7 @@ async function startServer() {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
       console.log(`📚 API Documentation: http://localhost:${PORT}/api/docs`);
-      console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
+      console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
     });
   } catch (error) {
     console.error("❌ Failed to start server:", error.message);

@@ -67,11 +67,25 @@ export const apiSlice = createApi({
     // Phase Discovery endpoints
     getPhases: builder.query<Phase[], void>({
       query: () => "/phases",
+      transformResponse: (response: { success: boolean; data: Phase[] }) =>
+        response.data,
       providesTags: ["Phase"],
+    }),
+
+    // Get phases with modules and user progress populated - comprehensive query
+    getPhasesWithModules: builder.query<Phase[], void>({
+      query: () => "/modules/with-phases",
+      transformResponse: (response: { success: boolean; data: Phase[] }) => {
+        // Backend should return phases with modules, labs, games, and user progress
+        return response.data;
+      },
+      providesTags: ["Phase", "Module", "Progress", "Enrollment"],
     }),
 
     getPhaseById: builder.query<Phase, string>({
       query: (phaseId) => `/phases/${phaseId}`,
+      transformResponse: (response: { success: boolean; data: Phase }) =>
+        response.data,
       providesTags: (result, error, phaseId) => [
         { type: "Phase", id: phaseId },
       ],
@@ -80,11 +94,15 @@ export const apiSlice = createApi({
     // Module Organization endpoints
     getModules: builder.query<Module[], void>({
       query: () => "/modules",
+      transformResponse: (response: { success: boolean; data: Module[] }) =>
+        response.data,
       providesTags: ["Module"],
     }),
 
     getModulesByPhase: builder.query<Module[], string>({
-      query: (phaseId) => `/phases/${phaseId}/modules`,
+      query: (phaseId) => `/modules/phase/${phaseId}`,
+      transformResponse: (response: { success: boolean; data: Module[] }) =>
+        response.data,
       providesTags: (result, error, phaseId) => [
         { type: "Module", id: phaseId },
       ],
@@ -92,6 +110,8 @@ export const apiSlice = createApi({
 
     getModuleById: builder.query<Module, string>({
       query: (moduleId) => `/modules/${moduleId}`,
+      transformResponse: (response: { success: boolean; data: Module }) =>
+        response.data,
       providesTags: (result, error, moduleId) => [
         { type: "Module", id: moduleId },
       ],
@@ -179,6 +199,7 @@ export const apiSlice = createApi({
 // Export hooks for usage in components
 export const {
   useGetPhasesQuery,
+  useGetPhasesWithModulesQuery,
   useGetPhaseByIdQuery,
   useGetModulesQuery,
   useGetModulesByPhaseQuery,

@@ -1,16 +1,15 @@
-import { LoadingSkeleton } from "@/components/common";
 import { Card, CardContent } from "@/components/ui/card";
-import { getPhaseStats } from "@/lib/appData";
+import { getIconFromName } from "@/lib/iconUtils";
 import { Module } from "@/lib/types";
 import { Activity, BookOpen, LucideIcon, Video, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 interface PhaseCardProps {
   phase: {
     id: string;
     title: string;
     description: string;
-    icon: LucideIcon;
+    icon: LucideIcon | string;
     color: string;
     modules: Module[];
   };
@@ -25,47 +24,46 @@ interface PhaseStatsType {
 }
 
 const PhaseCard = ({ phase, className = "" }: PhaseCardProps) => {
-  const [stats, setStats] = useState<PhaseStatsType | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Calculate stats directly from the phase data instead of using getPhaseStats
+  const stats: PhaseStatsType = useMemo(() => {
+    if (!phase.modules || phase.modules.length === 0) {
+      return {
+        courses: 0,
+        videos: 0,
+        labs: 0,
+        games: 0,
+      };
+    }
 
-  useEffect(() => {
-    const loadStats = async () => {
-      setLoading(true);
+    // Calculate stats from the modules data
+    const coursesCount = phase.modules.length;
 
-      // Simulate API call with 1 second delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const phaseStats = getPhaseStats(phase.id);
-      setStats(phaseStats);
-      setLoading(false);
-    };
-
-    loadStats();
-  }, [phase.id]);
-
-  if (loading || !stats) {
-    return (
-      <div className={`text-center ${className}`}>
-        <div className="flex items-center justify-center space-x-3 mb-4">
-          <phase.icon className={`w-8 h-8 ${phase.color}`} />
-          <h2 className={`text-3xl font-bold ${phase.color}`}>{phase.title}</h2>
-        </div>
-        <p className="text-lg text-green-300/80 max-w-3xl mx-auto mb-8">
-          {phase.description}
-        </p>
-
-        {/* Loading Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <LoadingSkeleton type="stats" count={4} className="contents" />
-        </div>
-      </div>
+    // Sum up the stats from all modules in the phase
+    const totalStats = phase.modules.reduce(
+      (acc, module) => {
+        // Use the stats from module data if available
+        acc.labs += module.labs || 0;
+        acc.games += module.games || 0;
+        // For videos, we might need to check content.videos.length or use a default
+        acc.videos += module.content?.videos?.length || 0;
+        return acc;
+      },
+      { labs: 0, games: 0, videos: 0 }
     );
-  }
 
+    return {
+      courses: coursesCount,
+      videos: totalStats.videos,
+      labs: totalStats.labs,
+      games: totalStats.games,
+    };
+  }, [phase.modules]);
+
+  const PhaseIcon = getIconFromName(phase.icon);
   return (
     <div className={`text-center ${className}`}>
       <div className="flex items-center justify-center space-x-3 mb-4">
-        <phase.icon className={`w-8 h-8 ${phase.color}`} />
+        <PhaseIcon className={`w-8 h-8 ${phase.color}`} />
         <h2 className={`text-3xl font-bold ${phase.color}`}>{phase.title}</h2>
       </div>
       <p className="text-lg text-green-300/80 max-w-3xl mx-auto mb-8">

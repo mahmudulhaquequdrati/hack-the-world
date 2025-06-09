@@ -1,4 +1,5 @@
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getIconFromName } from "@/lib/iconUtils";
 import { Phase } from "@/lib/types";
 
 interface PhaseNavigationProps {
@@ -11,7 +12,7 @@ const PhaseNavigation = ({ phases, onPhaseChange }: PhaseNavigationProps) => {
     <div className="flex justify-center">
       <TabsList className="bg-black/50 border border-green-400/30 p-1">
         {phases.map((phase) => {
-          const PhaseIcon = phase.icon;
+          const PhaseIcon = getIconFromName(phase.icon);
           return (
             <TabsTrigger
               key={phase.id}

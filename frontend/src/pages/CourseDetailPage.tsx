@@ -11,10 +11,12 @@ import {
   OverviewTab,
 } from "@/components/course";
 import { Button } from "@/components/ui/button";
-import { DataService } from "@/lib/dataService";
-import { Course } from "@/lib/types";
+import {
+  useEnrollInModuleMutation,
+  useGetCourseByIdQuery,
+} from "@/features/api/apiSlice";
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 const CourseDetailPage = () => {
@@ -24,32 +26,21 @@ const CourseDetailPage = () => {
   const { courseId } = useParams();
   const [activeTab, setActiveTab] = useState("overview");
 
-  // State management for dynamic loading
-  const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // RTK Query hooks
+  const {
+    data: course,
+    isLoading: loading,
+    error: courseError,
+    refetch,
+  } = useGetCourseByIdQuery(courseId || "", {
+    skip: !courseId,
+  });
 
-  // Fetch course data dynamically
-  useEffect(() => {
-    const fetchCourseData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const [enrollInModule] = useEnrollInModuleMutation();
 
-        if (courseId) {
-          const courseData = await DataService.getCourseById(courseId);
-          setCourse(courseData);
-        }
-      } catch (err) {
-        console.error("Failed to load course data:", err);
-        setError("Failed to load course data. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCourseData();
-  }, [courseId]);
+  const error = courseError
+    ? "Failed to load course data. Please try again later."
+    : null;
 
   const handleEnrollment = async () => {
     if (!course || !courseId) return;
@@ -60,24 +51,20 @@ const CourseDetailPage = () => {
         navigate(`/learn/${courseId}`);
       } else {
         // If not enrolled, enroll and then navigate
-        const result = await DataService.enrollInModule(courseId);
+        const result = await enrollInModule(courseId).unwrap();
         if (result.success) {
-          setCourse((prev: Course | null) =>
-            prev ? { ...prev, enrolled: true } : null
-          );
           navigate(`/learn/${courseId}`);
-        } else {
-          setError("Failed to enroll in course. Please try again.");
+          // Refetch course data to update enrollment status
+          refetch();
         }
       }
     } catch (err) {
       console.error("Enrollment failed:", err);
-      setError("Failed to enroll in course. Please try again.");
     }
   };
 
   const handleRetry = () => {
-    window.location.reload();
+    refetch();
   };
 
   if (loading) {

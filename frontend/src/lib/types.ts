@@ -4,29 +4,57 @@ export interface Module {
   id: string; // MongoDB ObjectId as string
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: LucideIcon | string; // Support both string from API and LucideIcon for frontend
   duration: string;
   difficulty: string;
-  progress: number;
+  progress?: number; // Make optional for API data
   color: string;
-  bgColor: string;
-  borderColor: string;
+  bgColor?: string; // Make optional, computed in frontend
+  borderColor?: string; // Make optional, computed in frontend
   topics: string[];
-  labs: number;
-  games: number;
-  assets: number;
-  enrolled: boolean;
-  completed: boolean;
+  labs?: number; // Make optional, computed from content
+  games?: number; // Make optional, computed from content
+  assets?: number; // Make optional, computed from content
+  enrolled?: boolean; // Make optional, computed from user progress
+  completed?: boolean; // Make optional, computed from user progress
   phaseId?: string; // MongoDB ObjectId as string - optional for backwards compatibility
+  // API specific fields
+  content?: {
+    videos: string[];
+    labs: string[];
+    games: string[];
+    documents: string[];
+    estimatedHours: number;
+  };
+  phase?: {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    color: string;
+    order: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+  order?: number;
+  isActive?: boolean;
+  prerequisites?: string[];
+  learningOutcomes?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Phase {
   id: string; // MongoDB ObjectId as string
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: LucideIcon | string; // Support both string from API and LucideIcon for frontend
   color: string;
-  modules: Module[];
+  modules?: Module[]; // Make optional, might be populated separately
+  // API specific fields
+  order?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Lesson {

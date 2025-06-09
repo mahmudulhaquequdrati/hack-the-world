@@ -1600,7 +1600,7 @@ export const ACHIEVEMENTS_DATA = [
 // =============================================================================
 
 // Icon mapping for database to React icon conversion
-const ICON_MAP: Record<string, LucideIcon> = {
+export const ICON_MAP: Record<string, LucideIcon> = {
   Lightbulb,
   Target,
   Brain,
@@ -2083,7 +2083,6 @@ export const getNormalizedCourseById = (courseId: string): Course | null => {
     labsData: labsArray,
     gamesData: gamesArray,
     assetsData,
-    enrollPath: rawModule.enrollPath,
   };
 };
 

@@ -1,13 +1,13 @@
-import { LoadingSkeleton } from "@/components/common";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { DataService } from "@/lib/dataService";
+import { getVideosCountForModule } from "@/lib/appData";
+import { getIconFromName } from "@/lib/iconUtils";
 import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
 import { Module } from "@/lib/types";
 import { CheckCircle, Clock, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 interface ModuleCardProps {
   module: Module;
@@ -28,67 +28,35 @@ interface ModuleStatsType {
 
 const ModuleCard = ({
   module: initialModule,
-  index,
   isLast,
   isCompleted,
   onNavigate,
   onEnroll,
   isEnrolling,
 }: ModuleCardProps) => {
-  const [stats, setStats] = useState<ModuleStatsType | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const loadModuleStats = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Simulate staggered loading for better UX
-        await new Promise((resolve) => setTimeout(resolve, 100 + index * 50));
-
-        // Get dynamic stats from DataService
-        const [labsData, gamesData] = await Promise.all([
-          DataService.getLabsByModule(initialModule.id),
-          DataService.getGamesByModule(initialModule.id),
-        ]);
-
-        // For videos, we'll use a placeholder count since it's not in the current API
-        // In a real implementation, this would come from the API
-        const videosCount = Math.floor(Math.random() * 8) + 3; // 3-10 videos
-
-        setStats({
-          videos: videosCount,
-          labs: Object.keys(labsData).length,
-          games: Object.keys(gamesData).length,
-        });
-      } catch (err) {
-        console.error("Failed to load module stats:", err);
-        setError("Failed to load module data");
-        // Set fallback stats
-        setStats({
-          videos: 5,
-          labs: 3,
-          games: 2,
-        });
-      } finally {
-        setLoading(false);
-      }
+  // Calculate stats from module data (API provides content arrays with counts)
+  const stats: ModuleStatsType = useMemo(() => {
+    return {
+      videos:
+        (initialModule as any).content?.videos?.length ||
+        getVideosCountForModule(initialModule.id),
+      labs:
+        (initialModule as any).content?.labs?.length ||
+        (initialModule as any).labs ||
+        0,
+      games:
+        (initialModule as any).content?.games?.length ||
+        (initialModule as any).games ||
+        0,
     };
-
-    loadModuleStats();
-  }, [initialModule.id, index]);
+  }, [initialModule]);
 
   const handleEnroll = async (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    // Call parent handler immediately - this will trigger the loading state
     onEnroll(getCoursePath(initialModule.id));
   };
 
   const handleNavigate = () => {
-    // If enrolled, go to learning page; otherwise, go to course overview
     if (initialModule.enrolled) {
       onNavigate(getEnrollPath(initialModule.id));
     } else {
@@ -112,24 +80,7 @@ const ModuleCard = ({
   };
 
   const treeChar = isLast ? "└──" : "├──";
-
-  if (loading || !stats) {
-    return (
-      <div className="relative">
-        <div className="flex items-start space-x-1">
-          <div className="flex flex-col items-center">
-            <span className="text-green-400/70 text-sm leading-none">
-              {treeChar}
-            </span>
-            {!isLast && <div className="w-px h-12 bg-green-400/30 mt-1"></div>}
-          </div>
-          <div className="flex-1 ml-2 mb-4">
-            <LoadingSkeleton type="card" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const ModuleIcon = getIconFromName(initialModule.icon);
 
   return (
     <div className="relative">
@@ -171,7 +122,7 @@ const ModuleCard = ({
                     {isCompleted ? (
                       <CheckCircle className="w-4 h-4" />
                     ) : (
-                      <initialModule.icon className="w-4 h-4" />
+                      <ModuleIcon className="w-4 h-4" />
                     )}
                   </div>
 
@@ -209,7 +160,7 @@ const ModuleCard = ({
                   variant="outline"
                   className={`text-xs ${getDifficultyColor(
                     initialModule.difficulty
-                  )} border-current`}
+                  )}`}
                 >
                   {initialModule.difficulty.toUpperCase()}
                 </Badge>
@@ -218,32 +169,38 @@ const ModuleCard = ({
           </CardHeader>
 
           <CardContent className="pt-0">
-            {/* Description */}
-            <p className="text-green-300/80 text-sm mb-4 font-mono">
+            {/* Module Description */}
+            <p className="text-green-300/80 text-sm mb-4 font-mono leading-relaxed">
               {initialModule.description}
             </p>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center">
-                <div className="text-green-400 font-mono text-lg font-bold">
-                  {stats.videos}
+            {/* Content Stats */}
+            <div className="bg-gray-900/30 border border-gray-700/50 rounded-lg p-3 mb-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center bg-green-400/5 rounded p-2">
+                  <div className="text-green-400 font-mono text-lg font-bold">
+                    {stats.videos}
+                  </div>
+                  <div className="text-green-400/70 text-xs uppercase tracking-wide">
+                    Videos
+                  </div>
                 </div>
-                <div className="text-green-400/70 text-xs font-mono">
-                  VIDEOS
+                <div className="text-center bg-yellow-400/5 rounded p-2">
+                  <div className="text-yellow-400 font-mono text-lg font-bold">
+                    {stats.labs}
+                  </div>
+                  <div className="text-yellow-400/70 text-xs uppercase tracking-wide">
+                    Labs
+                  </div>
                 </div>
-              </div>
-              <div className="text-center">
-                <div className="text-green-400 font-mono text-lg font-bold">
-                  {stats.labs}
+                <div className="text-center bg-red-400/5 rounded p-2">
+                  <div className="text-red-400 font-mono text-lg font-bold">
+                    {stats.games}
+                  </div>
+                  <div className="text-red-400/70 text-xs uppercase tracking-wide">
+                    Games
+                  </div>
                 </div>
-                <div className="text-green-400/70 text-xs font-mono">LABS</div>
-              </div>
-              <div className="text-center">
-                <div className="text-green-400 font-mono text-lg font-bold">
-                  {stats.games}
-                </div>
-                <div className="text-green-400/70 text-xs font-mono">GAMES</div>
               </div>
             </div>
 
@@ -251,8 +208,8 @@ const ModuleCard = ({
             {initialModule.enrolled && (
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-green-400/70 text-xs font-mono">
-                    PROGRESS
+                  <span className="text-green-400/70 text-xs font-mono uppercase">
+                    Progress
                   </span>
                   <span className="text-green-400 text-xs font-mono">
                     {initialModule.progress}%
@@ -265,22 +222,41 @@ const ModuleCard = ({
               </div>
             )}
 
-            {/* Duration and Action */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-green-400/70">
-                <Clock className="w-4 h-4" />
-                <span className="text-xs font-mono">
-                  {initialModule.duration}
-                </span>
+            {/* Duration and Topics */}
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center space-x-2 text-green-400/70 text-xs">
+                <Clock className="w-3 h-3" />
+                <span className="font-mono">{initialModule.duration}</span>
               </div>
+              <div className="flex flex-wrap gap-1">
+                {initialModule.topics.slice(0, 3).map((topic, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="outline"
+                    className="text-xs bg-green-400/5 border-green-400/30 text-green-400/80"
+                  >
+                    {topic}
+                  </Badge>
+                ))}
+                {initialModule.topics.length > 3 && (
+                  <Badge
+                    variant="outline"
+                    className="text-xs bg-green-400/5 border-green-400/30 text-green-400/80"
+                  >
+                    +{initialModule.topics.length - 3} more
+                  </Badge>
+                )}
+              </div>
+            </div>
 
-              {/* Action Button */}
+            {/* Action Button */}
+            <div className="flex justify-end">
               {!initialModule.enrolled ? (
                 <Button
                   onClick={handleEnroll}
                   disabled={isEnrolling}
                   size="sm"
-                  className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400 hover:text-black font-mono text-xs"
+                  className="bg-green-500/20 border border-green-500 text-green-400 hover:bg-green-500 hover:text-black transition-colors font-mono text-xs"
                 >
                   {isEnrolling ? (
                     <>
@@ -291,29 +267,15 @@ const ModuleCard = ({
                     "ENROLL"
                   )}
                 </Button>
-              ) : isCompleted ? (
-                <Button
-                  size="sm"
-                  className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400 hover:text-black font-mono text-xs"
-                >
-                  REVIEW
-                </Button>
               ) : (
                 <Button
                   size="sm"
-                  className="bg-green-400/20 border border-green-400 text-green-400 hover:bg-green-400 hover:text-black font-mono text-xs"
+                  className="bg-blue-500/20 border border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-black transition-colors font-mono text-xs"
                 >
-                  CONTINUE
+                  {isCompleted ? "REVIEW" : "CONTINUE"}
                 </Button>
               )}
             </div>
-
-            {/* Error indicator */}
-            {error && (
-              <div className="mt-2 text-red-400 text-xs font-mono">
-                ⚠️ {error}
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>

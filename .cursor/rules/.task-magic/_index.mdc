@@ -23,6 +23,7 @@ The Task Magic system is a file-based project management and AI agent operationa
 - Before starting any work, determine which functionality/category the task belongs to
 - Update `TASKS.md` in `.ai/tasks/` directory with the new task
 - Only proceed with implementation after task is properly documented
+- in [TASKS.md](mdc:.ai/TASKS.md) always we need current tasks and incoming tasks in some places at top so that we know whats going on currently and whats next.
 
 ### 2. Task Management Structure
 - `TASKS.md` should contain:

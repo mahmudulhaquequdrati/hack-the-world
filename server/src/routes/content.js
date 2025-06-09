@@ -33,14 +33,10 @@ const router = express.Router();
  *         - description
  *         - order
  *       properties:
- *         _id:
+ *         id:
  *           type: string
  *           description: MongoDB ObjectId
  *           example: "64a1b2c3d4e5f6789012345"
- *         id:
- *           type: string
- *           description: Unique content identifier
- *           example: "basic-cybersec-intro-video"
  *         moduleId:
  *           type: string
  *           description: Reference to parent module ObjectId

@@ -171,7 +171,7 @@ const getUserModuleProgress = asyncHandler(async (req, res, next) => {
     message: "Module progress retrieved successfully",
     data: {
       module: {
-        id: module._id,
+        id: module.id,
         title: module.title,
         description: module.description,
       },
@@ -398,7 +398,7 @@ const getModuleProgressStats = asyncHandler(async (req, res, next) => {
 
   // Get all content for this module
   const moduleContent = await Content.find({ moduleId, isActive: true });
-  const contentIds = moduleContent.map((content) => content._id);
+  const contentIds = moduleContent.map((content) => content.id);
 
   // Get all progress for this module's content
   const allProgress = await UserProgress.find({
@@ -514,7 +514,7 @@ const getModuleProgressStats = asyncHandler(async (req, res, next) => {
   // Top performing users (by completion percentage)
   const userProgressSummary = enrollments.map((enrollment) => {
     const userProgress = allProgress.filter(
-      (p) => p.userId._id.toString() === enrollment.userId._id.toString()
+      (p) => p.userId.id.toString() === enrollment.userId.id.toString()
     );
     const completedCount = userProgress.filter(
       (p) => p.status === "completed"
@@ -546,7 +546,7 @@ const getModuleProgressStats = asyncHandler(async (req, res, next) => {
     message: "Module progress statistics retrieved successfully",
     data: {
       module: {
-        id: module._id,
+        id: module.id,
         title: module.title,
         description: module.description,
       },
@@ -617,7 +617,7 @@ const getUserLabsProgress = asyncHandler(async (req, res, next) => {
     });
   }
 
-  const enrolledModuleIds = enrollments.map((e) => e.moduleId._id);
+  const enrolledModuleIds = enrollments.map((e) => e.moduleId.id);
 
   // Build query for labs content
   let contentQuery = {
@@ -658,7 +658,7 @@ const getUserLabsProgress = asyncHandler(async (req, res, next) => {
     });
   }
 
-  const labContentIds = labContent.map((content) => content._id);
+  const labContentIds = labContent.map((content) => content.id);
 
   // Get user progress for these labs
   let progressQuery = {
@@ -681,15 +681,15 @@ const getUserLabsProgress = asyncHandler(async (req, res, next) => {
   // Create a map of progress by content ID for efficient lookup
   const progressMap = new Map();
   labProgress.forEach((p) => {
-    progressMap.set(p.contentId._id.toString(), p);
+    progressMap.set(p.contentId.id.toString(), p);
   });
 
   // Build complete labs data with progress information
   const labsWithProgress = labContent.map((lab) => {
-    const progress = progressMap.get(lab._id.toString());
+    const progress = progressMap.get(lab.id.toString());
 
     return {
-      id: lab._id,
+      id: lab.id,
       title: lab.title,
       description: lab.description,
       section: lab.section,
@@ -697,7 +697,7 @@ const getUserLabsProgress = asyncHandler(async (req, res, next) => {
       instructions: lab.instructions,
       metadata: lab.metadata,
       module: {
-        id: lab.moduleId._id,
+        id: lab.moduleId.id,
         title: lab.moduleId.title,
         description: lab.moduleId.description,
         difficulty: lab.moduleId.difficulty,
@@ -705,7 +705,7 @@ const getUserLabsProgress = asyncHandler(async (req, res, next) => {
       },
       progress: progress
         ? {
-            id: progress._id,
+            id: progress.id,
             status: progress.status,
             progressPercentage: progress.progressPercentage,
             startedAt: progress.startedAt,
@@ -776,7 +776,7 @@ const getUserLabsProgress = asyncHandler(async (req, res, next) => {
   // Group labs by module for better organization
   const labsByModule = enrollments.map((enrollment) => {
     const moduleLabs = filteredLabs.filter(
-      (lab) => lab.module.id.toString() === enrollment.moduleId._id.toString()
+      (lab) => lab.module.id.toString() === enrollment.moduleId.id.toString()
     );
 
     return {
@@ -875,7 +875,7 @@ const getUserGamesProgress = asyncHandler(async (req, res, next) => {
     });
   }
 
-  const enrolledModuleIds = enrollments.map((e) => e.moduleId._id);
+  const enrolledModuleIds = enrollments.map((e) => e.moduleId.id);
 
   // Build query for games content
   let contentQuery = {
@@ -917,7 +917,7 @@ const getUserGamesProgress = asyncHandler(async (req, res, next) => {
     });
   }
 
-  const gameContentIds = gameContent.map((content) => content._id);
+  const gameContentIds = gameContent.map((content) => content.id);
 
   // Get user progress for these games
   let progressQuery = {
@@ -940,12 +940,12 @@ const getUserGamesProgress = asyncHandler(async (req, res, next) => {
   // Create a map of progress by content ID for efficient lookup
   const progressMap = new Map();
   gameProgress.forEach((p) => {
-    progressMap.set(p.contentId._id.toString(), p);
+    progressMap.set(p.contentId.id.toString(), p);
   });
 
   // Build complete games data with progress information
   const gamesWithProgress = gameContent.map((game) => {
-    const progress = progressMap.get(game._id.toString());
+    const progress = progressMap.get(game.id.toString());
 
     // Extract game-specific metadata
     const gameMetadata = game.metadata || {};
@@ -953,7 +953,7 @@ const getUserGamesProgress = asyncHandler(async (req, res, next) => {
     const pointsEarned = progress?.score || 0;
 
     return {
-      id: game._id,
+      id: game.id,
       title: game.title,
       description: game.description,
       section: game.section,
@@ -967,7 +967,7 @@ const getUserGamesProgress = asyncHandler(async (req, res, next) => {
         scoring: scoring,
       },
       module: {
-        id: game.moduleId._id,
+        id: game.moduleId.id,
         title: game.moduleId.title,
         description: game.moduleId.description,
         difficulty: game.moduleId.difficulty,
@@ -975,7 +975,7 @@ const getUserGamesProgress = asyncHandler(async (req, res, next) => {
       },
       progress: progress
         ? {
-            id: progress._id,
+            id: progress.id,
             status: progress.status,
             progressPercentage: progress.progressPercentage,
             startedAt: progress.startedAt,
@@ -1053,7 +1053,7 @@ const getUserGamesProgress = asyncHandler(async (req, res, next) => {
   // Group games by module for better organization
   const gamesByModule = enrollments.map((enrollment) => {
     const moduleGames = filteredGames.filter(
-      (game) => game.module.id.toString() === enrollment.moduleId._id.toString()
+      (game) => game.module.id.toString() === enrollment.moduleId.id.toString()
     );
 
     return {

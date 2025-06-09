@@ -84,7 +84,7 @@ Use the **"Try it out"** button on any endpoint below to interact with live data
         User: {
           type: "object",
           properties: {
-            _id: {
+            id: {
               type: "string",
               format: "uuid",
               example: "507f1f77bcf86cd799439011",

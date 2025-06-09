@@ -28,7 +28,7 @@ router.use(protect);
  *     Enrollment:
  *       type: object
  *       properties:
- *         _id:
+ *         id:
  *           type: string
  *           description: Enrollment ID
  *         userId:

@@ -57,10 +57,9 @@ const getContentById = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("Invalid content ID format", 400));
   }
 
-  const content = await Content.findOne({ _id: id, isActive: true }).populate(
-    "module",
-    "title"
-  );
+  const content = await Content.findById(id)
+    .where({ isActive: true })
+    .populate("module", "title");
 
   if (!content) {
     return next(new ErrorResponse("Content not found", 404));

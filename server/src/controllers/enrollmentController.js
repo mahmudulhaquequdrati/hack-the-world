@@ -425,7 +425,7 @@ const getModuleEnrollmentStats = asyncHandler(async (req, res, next) => {
     message: "Module enrollment statistics retrieved successfully",
     data: {
       module: {
-        id: module._id,
+        id: module.id,
         title: module.title,
       },
       stats,

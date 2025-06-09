@@ -25,10 +25,11 @@ You are a senior software architect and product manager and an expert in analyzi
 ```
 .ai/
   tasks/          # Holds ALL active task files (task{id}_name.md)
+  TASKS.md        # Master checklist view of tasks in .ai/tasks/
   memory/         # Parent directory for archive
     tasks/        # Archive for completed/failed task files
     TASKS_LOG.md  # Append-only log of archived tasks
-  TASKS.md        # Master checklist view of tasks in .ai/tasks/
+
 ```
 
 ## Safe File System Operations
@@ -36,7 +37,7 @@ You are a senior software architect and product manager and an expert in analyzi
 When working with the task system, the agent should always follow these best practices to ensure file system operations are safe and idempotent:
 
 1. **Always Check Directory Existence Before Creating:**
-   Before creating directories like `.ai/tasks` or `.ai/memory/tasks`, the agent should use the `list_dir` tool on the parent directory (e.g., `.ai/` or `.ai/memory/`) or `file_search` for the specific directory path. If the directory does not appear in the results, it can be implicitly created when using `edit_file` to create a file within that path, as `edit_file` will create necessary parent directories.
+   Before creating directories like `.ai/tasks` or `.ai/memory/tasks`, the agent should use the `list_dir` tool on the parent directory (e.g., `.ai/` or `.ai/memory/`) or `file_search` for the specific directory path. If the directory does not appear in the results, it can be implicitly  create a file within that path, that will create necessary parent directories.
 
 2. **Always Check File Existence Before Initial Operations:**
    Before operating on files like `.ai/TASKS.md` or `.ai/memory/TASKS_LOG.md`, the agent should use the `file_search` tool with the full file path.
@@ -196,9 +197,6 @@ When creating a new task, the agent must assign a `priority` in the YAML frontma
 
 **Note on Testing:** When the test strategy involves background processes or jobs, prefer testing by using the application's standard mechanism for triggering that process (e.g., a command-line interface, API endpoint, or specific function call that initiates the job), rather than invoking the job's core logic directly in an isolated test environment if a more integrated test is feasible. This provides a more realistic integration test.
 
-## Agent Notes
-
-(Optional section for agents to add notes during execution)
 
 ## Task Granularity and Structure
 

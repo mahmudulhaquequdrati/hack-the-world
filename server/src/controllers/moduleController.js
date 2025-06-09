@@ -54,7 +54,7 @@ const getModulesWithPhases = asyncHandler(async (req, res, next) => {
   // Combine phases with their modules
   const result = phases.map((phase) => ({
     ...phase.toJSON(),
-    modules: groupedModules[phase._id.toString()]?.modules || [],
+    modules: groupedModules[phase.id]?.modules || [],
   }));
 
   res.status(200).json({

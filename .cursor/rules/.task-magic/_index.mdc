@@ -1,7 +1,7 @@
 ---
 description:
 globs:
-alwaysApply: true
+alwaysApply: false
 ---
 # Task Magic System Overview
 
@@ -11,22 +11,113 @@ Whenever you use this rule, start your message with the following:
 
 The Task Magic system is a file-based project management and AI agent operational framework designed to plan features, manage development tasks, and maintain a memory of past work. It consists of three main components, each governed by its own detailed rule file:
 
+------------------------------ MENDATORY STARTS ----------------------------
+
+**Mendatory**
+# Cursor AI Rules - Task Management & Workflow
+
+## Core Workflow Protocol
+
+### 1. Task Classification & Recording
+- **EVERY** request, no matter how simple, must first be classified and recorded in the tasks list
+- Before starting any work, determine which functionality/category the task belongs to
+- Update `TASKS.md` in `.ai/tasks/` directory with the new task
+- Only proceed with implementation after task is properly documented
+
+### 2. Task Management Structure
+- `TASKS.md` should contain:
+  - **Active Tasks**: Currently being worked on
+  - **Future Tasks**: Planned but not yet started
+  - **No Completed Tasks**: Move finished tasks to memory/history
+- Each task should have:
+  - Clear description
+  - Current status
+  - Dependencies (if any)
+  - Estimated complexity
+
+### 3. Memory Integration
+- After completing any task portion, update the memory system with:
+  - What was accomplished
+  - Current status
+  - Next steps
+- Before starting new work, always check memory for existing functionality
+- Reuse and build upon previously completed work
+
+### 4. Chunked Development Approach
+- **Never attempt to complete everything in one shot**
+- Break down complex tasks into smaller, connected subtasks
+- Each chunk should be:
+  - Manageable in scope
+  - Have clear input/output
+  - Connect logically to the next chunk
+- Complete one chunk before moving to the next
+
+### 5. Continuation Protocol
+When user says "continue" or "follow previous chat":
+1. Review the last 3-5 responses to understand context
+2. Identify where work was left off
+3. Check current task status in `TASKS.md`
+4. Resume from the exact stopping point
+5. Maintain continuity of thought and implementation
+
+### 6. Call Efficiency Management
+- **Target**: Complete tasks within 25-50 AI calls (Cursor's limit)
+- Plan work to fit within this constraint
+- If a task requires more calls, break it into phases
+- Prioritize core functionality first
+- Document progress frequently to avoid losing work
+
+## Implementation Checklist
+
+Before any work session:
+- [ ] Check task classification
+- [ ] Update `TASKS.md`
+- [ ] Review memory for existing functionality
+- [ ] Plan chunked approach
+- [ ] Estimate call requirements
+
+During work:
+- [ ] Work in small, logical chunks
+- [ ] Update status after each chunk
+- [ ] Document progress continuously
+- [ ] Monitor call count
+
+After work session:
+- [ ] Update memory with completed work
+- [ ] Update task status
+- [ ] Plan next chunk/session
+- [ ] Clean up `TASKS.md` (remove completed tasks)
+
+## File Structure
+```
+.ai/
+├── tasks/
+│   └── TASKS.md          # Active and future tasks only
+├── memory/
+│   └── TASKS_LOG.md # all the tasks by indexing with actual tasks.
+    └── PLAN_LOG.md  # plans and context
+
+```
+
+-------------------------------- MENDATORY ENDS ----------------------------
+
+
+
+
 1.  **Plans (`@plans.mdc`)**:
     *   **Purpose**: Defines how Product Requirements Documents (PRDs) are created and structured for the overall project and specific features.
-    *   **Location**: PRDs are stored in `.ai/plans/`, with feature-specific plans in `.ai/plans/features/`.
-    *   **Key File**: A global `PLAN.md` is mandatory in `.ai/plans/`.
+    *   **Location**: PRDs are stored in `.ai/plans/` with a global `PLAN.md`. Golbal plan file should be indexed or connected with individual plans.
+    *   **Global**: global plan is located at `.ai/plans/PLAN.md` and its must need to be there.
     *   **Details**: For plan creation, fully review [task-magic/plans.mdc](mdc:.cursor/rules/task-magic/plans.mdc)
 
 2.  **Tasks (`@tasks.mdc`)**:
     *   **Purpose**: Governs the creation, management, and lifecycle of individual development tasks.
-    *   **Active Tasks**: All active tasks reside in `.ai/tasks/` as `task{id}_name.md` files.
-    *   **Master View**: A master checklist, `.ai/TASKS.md`, mirrors the status of tasks in the `.ai/tasks/` directory and must be kept synchronized.
+    *   **Active Tasks**: All active tasks reside in `.ai/tasks/` as `.ai/TASKS.md` file by separating server, admin, frontend.
     *   **Details**: For task creation, fully review [task-magic/tasks.mdc](mdc:.cursor/rules/task-magic/tasks.mdc)
 
 3.  **Memory (`@memory.mdc`)**:
     *   **Purpose**: Archives completed and failed tasks to provide historical context.
-    *   **Location**: Archived task files are stored in `.ai/memory/tasks/`.
-    *   **Log File**: A chronological log of archived tasks is maintained in `.ai/memory/TASKS_LOG.md`.
+    *   **Location**: Archived task files are stored in `.ai/memory/TASKS_LOG.md`.
     *   **Details**: For storing to memory, full review [task-magic/memory.mdc](mdc:.cursor/rules/task-magic/memory.mdc)
 
 This interconnected system allows for structured project development, from high-level planning to task execution and historical review, primarily managed through Markdown files and defined agent responsibilities.

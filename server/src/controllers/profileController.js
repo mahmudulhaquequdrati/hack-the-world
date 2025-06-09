@@ -80,7 +80,7 @@ const changePassword = asyncHandler(async (req, res, next) => {
 
   // Generate new JWT token (invalidates old token)
   // Token will have iat > passwordChangedAt, so it will be valid
-  const newToken = generateToken(user._id);
+  const newToken = generateToken(user.id);
 
   // Log password change activity
   console.log(

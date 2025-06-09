@@ -115,8 +115,8 @@ export interface Course {
   description: string;
   category: string;
   difficulty: string;
-  duration: string;
-  icon: LucideIcon;
+  duration: string | number;
+  icon: LucideIcon | string; // Support both string from API and LucideIcon for frontend
   color: string;
   bgColor: string;
   borderColor: string;
@@ -240,7 +240,7 @@ export interface PlaygroundMode {
 export interface EnrolledCourse {
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: LucideIcon | string; // Support both string from API and LucideIcon for frontend
   color: string;
   bgColor: string;
   borderColor: string;

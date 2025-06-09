@@ -95,6 +95,22 @@ const getContentByModule = asyncHandler(async (req, res, next) => {
   });
 });
 
+const getModuleOverview = asyncHandler(async (req, res, next) => {
+  const { moduleId } = req.params;
+  // Validate moduleId ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(moduleId)) {
+    return next(new ErrorResponse("Invalid module ID format", 400));
+  }
+
+  const content = await Content.getByModuleForOverview(moduleId);
+
+  res.status(200).json({
+    success: true,
+    message: "Module overview retrieved successfully",
+    data: content,
+  });
+});
+
 /**
  * @desc    Get content by module grouped by sections
  * @route   GET /api/content/module/:moduleId/grouped
@@ -321,4 +337,5 @@ module.exports = {
   updateContent,
   deleteContent,
   permanentDeleteContent,
+  getModuleOverview,
 };

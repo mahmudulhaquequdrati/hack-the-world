@@ -33,7 +33,9 @@ const CourseInfoSidebar = ({ course }: CourseInfoSidebarProps) => {
         <div className="p-6 space-y-2 font-mono text-sm">
           <div className="flex items-center justify-between border-b border-green-400/20 pb-2">
             <span className="text-green-300/70">Duration:</span>
-            <span className="text-green-400 font-bold">{course.duration}</span>
+            <span className="text-green-400 font-bold">
+              {course.duration} hours
+            </span>
           </div>
           <div className="flex items-center justify-between border-b border-green-400/20 pb-2">
             <span className="text-green-300/70">Price:</span>

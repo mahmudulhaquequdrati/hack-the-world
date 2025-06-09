@@ -1,18 +1,22 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CourseSection, EnrolledCourse } from "@/lib/types";
+import { Input } from "@/components/ui/input";
+import { EnrolledCourse } from "@/lib/types";
 import {
   BookOpen,
   Brain,
   CheckCircle,
   Clock,
   FileText,
+  Filter,
   Gamepad2,
   Monitor,
   Play,
+  Search,
   Video,
   X,
-  Zap,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface ContentSidebarProps {
   course: EnrolledCourse;
@@ -31,64 +35,98 @@ const ContentSidebar = ({
   onClose,
   onLessonSelect,
 }: ContentSidebarProps) => {
-  const getLessonIcon = (type: string) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
+
+  // Get flat list of all lessons with their indices
+  const allLessons = useMemo(() => {
+    let lessonIndex = 0;
+    return course.sections.flatMap((section) =>
+      section.lessons.map((lesson) => ({
+        ...lesson,
+        sectionTitle: section.title,
+        globalIndex: lessonIndex++,
+      }))
+    );
+  }, [course.sections]);
+
+  // Filter lessons based on search and filter
+  const filteredLessons = useMemo(() => {
+    return allLessons.filter((lesson) => {
+      const matchesSearch = lesson.title
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+      const matchesFilter =
+        selectedFilter === "all" ||
+        lesson.type === selectedFilter ||
+        (selectedFilter === "completed" &&
+          completedLessons.includes(lesson.id)) ||
+        (selectedFilter === "incomplete" &&
+          !completedLessons.includes(lesson.id));
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [allLessons, searchTerm, selectedFilter, completedLessons]);
+
+  const getContentIcon = (type: string) => {
     switch (type) {
       case "video":
-        return <Video className="w-4 h-4 text-cyan-400" />;
-      case "text":
-        return <FileText className="w-4 h-4 text-green-400" />;
-      case "quiz":
-        return <Brain className="w-4 h-4 text-purple-400" />;
+        return <Video className="w-4 h-4" />;
       case "lab":
-        return <Zap className="w-4 h-4 text-yellow-400" />;
+        return <Monitor className="w-4 h-4" />;
       case "game":
-        return <Gamepad2 className="w-4 h-4 text-pink-400" />;
+        return <Gamepad2 className="w-4 h-4" />;
+      case "text":
+        return <FileText className="w-4 h-4" />;
+      case "quiz":
+        return <Brain className="w-4 h-4" />;
       default:
-        return <Monitor className="w-4 h-4 text-blue-400" />;
+        return <BookOpen className="w-4 h-4" />;
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case "video":
-        return "VIDEO";
-      case "text":
-        return "READ";
-      case "quiz":
-        return "QUIZ";
-      case "lab":
-        return "LAB";
-      case "game":
-        return "GAME";
-      default:
-        return "CONTENT";
-    }
+  const getProgressStats = () => {
+    const total = allLessons.length;
+    const completed = allLessons.filter((lesson) =>
+      completedLessons.includes(lesson.id)
+    ).length;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    return { total, completed, percentage };
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "video":
-        return "text-cyan-400 bg-cyan-400/10 border-cyan-400/30";
-      case "text":
-        return "text-green-400 bg-green-400/10 border-green-400/30";
-      case "quiz":
-        return "text-purple-400 bg-purple-400/10 border-purple-400/30";
-      case "lab":
-        return "text-yellow-400 bg-yellow-400/10 border-yellow-400/30";
-      case "game":
-        return "text-pink-400 bg-pink-400/10 border-pink-400/30";
-      default:
-        return "text-blue-400 bg-blue-400/10 border-blue-400/30";
-    }
-  };
+  const progressStats = getProgressStats();
 
-  // Helper function to ensure section title is never empty
-  const getSectionTitle = (title: string, index: number) => {
-    if (!title || title.trim() === "") {
-      return `Section ${index + 1}`;
-    }
-    return title.trim();
-  };
+  const filterOptions = [
+    { value: "all", label: "All Content", count: allLessons.length },
+    {
+      value: "video",
+      label: "Videos",
+      count: allLessons.filter((l) => l.type === "video").length,
+    },
+    {
+      value: "lab",
+      label: "Labs",
+      count: allLessons.filter((l) => l.type === "lab").length,
+    },
+    {
+      value: "game",
+      label: "Games",
+      count: allLessons.filter((l) => l.type === "game").length,
+    },
+    {
+      value: "text",
+      label: "Reading",
+      count: allLessons.filter((l) => l.type === "text").length,
+    },
+    { value: "completed", label: "Completed", count: progressStats.completed },
+    {
+      value: "incomplete",
+      label: "Remaining",
+      count: progressStats.total - progressStats.completed,
+    },
+  ];
 
   return (
     <>
@@ -117,140 +155,194 @@ const ContentSidebar = ({
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <div className="text-sm text-green-300/70 font-mono">
+
+            <div className="text-sm text-green-300/70 font-mono mb-4">
               {course.title}
             </div>
-            <div className="mt-2 flex items-center space-x-2 text-xs text-green-400/60">
-              <BookOpen className="w-3 h-3" />
-              <span>
-                {course.sections.reduce(
-                  (acc, section) => acc + section.lessons.length,
-                  0
-                )}{" "}
-                MODULES
-              </span>
+
+            {/* Progress Overview */}
+            <div className="mb-4 p-3 bg-green-400/5 border border-green-400/20 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-green-400 font-mono">
+                  PROGRESS
+                </span>
+                <span className="text-xs text-green-300 font-mono">
+                  {progressStats.completed}/{progressStats.total}
+                </span>
+              </div>
+              <div className="w-full bg-gray-800 rounded-full h-2">
+                <div
+                  className="bg-green-400 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${progressStats.percentage}%` }}
+                />
+              </div>
+              <div className="text-xs text-green-300/60 font-mono mt-1">
+                {progressStats.percentage}% COMPLETE
+              </div>
+            </div>
+
+            {/* Search */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-400/60" />
+              <Input
+                type="text"
+                placeholder="Search content..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-black/50 border-green-400/30 text-green-400 placeholder-green-400/50 focus:border-green-400 font-mono text-sm"
+              />
+            </div>
+
+            {/* Filter Buttons */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {filterOptions.map((option) => (
+                <Button
+                  key={option.value}
+                  size="sm"
+                  variant={
+                    selectedFilter === option.value ? "default" : "outline"
+                  }
+                  onClick={() => setSelectedFilter(option.value)}
+                  className={`text-xs font-mono transition-all duration-200 ${
+                    selectedFilter === option.value
+                      ? "bg-green-400/20 text-green-400 border-green-400/50"
+                      : "bg-transparent text-green-400/70 border-green-400/30 hover:bg-green-400/10"
+                  }`}
+                >
+                  <Filter className="w-3 h-3 mr-1" />
+                  {option.label}
+                  <Badge
+                    variant="secondary"
+                    className="ml-1 text-xs bg-green-400/20 text-green-300"
+                  >
+                    {option.count}
+                  </Badge>
+                </Button>
+              ))}
             </div>
           </div>
 
-          {/* Content */}
-          <div className="p-4 max-h-[calc(100vh-0px)] pb-20">
-            <div className="space-y-4">
-              {course.sections.map((section: CourseSection, sectionIndex) => (
-                <div key={section.id} className="space-y-2">
-                  {/* Section Header */}
-                  <div className="bg-green-400/10 border border-green-400/30 rounded-none p-3 mx-1">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                      <div className="font-bold text-green-400 text-sm font-mono tracking-wide">
-                        {getSectionTitle(
-                          section.title,
-                          sectionIndex
-                        ).toUpperCase()}
+          {/* Content List */}
+          <div className="p-4 space-y-3">
+            {filteredLessons.map((lesson) => {
+              const isActive = lesson.globalIndex === currentVideo;
+              const isCompleted = completedLessons.includes(lesson.id);
+
+              return (
+                <div
+                  key={lesson.id}
+                  className={`group p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:scale-[1.02] ${
+                    isActive
+                      ? "bg-green-400/20 border-green-400/60 shadow-lg shadow-green-400/10"
+                      : "bg-gray-900/50 border-gray-700/30 hover:border-green-400/40 hover:bg-green-400/5"
+                  }`}
+                  onClick={() => onLessonSelect(lesson.globalIndex)}
+                >
+                  <div className="flex items-start space-x-3">
+                    {/* Content type icon */}
+                    <div
+                      className={`p-2 rounded-lg flex-shrink-0 ${
+                        isActive
+                          ? "bg-green-400/30"
+                          : "bg-gray-800/50 group-hover:bg-green-400/20"
+                      }`}
+                    >
+                      <div
+                        className={`${
+                          isActive
+                            ? "text-green-300"
+                            : "text-gray-400 group-hover:text-green-400"
+                        }`}
+                      >
+                        {getContentIcon(lesson.type)}
+                      </div>
+                    </div>
+
+                    {/* Content details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h4
+                          className={`font-semibold text-sm font-mono truncate ${
+                            isActive
+                              ? "text-green-300"
+                              : "text-gray-300 group-hover:text-green-400"
+                          }`}
+                        >
+                          {lesson.title}
+                        </h4>
+                        {isCompleted && (
+                          <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                        )}
+                        {isActive && (
+                          <Play className="w-4 h-4 text-green-300 flex-shrink-0 animate-pulse" />
+                        )}
+                      </div>
+
+                      {/* Section and metadata */}
+                      <div className="flex items-center space-x-2 text-xs">
+                        <Badge
+                          variant="secondary"
+                          className={`text-xs font-mono capitalize ${
+                            isActive
+                              ? "bg-green-400/30 text-green-200"
+                              : "bg-gray-700/50 text-gray-400"
+                          }`}
+                        >
+                          {lesson.type}
+                        </Badge>
+                        <div
+                          className={`flex items-center space-x-1 ${
+                            isActive ? "text-green-300/70" : "text-gray-500"
+                          }`}
+                        >
+                          <Clock className="w-3 h-3" />
+                          <span className="font-mono">{lesson.duration}</span>
+                        </div>
+                      </div>
+
+                      {/* Section title */}
+                      <div
+                        className={`text-xs font-mono mt-1 ${
+                          isActive ? "text-green-300/60" : "text-gray-500"
+                        }`}
+                      >
+                        📁 {lesson.sectionTitle}
                       </div>
                     </div>
                   </div>
-
-                  {/* Lessons */}
-                  <div className="space-y-2 pb-6">
-                    {section.lessons.map((lesson, lessonIndex) => {
-                      const flatIndex =
-                        course.sections
-                          .slice(0, sectionIndex)
-                          .reduce((acc, s) => acc + s.lessons.length, 0) +
-                        lessonIndex;
-
-                      const isActive = currentVideo === flatIndex;
-                      const isCompleted = completedLessons.includes(lesson.id);
-
-                      return (
-                        <div
-                          key={lesson.id}
-                          className={`group cursor-pointer transition-all duration-200 px-1 ${
-                            isActive
-                              ? "transform scale-[1.01]"
-                              : "hover:transform hover:scale-[1.02]"
-                          }`}
-                          onClick={() => {
-                            onLessonSelect(flatIndex);
-                            onClose();
-                          }}
-                        >
-                          <div
-                            className={`border-2 rounded-none p-4 transition-all ${
-                              isActive
-                                ? "border-green-400 bg-green-400/15 shadow-lg shadow-green-400/20"
-                                : "border-green-400/20 hover:border-green-400/50 hover:bg-green-400/5"
-                            }`}
-                          >
-                            {/* Lesson Header */}
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center space-x-3">
-                                {/* Completion Status */}
-                                {isCompleted ? (
-                                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-                                ) : (
-                                  <div className="w-4 h-4 border-2 border-green-400/40 rounded-full flex-shrink-0" />
-                                )}
-
-                                {/* Content Type Icon */}
-                                {getLessonIcon(lesson.type)}
-                              </div>
-
-                              {/* Type Badge */}
-                              <div
-                                className={`px-2 py-1 border rounded-none text-xs font-mono font-bold ${getTypeColor(
-                                  lesson.type
-                                )}`}
-                              >
-                                {getTypeLabel(lesson.type)}
-                              </div>
-                            </div>
-
-                            {/* Lesson Title */}
-                            <div className="mb-2">
-                              <div
-                                className={`text-sm font-semibold font-mono ${
-                                  isActive ? "text-green-300" : "text-green-400"
-                                } group-hover:text-green-300 transition-colors`}
-                              >
-                                {lesson.title}
-                              </div>
-                            </div>
-
-                            {/* Lesson Meta */}
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2 text-xs text-green-300/60">
-                                <Clock className="w-3 h-3" />
-                                <span className="font-mono">
-                                  {lesson.duration}
-                                </span>
-                              </div>
-
-                              {isActive && (
-                                <div className="flex items-center space-x-1 text-xs text-green-400">
-                                  <Play className="w-3 h-3" />
-                                  <span className="font-mono">ACTIVE</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
+
+            {filteredLessons.length === 0 && (
+              <div className="text-center py-8">
+                <div className="text-gray-500 font-mono text-sm">
+                  {searchTerm || selectedFilter !== "all"
+                    ? "No content matches your search/filter"
+                    : "No content available"}
+                </div>
+                {(searchTerm || selectedFilter !== "all") && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setSelectedFilter("all");
+                    }}
+                    className="mt-3 text-green-400 border-green-400/30 hover:bg-green-400/10"
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Overlay */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
       )}
     </>
   );

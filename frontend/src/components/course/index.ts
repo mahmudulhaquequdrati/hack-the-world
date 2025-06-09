@@ -3,6 +3,7 @@ export { default as CourseHero } from "./CourseHero";
 export { default as CourseInfoSidebar } from "./CourseInfoSidebar";
 export { default as CourseTabsContainer } from "./CourseTabsContainer";
 export { default as EnrollmentButton } from "./EnrollmentButton";
+export { default as EnrollmentConfirmationDialog } from "./EnrollmentConfirmationDialog";
 
 // Tab components
 export { default as CurriculumTab } from "./tabs/CurriculumTab";

@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { IconRenderer } from "@/lib/dataTransformers";
 import { Course } from "@/lib/types";
 import { Star } from "lucide-react";
 
@@ -45,7 +46,10 @@ const CourseHero = ({ course }: CourseHeroProps) => {
           <div
             className={`w-20 h-20 ${course.bgColor} border-2 ${course.borderColor} rounded-lg flex items-center justify-center relative`}
           >
-            <course.icon className={`w-10 h-10 ${course.color}`} />
+            <IconRenderer
+              icon={course.icon}
+              className={`w-10 h-10 ${course.color}`}
+            />
             {/* Glitch effect */}
             <div className="absolute inset-0 border-2 border-green-400/20 rounded-lg animate-pulse"></div>
           </div>

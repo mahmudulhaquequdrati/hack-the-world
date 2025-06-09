@@ -1,3 +1,4 @@
+import { transformApiModuleToCourse } from "@/lib/dataTransformers";
 import type { Course, GameData, LabData, Module, Phase } from "@/lib/types";
 import type {
   BaseQueryApi,
@@ -5,6 +6,41 @@ import type {
   FetchBaseQueryError,
 } from "@reduxjs/toolkit/query";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+
+// API response types
+interface ApiModuleResponse {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  duration: string;
+  difficulty: string;
+  topics?: string[];
+  phaseId?: string;
+  content?: {
+    videos: string[];
+    labs: string[];
+    games: string[];
+    documents: string[];
+    estimatedHours: number;
+  };
+  phase?: {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    color: string;
+    order: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+  order?: number;
+  isActive?: boolean;
+  prerequisites?: string[];
+  learningOutcomes?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 // Helper to get accessToken from localStorage
 const getAccessToken = () => {
@@ -117,9 +153,15 @@ export const apiSlice = createApi({
       ],
     }),
 
-    // Course Content endpoints
+    // Course Content endpoints - using modules API
     getCourseById: builder.query<Course, string>({
-      query: (courseId) => `/courses/${courseId}`,
+      query: (courseId) => `/modules/${courseId}`,
+      transformResponse: (response: {
+        success: boolean;
+        data: ApiModuleResponse;
+      }) => {
+        return transformApiModuleToCourse(response.data);
+      },
       providesTags: (result, error, courseId) => [
         { type: "Course", id: courseId },
       ],
@@ -193,6 +235,38 @@ export const apiSlice = createApi({
         { type: "Course", id: `${moduleId}-labs` },
       ],
     }),
+
+    // Module overview endpoint for curriculum, labs, and games content
+    getModuleOverview: builder.query<
+      {
+        [sectionName: string]: Array<{
+          _id: string;
+          type: "video" | "lab" | "game" | "text" | "quiz";
+          title: string;
+          description: string;
+          section: string;
+        }>;
+      },
+      string
+    >({
+      query: (moduleId) => `/content/module-overview/${moduleId}`,
+      transformResponse: (response: {
+        success: boolean;
+        message: string;
+        data: {
+          [sectionName: string]: Array<{
+            _id: string;
+            type: "video" | "lab" | "game" | "text" | "quiz";
+            title: string;
+            description: string;
+            section: string;
+          }>;
+        };
+      }) => response.data,
+      providesTags: (result, error, moduleId) => [
+        { type: "Course", id: `${moduleId}-overview` },
+      ],
+    }),
   }),
 });
 
@@ -212,6 +286,7 @@ export const {
   useUpdateProgressMutation,
   useGetGamesByModuleQuery,
   useGetLabsByModuleQuery,
+  useGetModuleOverviewQuery,
 } = apiSlice;
 
 export default apiSlice;

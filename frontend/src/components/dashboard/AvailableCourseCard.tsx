@@ -1,3 +1,4 @@
+import { IconRenderer } from "@/lib/dataTransformers";
 import { Module } from "@/lib/types";
 import { Plus } from "lucide-react";
 
@@ -17,7 +18,10 @@ export const AvailableCourseCard = ({
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
-          <module.icon className={`w-5 h-5 ${module.color}`} />
+          <IconRenderer
+            icon={module.icon}
+            className={`w-5 h-5 ${module.color}`}
+          />
           <div>
             <h4 className="text-md font-semibold text-white font-mono">
               {module.title}

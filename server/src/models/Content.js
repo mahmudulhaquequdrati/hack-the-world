@@ -150,6 +150,26 @@ ContentSchema.statics.getByModule = function (moduleId) {
     .sort({ section: 1, createdAt: 1 });
 };
 
+// Static method to get content by module and type
+ContentSchema.statics.getByModuleForOverview = async function (moduleId) {
+  // Get content for each section
+  const content = await this.find({ moduleId, isActive: true })
+    .select("title description type section")
+    .sort({ section: 1, createdAt: 1 })
+    .lean();
+
+  // Group content by section
+  const groupedContent = {};
+  content.forEach((item) => {
+    if (!groupedContent[item.section]) {
+      groupedContent[item.section] = [];
+    }
+    groupedContent[item.section].push(item);
+  });
+
+  return groupedContent;
+};
+
 // Static method to get content by type
 ContentSchema.statics.getByType = function (type, moduleId = null) {
   const query = { type, isActive: true };

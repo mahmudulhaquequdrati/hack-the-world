@@ -5,6 +5,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { IconRenderer } from "@/lib/dataTransformers";
 import { Module, Phase } from "@/lib/types";
 import {
   CheckCircle,
@@ -108,7 +109,8 @@ const CourseTree = ({
                     isEnrolled ? module.bgColor : "bg-gray-800/50"
                   }`}
                 >
-                  <module.icon
+                  <IconRenderer
+                    icon={module.icon}
                     className={`w-5 h-5 ${
                       isEnrolled ? module.color : "text-gray-500"
                     }`}

@@ -10,6 +10,7 @@ const {
   getContentByModuleGrouped,
   getContentByType,
   getSectionsByModule,
+  getModuleOverview,
 } = require("../controllers/contentController");
 const { protect, authorize } = require("../middleware/auth");
 
@@ -507,6 +508,53 @@ router.post("/", protect, authorize("admin"), createContent);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/module/:moduleId", protect, getContentByModule);
+
+/**
+ * @swagger
+ * /content/module-overview/{moduleId}:
+ *   get:
+ *     summary: 📊 Get module overview
+ *     description: |
+ *       Retrieve module overview with sections and content.
+ *     tags: [📚 Content Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: moduleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Module ObjectId
+ *         example: "64a1b2c3d4e5f6789012346"
+ *     responses:
+ *       200:
+ *         description: Module overview retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Module overview retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     sections:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     content:
+ *                       type: object
+ *                       properties:
+ *                         type: string
+ */
+
+router.get("/module-overview/:moduleId", getModuleOverview);
 
 /**
  * @swagger

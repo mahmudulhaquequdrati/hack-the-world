@@ -16,4 +16,5 @@ export { LabContent } from "./LabContent";
 export { LoadingContent } from "./LoadingContent";
 export { LoadingSpinner } from "./LoadingSpinner";
 export { NavigationControls } from "./NavigationControls";
+export { default as ProgressTracker } from "./ProgressTracker";
 export { TextContent } from "./TextContent";

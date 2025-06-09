@@ -42,7 +42,7 @@ const CourseDetailPage = () => {
     ? "Failed to load course data. Please try again later."
     : null;
 
-  const handleEnrollment = async () => {
+  const handleEnrollment = async (): Promise<void> => {
     if (!course || !courseId) return;
 
     try {
@@ -60,6 +60,8 @@ const CourseDetailPage = () => {
       }
     } catch (err) {
       console.error("Enrollment failed:", err);
+      // Error handling is now done in EnrollmentButton component
+      throw err; // Re-throw to let EnrollmentButton handle the error display
     }
   };
 
@@ -120,8 +122,7 @@ const CourseDetailPage = () => {
     );
   }
 
-  const lessonsCount =
-    typeof course.lessons === "number" ? course.lessons : course.lessons.length;
+  const lessonsCount = typeof course.lessons === "number" ? course.lessons : 0;
 
   return (
     <div className="min-h-screen bg-black text-green-400 relative">
@@ -169,14 +170,16 @@ const CourseDetailPage = () => {
           <EnrollmentButton
             enrollmentStatus={course.enrolled ? "enrolled" : "not-enrolled"}
             onEnrollment={handleEnrollment}
+            isLoadingEnrollment={loading}
+            prerequisites={course.prerequisites ? [course.prerequisites] : []}
           />
 
           {/* Tabs Section */}
           <CourseTabsContainer activeTab={activeTab} onTabChange={setActiveTab}>
             <OverviewTab learningOutcomes={course.learningOutcomes} />
-            <CurriculumTab curriculum={course.curriculum} />
-            <LabsTab labs={course.labsData} />
-            <GamesTab games={course.gamesData} />
+            <CurriculumTab curriculum={course.curriculum} moduleId={courseId} />
+            <LabsTab labs={course.labsData} moduleId={courseId} />
+            <GamesTab games={course.gamesData} moduleId={courseId} />
           </CourseTabsContainer>
 
           {/* Data Source Indicator */}

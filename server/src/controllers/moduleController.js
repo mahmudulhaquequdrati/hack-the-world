@@ -77,7 +77,9 @@ const getModule = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Invalid module ID format`, 400));
   }
 
-  const module = await Module.findById(id).populate("phase");
+  const module = await Module.findById(id)
+    .populate("phase")
+    .populate("content");
 
   if (!module) {
     return next(new ErrorResponse(`Module with ID '${id}' not found`, 404));

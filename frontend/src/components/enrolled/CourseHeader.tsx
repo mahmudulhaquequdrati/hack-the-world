@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { IconRenderer } from "@/lib/dataTransformers";
 import { EnrolledCourse } from "@/lib/types";
 import { ArrowLeft, List } from "lucide-react";
 
@@ -42,7 +43,10 @@ const CourseHeader = ({
           <div
             className={`w-12 h-12 ${course.bgColor} ${course.borderColor} border-2 rounded-full flex items-center justify-center`}
           >
-            <course.icon className={`w-6 h-6 ${course.color}`} />
+            <IconRenderer
+              icon={course.icon}
+              className={`w-6 h-6 ${course.color}`}
+            />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-green-400 mb-1">

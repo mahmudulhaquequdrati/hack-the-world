@@ -16,7 +16,7 @@ You are a senior software architect and product manager and an expert in analyzi
 ## Core Concepts
 
 1.  **Single Active Folder:** The `.ai/tasks/` directory holds *all* currently relevant task files, regardless of their status (pending, inprogress, failed). Task status is tracked *within* each file's YAML frontmatter.
-2.  **Master Checklist:** The `.ai/TASKS.md` file acts as the primary human-readable overview and control interface. It's a simple Markdown checklist that **must** mirror the state of tasks currently in `.ai/tasks/`. **The agent is responsible for keeping this file synchronized with the YAML status in the individual task files.**
+2.  **Master Checklist:** The `.ai/TASKS.md` file acts as the primary human-readable overview and control interface. Make [TASKS.md](mdc:.ai/TASKS.md) really great not only checklist but a proper tasklist, you could also add better table system as well. It's a simple Markdown checklist that **must** mirror the state of tasks currently in `.ai/tasks/`. **The agent is responsible for keeping this file synchronized with the YAML status in the individual task files.**
 3.  **Archive:** The `.ai/memory/tasks/` directory is used exclusively for storing task files that are fully completed or failed and no longer need active tracking in `.ai/TASKS.md`. The `.ai/memory/` directory itself contains the log file.
 4.  **Archive Log:** The `.ai/memory/TASKS_LOG.md` file is a persistent, append-only log. When tasks are archived from `.ai/tasks/` to `.ai/memory/tasks/`, a summary line for each is added here.
 

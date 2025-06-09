@@ -1,3 +1,4 @@
+import DataSourceIndicator from "@/components/common/DataSourceIndicator";
 import {
   CourseFeatures,
   CourseHero,
@@ -10,7 +11,7 @@ import {
   OverviewTab,
 } from "@/components/course";
 import { Button } from "@/components/ui/button";
-import { getNormalizedCourseById } from "@/lib/appData";
+import { DataService } from "@/lib/dataService";
 import { Course } from "@/lib/types";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -26,20 +27,22 @@ const CourseDetailPage = () => {
   // State management for dynamic loading
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch course data dynamically
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
         setLoading(true);
-
-        // Simulate API delay for realistic loading experience
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        setError(null);
 
         if (courseId) {
-          const courseData = getNormalizedCourseById(courseId);
+          const courseData = await DataService.getCourseById(courseId);
           setCourse(courseData);
         }
+      } catch (err) {
+        console.error("Failed to load course data:", err);
+        setError("Failed to load course data. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -48,18 +51,33 @@ const CourseDetailPage = () => {
     fetchCourseData();
   }, [courseId]);
 
-  const handleEnrollment = () => {
-    if (course?.enrolled) {
-      // If already enrolled, navigate to learning page
-      navigate(`/learn/${courseId}`);
-    } else {
-      // If not enrolled, enroll and then navigate
-      // In a real app, this would make an API call to enroll
-      setCourse((prev: Course | null) =>
-        prev ? { ...prev, enrolled: true } : null
-      );
-      navigate(`/learn/${courseId}`);
+  const handleEnrollment = async () => {
+    if (!course || !courseId) return;
+
+    try {
+      if (course.enrolled) {
+        // If already enrolled, navigate to learning page
+        navigate(`/learn/${courseId}`);
+      } else {
+        // If not enrolled, enroll and then navigate
+        const result = await DataService.enrollInModule(courseId);
+        if (result.success) {
+          setCourse((prev: Course | null) =>
+            prev ? { ...prev, enrolled: true } : null
+          );
+          navigate(`/learn/${courseId}`);
+        } else {
+          setError("Failed to enroll in course. Please try again.");
+        }
+      }
+    } catch (err) {
+      console.error("Enrollment failed:", err);
+      setError("Failed to enroll in course. Please try again.");
     }
+  };
+
+  const handleRetry = () => {
+    window.location.reload();
   };
 
   if (loading) {
@@ -69,6 +87,25 @@ const CourseDetailPage = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400 mx-auto mb-4"></div>
           <p className="font-mono">LOADING_COURSE_DATA...</p>
         </div>
+        <DataSourceIndicator className="fixed bottom-4 right-4" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-green-400 relative flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-red-400 text-xl font-mono">ERROR</div>
+          <div className="text-green-300 max-w-md">{error}</div>
+          <button
+            onClick={handleRetry}
+            className="bg-green-500/20 border border-green-500 text-green-400 px-6 py-2 rounded font-mono hover:bg-green-500/30 transition-colors"
+          >
+            RETRY
+          </button>
+        </div>
+        <DataSourceIndicator className="fixed bottom-4 right-4" showRefresh />
       </div>
     );
   }
@@ -91,6 +128,7 @@ const CourseDetailPage = () => {
             BACK_TO_OVERVIEW
           </Button>
         </div>
+        <DataSourceIndicator className="fixed bottom-4 right-4" showRefresh />
       </div>
     );
   }
@@ -153,6 +191,9 @@ const CourseDetailPage = () => {
             <LabsTab labs={course.labsData} />
             <GamesTab games={course.gamesData} />
           </CourseTabsContainer>
+
+          {/* Data Source Indicator */}
+          <DataSourceIndicator className="fixed bottom-4 right-4" showRefresh />
         </div>
       </div>
     </div>

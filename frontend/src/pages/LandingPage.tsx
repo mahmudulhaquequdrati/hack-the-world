@@ -83,7 +83,7 @@ const LandingPage = () => {
   };
 
   const handleViewDemo = () => {
-    navigate("/demo");
+    navigate("/how-it-works");
   };
 
   const handleViewPricing = () => {

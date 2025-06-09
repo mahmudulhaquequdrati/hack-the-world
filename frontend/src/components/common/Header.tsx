@@ -43,7 +43,9 @@ export function Header({ navigate }: HeaderProps) {
           onClick={() => handleNavigation("/")}
         >
           <Terminal className="w-8 h-8 text-green-400" />
-          <span className="text-xl font-bold text-green-400"></span>
+          <span className="text-xl font-bold text-green-400 hidden lg:block">
+            TH
+          </span>
         </div>
 
         {/* Desktop Navigation */}

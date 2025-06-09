@@ -11,7 +11,6 @@ import Dashboard from "@/pages/Dashboard";
 import EnrolledCoursePage from "@/pages/EnrolledCoursePage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import GamePage from "@/pages/GamePage";
-import HowItWorksPage from "@/pages/HowItWorksPage";
 import LabPage from "@/pages/LabPage";
 import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
@@ -80,7 +79,7 @@ function App() {
               path="/how-it-works"
               element={
                 <Layout>
-                  <HowItWorksPage />
+                  <PlatformDemo />
                 </Layout>
               }
             />

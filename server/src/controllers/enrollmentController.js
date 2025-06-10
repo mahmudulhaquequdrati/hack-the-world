@@ -305,36 +305,20 @@ const getUserEnrollmentsByUserId = asyncHandler(async (req, res, next) => {
  */
 const getCurrentUserEnrollments = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
-  const { status, populate, page = 1, limit = 20 } = req.query;
+  const { status, populate } = req.query;
 
   // Build query options
   const options = {};
   if (status) options.status = status;
   if (populate === "true") options.populate = true;
 
-  // Add pagination
-  const skip = (page - 1) * limit;
-  options.skip = skip;
-  options.limit = Number(limit);
-
-  const [enrollments, total] = await Promise.all([
+  const [enrollments] = await Promise.all([
     UserEnrollment.getUserEnrollments(userId, options),
-    UserEnrollment.countDocuments({
-      userId,
-      ...(status && { status }),
-    }),
   ]);
 
   res.status(200).json({
     success: true,
     message: "Current user enrollments retrieved successfully",
-    count: enrollments.length,
-    total,
-    pagination: {
-      page: Number(page),
-      limit: Number(limit),
-      pages: Math.ceil(total / limit),
-    },
     data: enrollments,
   });
 });

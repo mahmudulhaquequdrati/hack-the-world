@@ -11,11 +11,7 @@ import {
   SplitView,
   VideoPlayer,
 } from "@/components/enrolled";
-import { getNormalizedCourseById } from "@/lib/appData";
-import {
-  convertCourseToEnrolledCourse,
-  getDefaultCompletedLessons,
-} from "@/lib/courseUtils";
+import { apiSlice } from "@/features/api/apiSlice";
 import {
   ChatMessage,
   EnrolledCourse,
@@ -84,18 +80,97 @@ const EnrolledCoursePage = () => {
   const [activeLab, setActiveLab] = useState<string | null>(null);
   const [activeGame, setActiveGame] = useState<string | null>(null);
 
-  // Load course data dynamically
+  // Load course data from API
+  const {
+    data: moduleData,
+    error: moduleError,
+    isLoading: moduleLoading,
+  } = apiSlice.endpoints.getModuleById.useQuery(courseId || "", {
+    skip: !courseId,
+  });
+
+  const {
+    data: contentData,
+    error: contentError,
+    isLoading: contentLoading,
+  } = apiSlice.endpoints.getModuleContentGrouped.useQuery(courseId || "", {
+    skip: !courseId,
+  });
+
+  // Transform API data to EnrolledCourse format when available
   useEffect(() => {
-    if (courseId) {
-      const courseData = getNormalizedCourseById(courseId);
-      if (courseData) {
-        const enrolledCourse = convertCourseToEnrolledCourse(courseData);
-        setCourse(enrolledCourse);
-        setCompletedLessons(getDefaultCompletedLessons(enrolledCourse));
-      }
+    if (moduleData && contentData && contentData.success) {
+      // Create a simplified enrolled course structure
+      const sections = Object.entries(contentData.data).map(
+        ([sectionTitle, items], index) => ({
+          id: `section-${index}`,
+          title: sectionTitle,
+          lessons: (
+            items as Array<{
+              id: string;
+              title: string;
+              description?: string;
+              type: "video" | "lab" | "game" | "document";
+              duration?: number;
+              url?: string;
+              instructions?: string;
+            }>
+          ).map((item, itemIndex: number) => ({
+            id: `lesson-${index}-${itemIndex}`,
+            title: item.title,
+            duration: item.duration ? `${item.duration}:00` : "15:00",
+            type: item.type === "document" ? ("text" as const) : item.type,
+            completed: false,
+            description: item.description || `Learn about ${item.title}`,
+            videoUrl: item.type === "video" ? item.url : undefined,
+            content: item.type === "document" ? item.instructions : undefined,
+          })),
+        })
+      );
+
+      const enrolledCourse: EnrolledCourse = {
+        title: moduleData.title,
+        description: moduleData.description,
+        icon: moduleData.icon,
+        color: "text-green-400",
+        bgColor: "bg-green-400/10",
+        borderColor: "border-green-400/30",
+        totalLessons: sections.reduce(
+          (acc, section) => acc + section.lessons.length,
+          0
+        ),
+        completedLessons: 0,
+        progress: 0,
+        sections,
+        labs: [],
+        games: [],
+        resources: [],
+        playground: {
+          title: "AI Playground",
+          description: "Interactive learning environment",
+          tools: [],
+          available: true,
+        },
+      };
+
+      setCourse(enrolledCourse);
+      setCompletedLessons([]);
       setLoading(false);
     }
-  }, [courseId]);
+  }, [moduleData, contentData]);
+
+  // Handle loading and error states
+  useEffect(() => {
+    if (moduleLoading || contentLoading) {
+      setLoading(true);
+    } else if (
+      moduleError ||
+      contentError ||
+      (contentData && !contentData.success)
+    ) {
+      setLoading(false);
+    }
+  }, [moduleLoading, contentLoading, moduleError, contentError, contentData]);
 
   // Helper functions
   const getAllLessons = () => {

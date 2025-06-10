@@ -13,7 +13,18 @@ import {
   Users,
 } from "lucide-react";
 import React from "react";
-import { Course, LearningOutcome, Module, Phase } from "./types";
+import type {
+  Course,
+  CourseSection,
+  EnrolledCourse,
+  EnrolledLesson,
+  Game,
+  Lab,
+  Module,
+  Phase,
+  Resource,
+} from "./types";
+import { LearningOutcome } from "./types";
 
 // API response types
 interface ApiModule {
@@ -328,4 +339,140 @@ export const organizeModulesByPhase = (
       return transformApiPhase(phase, phaseModules);
     })
     .sort((a, b) => (a.order || 0) - (b.order || 0));
+};
+
+// Transform API module content grouped response to EnrolledCourse format
+export const transformApiContentToEnrolledCourse = (
+  moduleId: string,
+  moduleTitle: string,
+  moduleDescription: string,
+  groupedContent: Record<
+    string,
+    Array<{
+      id: string;
+      title: string;
+      description?: string;
+      type: "video" | "lab" | "game" | "document";
+      duration?: number;
+      url?: string;
+      instructions?: string;
+      metadata?: Record<string, unknown>;
+      order?: number;
+    }>
+  >
+): EnrolledCourse => {
+  // Convert grouped content to sections
+  const sections: CourseSection[] = Object.entries(groupedContent).map(
+    ([sectionTitle, contentItems], sectionIndex) => {
+      const lessons: EnrolledLesson[] = contentItems.map((item, itemIndex) => {
+        const lessonId = `${moduleId}-${sectionIndex}-${itemIndex}-${item.id}`;
+
+        // Generate realistic duration if not provided
+        const duration = item.duration
+          ? `${item.duration}:00`
+          : item.type === "video"
+          ? "15:30"
+          : item.type === "lab"
+          ? "45:00"
+          : item.type === "game"
+          ? "25:00"
+          : "10:00";
+
+        return {
+          id: lessonId,
+          title: item.title,
+          duration,
+          type: item.type === "document" ? "text" : item.type, // Map document to text
+          completed: false, // Default to not completed
+          description: item.description || `Learn about ${item.title}`,
+          videoUrl: item.type === "video" ? item.url : undefined,
+          content: item.type === "document" ? item.instructions : undefined,
+          dynamicResources: [], // Will be populated if needed
+          relatedLabs: [],
+          relatedGames: [],
+          contextualContent: {
+            objectives: [`Master ${item.title}`],
+            keyPoints: [item.description || `Key concepts in ${item.title}`],
+            practicalTips: [`Practice ${item.title} regularly`],
+            commonMistakes: [`Avoid rushing through ${item.title}`],
+            nextSteps: [`Apply ${item.title} knowledge`],
+          },
+        };
+      });
+
+      return {
+        id: `${moduleId}-section-${sectionIndex}`,
+        title: sectionTitle,
+        lessons,
+      };
+    }
+  );
+
+  // Generate labs array from lab content
+  const labs: Lab[] = Object.values(groupedContent)
+    .flat()
+    .filter((item) => item.type === "lab")
+    .map((lab, index) => ({
+      id: `${moduleId}-lab-${index}`,
+      name: lab.title,
+      description: lab.description || `Hands-on lab: ${lab.title}`,
+      difficulty: "intermediate",
+      duration: lab.duration ? `${lab.duration} minutes` : "45 minutes",
+      completed: false,
+      available: true,
+      objectives: [lab.description || `Complete ${lab.title}`],
+      prerequisites: [],
+      tools: [],
+      steps: [],
+      hints: [],
+      solution: lab.instructions || `Complete the ${lab.title} lab`,
+      category: "security",
+      estimatedTime: lab.duration ? `${lab.duration} minutes` : "45 minutes",
+      skillsGained: [],
+    }));
+
+  // Generate games array from game content
+  const games: Game[] = Object.values(groupedContent)
+    .flat()
+    .filter((item) => item.type === "game")
+    .map((game, index) => ({
+      id: `${moduleId}-game-${index}`,
+      name: game.title,
+      description: game.description || `Interactive game: ${game.title}`,
+      difficulty: "intermediate",
+      duration: game.duration ? `${game.duration} minutes` : "25 minutes",
+      points: 100,
+      available: true,
+      type: "simulation",
+      objectives: [game.description || `Complete ${game.title}`],
+      maxScore: 100,
+      timeLimit: game.duration ? `${game.duration} minutes` : undefined,
+      category: "security",
+      skillsGained: [],
+      challenges: [],
+    }));
+
+  // Generate resources from document content
+  const resources: Resource[] = Object.values(groupedContent)
+    .flat()
+    .filter((item) => item.type === "document")
+    .map((doc, index) => ({
+      name: doc.title,
+      type: "PDF" as const,
+      size: "1.2 MB",
+      category: "reference" as const,
+      description: doc.description || doc.title,
+      isContextual: false,
+      relatedTopics: [doc.title],
+    }));
+
+  return {
+    id: moduleId,
+    title: moduleTitle,
+    description: moduleDescription,
+    sections,
+    labs,
+    games,
+    resources,
+  };
 };

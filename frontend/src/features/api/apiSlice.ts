@@ -304,6 +304,33 @@ export const apiSlice = createApi({
         { type: "Course", id: `${moduleId}-overview` },
       ],
     }),
+
+    // Get module content grouped by sections for enrolled course page
+    getModuleContentGrouped: builder.query<
+      {
+        success: boolean;
+        data: Record<
+          string,
+          Array<{
+            id: string;
+            title: string;
+            description?: string;
+            type: "video" | "lab" | "game" | "document";
+            duration?: number;
+            url?: string;
+            instructions?: string;
+            metadata?: Record<string, unknown>;
+            order?: number;
+          }>
+        >;
+      },
+      string
+    >({
+      query: (moduleId) => `/content/module/${moduleId}/grouped`,
+      providesTags: (result, error, moduleId) => [
+        { type: "Course", id: `content-${moduleId}` },
+      ],
+    }),
   }),
 });
 
@@ -325,6 +352,7 @@ export const {
   useGetGamesByModuleQuery,
   useGetLabsByModuleQuery,
   useGetModuleOverviewQuery,
+  useGetModuleContentGroupedQuery,
 } = apiSlice;
 
 export default apiSlice;

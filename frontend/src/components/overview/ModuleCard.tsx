@@ -293,10 +293,10 @@ const ModuleCard = ({
                   <div className="text-center">
                     <Clock className="w-4 h-4 mx-auto mb-1 text-green-400 group-hover/stat:animate-spin" />
                     <div className="text-green-400 font-mono text-sm font-bold">
-                      {initialModule.duration}
+                      {initialModule.content?.estimatedHours}
                     </div>
                     <div className="text-green-400/60 text-xs font-mono uppercase">
-                      Time
+                      HOURS
                     </div>
                   </div>
                   <div className="absolute inset-0 bg-green-400/5 rounded-lg opacity-0 group-hover/stat:opacity-100 transition-opacity"></div>

@@ -155,7 +155,7 @@ const CourseTree = ({
                           isEnrolled ? "text-green-300/70" : "text-gray-500"
                         }
                       >
-                        {module.duration}
+                        {module.content?.estimatedHours}
                       </span>
                     </div>
 

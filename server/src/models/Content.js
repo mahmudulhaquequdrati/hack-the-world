@@ -212,7 +212,7 @@ ContentSchema.statics.getSectionsByModule = async function (moduleId) {
 };
 
 // Helper function to update module content statistics
-async function updateModuleStats(moduleId) {
+ContentSchema.statics.updateModuleStats = async function (moduleId) {
   const Module = mongoose.model("Module");
 
   // Get all content for this module
@@ -246,15 +246,15 @@ async function updateModuleStats(moduleId) {
       "content.labs": contentByType.labs,
       "content.games": contentByType.games,
       "content.documents": contentByType.documents,
-      "content.estimatedHours": Math.ceil(totalDuration / 60), // Convert minutes to hours
+      "content.estimatedHours": (totalDuration / 60).toFixed(2), // Convert minutes to hours
     },
   });
-}
+};
 
 // Post-save middleware to update module statistics
 ContentSchema.post("save", async function (doc) {
   if (doc.moduleId) {
-    await updateModuleStats(doc.moduleId);
+    await this.updateModuleStats(doc.moduleId);
   }
 });
 
@@ -267,7 +267,7 @@ ContentSchema.post("insertMany", async function (docs) {
     // Update each affected module
     for (const moduleId of moduleIds) {
       if (moduleId) {
-        await updateModuleStats(moduleId);
+        await this.updateModuleStats(moduleId);
       }
     }
   }
@@ -276,14 +276,14 @@ ContentSchema.post("insertMany", async function (docs) {
 // Post-remove middleware to update module statistics
 ContentSchema.post("remove", async function (doc) {
   if (doc.moduleId) {
-    await updateModuleStats(doc.moduleId);
+    await this.updateModuleStats(doc.moduleId);
   }
 });
 
 // Post-findOneAndDelete middleware to update module statistics
 ContentSchema.post("findOneAndDelete", async function (doc) {
   if (doc && doc.moduleId) {
-    await updateModuleStats(doc.moduleId);
+    await this.updateModuleStats(doc.moduleId);
   }
 });
 
@@ -295,7 +295,7 @@ ContentSchema.post("deleteMany", async function (result) {
   const modules = await Module.find({});
 
   for (const module of modules) {
-    await updateModuleStats(module.id);
+    await this.updateModuleStats(module.id);
   }
 });
 

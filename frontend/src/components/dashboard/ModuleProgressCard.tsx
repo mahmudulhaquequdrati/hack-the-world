@@ -44,7 +44,7 @@ export const ModuleProgressCard = ({ module }: ModuleProgressCardProps) => {
           </div>
           <div className="text-sm text-green-300/70 font-mono">
             difficulty: {module.difficulty.toLowerCase()} | duration:{" "}
-            {module.duration}
+            {module.content?.estimatedHours}
           </div>
           <Button
             size="sm"

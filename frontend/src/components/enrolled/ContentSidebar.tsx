@@ -9,7 +9,6 @@ import {
   ChevronDown,
   Clock,
   FileText,
-  Filter,
   Gamepad2,
   Monitor,
   Play,

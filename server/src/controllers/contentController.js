@@ -261,6 +261,8 @@ const updateContent = asyncHandler(async (req, res, next) => {
     runValidators: true,
   }).populate("module", "title");
 
+  await Content.updateModuleStats(content.moduleId);
+
   if (!content) {
     return next(new ErrorResponse("Content not found", 404));
   }

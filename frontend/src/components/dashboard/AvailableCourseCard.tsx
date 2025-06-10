@@ -34,7 +34,7 @@ export const AvailableCourseCard = ({
 
       <div className="flex items-center justify-between text-xs text-gray-400">
         <span>{module.difficulty}</span>
-        <span>{module.duration}</span>
+        <span>{module.content?.estimatedHours}</span>
       </div>
     </div>
   );

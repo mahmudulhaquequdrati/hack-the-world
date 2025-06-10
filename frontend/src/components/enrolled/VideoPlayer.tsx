@@ -1,6 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { EnrolledLesson } from "@/lib/types";
-import { CheckCircle, Maximize2, Pause, Play, Video } from "lucide-react";
+import {
+  CheckCircle,
+  ChevronsLeft,
+  ChevronsRight,
+  Maximize2,
+  Minimize2,
+  Pause,
+  Play,
+  Video,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import ReactPlayer from "react-player";
 
 interface VideoPlayerProps {
   lesson: EnrolledLesson;
@@ -31,98 +44,491 @@ const VideoPlayer = ({
   onMaximize,
   onRestore,
 }: VideoPlayerProps) => {
+  const playerRef = useRef<ReactPlayer>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [played, setPlayed] = useState(0);
+  const [volume, setVolume] = useState(0.8);
+  const [muted, setMuted] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isCurrentlyFullscreen);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const handleProgress = useCallback(
+    (state: {
+      played: number;
+      playedSeconds: number;
+      loadedSeconds: number;
+    }) => {
+      setPlayed(state.played);
+      setProgress(state.playedSeconds);
+    },
+    []
+  );
+
+  const handleDuration = useCallback((duration: number) => {
+    setDuration(duration);
+  }, []);
+
+  const toggleMute = () => {
+    setMuted(!muted);
+  };
+
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
+
+  const handleVideoEnd = () => {
+    // Auto-mark as complete when video ends
+    if (lesson && !completedLessons.includes(lesson.id)) {
+      onMarkComplete(lesson.id);
+    }
+
+    // Auto-advance to next lesson if available
+    if (currentVideo < totalLessons - 1) {
+      setTimeout(() => {
+        onNext();
+      }, 2000);
+    }
+  };
+
+  const handleVideoReady = () => {
+    // Video is ready for playback
+  };
+
+  const handlePlay = () => {
+    setHasStarted(true);
+    onPlayPause();
+  };
+
+  const handleVideoStart = () => {
+    setHasStarted(true);
+  };
+
+  const handleVideoClick = () => {
+    if (hasStarted) {
+      onPlayPause();
+    } else {
+      handlePlay();
+    }
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovering(true);
+    setShowControls(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+    // Hide controls after a delay when playing
+    if (isPlaying) {
+      setTimeout(() => {
+        if (!isHovering) {
+          setShowControls(false);
+        }
+      }, 2000);
+    } else {
+      setShowControls(false);
+    }
+  };
+
+  const toggleFullscreen = async () => {
+    if (!videoContainerRef.current) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        await videoContainerRef.current.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.error("Error toggling fullscreen:", error);
+    }
+  };
+
+  const skipBackward = () => {
+    if (playerRef.current) {
+      const currentTime = playerRef.current.getCurrentTime();
+      const newTime = Math.max(0, currentTime - 5);
+      playerRef.current.seekTo(newTime);
+      setProgress(newTime);
+      setPlayed(newTime / duration);
+    }
+  };
+
+  const skipForward = () => {
+    if (playerRef.current) {
+      const currentTime = playerRef.current.getCurrentTime();
+      const newTime = Math.min(duration, currentTime + 5);
+      playerRef.current.seekTo(newTime);
+      setProgress(newTime);
+      setPlayed(newTime / duration);
+    }
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickPosition = (e.clientX - rect.left) / rect.width;
+    const newProgress = clickPosition * duration;
+    setProgress(newProgress);
+    setPlayed(clickPosition);
+    if (playerRef.current) {
+      playerRef.current.seekTo(clickPosition);
+    }
+  };
+
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return; // Don't trigger if typing in input
+
+      switch (e.key) {
+        case " ":
+          e.preventDefault();
+          onPlayPause();
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          skipBackward();
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          skipForward();
+          break;
+        case "f":
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case "m":
+          e.preventDefault();
+          toggleMute();
+          break;
+      }
+    };
+
+    if (hasStarted) {
+      window.addEventListener("keydown", handleKeyPress);
+      return () => window.removeEventListener("keydown", handleKeyPress);
+    }
+  }, [hasStarted, onPlayPause, duration]);
+
+  // Check if lesson has a video URL
+  const hasVideoUrl = lesson?.videoUrl && lesson.videoUrl.trim() !== "";
+
+  // Determine if we should show the center play button
+  const showCenterPlayButton =
+    !hasStarted || (!isPlaying && (isHovering || !hasStarted));
+
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-green-400/30 flex items-center justify-between">
-        <h3 className="text-green-400 font-semibold flex items-center">
-          <Video className="w-4 h-4 mr-2" />
-          {lesson?.title}
-        </h3>
-        <div className="flex items-center space-x-2">
-          {isMaximized && onRestore ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onRestore}
-              className="text-green-400 hover:bg-green-400/10"
-              title="Restore to split view"
-            >
-              <Maximize2 className="w-4 h-4 rotate-180" />
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onMaximize}
-              className="text-green-400 hover:bg-green-400/10"
-              title="Maximize video"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 p-4 flex flex-col">
-        <div className="aspect-video bg-black border border-green-400/30 rounded-lg flex items-center justify-center mb-4 flex-shrink-0 relative">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center mx-auto mb-3">
-              {isPlaying ? (
-                <Pause className="w-6 h-6 text-green-400" />
-              ) : (
-                <Play className="w-6 h-6 text-green-400" />
-              )}
-            </div>
-            <Button
-              onClick={onPlayPause}
-              className="bg-green-400 text-black hover:bg-green-300"
-            >
-              {isPlaying ? "Pause" : "Play"} Video
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              onClick={onPrevious}
-              disabled={currentVideo === 0}
-              className="border-green-400/30 text-green-400 hover:bg-green-400/10"
-              size="sm"
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onNext}
-              disabled={currentVideo === totalLessons - 1}
-              className="border-green-400/30 text-green-400 hover:bg-green-400/10"
-              size="sm"
-            >
-              Next
-            </Button>
-          </div>
-
+      {/* Header - hide in fullscreen */}
+      {!isFullscreen && (
+        <div className="p-4 border-b border-green-400/30 flex items-center justify-between">
+          <h3 className="text-green-400 font-semibold flex items-center">
+            <Video className="w-4 h-4 mr-2" />
+            {lesson?.title || `Lesson ${currentVideo + 1}`}
+          </h3>
           <div className="flex items-center space-x-2">
-            {!completedLessons.includes(lesson?.id || "") && (
+            {isMaximized && onRestore ? (
               <Button
-                onClick={() => lesson && onMarkComplete(lesson.id)}
-                className="bg-green-400 text-black hover:bg-green-300"
+                variant="ghost"
                 size="sm"
+                onClick={onRestore}
+                className="text-green-400 hover:bg-green-400/10"
+                title="Restore to split view"
               >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Mark Complete
+                <Minimize2 className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onMaximize}
+                className="text-green-400 hover:bg-green-400/10"
+                title="Maximize video"
+              >
+                <Maximize2 className="w-4 h-4" />
               </Button>
             )}
-            {completedLessons.includes(lesson?.id || "") && (
-              <div className="flex items-center text-green-400 text-sm">
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Completed
-              </div>
-            )}
           </div>
         </div>
+      )}
+
+      <div className={`flex-1 flex flex-col ${!isFullscreen ? "p-4" : ""}`}>
+        <div
+          ref={videoContainerRef}
+          className={`${
+            isFullscreen
+              ? "fixed inset-0 z-50 bg-black"
+              : "aspect-video border border-green-400/30 rounded-lg mb-4 flex-shrink-0"
+          } bg-black overflow-hidden relative group cursor-pointer`}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={handleVideoClick}
+        >
+          {hasVideoUrl ? (
+            <>
+              <ReactPlayer
+                ref={playerRef}
+                url={lesson.videoUrl}
+                width="100%"
+                height="100%"
+                playing={isPlaying}
+                volume={volume}
+                muted={muted}
+                onProgress={handleProgress}
+                onDuration={handleDuration}
+                onEnded={handleVideoEnd}
+                onReady={handleVideoReady}
+                onStart={handleVideoStart}
+                controls={false}
+                config={{
+                  file: {
+                    attributes: {
+                      crossOrigin: "anonymous",
+                    },
+                  },
+                }}
+              />
+
+              {/* Center Play/Pause Button */}
+              {showCenterPlayButton && (
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center backdrop-blur-sm transition-all duration-300">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleVideoClick();
+                    }}
+                    size="lg"
+                    className="bg-green-400 text-black hover:bg-green-300 w-20 h-20 rounded-full p-0 shadow-2xl transform hover:scale-110 transition-all duration-300"
+                  >
+                    {!hasStarted || !isPlaying ? (
+                      <Play className="w-8 h-8 ml-1" />
+                    ) : (
+                      <Pause className="w-8 h-8" />
+                    )}
+                  </Button>
+                  {!hasStarted && !isFullscreen && (
+                    <div className="absolute top-full mt-4 text-center">
+                      <p className="text-green-400 font-semibold text-lg">
+                        Click to start video
+                      </p>
+                      <p className="text-green-400/70 text-sm mt-1">
+                        {lesson?.duration || "Duration unknown"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Bottom Controls Overlay */}
+              {hasStarted && (
+                <div
+                  className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-2 transition-opacity duration-300 ${
+                    showControls ? "opacity-100" : "opacity-0"
+                  }`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Control Buttons */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        onClick={onPlayPause}
+                        size="sm"
+                        className="bg-green-400 text-black hover:bg-green-300"
+                        title="Play/Pause (Space)"
+                      >
+                        {isPlaying ? (
+                          <Pause className="w-4 h-4" />
+                        ) : (
+                          <Play className="w-4 h-4" />
+                        )}
+                      </Button>
+
+                      <div className="">
+                        <Button
+                          onClick={skipBackward}
+                          //   size="icon"
+                          variant="ghost"
+                          className="text-green-400 hover:bg-green-400/20 !p-2"
+                          title="Skip back 5 seconds (←)"
+                        >
+                          <ChevronsLeft className="w-4 h-4" />
+                        </Button>
+
+                        <Button
+                          onClick={skipForward}
+                          //   size="icon"
+                          variant="ghost"
+                          className="text-green-400 hover:bg-green-400/20 !p-2"
+                          title="Skip forward 5 seconds (→)"
+                        >
+                          <ChevronsRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      {/* Show lesson title in fullscreen */}
+                      {isFullscreen && (
+                        <div className="text-green-400 font-semibold ml-4">
+                          {lesson?.title || `Lesson ${currentVideo + 1}`}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right side controls: Volume and Fullscreen */}
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        onClick={toggleMute}
+                        variant="ghost"
+                        size="sm"
+                        className="text-green-400 hover:bg-green-400/20"
+                      >
+                        {muted ? (
+                          <VolumeX className="w-4 h-4" />
+                        ) : (
+                          <Volume2 className="w-4 h-4" />
+                        )}
+                      </Button>
+
+                      <div className="flex items-center space-x-2 w-20">
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.1}
+                          value={volume}
+                          onChange={(e) =>
+                            setVolume(parseFloat(e.target.value))
+                          }
+                          className="w-full h-1 bg-green-400/30 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFullscreen();
+                        }}
+                        variant="ghost"
+                        size="sm"
+                        className="text-green-400 hover:bg-green-400/20"
+                        title={
+                          isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
+                        }
+                      >
+                        {isFullscreen ? (
+                          <Minimize2 className="w-4 h-4" />
+                        ) : (
+                          <Maximize2 className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="px-2">
+                    <div
+                      className="relative group cursor-pointer py-2"
+                      onClick={handleProgressClick}
+                    >
+                      <div className="h-1 bg-black/50 rounded-full relative overflow-hidden">
+                        <div
+                          className="h-full bg-green-400 rounded-full transition-all duration-150"
+                          style={{ width: `${played * 100}%` }}
+                        />
+                        {/* Hover indicator */}
+                        <div className="absolute inset-0 bg-green-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full" />
+                      </div>
+                      {/* Larger click area */}
+                      <div className="absolute inset-0 -my-2" />
+                    </div>
+                    <div className="flex justify-between text-xs text-green-400 mt-1">
+                      <span>{formatTime(progress)}</span>
+                      <span>{formatTime(duration)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            // No video URL available
+            <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Video className="w-8 h-8 text-green-400/60" />
+                </div>
+                <p className="text-green-400 font-semibold">
+                  No video available
+                </p>
+                <p className="text-green-400/70 text-sm mt-1">
+                  This lesson doesn't have a video yet
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation and Completion Controls - hide in fullscreen */}
+        {!isFullscreen && (
+          <div className="flex items-center justify-between">
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={onPrevious}
+                disabled={currentVideo === 0}
+                className="border-green-400/30 text-green-400 hover:bg-green-400/10"
+                size="sm"
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                onClick={onNext}
+                disabled={currentVideo === totalLessons - 1}
+                className="border-green-400/30 text-green-400 hover:bg-green-400/10"
+                size="sm"
+              >
+                Next
+              </Button>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              {!completedLessons.includes(lesson?.id || "") && (
+                <Button
+                  onClick={() => lesson && onMarkComplete(lesson.id)}
+                  className="bg-green-400 text-black hover:bg-green-300"
+                  size="sm"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Mark Complete
+                </Button>
+              )}
+              {completedLessons.includes(lesson?.id || "") && (
+                <div className="flex items-center text-green-400 text-sm">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Completed
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

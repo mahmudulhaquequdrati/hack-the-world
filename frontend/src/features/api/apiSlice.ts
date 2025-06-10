@@ -229,6 +229,34 @@ export const apiSlice = createApi({
       invalidatesTags: ["Enrollment", "Progress"],
     }),
 
+    // Get current user enrollments (without populate)
+    getCurrentUserEnrollments: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: Array<{
+          userId: string;
+          moduleId: string;
+          status: string;
+          completedSections: number;
+          totalSections: number;
+          progressPercentage: number;
+          estimatedCompletionDate: string | null;
+          enrolledAt: string;
+          lastAccessedAt: string;
+          createdAt: string;
+          updatedAt: string;
+          isCompleted: boolean;
+          isActive: boolean;
+          id: string;
+        }>;
+      },
+      void
+    >({
+      query: () => "/enrollments/user/me",
+      providesTags: ["Enrollment"],
+    }),
+
     getUserEnrollments: builder.query<
       { moduleId: string; enrolledAt: string; progress: number }[],
       void
@@ -346,6 +374,7 @@ export const {
   useEnrollInModuleMutation,
   useGetEnrollmentByModuleQuery,
   useUnenrollFromModuleMutation,
+  useGetCurrentUserEnrollmentsQuery,
   useGetUserEnrollmentsQuery,
   useGetUserProgressQuery,
   useUpdateProgressMutation,

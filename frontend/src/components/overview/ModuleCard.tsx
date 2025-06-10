@@ -41,15 +41,6 @@ interface ModuleStatsType {
   games: number;
 }
 
-// Enrollment data type
-interface EnrollmentData {
-  id: string;
-  status: string;
-  progressPercentage: number;
-  enrolledAt: string;
-  moduleId: { id: string; title: string };
-}
-
 const ModuleCard = ({
   module: initialModule,
   isLast,
@@ -63,18 +54,17 @@ const ModuleCard = ({
   // Cast to module type with optional content for content access
   const moduleWithContent = initialModule as ModuleWithOptionalContent;
 
-  // Check enrollment status using RTK Query
-  const { data: enrollmentData, isLoading: isCheckingEnrollment } =
-    apiSlice.useGetEnrollmentByModuleQuery(initialModule.id, {
-      skip: !isAuthenticated, // Skip query if user is not authenticated
-    });
-
   // Use enrollment mutation
   const [enrollInModule] = apiSlice.useEnrollInModuleMutation();
 
-  // Determine enrollment status
-  const isEnrolled = enrollmentData?.success && enrollmentData?.data;
-  const enrollmentInfo = enrollmentData?.data as EnrollmentData | null;
+  // Get enrollment data from module props (already processed in overview)
+  const isEnrolled = initialModule.enrolled || false;
+  const enrollmentInfo =
+    (
+      initialModule as ModuleWithOptionalContent & {
+        enrollmentInfo?: { progressPercentage: number };
+      }
+    ).enrollmentInfo || null;
 
   // Calculate stats from module data (API provides content arrays with counts)
   const stats: ModuleStatsType = useMemo(() => {
@@ -482,7 +472,7 @@ const ModuleCard = ({
                   {/* Small Enroll Button */}
                   <Button
                     onClick={handleEnroll}
-                    disabled={localEnrolling || isCheckingEnrollment}
+                    disabled={localEnrolling}
                     className={cn(
                       "h-12 px-4 font-mono uppercase tracking-wider text-xs font-bold",
                       "bg-gradient-to-r from-green-600 to-green-500",
@@ -491,12 +481,11 @@ const ModuleCard = ({
                       "hover:from-green-500 hover:to-green-400",
                       "transition-all duration-300",
                       "relative overflow-hidden",
-                      (localEnrolling || isCheckingEnrollment) &&
-                        "animate-pulse"
+                      localEnrolling && "animate-pulse"
                     )}
                   >
                     <span className="relative z-10 flex items-center justify-center space-x-1">
-                      {localEnrolling || isCheckingEnrollment ? (
+                      {localEnrolling ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
                       ) : (
                         <>

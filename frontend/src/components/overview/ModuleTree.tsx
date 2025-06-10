@@ -4,23 +4,11 @@ import ModuleCard from "./ModuleCard";
 
 interface ModuleTreeProps {
   phase: Phase;
-  completedModules: string[];
   onNavigate: (path: string) => void;
   onEnroll: (path: string) => void;
-  enrollingModules?: Set<string>;
 }
 
-const ModuleTree = ({
-  phase,
-  completedModules,
-  onNavigate,
-  onEnroll,
-  enrollingModules = new Set(),
-}: ModuleTreeProps) => {
-  const getModuleStatus = (moduleId: string) => {
-    return completedModules.includes(moduleId) ? "completed" : "in-progress";
-  };
-
+const ModuleTree = ({ phase, onNavigate, onEnroll }: ModuleTreeProps) => {
   // Handle case where modules might not be loaded yet
   const modules = phase.modules || [];
 
@@ -56,8 +44,6 @@ const ModuleTree = ({
       <div className="bg-black/60 border border-green-400/30 rounded-lg p-6 font-mono">
         <div className="space-y-0">
           {modules.map((module, index) => {
-            const status = getModuleStatus(module.id);
-            const isCompleted = status === "completed";
             const isLast = index === modules.length - 1;
 
             return (
@@ -67,10 +53,9 @@ const ModuleTree = ({
                 index={index}
                 totalModules={modules.length}
                 isLast={isLast}
-                isCompleted={isCompleted}
+                isCompleted={module.completed || false}
                 onNavigate={onNavigate}
                 onEnroll={onEnroll}
-                isEnrolling={enrollingModules.has(module.id)}
               />
             );
           })}

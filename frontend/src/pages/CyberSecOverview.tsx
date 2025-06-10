@@ -10,9 +10,9 @@ import {
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import {
   useEnrollInModuleMutation,
+  useGetCurrentUserEnrollmentsQuery,
   useGetPhasesWithModulesQuery,
 } from "@/features/api/apiSlice";
-import { COMPLETED_MODULES } from "@/lib/constants";
 import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
 import { Module, Phase } from "@/lib/types";
 import { useEffect, useMemo, useState } from "react";
@@ -45,7 +45,6 @@ const getColorsForModule = (color: string) => {
 
 const CyberSecOverview = () => {
   const navigate = useNavigate();
-  const completedModules = [...COMPLETED_MODULES];
 
   // Single comprehensive RTK Query hook
   const {
@@ -55,12 +54,33 @@ const CyberSecOverview = () => {
     refetch: refetchData,
   } = useGetPhasesWithModulesQuery();
 
+  // Get user enrollments
+  const { data: enrollmentResponse } = useGetCurrentUserEnrollmentsQuery();
+
   const [enrollInModule] = useEnrollInModuleMutation();
 
   // Set active phase to the first phase when data loads
   const [activePhase, setActivePhase] = useState("");
 
-  // Data processing - use only API data
+  // Process enrollment data to create a map for quick lookup
+  const enrollmentMap = useMemo(() => {
+    const map = new Map();
+    if (enrollmentResponse?.success && enrollmentResponse?.data) {
+      enrollmentResponse.data.forEach((enrollment) => {
+        map.set(enrollment.moduleId, {
+          enrollmentId: enrollment.id,
+          status: enrollment.status,
+          progressPercentage: enrollment.progressPercentage,
+          isCompleted: enrollment.isCompleted,
+          isActive: enrollment.isActive,
+          enrolledAt: enrollment.enrolledAt,
+        });
+      });
+    }
+    return map;
+  }, [enrollmentResponse]);
+
+  // Data processing - use only API data and enrollment data
   const phasesData = useMemo(() => {
     // Use API data (should already be processed with modules, stats, and progress)
     return phasesWithModules
@@ -69,6 +89,7 @@ const CyberSecOverview = () => {
         const phaseModules = (phase.modules || [])
           .map((module: Module) => {
             const colors = getColorsForModule(module.color);
+            const enrollmentInfo = enrollmentMap.get(module.id);
 
             return {
               ...module,
@@ -78,9 +99,10 @@ const CyberSecOverview = () => {
               labs: module.content?.labs?.length || 0,
               games: module.content?.games?.length || 0,
               assets: module.content?.documents?.length || 0,
-              enrolled: module.enrolled || false,
-              completed: module.progress === 100 || module.completed || false,
-              progress: module.progress || 0,
+              enrolled: !!enrollmentInfo,
+              completed: enrollmentInfo?.isCompleted || false,
+              progress: enrollmentInfo?.progressPercentage || 0,
+              enrollmentInfo,
             };
           })
           .sort((a: Module, b: Module) => (a.order || 0) - (b.order || 0));
@@ -91,7 +113,7 @@ const CyberSecOverview = () => {
         };
       })
       .sort((a: Phase, b: Phase) => (a.order || 0) - (b.order || 0));
-  }, [phasesWithModules]);
+  }, [phasesWithModules, enrollmentMap]);
 
   // Set default active phase to the first phase when data loads
   useEffect(() => {
@@ -111,9 +133,7 @@ const CyberSecOverview = () => {
     );
     const completedModules = phasesData
       .flatMap((phase: Phase) => phase.modules || [])
-      .filter(
-        (module: Module) => module.progress === 100 || module.completed
-      ).length;
+      .filter((module: Module) => module.completed).length;
 
     return totalModules > 0
       ? Math.round((completedModules / totalModules) * 100)
@@ -247,7 +267,6 @@ const CyberSecOverview = () => {
                 {/* Modules Tree Structure */}
                 <ModuleTree
                   phase={phase}
-                  completedModules={completedModules}
                   onNavigate={handleModuleNavigation}
                   onEnroll={handleEnroll}
                 />

@@ -86,6 +86,108 @@ const EnrolledCoursePage = () => {
   const [activeLab, setActiveLab] = useState<string | null>(null);
   const [activeGame, setActiveGame] = useState<string | null>(null);
 
+  // Security: Apply global security styles when video is playing
+  useEffect(() => {
+    const applySecurityStyles = () => {
+      const style = document.createElement("style");
+      style.id = "video-security-styles";
+      style.textContent = `
+        /* Disable screenshot/screen capture for video content */
+        .video-security-active {
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+          user-select: none !important;
+          -webkit-touch-callout: none !important;
+          -webkit-tap-highlight-color: transparent !important;
+          pointer-events: auto !important;
+        }
+
+        /* Disable print for video content */
+        @media print {
+          .video-security-active {
+            display: none !important;
+          }
+        }
+
+        /* Additional protection against content extraction */
+        .video-security-active * {
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+          user-select: none !important;
+          -webkit-user-drag: none !important;
+          -webkit-touch-callout: none !important;
+        }
+
+        /* Prevent image saving */
+        .video-security-active img,
+        .video-security-active video {
+          -webkit-user-drag: none !important;
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          pointer-events: none !important;
+        }
+
+        /* Block inspect element overlay */
+        .video-security-active::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 999;
+          pointer-events: none;
+          background: transparent;
+        }
+      `;
+
+      if (!document.getElementById("video-security-styles")) {
+        document.head.appendChild(style);
+      }
+    };
+
+    const removeSecurityStyles = () => {
+      const existingStyle = document.getElementById("video-security-styles");
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+    };
+
+    if (isPlaying) {
+      applySecurityStyles();
+      document.body.classList.add("video-security-active");
+
+      // Add meta tag to prevent screenshots (supported by some browsers)
+      const meta = document.createElement("meta");
+      meta.name = "format-detection";
+      meta.content = "telephone=no";
+      meta.id = "security-meta";
+      if (!document.getElementById("security-meta")) {
+        document.head.appendChild(meta);
+      }
+    } else {
+      document.body.classList.remove("video-security-active");
+      removeSecurityStyles();
+
+      const securityMeta = document.getElementById("security-meta");
+      if (securityMeta) {
+        securityMeta.remove();
+      }
+    }
+
+    return () => {
+      document.body.classList.remove("video-security-active");
+      removeSecurityStyles();
+
+      const securityMeta = document.getElementById("security-meta");
+      if (securityMeta) {
+        securityMeta.remove();
+      }
+    };
+  }, [isPlaying]);
+
   // Load course data from API
   const {
     data: moduleData,

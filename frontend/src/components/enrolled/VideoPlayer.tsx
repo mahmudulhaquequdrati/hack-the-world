@@ -8,6 +8,7 @@ import {
   Minimize2,
   Pause,
   Play,
+  Shield,
   Video,
   Volume2,
   VolumeX,
@@ -55,6 +56,84 @@ const VideoPlayer = ({
   const [hasStarted, setHasStarted] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [securityWarning, setSecurityWarning] = useState("");
+
+  // Security: Prevent tab switching and visibility change during video
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && isPlaying) {
+        // Pause video when tab is not visible
+        onPlayPause();
+        setSecurityWarning(
+          "Video paused for security. Please keep this tab active while watching."
+        );
+      }
+    };
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isPlaying) {
+        e.preventDefault();
+        e.returnValue =
+          "Video is currently playing. Are you sure you want to leave?";
+        return e.returnValue;
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isPlaying, onPlayPause]);
+
+  // Security: Disable developer tools and inspection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Disable common developer tool shortcuts
+      if (
+        // F12
+        e.keyCode === 123 ||
+        // Ctrl+Shift+I
+        (e.ctrlKey && e.shiftKey && e.keyCode === 73) ||
+        // Ctrl+Shift+C
+        (e.ctrlKey && e.shiftKey && e.keyCode === 67) ||
+        // Ctrl+Shift+J
+        (e.ctrlKey && e.shiftKey && e.keyCode === 74) ||
+        // Ctrl+U (view source)
+        (e.ctrlKey && e.keyCode === 85) ||
+        // Ctrl+S (save page)
+        (e.ctrlKey && e.keyCode === 83) ||
+        // Ctrl+P (print)
+        (e.ctrlKey && e.keyCode === 80) ||
+        // F5/Ctrl+R (refresh)
+        e.keyCode === 116 ||
+        (e.ctrlKey && e.keyCode === 82)
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        setSecurityWarning("This action is not allowed during video playback.");
+        return false;
+      }
+    };
+
+    // Only apply security when video is playing
+    if (isPlaying) {
+      document.addEventListener("keydown", handleKeyDown, true);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [isPlaying]);
+
+  // Security: Disable right-click context menu
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setSecurityWarning("Right-click is disabled for security purposes.");
+    return false;
+  };
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -116,6 +195,7 @@ const VideoPlayer = ({
   const handlePlay = () => {
     setHasStarted(true);
     onPlayPause();
+    setSecurityWarning(""); // Clear any warnings when starting video
   };
 
   const handleVideoStart = () => {
@@ -194,7 +274,7 @@ const VideoPlayer = ({
     }
   };
 
-  // Add keyboard shortcuts
+  // Add keyboard shortcuts (only for allowed actions)
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return; // Don't trigger if typing in input
@@ -238,6 +318,20 @@ const VideoPlayer = ({
 
   return (
     <div className="h-full flex flex-col">
+      {/* Security Warning Banner */}
+      {securityWarning && (
+        <div className="bg-red-900/80 border border-red-400 text-red-200 px-4 py-2 text-sm flex items-center">
+          <Shield className="w-4 h-4 mr-2" />
+          {securityWarning}
+          <button
+            onClick={() => setSecurityWarning("")}
+            className="ml-auto text-red-300 hover:text-red-100"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Header - hide in fullscreen */}
       {!isFullscreen && (
         <div className="p-4 border-b border-green-400/30 flex items-center justify-between">
@@ -246,6 +340,10 @@ const VideoPlayer = ({
             {lesson?.title || `Lesson ${currentVideo + 1}`}
           </h3>
           <div className="flex items-center space-x-2">
+            <div className="flex items-center text-xs text-green-400/70">
+              <Shield className="w-3 h-3 mr-1" />
+              Protected Content
+            </div>
             {isMaximized && onRestore ? (
               <Button
                 variant="ghost"
@@ -278,10 +376,22 @@ const VideoPlayer = ({
             isFullscreen
               ? "fixed inset-0 z-50 bg-black"
               : "aspect-video border border-green-400/30 rounded-lg mb-4 flex-shrink-0"
-          } bg-black overflow-hidden relative group cursor-pointer`}
+          } bg-black overflow-hidden relative group cursor-pointer select-none`}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onClick={handleVideoClick}
+          onContextMenu={handleContextMenu}
+          style={
+            {
+              userSelect: "none",
+              WebkitUserSelect: "none",
+              MozUserSelect: "none",
+              msUserSelect: "none",
+              WebkitTouchCallout: "none",
+              KhtmlUserSelect: "none",
+              pointerEvents: "auto",
+            } as React.CSSProperties
+          }
         >
           {hasVideoUrl ? (
             <>
@@ -299,18 +409,56 @@ const VideoPlayer = ({
                 onReady={handleVideoReady}
                 onStart={handleVideoStart}
                 controls={false}
+                disablePictureInPicture={true}
                 config={{
                   file: {
                     attributes: {
                       crossOrigin: "anonymous",
+                      controlsList: "nodownload noremoteplayback",
+                      disablePictureInPicture: true,
+                      preload: "none",
+                      "data-setup": '{"fluid": true}',
+                      onContextMenu: (e: Event) => e.preventDefault(),
+                    },
+                    forceVideo: true,
+                  },
+                  youtube: {
+                    playerVars: {
+                      showinfo: 0,
+                      controls: 0,
+                      modestbranding: 1,
+                      rel: 0,
+                      disablekb: 1,
+                      fs: 0,
+                    },
+                  },
+                  vimeo: {
+                    playerOptions: {
+                      byline: false,
+                      portrait: false,
+                      title: false,
+                      pip: false,
+                      download: false,
                     },
                   },
                 }}
               />
 
+              {/* Security Overlay - Invisible overlay to prevent direct video interaction */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: "transparent",
+                  zIndex: 1,
+                }}
+              />
+
               {/* Center Play/Pause Button */}
               {showCenterPlayButton && (
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center backdrop-blur-sm transition-all duration-300">
+                <div
+                  className="absolute inset-0 bg-black/30 flex items-center justify-center backdrop-blur-sm transition-all duration-300"
+                  style={{ zIndex: 2 }}
+                >
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -333,6 +481,10 @@ const VideoPlayer = ({
                       <p className="text-green-400/70 text-sm mt-1">
                         {lesson?.duration || "Duration unknown"}
                       </p>
+                      <p className="text-green-400/50 text-xs mt-2 flex items-center justify-center">
+                        <Shield className="w-3 h-3 mr-1" />
+                        This content is protected
+                      </p>
                     </div>
                   )}
                 </div>
@@ -344,6 +496,7 @@ const VideoPlayer = ({
                   className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-2 transition-opacity duration-300 ${
                     showControls ? "opacity-100" : "opacity-0"
                   }`}
+                  style={{ zIndex: 2 }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Control Buttons */}
@@ -365,7 +518,6 @@ const VideoPlayer = ({
                       <div className="">
                         <Button
                           onClick={skipBackward}
-                          //   size="icon"
                           variant="ghost"
                           className="text-green-400 hover:bg-green-400/20 !p-2"
                           title="Skip back 5 seconds (←)"
@@ -375,7 +527,6 @@ const VideoPlayer = ({
 
                         <Button
                           onClick={skipForward}
-                          //   size="icon"
                           variant="ghost"
                           className="text-green-400 hover:bg-green-400/20 !p-2"
                           title="Skip forward 5 seconds (→)"
@@ -386,7 +537,8 @@ const VideoPlayer = ({
 
                       {/* Show lesson title in fullscreen */}
                       {isFullscreen && (
-                        <div className="text-green-400 font-semibold ml-4">
+                        <div className="text-green-400 font-semibold ml-4 flex items-center">
+                          <Shield className="w-3 h-3 mr-1" />
                           {lesson?.title || `Lesson ${currentVideo + 1}`}
                         </div>
                       )}

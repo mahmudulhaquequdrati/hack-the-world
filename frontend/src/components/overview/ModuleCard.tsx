@@ -1,13 +1,29 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { apiSlice } from "@/features/api/apiSlice";
+import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { cn } from "@/lib";
 import { getVideosCountForModule } from "@/lib/appData";
 import { getIconFromName } from "@/lib/iconUtils";
 import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
 import { Module } from "@/lib/types";
-import { CheckCircle, Clock, Loader2, Play, Star, Zap } from "lucide-react";
-import { useMemo } from "react";
+import {
+  CheckCircle,
+  Clock,
+  Loader2,
+  Play,
+  Star,
+  UserCheck,
+  Zap,
+} from "lucide-react";
+import { useMemo, useState } from "react";
+
+// Type for handling modules that might have partial content data
+type ModuleWithOptionalContent = Module & {
+  labs?: number;
+  games?: number;
+};
 
 interface ModuleCardProps {
   module: Module;
@@ -17,7 +33,6 @@ interface ModuleCardProps {
   isCompleted: boolean;
   onNavigate: (path: string) => void;
   onEnroll: (path: string) => void;
-  isEnrolling?: boolean;
 }
 
 interface ModuleStatsType {
@@ -26,42 +41,85 @@ interface ModuleStatsType {
   games: number;
 }
 
+// Enrollment data type
+interface EnrollmentData {
+  id: string;
+  status: string;
+  progressPercentage: number;
+  enrolledAt: string;
+  moduleId: { id: string; title: string };
+}
+
 const ModuleCard = ({
   module: initialModule,
   isLast,
   isCompleted,
   onNavigate,
   onEnroll,
-  isEnrolling,
 }: ModuleCardProps) => {
+  const { isAuthenticated } = useAuthRTK();
+  const [localEnrolling, setLocalEnrolling] = useState(false);
+
+  // Cast to module type with optional content for content access
+  const moduleWithContent = initialModule as ModuleWithOptionalContent;
+
+  // Check enrollment status using RTK Query
+  const { data: enrollmentData, isLoading: isCheckingEnrollment } =
+    apiSlice.useGetEnrollmentByModuleQuery(initialModule.id, {
+      skip: !isAuthenticated, // Skip query if user is not authenticated
+    });
+
+  // Use enrollment mutation
+  const [enrollInModule] = apiSlice.useEnrollInModuleMutation();
+
+  // Determine enrollment status
+  const isEnrolled = enrollmentData?.success && enrollmentData?.data;
+  const enrollmentInfo = enrollmentData?.data as EnrollmentData | null;
+
   // Calculate stats from module data (API provides content arrays with counts)
   const stats: ModuleStatsType = useMemo(() => {
     return {
       videos:
-        (initialModule as any).content?.videos?.length ||
+        moduleWithContent.content?.videos?.length ||
         getVideosCountForModule(initialModule.id),
       labs:
-        (initialModule as any).content?.labs?.length ||
-        (initialModule as any).labs ||
-        0,
+        moduleWithContent.content?.labs?.length || moduleWithContent.labs || 0,
       games:
-        (initialModule as any).content?.games?.length ||
-        (initialModule as any).games ||
+        moduleWithContent.content?.games?.length ||
+        moduleWithContent.games ||
         0,
     };
-  }, [initialModule]);
+  }, [moduleWithContent, initialModule.id]);
 
   const handleEnroll = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    onEnroll(getCoursePath(initialModule.id));
+
+    if (!isAuthenticated) {
+      onEnroll(getCoursePath(initialModule.id));
+      return;
+    }
+
+    setLocalEnrolling(true);
+    try {
+      await enrollInModule(initialModule.id).unwrap();
+      // After successful enrollment, the query will be invalidated and refetched
+    } catch (error) {
+      console.error("Enrollment failed:", error);
+    } finally {
+      setLocalEnrolling(false);
+    }
   };
 
   const handleNavigate = () => {
-    if (initialModule.enrolled) {
+    if (isEnrolled) {
       onNavigate(getEnrollPath(initialModule.id));
     } else {
       onNavigate(getCoursePath(initialModule.id));
     }
+  };
+
+  const handleViewDetails = () => {
+    onNavigate(getCoursePath(initialModule.id));
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -89,8 +147,6 @@ const ModuleCard = ({
   const treeChar = isLast ? "└──" : "├──";
   const ModuleIcon = getIconFromName(initialModule.icon);
 
-  console.log(initialModule);
-
   return (
     <div className="relative">
       {/* Tree Structure */}
@@ -108,7 +164,7 @@ const ModuleCard = ({
             "relative flex-1 ml-2 mb-4 group cursor-pointer",
             "transform transition-all duration-300 hover:scale-[1.02]"
           )}
-          onClick={handleNavigate}
+          //   onClick={handleNavigate}
         >
           {/* Main Card Container with Retro Design */}
           <div
@@ -148,8 +204,9 @@ const ModuleCard = ({
                   <CheckCircle className="w-5 h-5" />
                 </div>
               )}
-              {initialModule.enrolled && !isCompleted && (
+              {isEnrolled && !isCompleted && (
                 <div
+                  onClick={handleNavigate}
                   className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center",
                     `bg-${colorName}-400/20 border-2 border-${colorName}-400`,
@@ -321,7 +378,7 @@ const ModuleCard = ({
             </div>
 
             {/* Progress Section (if enrolled) */}
-            {initialModule.enrolled && (
+            {isEnrolled && (
               <div className="px-6 pb-4">
                 <div
                   className={cn(
@@ -341,12 +398,12 @@ const ModuleCard = ({
                         initialModule.color
                       )}
                     >
-                      {initialModule.progress}%
+                      {enrollmentInfo?.progressPercentage}%
                     </span>
                   </div>
                   <div className="relative">
                     <Progress
-                      value={initialModule.progress}
+                      value={enrollmentInfo?.progressPercentage}
                       className={cn(
                         "h-3 bg-gray-800/80 border border-gray-700/50",
                         "shadow-inner"
@@ -359,7 +416,9 @@ const ModuleCard = ({
                         "bg-gradient-to-r opacity-50 blur-sm",
                         `from-${colorName}-400 to-${colorName}-600`
                       )}
-                      style={{ width: `${initialModule.progress}%` }}
+                      style={{
+                        width: `${enrollmentInfo?.progressPercentage}%`,
+                      }}
                     ></div>
                   </div>
                 </div>
@@ -401,81 +460,91 @@ const ModuleCard = ({
               </div>
             </div>
 
-            {/* Action Button */}
+            {/* Action Buttons */}
             <div className="px-6 pb-6">
-              {!initialModule.enrolled ? (
-                <Button
-                  onClick={handleEnroll}
-                  disabled={isEnrolling}
-                  className={cn(
-                    "w-full h-12 font-mono uppercase tracking-wider text-sm font-bold",
-                    "bg-gradient-to-r from-green-600 to-green-500",
-                    "border-2 border-green-400",
-                    "text-black ",
-                    "hover:from-green-500 hover:to-green-400",
-
-                    "transition-all duration-300",
-                    "relative overflow-hidden",
-                    isEnrolling && "animate-pulse"
-                  )}
-                >
-                  {/* Button Glow Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-green-600/20 blur-sm"></div>
-                  <span className="relative z-10 flex items-center justify-center space-x-2">
-                    {isEnrolling ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>INITIALIZING...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4" />
-                        <span>ENROLL NOW</span>
-                      </>
+              {!isEnrolled ? (
+                // Not enrolled: Show View Details button + small Enroll button
+                <div className="flex space-x-3">
+                  {/* Main View Details Button */}
+                  <Button
+                    onClick={handleViewDetails}
+                    variant="outline"
+                    className={cn(
+                      "flex-1 h-12 font-mono uppercase tracking-wider text-sm font-bold bg-gradient-to-r border shadow-lg relative overflow-hidden transition-all duration-300"
                     )}
-                  </span>
-                </Button>
+                  >
+                    <span className="relative z-10 flex items-center justify-center space-x-2">
+                      <Play className="w-4 h-4" />
+                      <span>VIEW DETAILS</span>
+                    </span>
+                  </Button>
+
+                  {/* Small Enroll Button */}
+                  <Button
+                    onClick={handleEnroll}
+                    disabled={localEnrolling || isCheckingEnrollment}
+                    className={cn(
+                      "h-12 px-4 font-mono uppercase tracking-wider text-xs font-bold",
+                      "bg-gradient-to-r from-green-600 to-green-500",
+                      "border-2 border-green-400",
+                      "text-black",
+                      "hover:from-green-500 hover:to-green-400",
+                      "transition-all duration-300",
+                      "relative overflow-hidden",
+                      (localEnrolling || isCheckingEnrollment) &&
+                        "animate-pulse"
+                    )}
+                  >
+                    <span className="relative z-10 flex items-center justify-center space-x-1">
+                      {localEnrolling || isCheckingEnrollment ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <>
+                          <UserCheck className="w-3 h-3" />
+                          <span>ENROLL</span>
+                        </>
+                      )}
+                    </span>
+                  </Button>
+                </div>
               ) : (
-                <Button
-                  className={cn(
-                    "w-full h-12 font-mono uppercase tracking-wider text-sm font-bold",
-                    "bg-gradient-to-r border-2 shadow-lg",
-                    `from-${colorName}-600 to-${colorName}-500`,
-                    `border-${colorName}-400 shadow-${colorName}-400/50`,
-                    "text-black",
-                    `hover:from-${colorName}-500 hover:to-${colorName}-400`,
-                    `hover:shadow-xl hover:shadow-${colorName}-400/60`,
-                    "transition-all duration-300",
-                    "relative overflow-hidden"
-                  )}
-                >
-                  {/* Button Glow Effect */}
+                // Enrolled: Show View Details button + Enrolled status
+                <div className="flex items-center space-x-3">
+                  {/* Main View Details Button */}
+                  <Button
+                    onClick={handleViewDetails}
+                    variant="outline"
+                    className={cn(
+                      "flex-1 h-12 font-mono uppercase tracking-wider text-sm font-bold bg-gradient-to-r border shadow-lg relative overflow-hidden transition-all duration-300"
+                    )}
+                  >
+                    <span className="relative z-10 flex items-center justify-center space-x-2">
+                      <Play className="w-4 h-4" />
+                      <span>VIEW DETAILS</span>
+                    </span>
+                  </Button>
+
+                  {/* Enrolled Status Badge */}
                   <div
                     className={cn(
-                      "absolute inset-0 blur-sm",
-                      `bg-gradient-to-r from-${colorName}-400/20 to-${colorName}-600/20`
+                      "flex items-center space-x-2 px-4 py-3",
+                      "bg-gradient-to-r from-green-600/20 to-green-500/20",
+                      "border-2 border-green-400",
+                      "rounded-lg shadow-lg shadow-green-400/30",
+                      "font-mono text-xs font-bold uppercase tracking-wider",
+                      "text-green-400"
                     )}
-                  ></div>
-                  <span className="relative z-10 flex items-center justify-center space-x-2">
-                    {isCompleted ? (
-                      <>
-                        <CheckCircle className="w-4 h-4" />
-                        <span>REVIEW MISSION</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4" />
-                        <span>CONTINUE MISSION</span>
-                      </>
-                    )}
-                  </span>
-                </Button>
+                  >
+                    <UserCheck className="w-4 h-4" />
+                    <span>ENROLLED</span>
+                  </div>
+                </div>
               )}
             </div>
 
             {/* Retro Status Indicators */}
             <div className="absolute top-2 left-2 flex space-x-1">
-              {initialModule.enrolled && (
+              {isEnrolled && (
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
               )}
               <div

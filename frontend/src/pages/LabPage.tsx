@@ -2,6 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+
+import useProgressTracking from "@/hooks/useProgressTracking";
 import { getLabData, getLabsByModule } from "@/lib/appData";
 import { LabData } from "@/lib/types";
 import {
@@ -13,7 +15,7 @@ import {
   Terminal,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 interface LabStep {
@@ -28,6 +30,10 @@ const LabPage = () => {
   const { courseId, labId } = useParams();
   const [labProgress, setLabProgress] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+
+  // Progress tracking
+  const progressTracking = useProgressTracking();
+  const contentStartedRef = useRef(false);
 
   // Get lab data from centralized system
   const getLabDataFromCentral = (): LabData => {
@@ -77,6 +83,17 @@ const LabPage = () => {
 
   const lab = getLabDataFromCentral();
 
+  // Use the labId from URL as the MongoDB content ID
+  const contentId = labId || "";
+
+  // Auto-start content tracking when lab loads
+  useEffect(() => {
+    if (contentId && !contentStartedRef.current) {
+      contentStartedRef.current = true;
+      progressTracking.startContent(contentId);
+    }
+  }, [contentId, progressTracking]);
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case "beginner":
@@ -94,7 +111,17 @@ const LabPage = () => {
     if (!completedSteps.includes(stepId)) {
       const newCompleted = [...completedSteps, stepId];
       setCompletedSteps(newCompleted);
-      setLabProgress((newCompleted.length / lab.steps.length) * 100);
+      const newProgress = (newCompleted.length / lab.steps.length) * 100;
+      setLabProgress(newProgress);
+
+      // If lab is fully completed, mark it as complete with score
+      if (newCompleted.length === lab.steps.length && contentId) {
+        progressTracking.completeLabGame(
+          contentId,
+          newCompleted.length,
+          lab.steps.length
+        );
+      }
     }
   };
 

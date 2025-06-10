@@ -286,6 +286,281 @@ export const apiSlice = createApi({
       invalidatesTags: ["Progress"],
     }),
 
+    // New Content Progress API endpoints
+    startContent: builder.mutation<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          id: string;
+          userId: string;
+          contentId: {
+            id: string;
+            title: string;
+            type: string;
+            section: string;
+          };
+          status: string;
+          progressPercentage: number;
+          startedAt: string;
+          completedAt: string | null;
+          score: number | null;
+          maxScore: number | null;
+        };
+      },
+      { contentId: string }
+    >({
+      query: ({ contentId }) => ({
+        url: "/progress/content/start",
+        method: "POST",
+        body: { contentId },
+      }),
+      invalidatesTags: ["Progress"],
+    }),
+
+    completeContent: builder.mutation<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          id: string;
+          userId: string;
+          contentId: {
+            id: string;
+            title: string;
+            type: string;
+            section: string;
+          };
+          status: string;
+          progressPercentage: number;
+          startedAt: string;
+          completedAt: string;
+          score: number | null;
+          maxScore: number | null;
+        };
+      },
+      { contentId: string; score?: number; maxScore?: number }
+    >({
+      query: ({ contentId, score, maxScore }) => ({
+        url: "/progress/content/complete",
+        method: "POST",
+        body: {
+          contentId,
+          ...(score !== undefined && { score }),
+          ...(maxScore !== undefined && { maxScore }),
+        },
+      }),
+      invalidatesTags: ["Progress"],
+    }),
+
+    updateContentProgress: builder.mutation<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          id: string;
+          userId: string;
+          contentId: {
+            id: string;
+            title: string;
+            type: string;
+            section: string;
+          };
+          status: string;
+          progressPercentage: number;
+          startedAt: string;
+          completedAt: string | null;
+          score: number | null;
+          maxScore: number | null;
+        };
+      },
+      { contentId: string; progressPercentage: number }
+    >({
+      query: ({ contentId, progressPercentage }) => ({
+        url: "/progress/content/update",
+        method: "POST",
+        body: { contentId, progressPercentage },
+      }),
+      invalidatesTags: ["Progress"],
+    }),
+
+    getOverallProgress: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          overallStats: {
+            totalModules: number;
+            completedModules: number;
+            inProgressModules: number;
+            overallCompletionPercentage: number;
+          };
+          moduleProgress: Array<{
+            module: {
+              id: string;
+              title: string;
+              description: string;
+              difficulty: string;
+              phase: string;
+            };
+            enrollment: {
+              status: string;
+              enrolledAt: string;
+              progressPercentage: number;
+            };
+            content: {
+              total: number;
+              completed: number;
+              inProgress: number;
+              notStarted: number;
+            };
+          }>;
+          contentStats: {
+            totalContent: number;
+            completedContent: number;
+            inProgressContent: number;
+            contentByType: {
+              video: { total: number; completed: number };
+              lab: { total: number; completed: number };
+              game: { total: number; completed: number };
+              document: { total: number; completed: number };
+            };
+          };
+        };
+      },
+      string
+    >({
+      query: (userId) => `/progress/overview/${userId}`,
+      providesTags: ["Progress"],
+    }),
+
+    getModuleProgress: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          module: {
+            id: string;
+            title: string;
+            description: string;
+            difficulty: string;
+            phase: string;
+          };
+          enrollment: {
+            status: string;
+            enrolledAt: string;
+            progressPercentage: number;
+          };
+          content: Array<{
+            id: string;
+            title: string;
+            type: string;
+            section: string;
+            duration: number;
+            progress: {
+              status: string;
+              progressPercentage: number;
+              score: number | null;
+              maxScore: number | null;
+              startedAt: string;
+              completedAt: string | null;
+            } | null;
+          }>;
+          statistics: {
+            totalContent: number;
+            completedContent: number;
+            inProgressContent: number;
+            notStartedContent: number;
+            completionPercentage: number;
+            contentByType: {
+              video: { total: number; completed: number };
+              lab: { total: number; completed: number };
+              game: { total: number; completed: number };
+              document: { total: number; completed: number };
+            };
+          };
+        };
+      },
+      { userId: string; moduleId: string }
+    >({
+      query: ({ userId, moduleId }) => `/progress/module/${userId}/${moduleId}`,
+      providesTags: (result, error, { moduleId }) => [
+        { type: "Progress", id: `module-${moduleId}` },
+      ],
+    }),
+
+    getContentTypeProgress: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          content: Array<{
+            id: string;
+            title: string;
+            description: string;
+            section: string;
+            duration: number;
+            module: {
+              id: string;
+              title: string;
+              difficulty: string;
+              phase: string;
+            };
+            progress: {
+              id: string;
+              status: string;
+              progressPercentage: number;
+              startedAt: string;
+              completedAt: string | null;
+              score: number | null;
+              maxScore: number | null;
+            } | null;
+          }>;
+          statistics: {
+            total: number;
+            completed: number;
+            inProgress: number;
+            notStarted: number;
+            averageProgress: number;
+          };
+          modules: Array<{
+            module: {
+              id: string;
+              title: string;
+            };
+            enrollment: {
+              status: string;
+              enrolledAt: string;
+            };
+            content: Array<unknown>;
+            statistics: {
+              total: number;
+              completed: number;
+              inProgress: number;
+              notStarted: number;
+            };
+          }>;
+        };
+      },
+      {
+        userId: string;
+        contentType: "video" | "lab" | "game" | "document";
+        moduleId?: string;
+        status?: "not-started" | "in-progress" | "completed";
+      }
+    >({
+      query: ({ userId, contentType, moduleId, status }) => {
+        const params = new URLSearchParams();
+        if (moduleId) params.append("moduleId", moduleId);
+        if (status) params.append("status", status);
+
+        return `/progress/content/${userId}/${contentType}?${params.toString()}`;
+      },
+      providesTags: (result, error, { contentType }) => [
+        { type: "Progress", id: `content-${contentType}` },
+      ],
+    }),
+
     // Content endpoints
     getGamesByModule: builder.query<{ [gameId: string]: GameData }, string>({
       query: (moduleId) => `/modules/${moduleId}/games`,
@@ -382,6 +657,12 @@ export const {
   useGetLabsByModuleQuery,
   useGetModuleOverviewQuery,
   useGetModuleContentGroupedQuery,
+  useStartContentMutation,
+  useCompleteContentMutation,
+  useUpdateContentProgressMutation,
+  useGetOverallProgressQuery,
+  useGetModuleProgressQuery,
+  useGetContentTypeProgressQuery,
 } = apiSlice;
 
 export default apiSlice;

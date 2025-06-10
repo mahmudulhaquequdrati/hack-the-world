@@ -1,4 +1,8 @@
-import { DashboardTabs, LearningDashboard } from "@/components/dashboard";
+import {
+  DashboardTabs,
+  LearningDashboard,
+  ProgressOverview,
+} from "@/components/dashboard";
 import {
   ACHIEVEMENTS_DATA,
   getAllModules,
@@ -33,6 +37,8 @@ const Dashboard = () => {
     <div className="min-h-screen bg-black text-green-400">
       <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
         <LearningDashboard enrolledModules={enrolledModules} />
+
+        <ProgressOverview />
 
         <DashboardTabs
           activeTab={activeTab}

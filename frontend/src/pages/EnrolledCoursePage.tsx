@@ -225,6 +225,7 @@ const EnrolledCoursePage = () => {
             }>
           ).map((item, itemIndex: number) => ({
             id: `lesson-${index}-${itemIndex}`,
+            contentId: item.id,
             title: item.title,
             duration: item.duration ? `${item.duration}:00` : "15:00",
             type: item.type === "document" ? ("text" as const) : item.type,

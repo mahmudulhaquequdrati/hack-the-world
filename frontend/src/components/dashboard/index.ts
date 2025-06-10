@@ -7,6 +7,7 @@ export { EnhancedProgressTab } from "./EnhancedProgressTab";
 export { LearningDashboard } from "./LearningDashboard";
 export { ModuleProgressCard } from "./ModuleProgressCard";
 export { DashboardOverviewTab } from "./OverviewTab";
+export { ProgressOverview } from "./ProgressOverview";
 export { ProgressTab } from "./ProgressTab";
 export { StatsGrid } from "./StatsGrid";
 

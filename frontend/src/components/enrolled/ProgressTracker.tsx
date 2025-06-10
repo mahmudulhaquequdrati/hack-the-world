@@ -2,6 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useGetModuleProgressQuery } from "@/features/api/apiSlice";
+import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { EnrolledCourse } from "@/lib/types";
 import {
   Award,
@@ -20,6 +22,7 @@ interface ProgressTrackerProps {
   course: EnrolledCourse;
   completedLessons: string[];
   currentLessonIndex: number;
+  moduleId: string;
   onContinueLearning: () => void;
 }
 
@@ -27,10 +30,53 @@ const ProgressTracker = ({
   course,
   completedLessons,
   currentLessonIndex,
+  moduleId,
   onContinueLearning,
 }: ProgressTrackerProps) => {
+  const { user } = useAuthRTK();
+
+  // Get progress data from API
+  const { data: progressData, isLoading: progressLoading } =
+    useGetModuleProgressQuery(
+      { userId: user?.id || "", moduleId },
+      { skip: !user?.id || !moduleId }
+    );
+
   // Calculate progress statistics
   const progressStats = useMemo(() => {
+    // If we have API data, use it; otherwise fall back to local calculations
+    if (progressData?.success) {
+      const apiStats = progressData.data.statistics;
+      const contentStats = progressData.data.statistics.contentByType;
+
+      return {
+        totalLessons: apiStats.totalContent,
+        completedCount: apiStats.completedContent,
+        progressPercentage: apiStats.completionPercentage,
+        videoProgress: {
+          completed: contentStats.video.completed,
+          total: contentStats.video.total,
+        },
+        labProgress: {
+          completed: contentStats.lab.completed,
+          total: contentStats.lab.total,
+        },
+        gameProgress: {
+          completed: contentStats.game.completed,
+          total: contentStats.game.total,
+        },
+        textProgress: {
+          completed: contentStats.document.completed,
+          total: contentStats.document.total,
+        },
+        estimatedTimeRemaining: 0, // Would need to be calculated from content data
+        currentLesson: course.sections.flatMap((s) => s.lessons)[
+          currentLessonIndex
+        ],
+      };
+    }
+
+    // Fallback to local calculations
     const allLessons = course.sections.flatMap((section) => section.lessons);
     const totalLessons = allLessons.length;
     const completedCount = completedLessons.length;
@@ -77,7 +123,7 @@ const ProgressTracker = ({
       estimatedTimeRemaining,
       currentLesson: allLessons[currentLessonIndex],
     };
-  }, [course.sections, completedLessons, currentLessonIndex]);
+  }, [course.sections, completedLessons, currentLessonIndex, progressData]);
 
   const getProgressColor = (percentage: number) => {
     if (percentage >= 80) return "text-green-400";
@@ -85,6 +131,19 @@ const ProgressTracker = ({
     if (percentage >= 40) return "text-yellow-400";
     return "text-orange-400";
   };
+
+  // Show loading state
+  if (progressLoading) {
+    return (
+      <Card className="bg-black/50 border-2 border-green-400/30 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <div className="animate-pulse text-green-400/60">
+            Loading progress...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-black/50 border-2 border-green-400/30 backdrop-blur-sm">

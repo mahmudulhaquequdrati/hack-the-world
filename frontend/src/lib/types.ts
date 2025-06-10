@@ -59,6 +59,7 @@ export interface Phase {
 
 export interface Lesson {
   id: string;
+  contentId?: string; // Real MongoDB ID for progress tracking
   title: string;
   type: string;
   duration: string;
@@ -140,6 +141,7 @@ export interface Course {
 // Enrolled Course Types
 export interface EnrolledLesson {
   id: string;
+  contentId?: string; // Real MongoDB ID for progress tracking
   title: string;
   duration: string;
   type: "video" | "text" | "quiz" | "lab" | "game";

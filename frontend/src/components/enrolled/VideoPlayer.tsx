@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import useProgressTracking from "@/hooks/useProgressTracking";
 import { EnrolledLesson } from "@/lib/types";
 import {
   CheckCircle,
@@ -57,6 +58,21 @@ const VideoPlayer = ({
   const [isHovering, setIsHovering] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [securityWarning, setSecurityWarning] = useState("");
+
+  // Progress tracking
+  const progressTracking = useProgressTracking();
+  const contentStartedRef = useRef(false);
+
+  // Get actual MongoDB content ID directly from lesson
+  const contentId = lesson?.contentId || "";
+
+  // Auto-start content tracking when lesson loads
+  useEffect(() => {
+    if (lesson && contentId && !contentStartedRef.current) {
+      contentStartedRef.current = true;
+      progressTracking.startContent(contentId);
+    }
+  }, [lesson, contentId, progressTracking]);
 
   // Security: Prevent tab switching and visibility change during video
   useEffect(() => {
@@ -149,15 +165,31 @@ const VideoPlayer = ({
   }, []);
 
   const handleProgress = useCallback(
-    (state: {
+    async (state: {
       played: number;
       playedSeconds: number;
       loadedSeconds: number;
     }) => {
       setPlayed(state.played);
       setProgress(state.playedSeconds);
+
+      // Track video progress for API
+      if (contentId && duration > 0) {
+        const result = await progressTracking.trackVideoProgress(
+          contentId,
+          state.playedSeconds,
+          duration
+        );
+
+        // Handle auto-completion notification
+        if (result && result.status === "completed") {
+          console.log("Video auto-completed at 90%");
+          // You could show a notification here
+          onMarkComplete(lesson?.id || "");
+        }
+      }
     },
-    []
+    [contentId, duration, progressTracking, lesson?.id, onMarkComplete]
   );
 
   const handleDuration = useCallback((duration: number) => {
@@ -174,9 +206,10 @@ const VideoPlayer = ({
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  const handleVideoEnd = () => {
+  const handleVideoEnd = async () => {
     // Auto-mark as complete when video ends
-    if (lesson && !completedLessons.includes(lesson.id)) {
+    if (lesson && !completedLessons.includes(lesson.id) && contentId) {
+      await progressTracking.markAsComplete(contentId);
       onMarkComplete(lesson.id);
     }
 
@@ -664,7 +697,12 @@ const VideoPlayer = ({
             <div className="flex items-center space-x-2">
               {!completedLessons.includes(lesson?.id || "") && (
                 <Button
-                  onClick={() => lesson && onMarkComplete(lesson.id)}
+                  onClick={async () => {
+                    if (lesson && contentId) {
+                      await progressTracking.markAsComplete(contentId);
+                      onMarkComplete(lesson.id);
+                    }
+                  }}
                   className="bg-green-400 text-black hover:bg-green-300"
                   size="sm"
                 >

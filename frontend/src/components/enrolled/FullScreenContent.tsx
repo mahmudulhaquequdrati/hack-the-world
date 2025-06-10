@@ -1,4 +1,6 @@
+import useProgressTracking from "@/hooks/useProgressTracking";
 import { Lesson } from "@/lib/types";
+import { useEffect, useRef } from "react";
 import { ContentContainer } from "./ContentContainer";
 import { LoadingContent } from "./LoadingContent";
 import { NavigationControls } from "./NavigationControls";
@@ -25,6 +27,29 @@ export const FullScreenContent = ({
   onMarkComplete,
   onOpenInNewTab,
 }: FullScreenContentProps) => {
+  // Progress tracking
+  const progressTracking = useProgressTracking();
+  const contentStartedRef = useRef(false);
+
+  // Get actual MongoDB content ID directly from lesson
+  const contentId = lesson.contentId || "";
+
+  // Auto-start content tracking when lesson loads
+  useEffect(() => {
+    if (contentId && !contentStartedRef.current) {
+      contentStartedRef.current = true;
+      progressTracking.startContent(contentId);
+    }
+  }, [contentId, progressTracking]);
+
+  // Handle manual completion with progress tracking
+  const handleMarkComplete = async () => {
+    if (contentId) {
+      await progressTracking.markAsComplete(contentId);
+    }
+    onMarkComplete();
+  };
+
   const renderContent = () => {
     switch (lesson.type) {
       case "text":
@@ -74,7 +99,7 @@ export const FullScreenContent = ({
         isCompleted={isCompleted}
         onPrevious={onPrevious}
         onNext={onNext}
-        onMarkComplete={onMarkComplete}
+        onMarkComplete={handleMarkComplete}
         canGoBack={currentIndex > 0}
         canGoForward={currentIndex < totalCount - 1}
       />

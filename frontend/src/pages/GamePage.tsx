@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import useProgressTracking from "@/hooks/useProgressTracking";
 import { getGameData, getGamesByModule } from "@/lib/appData";
 import { GameData } from "@/lib/types";
 import {
@@ -15,7 +16,7 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const GamePage = () => {
@@ -24,6 +25,10 @@ const GamePage = () => {
   const [score, setScore] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(300); // 5 minutes
+
+  // Progress tracking
+  const progressTracking = useProgressTracking();
+  const contentStartedRef = useRef(false);
 
   // Get game data from centralized system
   const getGameDataFromCentral = (): GameData => {
@@ -71,24 +76,35 @@ const GamePage = () => {
 
   const game = getGameDataFromCentral();
 
+  // Use the gameId from URL as the MongoDB content ID
+  const contentId = gameId || "";
+
+  // Auto-start content tracking when game loads
+  useEffect(() => {
+    if (contentId && !contentStartedRef.current) {
+      contentStartedRef.current = true;
+      progressTracking.startContent(contentId);
+    }
+  }, [contentId, progressTracking]);
+
   // Initialize timer based on game's timeLimit
-  useState(() => {
+  useEffect(() => {
     if (game.timeLimit) {
       const minutes = parseInt(game.timeLimit.split(" ")[0]);
       setTimeRemaining(minutes * 60);
     }
-  });
+  }, [game.timeLimit]);
 
-  const getTypeColor = (type: string) => {
+  const getGameTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
-      case "security challenge":
+      case "challenge":
         return "text-red-400 bg-red-400/20";
-      case "speed challenge":
-        return "text-green-400 bg-green-400/20";
-      case "analysis game":
-        return "text-purple-400 bg-purple-400/20";
-      default:
+      case "simulation":
         return "text-blue-400 bg-blue-400/20";
+      case "quiz":
+        return "text-green-400 bg-green-400/20";
+      default:
+        return "text-purple-400 bg-purple-400/20";
     }
   };
 
@@ -105,11 +121,20 @@ const GamePage = () => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
+          // Auto-complete game when time runs out
+          handleGameComplete();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const handleGameComplete = async () => {
+    if (contentId) {
+      await progressTracking.completeLabGame(contentId, score, game.maxPoints);
+    }
+    // Additional game completion logic here
   };
 
   return (
@@ -168,7 +193,9 @@ const GamePage = () => {
                 </h1>
                 <p className="text-green-300/80 mb-4">{game.description}</p>
                 <div className="flex items-center space-x-4">
-                  <Badge className={getTypeColor(game.type)}>{game.type}</Badge>
+                  <Badge className={getGameTypeColor(game.type)}>
+                    {game.type}
+                  </Badge>
                   {game.timeLimit && (
                     <div className="flex items-center space-x-1 text-green-300/70">
                       <Target className="w-4 h-4" />

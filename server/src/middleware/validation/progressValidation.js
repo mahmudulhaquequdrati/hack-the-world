@@ -21,13 +21,6 @@ const updateProgressValidation = [
     .isFloat({ min: 0, max: 100 })
     .withMessage("Progress percentage must be between 0 and 100"),
 
-  body("timeSpent")
-    .optional()
-    .isNumeric()
-    .withMessage("Time spent must be a number")
-    .isFloat({ min: 0 })
-    .withMessage("Time spent cannot be negative"),
-
   body("score")
     .optional()
     .isNumeric()

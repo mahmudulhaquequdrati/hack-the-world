@@ -61,12 +61,6 @@ const UserProgressSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-    timeSpent: {
-      type: Number,
-      default: 0,
-      min: [0, "Time spent cannot be negative"],
-      // Time spent in minutes for consistency
-    },
 
     // Simple scoring (for labs/games)
     score: {
@@ -232,12 +226,8 @@ UserProgressSchema.statics.getUserProgressByModule = async function (
 };
 
 // Instance method to update progress
-UserProgressSchema.methods.updateProgress = function (
-  percentage,
-  timeSpent = 0
-) {
+UserProgressSchema.methods.updateProgress = function (percentage) {
   this.progressPercentage = Math.max(0, Math.min(100, percentage));
-  this.timeSpent += timeSpent;
   return this.save();
 };
 
@@ -261,12 +251,6 @@ UserProgressSchema.methods.markStarted = function () {
     this.startedAt = new Date();
     this.progressPercentage = Math.max(1, this.progressPercentage);
   }
-  return this.save();
-};
-
-// Instance method to add time spent
-UserProgressSchema.methods.addTimeSpent = function (minutes) {
-  this.timeSpent += Math.max(0, minutes);
   return this.save();
 };
 

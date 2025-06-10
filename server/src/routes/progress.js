@@ -1,12 +1,11 @@
 const express = require("express");
 const {
-  getUserProgress,
+  markContentStarted,
+  markContentComplete,
+  updateContentProgress,
+  getUserOverallProgress,
   getUserModuleProgress,
-  updateProgress,
-  markContentCompleted,
-  getModuleProgressStats,
-  getUserLabsProgress,
-  getUserGamesProgress,
+  getUserContentTypeProgress,
 } = require("../controllers/progressController");
 const { protect } = require("../middleware/auth");
 const { validateRequest } = require("../middleware/validation");
@@ -50,9 +49,6 @@ const router = express.Router();
  *           type: string
  *           format: date-time
  *           description: When user completed this content
- *         timeSpent:
- *           type: number
- *           description: Total time spent in minutes
  *         score:
  *           type: number
  *           description: Score achieved (optional)
@@ -69,9 +65,150 @@ const router = express.Router();
 
 /**
  * @swagger
- * /progress/{userId}/labs:
+ * /progress/content/start:
+ *   post:
+ *     summary: Mark content as started (when content is loaded/accessed)
+ *     tags: [Progress]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - contentId
+ *             properties:
+ *               contentId:
+ *                 type: string
+ *                 description: Content ID to mark as started
+ *     responses:
+ *       200:
+ *         description: Content started successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/UserProgress'
+ *       400:
+ *         description: Invalid input data
+ *       403:
+ *         description: User not enrolled in module
+ *       404:
+ *         description: Content not found
+ */
+router.post("/content/start", protect, markContentStarted);
+
+/**
+ * @swagger
+ * /progress/content/complete:
+ *   post:
+ *     summary: Mark content as completed (manual or from labs/games)
+ *     tags: [Progress]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - contentId
+ *             properties:
+ *               contentId:
+ *                 type: string
+ *                 description: Content ID to mark as completed
+ *               score:
+ *                 type: number
+ *                 description: Score achieved (for labs/games)
+ *               maxScore:
+ *                 type: number
+ *                 description: Maximum possible score
+ *     responses:
+ *       200:
+ *         description: Content marked as completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/UserProgress'
+ *       400:
+ *         description: Invalid input data
+ *       403:
+ *         description: User not enrolled in module
+ *       404:
+ *         description: Content not found
+ */
+router.post("/content/complete", protect, markContentComplete);
+
+/**
+ * @swagger
+ * /progress/content/update:
+ *   post:
+ *     summary: Update content progress (for videos - auto-complete at 90%)
+ *     tags: [Progress]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - contentId
+ *               - progressPercentage
+ *             properties:
+ *               contentId:
+ *                 type: string
+ *                 description: Content ID
+ *               progressPercentage:
+ *                 type: number
+ *                 minimum: 0
+ *                 maximum: 100
+ *                 description: Progress percentage (0-100)
+ *     responses:
+ *       200:
+ *         description: Content progress updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/UserProgress'
+ *       400:
+ *         description: Invalid input data
+ *       403:
+ *         description: User not enrolled in module
+ *       404:
+ *         description: Content not found
+ */
+router.post("/content/update", protect, updateContentProgress);
+
+/**
+ * @swagger
+ * /progress/overview/{userId}:
  *   get:
- *     summary: Get user's labs progress across all enrolled modules
+ *     summary: Get user's overall progress across all modules
  *     tags: [Progress]
  *     security:
  *       - bearerAuth: []
@@ -82,20 +219,9 @@ const router = express.Router();
  *         schema:
  *           type: string
  *         description: User ID
- *       - in: query
- *         name: moduleId
- *         schema:
- *           type: string
- *         description: Filter by specific module ID
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [not-started, in-progress, completed]
- *         description: Filter by progress status
  *     responses:
  *       200:
- *         description: User labs progress retrieved successfully
+ *         description: User overall progress retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -108,377 +234,39 @@ const router = express.Router();
  *                 data:
  *                   type: object
  *                   properties:
- *                     labs:
+ *                     overallStats:
+ *                       type: object
+ *                       properties:
+ *                         totalModules:
+ *                           type: number
+ *                         completedModules:
+ *                           type: number
+ *                         inProgressModules:
+ *                           type: number
+ *                         overallCompletionPercentage:
+ *                           type: number
+ *                     moduleProgress:
  *                       type: array
  *                       items:
  *                         type: object
  *                         properties:
- *                           id:
- *                             type: string
- *                           title:
- *                             type: string
- *                           description:
- *                             type: string
- *                           section:
- *                             type: string
- *                           duration:
- *                             type: number
- *                           instructions:
- *                             type: string
- *                           metadata:
- *                             type: object
  *                           module:
  *                             type: object
- *                             properties:
- *                               id:
- *                                 type: string
- *                               title:
- *                                 type: string
- *                               difficulty:
- *                                 type: string
- *                           progress:
- *                             type: object
- *                             properties:
- *                               status:
- *                                 type: string
- *                               progressPercentage:
- *                                 type: number
- *                               timeSpent:
- *                                 type: number
- *                               score:
- *                                 type: number
- *                               maxScore:
- *                                 type: number
- *                     statistics:
- *                       type: object
- *                       properties:
- *                         total:
- *                           type: number
- *                         completed:
- *                           type: number
- *                         inProgress:
- *                           type: number
- *                         notStarted:
- *                           type: number
- *                         averageProgress:
- *                           type: number
- *                         totalTimeSpent:
- *                           type: number
- *                         averageScore:
- *                           type: number
- *                     modules:
- *                       type: array
- *                       items:
- *                         type: object
- *       400:
- *         description: Invalid user ID format
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Not authorized to access this progress
- *       404:
- *         description: User not found
- */
-router.get("/:userId/labs", protect, getUserLabsProgress);
-
-/**
- * @swagger
- * /progress/{userId}/games:
- *   get:
- *     summary: Get user's games progress across all enrolled modules
- *     tags: [Progress]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: User ID
- *       - in: query
- *         name: moduleId
- *         schema:
- *           type: string
- *         description: Filter by specific module ID
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [not-started, in-progress, completed]
- *         description: Filter by progress status
- *     responses:
- *       200:
- *         description: User games progress retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     games:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: string
- *                           title:
- *                             type: string
- *                           description:
- *                             type: string
- *                           section:
- *                             type: string
- *                           duration:
- *                             type: number
- *                           instructions:
- *                             type: string
- *                           metadata:
- *                             type: object
- *                             properties:
- *                               difficulty:
- *                                 type: string
- *                               gameType:
- *                                 type: string
- *                               levels:
- *                                 type: number
- *                               scoring:
- *                                 type: object
- *                           module:
- *                             type: object
- *                             properties:
- *                               id:
- *                                 type: string
- *                               title:
- *                                 type: string
- *                               difficulty:
- *                                 type: string
- *                           progress:
- *                             type: object
- *                             properties:
- *                               status:
- *                                 type: string
- *                               progressPercentage:
- *                                 type: number
- *                               timeSpent:
- *                                 type: number
- *                               score:
- *                                 type: number
- *                               maxScore:
- *                                 type: number
- *                               pointsEarned:
- *                                 type: number
- *                     statistics:
- *                       type: object
- *                       properties:
- *                         total:
- *                           type: number
- *                         completed:
- *                           type: number
- *                         inProgress:
- *                           type: number
- *                         notStarted:
- *                           type: number
- *                         averageProgress:
- *                           type: number
- *                         totalTimeSpent:
- *                           type: number
- *                         averageScore:
- *                           type: number
- *                         totalPoints:
- *                           type: number
- *                     modules:
- *                       type: array
- *                       items:
- *                         type: object
- *       400:
- *         description: Invalid user ID format
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Not authorized to access this progress
- *       404:
- *         description: User not found
- */
-router.get("/:userId/games", protect, getUserGamesProgress);
-
-/**
- * @swagger
- * /progress/stats/{moduleId}:
- *   get:
- *     summary: Get module progress statistics
- *     tags: [Progress]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: moduleId
- *         required: true
- *         schema:
- *           type: string
- *         description: Module ID
- *     responses:
- *       200:
- *         description: Module progress statistics retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     module:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: string
- *                         title:
- *                           type: string
- *                         description:
- *                           type: string
- *                     overview:
- *                       type: object
- *                       properties:
- *                         totalUsers:
- *                           type: number
- *                         totalContent:
- *                           type: number
- *                         totalProgress:
- *                           type: number
- *                     progressByStatus:
- *                       type: object
- *                       properties:
- *                         completed:
- *                           type: number
- *                         inProgress:
- *                           type: number
- *                         notStarted:
- *                           type: number
- *                     completionRates:
- *                       type: object
- *                       properties:
- *                         video:
- *                           type: number
- *                         lab:
- *                           type: number
- *                         game:
- *                           type: number
- *                         document:
- *                           type: number
- *                     averageTimeSpent:
- *                       type: object
- *                       properties:
- *                         video:
- *                           type: number
- *                         lab:
- *                           type: number
- *                         game:
- *                           type: number
- *                         document:
- *                           type: number
- *                     userProgressSummary:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           user:
- *                             type: object
- *                           completionPercentage:
- *                             type: number
- *                           completedContent:
- *                             type: number
- *                           totalTimeSpent:
- *                             type: number
  *                           enrollment:
  *                             type: object
- *       400:
- *         description: Invalid module ID format
- *       401:
- *         description: Not authenticated
- *       403:
- *         description: Not authorized to view progress statistics
- *       404:
- *         description: Module not found
- */
-router.get("/stats/:moduleId", protect, getModuleProgressStats);
-
-/**
- * @swagger
- * /progress/{userId}:
- *   get:
- *     summary: Get user's overall progress
- *     tags: [Progress]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: User ID
- *       - in: query
- *         name: contentType
- *         schema:
- *           type: string
- *           enum: [video, lab, game, document]
- *         description: Filter by content type
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [not-started, in-progress, completed]
- *         description: Filter by progress status
- *       - in: query
- *         name: moduleId
- *         schema:
- *           type: string
- *         description: Filter by module ID
- *     responses:
- *       200:
- *         description: User progress retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     progress:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/UserProgress'
- *                     statistics:
+ *                           content:
+ *                             type: object
+ *                     contentStats:
  *                       type: object
  *                       properties:
- *                         total:
+ *                         totalContent:
  *                           type: number
- *                         completed:
+ *                         completedContent:
  *                           type: number
- *                         inProgress:
+ *                         inProgressContent:
  *                           type: number
- *                         notStarted:
- *                           type: number
- *                         averageProgress:
- *                           type: number
- *                         totalTimeSpent:
- *                           type: number
+ *                         contentByType:
+ *                           type: object
  *       400:
  *         description: Invalid user ID format
  *       401:
@@ -488,13 +276,13 @@ router.get("/stats/:moduleId", protect, getModuleProgressStats);
  *       404:
  *         description: User not found
  */
-router.get("/:userId", protect, getUserProgress);
+router.get("/overview/:userId", protect, getUserOverallProgress);
 
 /**
  * @swagger
- * /progress/{userId}/{moduleId}:
+ * /progress/module/{userId}/{moduleId}:
  *   get:
- *     summary: Get module-specific progress for a user
+ *     summary: Get user's progress for a specific module
  *     tags: [Progress]
  *     security:
  *       - bearerAuth: []
@@ -535,134 +323,101 @@ router.get("/:userId", protect, getUserProgress);
  *                           type: string
  *                         description:
  *                           type: string
+ *                         difficulty:
+ *                           type: string
+ *                         phase:
+ *                           type: string
  *                     enrollment:
  *                       type: object
- *                       description: User's enrollment in this module
- *                     progress:
+ *                       properties:
+ *                         status:
+ *                           type: string
+ *                         enrolledAt:
+ *                           type: string
+ *                           format: date-time
+ *                         progressPercentage:
+ *                           type: number
+ *                     content:
  *                       type: array
  *                       items:
- *                         $ref: '#/components/schemas/UserProgress'
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           type:
+ *                             type: string
+ *                           section:
+ *                             type: string
+ *                           duration:
+ *                             type: number
+ *                           progress:
+ *                             type: object
+ *                             properties:
+ *                               status:
+ *                                 type: string
+ *                               progressPercentage:
+ *                                 type: number
+ *                               score:
+ *                                 type: number
+ *                               maxScore:
+ *                                 type: number
+ *                               startedAt:
+ *                                 type: string
+ *                                 format: date-time
+ *                               completedAt:
+ *                                 type: string
+ *                                 format: date-time
  *                     statistics:
  *                       type: object
- *                       properties:
- *                         totalContent:
- *                           type: number
- *                         completedContent:
- *                           type: number
- *                         completionPercentage:
- *                           type: number
- *                         totalTimeSpent:
- *                           type: number
- *                         progressByType:
- *                           type: object
  *       400:
- *         description: Invalid ID format
+ *         description: Invalid user ID or module ID format
  *       401:
  *         description: Not authenticated
  *       403:
  *         description: Not authorized to access this progress
  *       404:
- *         description: User or module not found
+ *         description: User not found, module not found, or user not enrolled
  */
-router.get("/:userId/:moduleId", protect, getUserModuleProgress);
+router.get("/module/:userId/:moduleId", protect, getUserModuleProgress);
 
 /**
  * @swagger
- * /progress:
- *   post:
- *     summary: Update content progress
- *     tags: [Progress]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - contentId
- *               - progressPercentage
- *             properties:
- *               contentId:
- *                 type: string
- *                 description: Content ID
- *               progressPercentage:
- *                 type: number
- *                 minimum: 0
- *                 maximum: 100
- *                 description: Progress percentage (0-100)
- *               timeSpent:
- *                 type: number
- *                 minimum: 0
- *                 description: Additional time spent in minutes
- *               score:
- *                 type: number
- *                 minimum: 0
- *                 description: Score achieved (optional)
- *               maxScore:
- *                 type: number
- *                 minimum: 0
- *                 description: Maximum score possible (optional)
- *           example:
- *             contentId: "60f7b3b3b3b3b3b3b3b3b3b3"
- *             progressPercentage: 75
- *             timeSpent: 15
- *             score: 85
- *             maxScore: 100
- *     responses:
- *       201:
- *         description: Progress updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/UserProgress'
- *       400:
- *         description: Invalid input data
- *       401:
- *         description: Not authenticated
- *       404:
- *         description: Content not found
- */
-router.post("/", protect, validateRequest("updateProgress"), updateProgress);
-
-/**
- * @swagger
- * /progress/{id}/complete:
- *   put:
- *     summary: Mark content as completed
+ * /progress/content/{userId}/{contentType}:
+ *   get:
+ *     summary: Get user's progress for specific content type (labs, games, videos, documents)
  *     tags: [Progress]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: userId
  *         required: true
  *         schema:
  *           type: string
- *         description: Progress record ID
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               score:
- *                 type: number
- *                 minimum: 0
- *                 description: Final score achieved (optional)
- *           example:
- *             score: 95
+ *         description: User ID
+ *       - in: path
+ *         name: contentType
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [video, lab, game, document]
+ *         description: Content type to filter by
+ *       - in: query
+ *         name: moduleId
+ *         schema:
+ *           type: string
+ *         description: Filter by specific module ID
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [not-started, in-progress, completed]
+ *         description: Filter by progress status
  *     responses:
  *       200:
- *         description: Content marked as completed successfully
+ *         description: User content type progress retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -673,16 +428,81 @@ router.post("/", protect, validateRequest("updateProgress"), updateProgress);
  *                 message:
  *                   type: string
  *                 data:
- *                   $ref: '#/components/schemas/UserProgress'
+ *                   type: object
+ *                   properties:
+ *                     content:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                           section:
+ *                             type: string
+ *                           duration:
+ *                             type: number
+ *                           module:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                               title:
+ *                                 type: string
+ *                               difficulty:
+ *                                 type: string
+ *                               phase:
+ *                                 type: string
+ *                           progress:
+ *                             type: object
+ *                             properties:
+ *                               status:
+ *                                 type: string
+ *                               progressPercentage:
+ *                                 type: number
+ *                               score:
+ *                                 type: number
+ *                               maxScore:
+ *                                 type: number
+ *                               startedAt:
+ *                                 type: string
+ *                                 format: date-time
+ *                               completedAt:
+ *                                 type: string
+ *                                 format: date-time
+ *                     statistics:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: number
+ *                         completed:
+ *                           type: number
+ *                         inProgress:
+ *                           type: number
+ *                         notStarted:
+ *                           type: number
+ *                         averageProgress:
+ *                           type: number
+ *                     modules:
+ *                       type: array
+ *                       items:
+ *                         type: object
  *       400:
- *         description: Invalid progress ID format
+ *         description: Invalid user ID format or invalid content type
  *       401:
  *         description: Not authenticated
  *       403:
- *         description: Not authorized to update this progress
+ *         description: Not authorized to access this progress
  *       404:
- *         description: Progress record not found
+ *         description: User not found
  */
-router.put("/:id/complete", protect, markContentCompleted);
+router.get(
+  "/content/:userId/:contentType",
+  protect,
+  getUserContentTypeProgress
+);
 
 module.exports = router;

@@ -2,7 +2,7 @@
 
 **Generated on**: January 25, 2025
 **Version**: 1.0.0
-**Last Updated**: Auto-generated based on current server state
+**Last Updated**: January 25, 2025 - Progress System Restructured
 
 ---
 
@@ -109,16 +109,14 @@
 
 ### 📈 Progress Routes (`/api/progress`)
 
-| Method | Endpoint                                    | Purpose                     | Admin Used | Frontend Used |
-| ------ | ------------------------------------------- | --------------------------- | ---------- | ------------- |
-| GET    | `/api/progress`                             | Get user progress           | ❌         | ✅            |
-| POST   | `/api/progress`                             | Update progress             | ❌         | ✅            |
-| GET    | `/api/progress/module/:moduleId`            | Get module progress         | ❌         | ✅            |
-| POST   | `/api/progress/content/:contentId/complete` | Mark content complete       | ❌         | ✅            |
-| GET    | `/api/progress/admin/all`                   | Get all progress (admin)    | ✅         | ❌            |
-| GET    | `/api/progress/admin/user/:userId`          | Get user progress (admin)   | ✅         | ❌            |
-| GET    | `/api/progress/admin/module/:moduleId`      | Get module progress (admin) | ✅         | ❌            |
-| GET    | `/api/progress/admin/analytics`             | Get progress analytics      | ✅         | ❌            |
+| Method | Endpoint                                     | Purpose                          | Admin Used | Frontend Used |
+| ------ | -------------------------------------------- | -------------------------------- | ---------- | ------------- |
+| POST   | `/api/progress/content/start`                | Mark content as started (auto)   | ❌         | ✅            |
+| POST   | `/api/progress/content/complete`             | Mark content as completed        | ❌         | ✅            |
+| POST   | `/api/progress/content/update`               | Update content progress (videos) | ❌         | ✅            |
+| GET    | `/api/progress/overview/:userId`             | Get user overall progress        | ✅         | ✅            |
+| GET    | `/api/progress/module/:userId/:moduleId`     | Get user module progress         | ✅         | ✅            |
+| GET    | `/api/progress/content/:userId/:contentType` | Get content type progress        | ✅         | ✅            |
 
 ### 👤 Profile Routes (`/api/profile`)
 
@@ -227,18 +225,25 @@
 
 **Functions:**
 
-- `getUserProgress(req, res, next)` - Get user's progress
-- `updateProgress(req, res, next)` - Update progress tracking
-- `getModuleProgress(req, res, next)` - Get module-specific progress
-- `markContentComplete(req, res, next)` - Mark content as completed
-- `getAllProgress(req, res, next)` - Admin: get all progress records
-- `getUserProgressAdmin(req, res, next)` - Admin: get user progress
-- `getModuleProgressAdmin(req, res, next)` - Admin: get module progress
-- `getProgressAnalytics(req, res, next)` - Admin: progress analytics
+- `markContentStarted(req, res, next)` - Mark content as "in-progress" when first accessed/loaded
+- `markContentComplete(req, res, next)` - Mark content as completed (manual or from labs/games with scores)
+- `updateContentProgress(req, res, next)` - Update progress percentage (videos auto-complete at 90%)
+- `getUserOverallProgress(req, res, next)` - Get user's progress across all enrolled modules (dashboard view)
+- `getUserModuleProgress(req, res, next)` - Get detailed progress for a specific module
+- `getUserContentTypeProgress(req, res, next)` - Get progress for specific content type (labs, games, videos, documents)
+- `updateModuleProgress(userId, moduleId)` - Helper function to automatically update module completion percentage
+
+**Key Features:**
+
+- **Auto-Start**: Content automatically marked as "in-progress" when accessed
+- **Auto-Complete**: Videos complete at 90% watched, manual completion available for all types
+- **Score Tracking**: Labs and games can submit scores with completion
+- **Progress Cascading**: Content completion → Module progress → Overall progress
+- **Multiple Views**: Overview (dashboard), module-specific, content-type specific
 
 **Dependencies:**
 
-- Progress model, Content model, Module model, Enrollment model
+- UserProgress model, Content model, Module model, UserEnrollment model
 
 ### 📁 Profile Controller (`profileController.js`)
 
@@ -431,16 +436,30 @@
 ```javascript
 {
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  moduleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Module', required: true },
   contentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Content', required: true },
+  contentType: {
+    type: String,
+    required: true,
+    enum: ['video', 'lab', 'game', 'document'],
+    lowercase: true
+  },
   status: {
     type: String,
-    enum: ['not_started', 'in_progress', 'completed'],
-    default: 'not_started'
+    required: true,
+    enum: ['not-started', 'in-progress', 'completed'],
+    default: 'not-started'
   },
-  timeSpent: { type: Number, default: 0 }, // in minutes
-  completedAt: { type: Date },
-  lastAccessedAt: { type: Date, default: Date.now }
+  progressPercentage: {
+    type: Number,
+    required: true,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  startedAt: { type: Date, default: null },
+  completedAt: { type: Date, default: null },
+  score: { type: Number, default: null, min: 0 },
+  maxScore: { type: Number, default: null, min: 0 }
 }
 ```
 
@@ -448,9 +467,19 @@
 
 - `{ userId: 1, contentId: 1 }` (compound unique)
 - `userId: 1`
-- `moduleId: 1`
 - `contentId: 1`
 - `status: 1`
+- `contentType: 1`
+- `completedAt: -1`
+
+**Key Features:**
+
+- **Auto-Status Management**: Pre-save middleware handles status transitions
+- **Progress Validation**: Ensures progress percentage stays within 0-100 range
+- **Score Validation**: Validates score doesn't exceed maxScore
+- **Virtual Properties**: `isCompleted`, `isInProgress`, `scorePercentage`
+- **Static Methods**: `findByUserAndContent`, `getUserProgress`, `getContentProgress`
+- **Instance Methods**: `updateProgress`, `markCompleted`, `markStarted`, `setScore`
 
 ---
 
@@ -548,10 +577,9 @@
 
 **Progress Tracking:**
 
-- `GET /api/progress/admin/all` - Get all progress records
-- `GET /api/progress/admin/user/:userId` - Get user progress
-- `GET /api/progress/admin/module/:moduleId` - Get module progress
-- `GET /api/progress/admin/analytics` - Progress analytics
+- `GET /api/progress/overview/:userId` - Get user overall progress (dashboard view)
+- `GET /api/progress/module/:userId/:moduleId` - Get detailed module progress
+- `GET /api/progress/content/:userId/:contentType` - Get content type specific progress (labs, games, etc.)
 
 ### ❌ Available but Not Used by Admin Panel
 
@@ -568,6 +596,12 @@
 **Content by Module:**
 
 - `GET /api/content/module/:moduleId` - Get content by module (useful for admin)
+
+**Content Progress Management:**
+
+- `POST /api/progress/content/start` - Mark content as started (useful for admin testing)
+- `POST /api/progress/content/complete` - Mark content as completed (useful for admin operations)
+- `POST /api/progress/content/update` - Update video progress (useful for admin testing)
 
 ### 🚀 Recommended Admin Panel Enhancements
 
@@ -662,6 +696,81 @@ const statsResponse = await fetch("/api/enrollment/admin/stats", {
 const enrollmentStats = await statsResponse.json();
 ```
 
+### 🛠️ Progress Tracking Example
+
+```javascript
+// Auto-start content when accessed
+const startContent = async (contentId) => {
+  const response = await fetch("/api/progress/content/start", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ contentId }),
+  });
+  return await response.json();
+};
+
+// Update video progress (auto-completes at 90%)
+const updateVideoProgress = async (contentId, progressPercentage) => {
+  const response = await fetch("/api/progress/content/update", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ contentId, progressPercentage }),
+  });
+  return await response.json();
+};
+
+// Mark content as completed (with optional score for labs/games)
+const markComplete = async (contentId, score = null, maxScore = null) => {
+  const response = await fetch("/api/progress/content/complete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      contentId,
+      ...(score !== null && { score }),
+      ...(maxScore !== null && { maxScore }),
+    }),
+  });
+  return await response.json();
+};
+
+// Get user overall progress for dashboard
+const getOverallProgress = async (userId) => {
+  const response = await fetch(`/api/progress/overview/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return await response.json();
+};
+
+// Get detailed module progress
+const getModuleProgress = async (userId, moduleId) => {
+  const response = await fetch(`/api/progress/module/${userId}/${moduleId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return await response.json();
+};
+
+// Get labs progress with filtering
+const getLabsProgress = async (userId, filters = {}) => {
+  const queryParams = new URLSearchParams(filters);
+  const response = await fetch(
+    `/api/progress/content/${userId}/lab?${queryParams}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return await response.json();
+};
+```
+
 ---
 
 ## 🔄 Auto-Update System
@@ -729,10 +838,10 @@ Consider implementing these tools for better maintenance:
 
 ### 🎯 Current System Stats
 
-- **Total Routes**: 47 endpoints across 7 route files
-- **Admin Panel Usage**: 28 endpoints actively used (59%)
-- **Frontend Usage**: 31 endpoints actively used (66%)
-- **Controller Functions**: 35+ functions across 7 controllers
+- **Total Routes**: 43 endpoints across 7 route files
+- **Admin Panel Usage**: 24 endpoints actively used (56%)
+- **Frontend Usage**: 28 endpoints actively used (65%)
+- **Controller Functions**: 32+ functions across 7 controllers
 - **Database Models**: 6 main models with 15+ indexes
 - **Middleware Functions**: 12+ middleware functions
 
@@ -743,7 +852,7 @@ Consider implementing these tools for better maintenance:
 - **Module Management**: 90% admin coverage, 70% frontend coverage
 - **Content Management**: 90% admin coverage, 40% frontend coverage
 - **Enrollment Tracking**: 100% admin coverage, 80% frontend coverage
-- **Progress Tracking**: 80% admin coverage, 70% frontend coverage
+- **Progress Tracking**: 100% admin coverage, 100% frontend coverage (newly updated)
 
 ### 📋 Recommendations
 

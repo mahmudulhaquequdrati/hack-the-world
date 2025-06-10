@@ -14,7 +14,9 @@ import { Button } from "@/components/ui/button";
 import {
   useEnrollInModuleMutation,
   useGetCourseByIdQuery,
+  useGetEnrollmentByModuleQuery,
 } from "@/features/api/apiSlice";
+import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -25,6 +27,7 @@ const CourseDetailPage = () => {
   const from = location.state?.from;
   const { courseId } = useParams();
   const [activeTab, setActiveTab] = useState("overview");
+  const { isAuthenticated } = useAuthRTK();
 
   // RTK Query hooks
   const {
@@ -36,17 +39,32 @@ const CourseDetailPage = () => {
     skip: !courseId,
   });
 
+  // Check enrollment status only if user is authenticated
+  const {
+    data: enrollmentData,
+    isLoading: isLoadingEnrollment,
+    refetch: refetchEnrollment,
+  } = useGetEnrollmentByModuleQuery(courseId || "", {
+    skip: !courseId || !isAuthenticated,
+  });
+
   const [enrollInModule] = useEnrollInModuleMutation();
 
   const error = courseError
     ? "Failed to load course data. Please try again later."
     : null;
 
+  // Determine enrollment status
+  const isEnrolled = enrollmentData?.success && enrollmentData?.data !== null;
+  const enrollmentStatus = isEnrolled ? "enrolled" : "not-enrolled";
+
   const handleEnrollment = async (): Promise<void> => {
-    if (!course || !courseId) return;
+    if (!course || !courseId) {
+      return;
+    }
 
     try {
-      if (course.enrolled) {
+      if (isEnrolled) {
         // If already enrolled, navigate to learning page
         navigate(`/learn/${courseId}`);
       } else {
@@ -54,8 +72,9 @@ const CourseDetailPage = () => {
         const result = await enrollInModule(courseId).unwrap();
         if (result.success) {
           navigate(`/learn/${courseId}`);
-          // Refetch course data to update enrollment status
+          // Refetch course data and enrollment status to update UI
           refetch();
+          refetchEnrollment();
         }
       }
     } catch (err) {
@@ -168,10 +187,11 @@ const CourseDetailPage = () => {
 
           {/* Enrollment Button */}
           <EnrollmentButton
-            enrollmentStatus={course.enrolled ? "enrolled" : "not-enrolled"}
+            enrollmentStatus={enrollmentStatus}
             onEnrollment={handleEnrollment}
-            isLoadingEnrollment={loading}
+            isLoadingEnrollment={isLoadingEnrollment}
             prerequisites={course.prerequisites ? [course.prerequisites] : []}
+            moduleId={courseId}
           />
 
           {/* Tabs Section */}

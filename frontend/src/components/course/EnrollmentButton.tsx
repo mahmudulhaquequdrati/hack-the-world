@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
+import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { CheckCircle, Loader2, Play, UserCheck } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface EnrollmentButtonProps {
@@ -9,26 +11,43 @@ interface EnrollmentButtonProps {
   disabled?: boolean;
   prerequisites?: string[];
   isLoadingEnrollment?: boolean;
+  moduleId?: string; // Add moduleId to support enrollment checking
 }
 
 const EnrollmentButton = ({
   enrollmentStatus,
   onEnrollment,
   disabled = false,
-  prerequisites = [],
+  prerequisites = [], // eslint-disable-line @typescript-eslint/no-unused-vars
   isLoadingEnrollment = false,
+  moduleId,
 }: EnrollmentButtonProps) => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthRTK();
   const [isEnrolling, setIsEnrolling] = useState(false);
   const isEnrolled = enrollmentStatus === "enrolled";
-  const hasUnmetPrerequisites = prerequisites.length > 0;
+  // const hasUnmetPrerequisites = prerequisites.length > 0; // Temporarily disabled
 
   const handleEnrollment = async () => {
     if (
       disabled ||
-      hasUnmetPrerequisites ||
+      // hasUnmetPrerequisites ||  // Temporarily disabled - allow enrollment regardless of prerequisites
       isEnrolling ||
       isLoadingEnrollment
     ) {
+      return;
+    }
+
+    // Check authentication first
+    if (!isAuthenticated) {
+      // Store current location to redirect back after login
+      const currentLocation = window.location.pathname;
+      navigate("/login", {
+        state: {
+          from: currentLocation,
+          enrollModuleId: moduleId,
+        },
+      });
       return;
     }
 
@@ -59,6 +78,7 @@ const EnrollmentButton = ({
     if (isEnrolling) return "ENROLLING_IN_MISSION...";
     // if (hasUnmetPrerequisites) return "PREREQUISITES_REQUIRED";
     if (isEnrolled) return "> CONTINUE_MISSION";
+    if (!isAuthenticated) return "> INITIALIZE_LEARNING_PROTOCOL";
     return "> INITIALIZE_LEARNING_PROTOCOL";
   };
 
@@ -81,7 +101,7 @@ const EnrollmentButton = ({
           disabled={isButtonDisabled}
           className={`w-full font-mono font-bold text-lg py-6 relative overflow-hidden group transition-all duration-300 ${
             isEnrolled
-              ? "bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-400 hover:to-blue-300 text-white"
+              ? "bg-gradient-to-r from-green-500 to-green-400 hover:from-green-400 hover:to-green-300 "
               : "bg-gradient-to-r from-green-400 to-green-300 text-black hover:from-green-300 hover:to-green-200"
           } ${isButtonDisabled ? "opacity-60 cursor-not-allowed" : ""}`}
         >
@@ -101,6 +121,21 @@ const EnrollmentButton = ({
           }`}
         ></div>
       </div>
+
+      {/* Authentication reminder for non-authenticated users */}
+      {!isAuthenticated && (
+        <div className="mt-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+          <div className="flex items-center space-x-2 mb-2">
+            <UserCheck className="w-5 h-5 text-blue-400" />
+            <h4 className="text-blue-400 font-mono font-semibold">
+              AUTHENTICATION_REQUIRED
+            </h4>
+          </div>
+          <p className="text-blue-300/80 text-sm font-mono">
+            Login required to enroll in modules and track progress.
+          </p>
+        </div>
+      )}
 
       {/* Prerequisites warning */}
       {/* {hasUnmetPrerequisites && (

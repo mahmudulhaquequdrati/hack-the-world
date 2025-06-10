@@ -151,9 +151,7 @@ function App() {
               path="/course/:courseId"
               element={
                 <Layout>
-                  <ProtectedRoute>
-                    <CourseDetailPage />
-                  </ProtectedRoute>
+                  <CourseDetailPage />
                 </Layout>
               }
             />

@@ -173,11 +173,48 @@ export const apiSlice = createApi({
       string
     >({
       query: (moduleId) => ({
-        url: `/enrollments/enroll`,
+        url: `/enrollments`,
         method: "POST",
         body: { moduleId },
       }),
       invalidatesTags: ["Enrollment", "Progress"],
+    }),
+
+    // Check enrollment status for a specific module
+    getEnrollmentByModule: builder.query<
+      {
+        success: boolean;
+        data: {
+          id: string;
+          status: string;
+          progressPercentage: number;
+          enrolledAt: string;
+          moduleId: { id: string; title: string };
+        } | null;
+      },
+      string
+    >({
+      query: (moduleId) => `/enrollments/module/${moduleId}`,
+      transformResponse: (response: {
+        success: boolean;
+        data?: {
+          id: string;
+          status: string;
+          progressPercentage: number;
+          enrolledAt: string;
+          moduleId: { id: string; title: string };
+        };
+        message?: string;
+      }) => {
+        // If no enrollment found, return null
+        if (!response.success || !response.data) {
+          return { success: false, data: null };
+        }
+        return { success: true, data: response.data };
+      },
+      providesTags: (result, error, moduleId) => [
+        { type: "Enrollment", id: moduleId },
+      ],
     }),
 
     unenrollFromModule: builder.mutation<
@@ -280,6 +317,7 @@ export const {
   useGetModuleByIdQuery,
   useGetCourseByIdQuery,
   useEnrollInModuleMutation,
+  useGetEnrollmentByModuleQuery,
   useUnenrollFromModuleMutation,
   useGetUserEnrollmentsQuery,
   useGetUserProgressQuery,

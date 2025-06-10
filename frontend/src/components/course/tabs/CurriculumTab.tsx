@@ -1,9 +1,7 @@
 import { TabsContent } from "@/components/ui/tabs";
-import { CurriculumSection } from "@/lib/types";
 import { Book, BookOpen, Code, FileText, Gamepad2, Video } from "lucide-react";
 
 interface CurriculumTabProps {
-  curriculum: CurriculumSection[];
   moduleId?: string;
   moduleOverview?: {
     [sectionName: string]: Array<{
@@ -24,7 +22,7 @@ type ContentItem = {
   section: string;
 };
 
-const CurriculumTab = ({ curriculum, moduleOverview }: CurriculumTabProps) => {
+const CurriculumTab = ({ moduleOverview }: CurriculumTabProps) => {
   const getContentIcon = (type: string) => {
     switch (type) {
       case "video":
@@ -71,60 +69,12 @@ const CurriculumTab = ({ curriculum, moduleOverview }: CurriculumTabProps) => {
             </div>
           </div>
 
-          {/* Fallback to original curriculum data */}
-          <div className="p-4 font-mono text-sm">
-            {curriculum.map((section, index) => (
-              <div key={index} className="mb-3">
-                {/* Folder line */}
-                <div className="flex items-center space-x-3 py-2 hover:bg-green-400/5 transition-colors">
-                  <div className="flex items-center space-x-2 flex-1">
-                    <span className="text-green-400/60">
-                      {section.completed ? "📂" : "📁"}
-                    </span>
-                    <span className="text-green-400 flex-1">
-                      {section.title}
-                    </span>
-                    <span className="text-green-300/60 text-xs">
-                      {section.lessons} files
-                    </span>
-                    <span className="text-green-300/60 text-xs">
-                      {section.duration}
-                    </span>
-                    {section.completed && (
-                      <span className="text-green-400 text-xs">✓</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Files in folder */}
-                <div className="ml-6 space-y-1">
-                  {section.topics.map((topic, topicIndex) => (
-                    <div
-                      key={topicIndex}
-                      className="flex items-center space-x-2 py-1 text-green-300/70 hover:bg-green-400/5 transition-colors"
-                    >
-                      <span className="text-green-400/40">├─</span>
-                      <span className="text-blue-400/50">
-                        <Video className="w-5 h-5" />
-                      </span>
-                      <span className="text-sm">{topic}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-
-            {/* Footer info */}
-            <div className="border-t border-green-400/20 pt-3 mt-4">
-              <div className="text-green-400/60 text-xs">
-                Total: {curriculum.length} folders,{" "}
-                {curriculum.reduce(
-                  (acc, section) => acc + section.topics.length,
-                  0
-                )}{" "}
-                files
-              </div>
-            </div>
+          <div className="text-center text-white py-4">
+            <p className="text-lg font-bold">No Curriculum Found</p>
+            <p className="text-sm">
+              The module you have selected is not yet available. Please check
+              back later.
+            </p>
           </div>
         </div>
       </TabsContent>

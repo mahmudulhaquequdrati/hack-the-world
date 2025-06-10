@@ -55,7 +55,7 @@ const CourseDetailPage = () => {
     isLoading: isLoadingOverview,
     error: overviewError,
   } = useGetModuleOverviewQuery(courseId || "", {
-    skip: !courseId,
+    skip: !courseId || activeTab === "overview",
   });
 
   const [enrollInModule] = useEnrollInModuleMutation();
@@ -207,21 +207,13 @@ const CourseDetailPage = () => {
           {/* Tabs Section */}
           <CourseTabsContainer activeTab={activeTab} onTabChange={setActiveTab}>
             <OverviewTab learningOutcomes={course.learningOutcomes} />
-            <CurriculumTab
-              curriculum={[]}
-              moduleId={courseId}
-              moduleOverview={moduleOverview}
-            />
+            <CurriculumTab moduleOverview={moduleOverview} />
             <LabsTab
-              labs={[]}
-              moduleId={courseId}
               moduleOverview={moduleOverview}
               isLoadingOverview={isLoadingOverview}
               overviewError={overviewError}
             />
             <GamesTab
-              games={[]}
-              moduleId={courseId}
               moduleOverview={moduleOverview}
               isLoadingOverview={isLoadingOverview}
               overviewError={overviewError}

@@ -262,8 +262,10 @@ moduleSchema.statics.getAllWithPhases = function () {
 // Static method to get modules grouped by phase
 moduleSchema.statics.getGroupedByPhase = async function () {
   const modules = await this.find({ isActive: true })
-    .populate("phase")
-    .sort({ "phase.order": 1, order: 1 });
+    .select(
+      "color content description difficulty icon phaseId title topics order"
+    )
+    .sort({ order: 1 });
 
   const grouped = {};
   modules.forEach((module) => {

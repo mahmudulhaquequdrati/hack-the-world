@@ -15,6 +15,7 @@ import {
   useEnrollInModuleMutation,
   useGetCourseByIdQuery,
   useGetEnrollmentByModuleQuery,
+  useGetModuleOverviewQuery,
 } from "@/features/api/apiSlice";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { ArrowLeft } from "lucide-react";
@@ -46,6 +47,15 @@ const CourseDetailPage = () => {
     refetch: refetchEnrollment,
   } = useGetEnrollmentByModuleQuery(courseId || "", {
     skip: !courseId || !isAuthenticated,
+  });
+
+  // Get module overview data to pass to child components
+  const {
+    data: moduleOverview,
+    isLoading: isLoadingOverview,
+    error: overviewError,
+  } = useGetModuleOverviewQuery(courseId || "", {
+    skip: !courseId,
   });
 
   const [enrollInModule] = useEnrollInModuleMutation();
@@ -197,9 +207,25 @@ const CourseDetailPage = () => {
           {/* Tabs Section */}
           <CourseTabsContainer activeTab={activeTab} onTabChange={setActiveTab}>
             <OverviewTab learningOutcomes={course.learningOutcomes} />
-            <CurriculumTab curriculum={course.curriculum} moduleId={courseId} />
-            <LabsTab labs={course.labsData} moduleId={courseId} />
-            <GamesTab games={course.gamesData} moduleId={courseId} />
+            <CurriculumTab
+              curriculum={[]}
+              moduleId={courseId}
+              moduleOverview={moduleOverview}
+            />
+            <LabsTab
+              labs={[]}
+              moduleId={courseId}
+              moduleOverview={moduleOverview}
+              isLoadingOverview={isLoadingOverview}
+              overviewError={overviewError}
+            />
+            <GamesTab
+              games={[]}
+              moduleId={courseId}
+              moduleOverview={moduleOverview}
+              isLoadingOverview={isLoadingOverview}
+              overviewError={overviewError}
+            />
           </CourseTabsContainer>
 
           {/* Data Source Indicator */}

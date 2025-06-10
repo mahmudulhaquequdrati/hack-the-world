@@ -1,11 +1,19 @@
 import { TabsContent } from "@/components/ui/tabs";
-import { useGetModuleOverviewQuery } from "@/features/api/apiSlice";
 import { CurriculumSection } from "@/lib/types";
 import { Book, BookOpen, Code, FileText, Gamepad2, Video } from "lucide-react";
 
 interface CurriculumTabProps {
   curriculum: CurriculumSection[];
   moduleId?: string;
+  moduleOverview?: {
+    [sectionName: string]: Array<{
+      _id: string;
+      type: "video" | "lab" | "game" | "text" | "quiz";
+      title: string;
+      description: string;
+      section: string;
+    }>;
+  };
 }
 
 type ContentItem = {
@@ -16,15 +24,7 @@ type ContentItem = {
   section: string;
 };
 
-const CurriculumTab = ({ curriculum, moduleId }: CurriculumTabProps) => {
-  const {
-    data: moduleOverview,
-    isLoading,
-    error,
-  } = useGetModuleOverviewQuery(moduleId || "", {
-    skip: !moduleId,
-  });
-
+const CurriculumTab = ({ curriculum, moduleOverview }: CurriculumTabProps) => {
   const getContentIcon = (type: string) => {
     switch (type) {
       case "video":
@@ -59,20 +59,7 @@ const CurriculumTab = ({ curriculum, moduleId }: CurriculumTabProps) => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <TabsContent value="curriculum" className="mt-0">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400"></div>
-          <span className="ml-3 text-green-400 font-mono">
-            LOADING_CURRICULUM...
-          </span>
-        </div>
-      </TabsContent>
-    );
-  }
-
-  if (error || !moduleOverview) {
+  if (!moduleOverview) {
     return (
       <TabsContent value="curriculum" className="mt-0">
         <div className="bg-black/40 border border-green-400/30 rounded-lg overflow-hidden">
@@ -208,7 +195,7 @@ const CurriculumTab = ({ curriculum, moduleId }: CurriculumTabProps) => {
           {/* Footer info */}
           <div className="border-t border-green-400/20 pt-3 mt-4">
             <div className="text-green-400/60 text-xs">
-              Total: {totalSections} sections, {totalContent} content items
+              Total: {totalSections} folders, {totalContent} files
             </div>
           </div>
         </div>

@@ -203,11 +203,8 @@ export const transformApiModuleToCourse = (
       avatar: "",
       experience: "",
     }, // No instructor data available
-    curriculum: [], // Empty until real curriculum data is available
+    // Empty until real curriculum data is available
     learningOutcomes,
-    labsData: [], // Empty until real lab data is available
-    gamesData: [], // Empty until real game data is available
-    assetsData: [], // Empty until real asset data is available
   };
 };
 

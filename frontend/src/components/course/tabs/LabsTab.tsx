@@ -1,13 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
-import { useGetModuleOverviewQuery } from "@/features/api/apiSlice";
 import { LabItem } from "@/lib/types";
+import { SerializedError } from "@reduxjs/toolkit";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { Clock, Code, Play, Target } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 interface LabsTabProps {
   labs: LabItem[];
   moduleId?: string;
+  moduleOverview?: {
+    [sectionName: string]: Array<{
+      _id: string;
+      type: "video" | "lab" | "game" | "text" | "quiz";
+      title: string;
+      description: string;
+      section: string;
+    }>;
+  };
+  isLoadingOverview?: boolean;
+  overviewError?: FetchBaseQueryError | SerializedError | undefined;
 }
 
 type LabContentItem = {
@@ -18,19 +30,16 @@ type LabContentItem = {
   section: string;
 };
 
-const LabsTab = ({ labs, moduleId }: LabsTabProps) => {
+const LabsTab = ({
+  labs,
+  moduleOverview,
+  isLoadingOverview = false,
+  overviewError,
+}: LabsTabProps) => {
   const navigate = useNavigate();
   const { courseId } = useParams();
 
-  const {
-    data: moduleOverview,
-    isLoading,
-    error,
-  } = useGetModuleOverviewQuery(moduleId || "", {
-    skip: !moduleId,
-  });
-
-  // Extract lab items from the API response
+  // Extract lab items from the moduleOverview prop instead of calling API
   const labsFromAPI = moduleOverview
     ? Object.values(moduleOverview)
         .flat()
@@ -66,7 +75,7 @@ const LabsTab = ({ labs, moduleId }: LabsTabProps) => {
     }
   };
 
-  if (isLoading) {
+  if (isLoadingOverview) {
     return (
       <TabsContent value="labs" className="mt-0">
         <div className="flex items-center justify-center py-12">
@@ -78,7 +87,8 @@ const LabsTab = ({ labs, moduleId }: LabsTabProps) => {
   }
 
   // Use API data if available, otherwise fall back to original labs data
-  const labsToShow = !error && labsFromAPI.length > 0 ? labsFromAPI : labs;
+  const labsToShow =
+    !overviewError && labsFromAPI.length > 0 ? labsFromAPI : labs;
 
   return (
     <TabsContent value="labs" className="mt-0">
@@ -94,7 +104,7 @@ const LabsTab = ({ labs, moduleId }: LabsTabProps) => {
 
         <div className="grid gap-6">
           {/* Show API-based labs */}
-          {!error && labsFromAPI.length > 0
+          {!overviewError && labsFromAPI.length > 0
             ? labsFromAPI.map((lab, index) => (
                 <div
                   key={lab._id}

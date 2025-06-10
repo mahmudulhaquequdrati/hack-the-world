@@ -5,7 +5,7 @@ export interface Module {
   title: string;
   description: string;
   icon: LucideIcon | string; // Support both string from API and LucideIcon for frontend
-  duration: string;
+  duration: string | number;
   difficulty: string;
   progress?: number; // Make optional for API data
   color: string;
@@ -24,7 +24,7 @@ export interface Module {
     labs: string[];
     games: string[];
     documents: string[];
-    estimatedHours: number;
+    estimatedHours: number | string;
   };
   phase?: {
     id: string;
@@ -133,11 +133,8 @@ export interface Course {
   prerequisites: string;
   certification: boolean;
   instructor: Instructor;
-  curriculum: CurriculumSection[];
+
   learningOutcomes: LearningOutcome[];
-  labsData: LabItem[];
-  gamesData: GameItem[];
-  assetsData: AssetItem[];
 }
 
 // Enrolled Course Types

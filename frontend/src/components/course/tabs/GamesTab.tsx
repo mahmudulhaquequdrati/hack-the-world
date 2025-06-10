@@ -1,14 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
-import { useGetModuleOverviewQuery } from "@/features/api/apiSlice";
 import { getGameTypeColor, getPointsColor } from "@/lib";
 import { GameItem } from "@/lib/types";
+import { SerializedError } from "@reduxjs/toolkit";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { Gamepad2, Play, Star, Trophy } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 interface GamesTabProps {
   games: GameItem[];
   moduleId?: string;
+  moduleOverview?: {
+    [sectionName: string]: Array<{
+      _id: string;
+      type: "video" | "lab" | "game" | "text" | "quiz";
+      title: string;
+      description: string;
+      section: string;
+    }>;
+  };
+  isLoadingOverview?: boolean;
+  overviewError?: FetchBaseQueryError | SerializedError | undefined;
 }
 
 type GameContentItem = {
@@ -19,19 +31,16 @@ type GameContentItem = {
   section: string;
 };
 
-const GamesTab = ({ games, moduleId }: GamesTabProps) => {
+const GamesTab = ({
+  games,
+  moduleOverview,
+  isLoadingOverview = false,
+  overviewError,
+}: GamesTabProps) => {
   const navigate = useNavigate();
   const { courseId } = useParams();
 
-  const {
-    data: moduleOverview,
-    isLoading,
-    error,
-  } = useGetModuleOverviewQuery(moduleId || "", {
-    skip: !moduleId,
-  });
-
-  // Extract game items from the API response
+  // Extract game items from the moduleOverview prop instead of calling API
   const gamesFromAPI = moduleOverview
     ? Object.values(moduleOverview)
         .flat()
@@ -50,7 +59,7 @@ const GamesTab = ({ games, moduleId }: GamesTabProps) => {
     navigate(`/learn/${courseId}/game/${gameId}`);
   };
 
-  if (isLoading) {
+  if (isLoadingOverview) {
     return (
       <TabsContent value="games" className="mt-0">
         <div className="flex items-center justify-center py-12">
@@ -64,7 +73,8 @@ const GamesTab = ({ games, moduleId }: GamesTabProps) => {
   }
 
   // Use API data if available, otherwise fall back to original games data
-  const gamesToShow = !error && gamesFromAPI.length > 0 ? gamesFromAPI : games;
+  const gamesToShow =
+    !overviewError && gamesFromAPI.length > 0 ? gamesFromAPI : games;
 
   return (
     <TabsContent value="games" className="mt-0">
@@ -80,7 +90,7 @@ const GamesTab = ({ games, moduleId }: GamesTabProps) => {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Show API-based games */}
-          {!error && gamesFromAPI.length > 0
+          {!overviewError && gamesFromAPI.length > 0
             ? gamesFromAPI.map((game, index) => (
                 <div
                   key={game._id}

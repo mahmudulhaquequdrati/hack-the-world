@@ -20,12 +20,12 @@ export function Header({ navigate }: HeaderProps) {
     window.location.pathname === "/dashboard";
 
   const navigationItems = [
+    { name: "Courses", href: "/overview" },
     { name: "How it works", href: "/how-it-works" },
     { name: "Pricing", href: "/pricing" },
-    { name: "About", href: "/about" },
   ];
 
-  const handleNavigation = (path: string) => {
+  const handleNavigation = (path: string): void => {
     navigate(path);
     setIsMobileMenuOpen(false);
   };

@@ -45,6 +45,12 @@ const EnrolledCoursePage = () => {
   const [loading, setLoading] = useState(true);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
 
+  // when someone comes to this page, move to top -1000
+  useEffect(() => {
+    // window.scrollTo(0, 100); // with beautiful animation
+    window.scrollTo(0, 100);
+  }, []);
+
   // AI Playground State
   const [playgroundMode, setPlaygroundMode] = useState("terminal");
   const [terminalHistory, setTerminalHistory] = useState<TerminalMessage[]>([

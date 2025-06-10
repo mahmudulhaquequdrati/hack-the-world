@@ -264,7 +264,7 @@ const AIPlayground = ({
             </Button>
           </div>
 
-          <TabsContent value="terminal" className="h-[calc(100%-60px)]">
+          <TabsContent value="terminal" className="max-h-[calc(100vh-300px)]">
             <div className="bg-black border border-green-400/30 rounded-lg h-full flex flex-col">
               <div className="p-3 border-b border-green-400/30 bg-green-400/10">
                 <div className="text-green-400 font-mono text-sm">
@@ -306,7 +306,7 @@ const AIPlayground = ({
             </div>
           </TabsContent>
 
-          <TabsContent value="chat" className="h-[calc(100%-60px)]">
+          <TabsContent value="chat" className="max-h-[calc(100vh-300px)]">
             <div className="bg-black border border-green-400/30 rounded-lg h-full flex flex-col">
               <div className="p-3 border-b border-green-400/30 bg-green-400/10">
                 <div className="text-green-400 font-mono text-sm flex items-center">
@@ -358,7 +358,7 @@ const AIPlayground = ({
             </div>
           </TabsContent>
 
-          <TabsContent value="analysis" className="h-[calc(100%-60px)]">
+          <TabsContent value="analysis" className="max-h-[calc(100vh-300px)]">
             <div className="bg-black border border-green-400/30 rounded-lg h-full flex flex-col">
               <div className="p-3 border-b border-green-400/30 bg-green-400/10">
                 <div className="text-green-400 font-mono text-sm flex items-center">

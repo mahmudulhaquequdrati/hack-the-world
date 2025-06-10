@@ -50,13 +50,52 @@ const ModulesManagerEnhanced = () => {
     description: "",
     icon: "",
     difficulty: "",
-    color: "#00ff00",
+    color: "green",
     order: "",
     topics: "",
     prerequisites: "",
     learningOutcomes: "",
     isActive: true,
   });
+
+  // Available icon options
+  const iconOptions = [
+    { value: "Lightbulb", label: "💡 Lightbulb" },
+    { value: "Target", label: "🎯 Target" },
+    { value: "Brain", label: "🧠 Brain" },
+    { value: "Shield", label: "🛡️ Shield" },
+    { value: "Terminal", label: "💻 Terminal" },
+    { value: "Network", label: "🌐 Network" },
+    { value: "Code", label: "💻 Code" },
+  ];
+
+  // Available Tailwind color options
+  const colorOptions = [
+    "green",
+    "blue",
+    "red",
+    "yellow",
+    "purple",
+    "pink",
+    "indigo",
+    "cyan",
+    "orange",
+    "gray",
+    "black",
+    "white",
+    "emerald",
+    "lime",
+    "teal",
+    "sky",
+    "violet",
+    "fuchsia",
+    "rose",
+    "slate",
+    "zinc",
+    "neutral",
+    "stone",
+    "amber",
+  ];
 
   useEffect(() => {
     fetchData();
@@ -152,15 +191,12 @@ const ModulesManagerEnhanced = () => {
       setEditingModule(module);
 
       // Normalize color value from database
-      let colorValue = module.color || "#00ff00";
+      let colorValue = module.color || "green";
       if (typeof colorValue === "string") {
         colorValue = colorValue.trim();
-        if (!colorValue.startsWith("#")) {
-          colorValue = "#" + colorValue;
-        }
-        // If invalid format, use default
-        if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(colorValue)) {
-          colorValue = "#00ff00";
+        // If invalid color name, use default
+        if (!colorOptions.includes(colorValue)) {
+          colorValue = "green";
         }
       }
 
@@ -189,7 +225,7 @@ const ModulesManagerEnhanced = () => {
         description: "",
         icon: "",
         difficulty: "",
-        color: "#00ff00",
+        color: "green",
         order: "",
         topics: "",
         prerequisites: "",
@@ -257,20 +293,12 @@ const ModulesManagerEnhanced = () => {
 
     try {
       // Normalize and validate color value
-      let colorValue = formData.color?.trim() || "#00ff00";
+      let colorValue = formData.color?.trim() || "green";
 
-      // Ensure color starts with # and has valid format
-      if (!colorValue.startsWith("#")) {
-        colorValue = "#" + colorValue;
-      }
-
-      // If it's not a valid hex color, use default
-      if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(colorValue)) {
-        console.warn(
-          "Invalid color format detected, using default:",
-          colorValue
-        );
-        colorValue = "#00ff00";
+      // Validate color is a valid Tailwind color name
+      if (!colorOptions.includes(colorValue)) {
+        console.warn("Invalid color name detected, using default:", colorValue);
+        colorValue = "green";
       }
 
       // Handle prerequisites - convert to ObjectIds or leave empty
@@ -1419,14 +1447,19 @@ const ModulesManagerEnhanced = () => {
                     <label className="block text-sm font-medium text-green-400 mb-1">
                       Icon
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="icon"
                       value={formData.icon}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
-                      placeholder="Shield"
-                    />
+                    >
+                      <option value="">Select an icon</option>
+                      {iconOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
@@ -1453,13 +1486,19 @@ const ModulesManagerEnhanced = () => {
                     <label className="block text-sm font-medium text-green-400 mb-1">
                       Color
                     </label>
-                    <input
-                      type="color"
+                    <select
                       name="color"
                       value={formData.color}
                       onChange={handleInputChange}
-                      className="w-full h-10 border border-gray-600 rounded-md bg-gray-700"
-                    />
+                      className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                    >
+                      <option value="">Select a color</option>
+                      {colorOptions.map((color) => (
+                        <option key={color} value={color}>
+                          {color.charAt(0).toUpperCase() + color.slice(1)}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

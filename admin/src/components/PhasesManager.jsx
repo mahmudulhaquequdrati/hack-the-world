@@ -26,9 +26,48 @@ const PhasesManager = () => {
     title: "",
     description: "",
     icon: "",
-    color: "#00ff00",
+    color: "green",
     order: "",
   });
+
+  // Available icon options
+  const iconOptions = [
+    { value: "Lightbulb", label: "💡 Lightbulb" },
+    { value: "Target", label: "🎯 Target" },
+    { value: "Brain", label: "🧠 Brain" },
+    { value: "Shield", label: "🛡️ Shield" },
+    { value: "Terminal", label: "💻 Terminal" },
+    { value: "Network", label: "🌐 Network" },
+    { value: "Code", label: "💻 Code" },
+  ];
+
+  // Available Tailwind color options
+  const colorOptions = [
+    "green",
+    "blue",
+    "red",
+    "yellow",
+    "purple",
+    "pink",
+    "indigo",
+    "cyan",
+    "orange",
+    "gray",
+    "black",
+    "white",
+    "emerald",
+    "lime",
+    "teal",
+    "sky",
+    "violet",
+    "fuchsia",
+    "rose",
+    "slate",
+    "zinc",
+    "neutral",
+    "stone",
+    "amber",
+  ];
 
   useEffect(() => {
     fetchPhases();
@@ -65,7 +104,7 @@ const PhasesManager = () => {
         title: phase.title || "",
         description: phase.description || "",
         icon: phase.icon || "",
-        color: phase.color || "#00ff00",
+        color: phase.color || "green",
         order: phase.order?.toString() || "",
       });
     } else {
@@ -74,7 +113,7 @@ const PhasesManager = () => {
         title: "",
         description: "",
         icon: "",
-        color: "#00ff00",
+        color: "green",
         order: "",
       });
     }
@@ -119,8 +158,8 @@ const PhasesManager = () => {
       }
 
       // Validate color format
-      if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(phaseData.color)) {
-        throw new Error("Please enter a valid hex color code");
+      if (!colorOptions.includes(phaseData.color)) {
+        throw new Error("Please enter a valid Tailwind color name");
       }
 
       if (editingPhase) {
@@ -527,16 +566,21 @@ const PhasesManager = () => {
                   >
                     Icon *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     id="icon"
                     name="icon"
                     value={formData.icon}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                    placeholder="Enter icon name (e.g., Shield)"
                     required
-                  />
+                  >
+                    <option value="">Select an icon</option>
+                    {iconOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -547,15 +591,21 @@ const PhasesManager = () => {
                     >
                       Color *
                     </label>
-                    <input
-                      type="color"
+                    <select
                       id="color"
                       name="color"
                       value={formData.color}
                       onChange={handleInputChange}
-                      className="w-full h-10 bg-gray-700 border border-gray-600 rounded-md"
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                       required
-                    />
+                    >
+                      <option value="">Select a color</option>
+                      {colorOptions.map((color) => (
+                        <option key={color} value={color}>
+                          {color.charAt(0).toUpperCase() + color.slice(1)}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>

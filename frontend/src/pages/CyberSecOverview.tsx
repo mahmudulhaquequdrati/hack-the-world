@@ -18,6 +18,31 @@ import { Module, Phase } from "@/lib/types";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const getColorsForModule = (color: string) => {
+  //   const colorOptions = {
+  //     beginner: ["green", "blue", "purple"],
+  //     intermediate: ["yellow", "pink"],
+  //     advanced: ["orange", "red"],
+  //     expert: ["indigo", "violet"],
+  //   };
+
+  //   const getRandomColor = (options: string[]) => {
+  //     return options[Math.floor(Math.random() * options.length)];
+  //   };
+
+  //   const difficultyLevel = difficulty.toLowerCase();
+  //   const options = colorOptions[
+  //     difficultyLevel as keyof typeof colorOptions
+  //   ] || ["green"];
+  //   const selectedColor = getRandomColor(options);
+
+  return {
+    color: `text-${color}-400`,
+    bgColor: `bg-${color}-500/10`,
+    borderColor: `border-${color}-400/30`,
+  };
+};
+
 const CyberSecOverview = () => {
   const navigate = useNavigate();
   const completedModules = [...COMPLETED_MODULES];
@@ -43,42 +68,7 @@ const CyberSecOverview = () => {
         // If API returns modules with the phase, use them directly
         const phaseModules = (phase.modules || [])
           .map((module: Module) => {
-            const getColorsForDifficulty = (difficulty: string) => {
-              switch (difficulty.toLowerCase()) {
-                case "beginner":
-                  return {
-                    color: "text-green-400",
-                    bgColor: "bg-green-500/10",
-                    borderColor: "border-green-400/30",
-                  };
-                case "intermediate":
-                  return {
-                    color: "text-yellow-400",
-                    bgColor: "bg-yellow-500/10",
-                    borderColor: "border-yellow-400/30",
-                  };
-                case "advanced":
-                  return {
-                    color: "text-red-400",
-                    bgColor: "bg-red-500/10",
-                    borderColor: "border-red-400/30",
-                  };
-                case "expert":
-                  return {
-                    color: "text-purple-400",
-                    bgColor: "bg-purple-500/10",
-                    borderColor: "border-purple-400/30",
-                  };
-                default:
-                  return {
-                    color: "text-gray-400",
-                    bgColor: "bg-gray-500/10",
-                    borderColor: "border-gray-400/30",
-                  };
-              }
-            };
-
-            const colors = getColorsForDifficulty(module.difficulty);
+            const colors = getColorsForModule(module.color);
 
             return {
               ...module,

@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
-import useProgressTracking from "@/hooks/useProgressTracking";
+import { apiSlice } from "@/features/api/apiSlice";
 import { EnrolledLesson } from "@/lib/types";
 import {
   CheckCircle,
   ChevronsLeft,
   ChevronsRight,
+  Loader2,
   Maximize2,
   Minimize2,
   Pause,
@@ -23,6 +24,7 @@ interface VideoPlayerProps {
   currentVideo: number;
   totalLessons: number;
   completedLessons: string[];
+  progressData?: Record<string, { status: string; progressPercentage: number }>;
   isMaximized?: boolean;
   onPlayPause: () => void;
   onPrevious: () => void;
@@ -30,6 +32,11 @@ interface VideoPlayerProps {
   onMarkComplete: (lessonId: string) => void;
   onMaximize: () => void;
   onRestore?: () => void;
+  // T022: Loading states for navigation buttons
+  isNavigatingNext?: boolean;
+  isNavigatingPrev?: boolean;
+  // T035: Video progress tracking for auto-completion
+  onVideoProgress?: (progressPercentage: number) => void;
 }
 
 const VideoPlayer = ({
@@ -38,6 +45,7 @@ const VideoPlayer = ({
   currentVideo,
   totalLessons,
   completedLessons,
+  progressData = {},
   isMaximized = false,
   onPlayPause,
   onPrevious,
@@ -45,6 +53,11 @@ const VideoPlayer = ({
   onMarkComplete,
   onMaximize,
   onRestore,
+  // T022: Loading states for navigation buttons
+  isNavigatingNext,
+  isNavigatingPrev,
+  // T035: Video progress tracking for auto-completion
+  onVideoProgress,
 }: VideoPlayerProps) => {
   const playerRef = useRef<ReactPlayer>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
@@ -58,21 +71,43 @@ const VideoPlayer = ({
   const [isHovering, setIsHovering] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [securityWarning, setSecurityWarning] = useState("");
-
-  // Progress tracking
-  const progressTracking = useProgressTracking();
-  const contentStartedRef = useRef(false);
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
 
   // Get actual MongoDB content ID directly from lesson
   const contentId = lesson?.contentId || "";
 
-  // Auto-start content tracking when lesson loads
+  // Reset player ready state when content changes
   useEffect(() => {
-    if (lesson && contentId && !contentStartedRef.current) {
-      contentStartedRef.current = true;
-      progressTracking.startContent(contentId);
+    setIsPlayerReady(false);
+    setHasStarted(false);
+    setProgress(0);
+    setPlayed(0);
+  }, [contentId]);
+
+  // Get progress status from props instead of useProgressTracking
+  const progressStatus = contentId ? progressData[contentId] : null;
+
+  // Lazy loading for video URL if missing (T012 fix)
+  const needsVideoUrl =
+    lesson?.type === "video" && !lesson?.videoUrl && contentId;
+
+  const { data: contentData } = apiSlice.endpoints.getContentById.useQuery(
+    contentId,
+    {
+      skip: !needsVideoUrl,
     }
-  }, [lesson, contentId, progressTracking]);
+  );
+
+  // Enhanced lesson with lazy-loaded video URL
+  const enhancedLesson =
+    needsVideoUrl && contentData?.success
+      ? {
+          ...lesson,
+          videoUrl: contentData.data.url,
+          description: contentData.data.description || lesson.description,
+          instructions: contentData.data.instructions || lesson.content,
+        }
+      : lesson;
 
   // Security: Prevent tab switching and visibility change during video
   useEffect(() => {
@@ -173,23 +208,15 @@ const VideoPlayer = ({
       setPlayed(state.played);
       setProgress(state.playedSeconds);
 
-      // Track video progress for API
-      if (contentId && duration > 0) {
-        const result = await progressTracking.trackVideoProgress(
-          contentId,
-          state.playedSeconds,
-          duration
-        );
-
-        // Handle auto-completion notification
-        if (result && result.status === "completed") {
-          console.log("Video auto-completed at 90%");
-          // You could show a notification here
-          onMarkComplete(lesson?.id || "");
-        }
+      // T035: Call parent progress handler for auto-completion tracking
+      if (onVideoProgress) {
+        onVideoProgress(state.played * 100); // Convert to percentage
       }
+
+      // Simple progress tracking - let parent handle API calls
+      // We just track local video progress for UI purposes
     },
-    [contentId, duration, progressTracking, lesson?.id, onMarkComplete]
+    [contentId, duration, lesson?.id, onMarkComplete]
   );
 
   const handleDuration = useCallback((duration: number) => {
@@ -208,9 +235,8 @@ const VideoPlayer = ({
 
   const handleVideoEnd = async () => {
     // Auto-mark as complete when video ends
-    if (lesson && !completedLessons.includes(lesson.id) && contentId) {
-      await progressTracking.markAsComplete(contentId);
-      onMarkComplete(lesson.id);
+    if (enhancedLesson && !completedLessons.includes(enhancedLesson.id)) {
+      onMarkComplete(enhancedLesson.id);
     }
 
     // Auto-advance to next lesson if available
@@ -223,6 +249,7 @@ const VideoPlayer = ({
 
   const handleVideoReady = () => {
     // Video is ready for playback
+    setIsPlayerReady(true); // Mark player as ready
   };
 
   const handlePlay = () => {
@@ -342,8 +369,9 @@ const VideoPlayer = ({
     }
   }, [hasStarted, onPlayPause, duration]);
 
-  // Check if lesson has a video URL
-  const hasVideoUrl = lesson?.videoUrl && lesson.videoUrl.trim() !== "";
+  // Check if lesson has a video URL (using enhanced lesson with lazy-loaded URL)
+  const hasVideoUrl =
+    enhancedLesson?.videoUrl && enhancedLesson.videoUrl.trim() !== "";
 
   // Determine if we should show the center play button
   const showCenterPlayButton =
@@ -370,7 +398,7 @@ const VideoPlayer = ({
         <div className="p-4 border-b border-green-400/30 flex items-center justify-between">
           <h3 className="text-green-400 font-semibold flex items-center">
             <Video className="w-4 h-4 mr-2" />
-            {lesson?.title || `Lesson ${currentVideo + 1}`}
+            {enhancedLesson?.title || `Lesson ${currentVideo + 1}`}
           </h3>
           <div className="flex items-center space-x-2">
             <div className="flex items-center text-xs text-green-400/70">
@@ -429,11 +457,12 @@ const VideoPlayer = ({
           {hasVideoUrl ? (
             <>
               <ReactPlayer
+                key={`${contentId}-${enhancedLesson.videoUrl}`} // Force reinitialize when content changes
                 ref={playerRef}
-                url={lesson.videoUrl}
+                url={enhancedLesson.videoUrl}
                 width="100%"
                 height="100%"
-                playing={isPlaying}
+                playing={isPlaying && isPlayerReady}
                 volume={volume}
                 muted={muted}
                 onProgress={handleProgress}
@@ -512,7 +541,7 @@ const VideoPlayer = ({
                         Click to start video
                       </p>
                       <p className="text-green-400/70 text-sm mt-1">
-                        {lesson?.duration || "Duration unknown"}
+                        {enhancedLesson?.duration || "Duration unknown"}
                       </p>
                       <p className="text-green-400/50 text-xs mt-2 flex items-center justify-center">
                         <Shield className="w-3 h-3 mr-1" />
@@ -572,7 +601,8 @@ const VideoPlayer = ({
                       {isFullscreen && (
                         <div className="text-green-400 font-semibold ml-4 flex items-center">
                           <Shield className="w-3 h-3 mr-1" />
-                          {lesson?.title || `Lesson ${currentVideo + 1}`}
+                          {enhancedLesson?.title ||
+                            `Lesson ${currentVideo + 1}`}
                         </div>
                       )}
                     </div>
@@ -677,44 +707,62 @@ const VideoPlayer = ({
               <Button
                 variant="outline"
                 onClick={onPrevious}
-                disabled={currentVideo === 0}
+                disabled={currentVideo === 0 || isNavigatingPrev}
                 className="border-green-400/30 text-green-400 hover:bg-green-400/10"
                 size="sm"
               >
-                Previous
+                {isNavigatingPrev ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  "Previous"
+                )}
               </Button>
               <Button
                 variant="outline"
                 onClick={onNext}
-                disabled={currentVideo === totalLessons - 1}
+                disabled={currentVideo === totalLessons - 1 || isNavigatingNext}
                 className="border-green-400/30 text-green-400 hover:bg-green-400/10"
                 size="sm"
               >
-                Next
+                {isNavigatingNext ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  "Next"
+                )}
               </Button>
             </div>
 
             <div className="flex items-center space-x-2">
-              {!completedLessons.includes(lesson?.id || "") && (
+              {/* Simplified completion button */}
+              {progressStatus?.status === "completed" ? (
                 <Button
-                  onClick={async () => {
-                    if (lesson && contentId) {
-                      await progressTracking.markAsComplete(contentId);
-                      onMarkComplete(lesson.id);
+                  disabled
+                  className="bg-green-500/20 text-green-400 border-green-400/30 cursor-not-allowed"
+                  size="sm"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Completed
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    if (enhancedLesson) {
+                      onMarkComplete(enhancedLesson.id);
                     }
                   }}
                   className="bg-green-400 text-black hover:bg-green-300"
                   size="sm"
+                  disabled={!enhancedLesson}
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  Mark Complete
+                  Mark as Completed
                 </Button>
-              )}
-              {completedLessons.includes(lesson?.id || "") && (
-                <div className="flex items-center text-green-400 text-sm">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Completed
-                </div>
               )}
             </div>
           </div>

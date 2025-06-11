@@ -1,14 +1,20 @@
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 interface NavigationControlsProps {
   currentIndex: number;
   totalCount: number;
-  isCompleted: boolean;
+  isCompleted?: boolean; // Make optional for backward compatibility
   onPrevious: () => void;
   onNext: () => void;
-  onMarkComplete: () => void;
+  onMarkComplete?: () => void; // Make optional to prevent duplication
   canGoBack: boolean;
   canGoForward: boolean;
+  // T022: Loading states for navigation buttons
+  isNavigatingNext?: boolean;
+  isNavigatingPrev?: boolean;
+  // T026: Option to show/hide completion button to prevent duplication
+  showCompletionButton?: boolean;
 }
 
 export const NavigationControls = ({
@@ -20,38 +26,61 @@ export const NavigationControls = ({
   onMarkComplete,
   canGoBack,
   canGoForward,
+  // T022: Loading states for navigation buttons
+  isNavigatingNext = false,
+  isNavigatingPrev = false,
+  // T026: Default to true for backward compatibility, but allow disabling
+  showCompletionButton = true,
 }: NavigationControlsProps) => {
   return (
     <div className="flex items-center justify-between mt-6 pt-4 border-t border-green-400/30">
       <Button
         variant="outline"
         onClick={onPrevious}
-        disabled={!canGoBack}
+        disabled={!canGoBack || isNavigatingPrev}
         className="border-green-400/30 text-green-400 hover:bg-green-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        ← Previous
+        {isNavigatingPrev ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Loading...
+          </>
+        ) : (
+          "← Previous"
+        )}
       </Button>
 
       <div className="flex items-center space-x-4">
         <span className="text-green-400/70 text-sm font-mono">
           {currentIndex + 1} / {totalCount}
         </span>
-        <Button
-          onClick={onMarkComplete}
-          disabled={isCompleted}
-          className="bg-green-400 text-black hover:bg-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isCompleted ? "✓ Completed" : "Mark Complete"}
-        </Button>
+
+        {/* T026: Only show completion button if explicitly requested and callback provided */}
+        {showCompletionButton && onMarkComplete && (
+          <Button
+            onClick={onMarkComplete}
+            disabled={isCompleted}
+            className="bg-green-400 text-black hover:bg-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isCompleted ? "Completed" : "Mark as Completed"}
+          </Button>
+        )}
       </div>
 
       <Button
         variant="outline"
         onClick={onNext}
-        disabled={!canGoForward}
+        disabled={!canGoForward || isNavigatingNext}
         className="border-green-400/30 text-green-400 hover:bg-green-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Next →
+        {isNavigatingNext ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Loading...
+          </>
+        ) : (
+          "Next →"
+        )}
       </Button>
     </div>
   );

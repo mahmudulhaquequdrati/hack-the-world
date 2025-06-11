@@ -1,34 +1,76 @@
-import {
-  useCompleteContentMutation,
-  useStartContentMutation,
-  useUpdateContentProgressMutation,
-} from "@/features/api/apiSlice";
-import ProgressService from "@/lib/progressService";
+import { useCompleteContentMutation } from "@/features/api/apiSlice";
 import { useCallback, useRef } from "react";
 
+// T037: Simplified for 2-API system - only keep essential types and functions
+export interface ContentProgressStatus {
+  contentId: string;
+  status: "not-started" | "in-progress" | "completed";
+  progressPercentage: number;
+  alreadyStarted?: boolean;
+  startedAt?: string;
+  completedAt?: string | null;
+  score?: number | null;
+  maxScore?: number | null;
+}
+
+interface ProgressValidationResult {
+  shouldStart: boolean;
+  existingProgress: ContentProgressStatus | null;
+  reason: string;
+}
+
 export const useProgressTracking = () => {
-  const [startContent] = useStartContentMutation();
   const [completeContent] = useCompleteContentMutation();
-  const [updateContentProgress] = useUpdateContentProgressMutation();
 
   const completionNotifiedRef = useRef(new Set<string>());
 
-  // Start content tracking when content is first accessed
-  const handleStartContent = useCallback(
-    async (contentId: string) => {
-      try {
-        const result = await startContent({ contentId }).unwrap();
-        console.log("Content started:", result.data);
-        return result.data;
-      } catch (error) {
-        console.error("Failed to start content:", error);
-        return null;
-      }
-    },
-    [startContent]
+  // Simple cache for basic progress validation (optional)
+  const progressValidationCache = useRef(
+    new Map<string, ContentProgressStatus>()
   );
 
-  // Complete content manually or with score
+  // Cache invalidation callbacks for components to listen to changes
+  const cacheInvalidationCallbacks = useRef(new Set<() => void>());
+
+  // Register callback for cache invalidation events
+  const onCacheInvalidation = useCallback((callback: () => void) => {
+    cacheInvalidationCallbacks.current.add(callback);
+
+    // Return cleanup function
+    return () => {
+      cacheInvalidationCallbacks.current.delete(callback);
+    };
+  }, []);
+
+  // Notify all listening components about cache invalidation
+  const notifyCacheInvalidation = useCallback(() => {
+    cacheInvalidationCallbacks.current.forEach((callback) => {
+      try {
+        callback();
+      } catch (error) {
+        console.error("Cache invalidation callback error:", error);
+      }
+    });
+  }, []);
+
+  // Enhanced cache invalidation with notification
+  const invalidateProgressCache = useCallback(
+    (contentId?: string) => {
+      if (contentId) {
+        progressValidationCache.current.delete(contentId);
+        console.log(`Cache invalidated for content: ${contentId}`);
+      } else {
+        progressValidationCache.current.clear();
+        console.log("All progress cache cleared");
+      }
+
+      // Notify all listening components
+      notifyCacheInvalidation();
+    },
+    [notifyCacheInvalidation]
+  );
+
+  // T037: Simplified progress completion handler
   const handleCompleteContent = useCallback(
     async (contentId: string, score?: number, maxScore?: number) => {
       try {
@@ -37,102 +79,75 @@ export const useProgressTracking = () => {
           ...(score !== undefined && { score }),
           ...(maxScore !== undefined && { maxScore }),
         }).unwrap();
-        console.log("Content completed:", result.data);
-        return result.data;
-      } catch (error) {
-        console.error("Failed to complete content:", error);
-        return null;
-      }
-    },
-    [completeContent]
-  );
 
-  // Update content progress percentage
-  const handleUpdateProgress = useCallback(
-    async (contentId: string, progressPercentage: number) => {
-      // Use service to check if we should update
-      if (
-        !ProgressService.shouldUpdateProgress(contentId, progressPercentage)
-      ) {
-        return null;
-      }
-
-      try {
-        const result = await updateContentProgress({
+        // Update cache with completion status
+        const completedProgress: ContentProgressStatus = {
           contentId,
-          progressPercentage,
-        }).unwrap();
+          status: "completed",
+          progressPercentage: 100,
+          alreadyStarted: true,
+          completedAt: new Date().toISOString(),
+        };
 
-        // Mark that we reported this progress
-        ProgressService.markProgressReported(contentId, progressPercentage);
-        console.log("Content progress updated:", result.data);
-        return result.data;
-      } catch (error) {
-        console.error("Failed to update content progress:", error);
-        return null;
-      }
-    },
-    [updateContentProgress]
-  );
+        progressValidationCache.current.set(contentId, completedProgress);
+        completionNotifiedRef.current.add(contentId);
 
-  // Video-specific progress tracking
-  const handleVideoProgress = useCallback(
-    async (contentId: string, currentTime: number, duration: number) => {
-      const progressPercentage = ProgressService.calculateVideoProgress(
-        currentTime,
-        duration
-      );
-
-      // Check if we should report this progress (every 10%)
-      if (
-        ProgressService.shouldReportVideoProgress(progressPercentage, contentId)
-      ) {
-        const result = await handleUpdateProgress(
-          contentId,
-          progressPercentage
-        );
-
-        // Check for auto-completion at 90%
-        if (
-          result &&
-          result.status === "completed" &&
-          !completionNotifiedRef.current.has(contentId)
-        ) {
-          completionNotifiedRef.current.add(contentId);
-          return { ...result, autoCompleted: true };
-        }
+        // Notify components of progress update
+        notifyCacheInvalidation();
 
         return result;
+      } catch (error) {
+        console.error("Failed to complete content:", error);
+        throw error;
       }
-
-      return null;
     },
-    [handleUpdateProgress]
+    [completeContent, notifyCacheInvalidation]
   );
 
-  // Handle lab/game completion with scores
-  const handleLabGameCompletion = useCallback(
-    async (contentId: string, score: number, maxScore: number) => {
-      return await handleCompleteContent(contentId, score, maxScore);
+  // Legacy compatibility - mark lesson completion (simplified)
+  const markLessonComplete = useCallback(
+    async (lessonId: string) => {
+      return handleCompleteContent(lessonId);
     },
     [handleCompleteContent]
   );
 
-  // Handle manual mark as complete
-  const handleMarkAsComplete = useCallback(
-    async (contentId: string) => {
-      return await handleCompleteContent(contentId);
+  // Legacy compatibility - no-op functions for components that still expect them
+  const handleStartContent = useCallback(async (contentId: string) => {
+    console.warn(
+      "handleStartContent is deprecated - use getContentWithModuleAndProgress API instead"
+    );
+    return null;
+  }, []);
+
+  const checkContentProgress = useCallback(
+    async (contentId: string): Promise<ProgressValidationResult> => {
+      console.warn(
+        "checkContentProgress is deprecated - use getContentWithModuleAndProgress API instead"
+      );
+      return {
+        shouldStart: false,
+        existingProgress: null,
+        reason: "Function deprecated - use 2-API system instead",
+      };
     },
-    [handleCompleteContent]
+    []
   );
 
   return {
-    startContent: handleStartContent,
-    completeContent: handleCompleteContent,
-    updateProgress: handleUpdateProgress,
-    trackVideoProgress: handleVideoProgress,
-    completeLabGame: handleLabGameCompletion,
-    markAsComplete: handleMarkAsComplete,
+    // Core functionality for 2-API system
+    handleCompleteContent,
+    invalidateProgressCache,
+    onCacheInvalidation,
+
+    // Legacy compatibility (deprecated but maintained for existing components)
+    markLessonComplete,
+    handleStartContent, // No-op
+    checkContentProgress, // No-op
+
+    // Cache management
+    progressCache: progressValidationCache.current,
+    completionNotified: completionNotifiedRef.current,
   };
 };
 

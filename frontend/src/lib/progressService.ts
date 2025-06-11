@@ -111,7 +111,6 @@ export class ProgressService {
    */
   static getContentId(item: Record<string, unknown>): string {
     // Try different possible ID fields in order of preference
-    if (item._id && typeof item._id === "string") return item._id;
     if (item.id && typeof item.id === "string") return item.id;
     if (item.contentId && typeof item.contentId === "string")
       return item.contentId;

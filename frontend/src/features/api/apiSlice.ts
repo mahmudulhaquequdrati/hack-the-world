@@ -286,38 +286,10 @@ export const apiSlice = createApi({
       invalidatesTags: ["Progress"],
     }),
 
-    // New Content Progress API endpoints
-    startContent: builder.mutation<
-      {
-        success: boolean;
-        message: string;
-        data: {
-          id: string;
-          userId: string;
-          contentId: {
-            id: string;
-            title: string;
-            type: string;
-            section: string;
-          };
-          status: string;
-          progressPercentage: number;
-          startedAt: string;
-          completedAt: string | null;
-          score: number | null;
-          maxScore: number | null;
-        };
-      },
-      { contentId: string }
-    >({
-      query: ({ contentId }) => ({
-        url: "/progress/content/start",
-        method: "POST",
-        body: { contentId },
-      }),
-      invalidatesTags: ["Progress"],
-    }),
+    // T037: Removed deprecated progress endpoints - now handled by getContentWithModuleAndProgress
+    // Deprecated: getContentProgress, startContent, updateContentProgress
 
+    // Complete content mutation - kept for manual completion
     completeContent: builder.mutation<
       {
         success: boolean;
@@ -349,37 +321,6 @@ export const apiSlice = createApi({
           ...(score !== undefined && { score }),
           ...(maxScore !== undefined && { maxScore }),
         },
-      }),
-      invalidatesTags: ["Progress"],
-    }),
-
-    updateContentProgress: builder.mutation<
-      {
-        success: boolean;
-        message: string;
-        data: {
-          id: string;
-          userId: string;
-          contentId: {
-            id: string;
-            title: string;
-            type: string;
-            section: string;
-          };
-          status: string;
-          progressPercentage: number;
-          startedAt: string;
-          completedAt: string | null;
-          score: number | null;
-          maxScore: number | null;
-        };
-      },
-      { contentId: string; progressPercentage: number }
-    >({
-      query: ({ contentId, progressPercentage }) => ({
-        url: "/progress/content/update",
-        method: "POST",
-        body: { contentId, progressPercentage },
       }),
       invalidatesTags: ["Progress"],
     }),
@@ -580,7 +521,7 @@ export const apiSlice = createApi({
     getModuleOverview: builder.query<
       {
         [sectionName: string]: Array<{
-          _id: string;
+          id: string;
           type: "video" | "lab" | "game" | "text" | "quiz";
           title: string;
           description: string;
@@ -595,7 +536,7 @@ export const apiSlice = createApi({
         message: string;
         data: {
           [sectionName: string]: Array<{
-            _id: string;
+            id: string;
             type: "video" | "lab" | "game" | "text" | "quiz";
             title: string;
             description: string;
@@ -634,6 +575,167 @@ export const apiSlice = createApi({
         { type: "Course", id: `content-${moduleId}` },
       ],
     }),
+
+    // Get first content item only for initial page load optimization (T004)
+    getFirstContentByModule: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          id: string;
+          title: string;
+          description?: string;
+          type: "video" | "lab" | "game" | "document";
+          duration?: number;
+          url?: string;
+          instructions?: string;
+          metadata?: Record<string, unknown>;
+          order?: number;
+          section?: string;
+        } | null;
+      },
+      string
+    >({
+      query: (moduleId) => `/content/module/${moduleId}/first`,
+      providesTags: (result, error, moduleId) => [
+        { type: "Course", id: `first-content-${moduleId}` },
+      ],
+    }),
+
+    // T005/T012: Get optimized content list for lazy loading (reduced payload)
+    getModuleContentGroupedOptimized: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: Record<
+          string,
+          Array<{
+            contentId: string; // Real MongoDB ObjectId for progress tracking
+            contentTitle: string;
+            contentType: "video" | "lab" | "game" | "document";
+            sectionTitle: string;
+            duration?: number;
+          }>
+        >;
+      },
+      string
+    >({
+      query: (moduleId) => `/content/module/${moduleId}/grouped-optimized`,
+      providesTags: (result, error, moduleId) => [
+        { type: "Course", id: `optimized-content-${moduleId}` },
+      ],
+    }),
+
+    // T006/T013: Get content with navigation context (next/prev IDs, position, etc.)
+    getContentWithNavigation: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          content: {
+            id: string;
+            title: string;
+            description?: string;
+            type: "video" | "lab" | "game" | "document";
+            duration?: number;
+            url?: string;
+            instructions?: string;
+            metadata?: Record<string, unknown>;
+            section?: string;
+            moduleId: string;
+          };
+          navigation: {
+            previous: {
+              id: string;
+              title: string;
+            } | null;
+            next: {
+              id: string;
+              title: string;
+            } | null;
+            position: number;
+            total: number;
+          };
+        };
+      },
+      string
+    >({
+      query: (contentId) => `/content/${contentId}/with-navigation`,
+      providesTags: (result, error, contentId) => [
+        { type: "Course", id: `navigation-${contentId}` },
+      ],
+    }),
+
+    // T032: Get content with module and progress in one API call
+    getContentWithModuleAndProgress: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          content: {
+            id: string;
+            title: string;
+            description?: string;
+            type: "video" | "lab" | "game" | "document";
+            url?: string;
+            instructions?: string;
+            duration?: number;
+            section: string;
+          };
+          module: {
+            id: string;
+            title: string;
+            description: string;
+            icon: string;
+            color: string;
+            difficulty: string;
+          };
+          progress: {
+            id?: string;
+            status: "not-started" | "in-progress" | "completed";
+            progressPercentage: number;
+            startedAt?: string;
+            completedAt?: string;
+            score?: number;
+            maxScore?: number;
+            wasStarted: boolean;
+          };
+        };
+      },
+      string
+    >({
+      query: (contentId) => `/content/${contentId}/with-module-and-progress`,
+      providesTags: (result, error, contentId) => [
+        { type: "Course", id: `content-progress-${contentId}` },
+        { type: "Progress", id: contentId },
+      ],
+    }),
+
+    // Get individual content by ID - kept for VideoPlayer lazy loading
+    getContentById: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          _id: string;
+          title: string;
+          description?: string;
+          type: "video" | "lab" | "game" | "document";
+          duration?: number;
+          url?: string;
+          instructions?: string;
+          metadata?: Record<string, unknown>;
+          section?: string;
+          moduleId: string;
+        };
+      },
+      string
+    >({
+      query: (contentId) => `/content/${contentId}`,
+      providesTags: (result, error, contentId) => [
+        { type: "Course", id: `content-${contentId}` },
+      ],
+    }),
   }),
 });
 
@@ -657,12 +759,16 @@ export const {
   useGetLabsByModuleQuery,
   useGetModuleOverviewQuery,
   useGetModuleContentGroupedQuery,
-  useStartContentMutation,
+  // T037: Removed deprecated hooks for 2-API optimization
+  // useGetContentProgressQuery, useStartContentMutation, useUpdateContentProgressMutation,
+  // useGetModuleProgressQuery, useGetContentTypeProgressQuery - now handled by combined API
   useCompleteContentMutation,
-  useUpdateContentProgressMutation,
   useGetOverallProgressQuery,
-  useGetModuleProgressQuery,
-  useGetContentTypeProgressQuery,
+  useGetFirstContentByModuleQuery,
+  useGetModuleContentGroupedOptimizedQuery,
+  useGetContentWithNavigationQuery,
+  useGetContentWithModuleAndProgressQuery,
+  useGetContentByIdQuery,
 } = apiSlice;
 
 export default apiSlice;

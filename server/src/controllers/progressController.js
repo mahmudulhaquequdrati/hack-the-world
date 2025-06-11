@@ -41,11 +41,27 @@ const markContentStarted = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("User is not enrolled in this module", 403));
   }
 
-  // Find or create progress record
+  // Find existing progress record
   let progress = await UserProgress.findByUserAndContent(userId, contentId);
 
+  // T007: Progress validation - Skip if already in progress or completed
+  if (
+    progress &&
+    (progress.status === "in-progress" || progress.status === "completed")
+  ) {
+    // Content already started or completed - return existing progress without making changes
+    await progress.populate("contentId", "title type section moduleId");
+
+    return res.status(200).json({
+      success: true,
+      message: `Content already ${progress.status}`,
+      data: progress,
+      alreadyStarted: true, // Flag for frontend to know no action was taken
+    });
+  }
+
   if (progress) {
-    // Mark as started if not already started
+    // Mark as started if not already started (status is "not-started")
     if (progress.status === "not-started") {
       await progress.markStarted();
     }
@@ -838,6 +854,57 @@ const getUserContentTypeProgress = asyncHandler(async (req, res, next) => {
 });
 
 /**
+ * @desc    Get content progress without starting it (T019)
+ * @route   GET /api/progress/content/:contentId
+ * @access  Private
+ */
+const getContentProgress = asyncHandler(async (req, res, next) => {
+  const { contentId } = req.params;
+  const userId = req.user.id;
+
+  // Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(contentId)) {
+    return next(new ErrorResponse("Invalid content ID format", 400));
+  }
+
+  // Check if content exists
+  const content = await Content.findById(contentId);
+  if (!content) {
+    return next(new ErrorResponse("Content not found", 404));
+  }
+
+  // Check if user is enrolled in the module
+  const enrollment = await UserEnrollment.findByUserAndModule(
+    userId,
+    content.moduleId
+  );
+  if (!enrollment) {
+    return next(new ErrorResponse("User is not enrolled in this module", 403));
+  }
+
+  // Find existing progress record
+  const progress = await UserProgress.findByUserAndContent(userId, contentId);
+
+  if (!progress) {
+    // No progress record exists - content is not started
+    return res.status(200).json({
+      success: true,
+      message: "Content progress retrieved successfully",
+      data: null, // null indicates not started
+    });
+  }
+
+  // Populate content information for response
+  await progress.populate("contentId", "title type section moduleId");
+
+  res.status(200).json({
+    success: true,
+    message: "Content progress retrieved successfully",
+    data: progress,
+  });
+});
+
+/**
  * Helper function to update module progress
  */
 const updateModuleProgress = async (userId, moduleId) => {
@@ -889,4 +956,5 @@ module.exports = {
   getUserOverallProgress,
   getUserModuleProgress,
   getUserContentTypeProgress,
+  getContentProgress,
 };

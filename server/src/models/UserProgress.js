@@ -215,9 +215,9 @@ UserProgressSchema.statics.getUserProgressByModule = async function (
 
   // Get all content for the module
   const moduleContent = await Content.find({ moduleId, isActive: true }).select(
-    "_id"
+    "id"
   );
-  const contentIds = moduleContent.map((content) => content._id);
+  const contentIds = moduleContent.map((content) => content.id);
 
   return this.find({
     userId,

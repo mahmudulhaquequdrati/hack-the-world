@@ -17,12 +17,13 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface ContentSidebarProps {
   course: EnrolledCourse;
   currentVideo: number;
   completedLessons: string[];
+  progressData?: Record<string, { status: string; progressPercentage: number }>;
   isOpen: boolean;
   onClose: () => void;
   onLessonSelect: (lessonIndex: number) => void;
@@ -32,6 +33,7 @@ const ContentSidebar = ({
   course,
   currentVideo,
   completedLessons,
+  progressData = {},
   isOpen,
   onClose,
   onLessonSelect,
@@ -40,9 +42,32 @@ const ContentSidebar = ({
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
   // Collapsible section states (default collapsed)
-  const [isProgressExpanded, setIsProgressExpanded] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
+
+  // T024: Enhanced completion check with multiple data sources
+  const isLessonCompleted = useCallback(
+    (lesson: { id: string; contentId?: string }) => {
+      // Check completion status from multiple sources
+      return (
+        completedLessons.includes(lesson.id) ||
+        (lesson.contentId && completedLessons.includes(lesson.contentId)) ||
+        (lesson.contentId &&
+          progressData?.[lesson.contentId]?.status === "completed")
+      );
+    },
+    [completedLessons, progressData]
+  );
+
+  // NEW: Get progress status for a lesson
+  const getLessonProgress = useCallback(
+    (lesson: { id: string; contentId?: string }) => {
+      if (lesson.contentId && progressData?.[lesson.contentId]) {
+        return progressData[lesson.contentId];
+      }
+      return null;
+    },
+    [progressData]
+  );
 
   // Lock body scroll when sidebar is open
   useEffect(() => {
@@ -148,17 +173,19 @@ const ContentSidebar = ({
     return title.trim();
   };
 
-  const getProgressStats = () => {
-    const total = allLessons.length;
-    const completed = allLessons.filter((lesson) =>
-      completedLessons.includes(lesson.id)
-    ).length;
-    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+  // F003: Comment out unused progress stats function
+  // const getProgressStats = () => {
+  //   const total = allLessons.length;
+  //   const completed = allLessons.filter((lesson) =>
+  //     completedLessons.includes(lesson.id)
+  //   ).length;
+  //   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    return { total, completed, percentage };
-  };
+  //   return { total, completed, percentage };
+  // };
 
-  const progressStats = getProgressStats();
+  // F003: Remove unused progressStats to fix linter warnings
+  // const progressStats = getProgressStats();
 
   const filterOptions = [
     { value: "all", label: "All Content", count: allLessons.length },
@@ -230,13 +257,7 @@ const ContentSidebar = ({
             </div>
             <div className="flex items-center space-x-2 text-xs text-green-400/60">
               <BookOpen className="w-3 h-3" />
-              <span>
-                {course.sections.reduce(
-                  (acc, section) => acc + section.lessons.length,
-                  0
-                )}{" "}
-                MODULES
-              </span>
+              <span>{course.totalLessons} MODULES</span>
             </div>
 
             {/* Search and Filter */}
@@ -312,13 +333,43 @@ const ContentSidebar = ({
                 <div key={`section-${sectionIndex}`} className="space-y-2">
                   {/* Section Header */}
                   <div className="bg-green-400/10 border border-green-400/30 rounded-none p-3 mx-1">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                      <div className="font-bold text-green-400 text-sm font-mono tracking-wide">
-                        {getSectionTitle(
-                          section.title,
-                          sectionIndex
-                        ).toUpperCase()}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <div className="font-bold text-green-400 text-sm font-mono tracking-wide">
+                          {getSectionTitle(
+                            section.title,
+                            sectionIndex
+                          ).toUpperCase()}
+                        </div>
+                      </div>
+
+                      {/* T023: Section completion progress indicator */}
+                      <div className="flex items-center space-x-2">
+                        <div className="text-xs text-green-400/70 font-mono">
+                          {
+                            section.lessons.filter((lesson) =>
+                              completedLessons.includes(lesson.id)
+                            ).length
+                          }
+                          /{section.lessons.length}
+                        </div>
+                        <div className="w-8 h-1 bg-green-400/20 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-green-400 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${
+                                section.lessons.length > 0
+                                  ? (section.lessons.filter((lesson) =>
+                                      completedLessons.includes(lesson.id)
+                                    ).length /
+                                      section.lessons.length) *
+                                    100
+                                  : 0
+                              }%`,
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -327,7 +378,7 @@ const ContentSidebar = ({
                   <div className="space-y-2 pb-6">
                     {section.lessons.map((lesson) => {
                       const isActive = lesson.globalIndex === currentVideo;
-                      const isCompleted = completedLessons.includes(lesson.id);
+                      const isCompleted = isLessonCompleted(lesson);
 
                       return (
                         <div
@@ -352,24 +403,51 @@ const ContentSidebar = ({
                             {/* Lesson Header */}
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-3">
-                                {/* Completion Status */}
+                                {/* Enhanced Completion Status Indicators */}
                                 {isCompleted ? (
-                                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                                  <div className="relative">
+                                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                                    <div className="absolute -inset-1 bg-green-400/20 rounded-full animate-pulse" />
+                                  </div>
+                                ) : getLessonProgress(lesson)?.status ===
+                                  "in-progress" ? (
+                                  <div className="relative">
+                                    <div className="w-4 h-4 border-2 border-yellow-400 rounded-full flex-shrink-0 bg-yellow-400/10" />
+                                    <div className="absolute inset-1 bg-yellow-400 rounded-full animate-pulse" />
+                                  </div>
                                 ) : (
-                                  <div className="w-4 h-4 border-2 border-green-400/40 rounded-full flex-shrink-0" />
+                                  <div className="relative">
+                                    <div className="w-4 h-4 border-2 border-green-400/40 rounded-full flex-shrink-0 bg-transparent" />
+                                    <div className="absolute inset-0.5 bg-green-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  </div>
                                 )}
 
                                 {/* Content Type Icon */}
                                 {getLessonIcon(lesson.type)}
                               </div>
 
-                              {/* Type Badge */}
-                              <div
-                                className={`px-2 py-1 border rounded-none text-xs font-mono font-bold ${getTypeColor(
-                                  lesson.type
-                                )}`}
-                              >
-                                {getTypeLabel(lesson.type)}
+                              {/* Type Badge with Progress Indicator */}
+                              <div className="flex items-center space-x-2">
+                                {(() => {
+                                  const progressPercentage =
+                                    getLessonProgress(
+                                      lesson
+                                    )?.progressPercentage;
+                                  return progressPercentage &&
+                                    progressPercentage > 0 &&
+                                    !isCompleted ? (
+                                    <div className="text-xs text-yellow-400 font-mono">
+                                      {Math.round(progressPercentage)}%
+                                    </div>
+                                  ) : null;
+                                })()}
+                                <div
+                                  className={`px-2 py-1 border rounded-none text-xs font-mono font-bold ${getTypeColor(
+                                    lesson.type
+                                  )}`}
+                                >
+                                  {getTypeLabel(lesson.type)}
+                                </div>
                               </div>
                             </div>
 

@@ -134,6 +134,82 @@ const getContentByModuleGrouped = asyncHandler(async (req, res, next) => {
 });
 
 /**
+ * @desc    Get first content by module (T004)
+ * @route   GET /api/content/module/:moduleId/first
+ * @access  Private
+ */
+const getFirstContentByModule = asyncHandler(async (req, res, next) => {
+  const { moduleId } = req.params;
+
+  // Validate moduleId ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(moduleId)) {
+    return next(new ErrorResponse("Invalid module ID format", 400));
+  }
+
+  const firstContent = await Content.getFirstContentByModule(moduleId);
+
+  if (!firstContent) {
+    return next(new ErrorResponse("No content found for this module", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "First content for module retrieved successfully",
+    data: firstContent,
+  });
+});
+
+/**
+ * @desc    Get content by module grouped by sections with optimized fields (T005)
+ * @route   GET /api/content/module/:moduleId/grouped-optimized
+ * @access  Private
+ */
+const getContentByModuleGroupedOptimized = asyncHandler(
+  async (req, res, next) => {
+    const { moduleId } = req.params;
+
+    // Validate moduleId ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(moduleId)) {
+      return next(new ErrorResponse("Invalid module ID format", 400));
+    }
+
+    const groupedContent = await Content.getByModuleGroupedOptimized(moduleId);
+
+    res.status(200).json({
+      success: true,
+      message: "Optimized grouped content for module retrieved successfully",
+      data: groupedContent,
+    });
+  }
+);
+
+/**
+ * @desc    Get content with navigation context (T006)
+ * @route   GET /api/content/:id/with-navigation
+ * @access  Private
+ */
+const getContentWithNavigation = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new ErrorResponse("Invalid content ID format", 400));
+  }
+
+  const contentWithNavigation = await Content.getContentWithNavigation(id);
+
+  if (!contentWithNavigation) {
+    return next(new ErrorResponse("Content not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Content with navigation retrieved successfully",
+    data: contentWithNavigation,
+  });
+});
+
+/**
  * @desc    Get content by type
  * @route   GET /api/content/type/:type
  * @access  Private
@@ -328,6 +404,101 @@ const permanentDeleteContent = asyncHandler(async (req, res, next) => {
   });
 });
 
+/**
+ * @desc    Get content with module and progress in one API call (T032)
+ * @route   GET /api/content/:id/with-module-and-progress
+ * @access  Private
+ */
+const getContentWithModuleAndProgress = asyncHandler(async (req, res, next) => {
+  const { id: contentId } = req.params;
+  const userId = req.user.id;
+
+  // Validate content ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(contentId)) {
+    return next(new ErrorResponse("Invalid content ID format", 400));
+  }
+
+  // Get content with module populated
+  const content = await Content.findById(contentId)
+    .populate("moduleId", "id title description icon color difficulty")
+    .lean();
+
+  if (!content) {
+    return next(new ErrorResponse("Content not found", 404));
+  }
+
+  // Check if user is enrolled in the module
+  const UserEnrollment = require("../models/UserEnrollment");
+  const enrollment = await UserEnrollment.findByUserAndModule(
+    userId,
+    content.moduleId._id
+  );
+  if (!enrollment) {
+    return next(new ErrorResponse("User is not enrolled in this module", 403));
+  }
+
+  // Get or create progress for this content (implements startContent logic)
+  const UserProgress = require("../models/UserProgress");
+  let progress = await UserProgress.findByUserAndContent(userId, contentId);
+  let wasStarted = false;
+
+  if (!progress) {
+    // Create new progress record in "in-progress" state (startContent logic)
+    progress = new UserProgress({
+      userId,
+      contentId,
+      contentType: content.type,
+      status: "in-progress",
+      progressPercentage: 1,
+      startedAt: new Date(),
+    });
+    await progress.save();
+    wasStarted = true;
+  } else if (progress.status === "not-started") {
+    // Mark as started if not already started (startContent logic)
+    await progress.markStarted();
+    wasStarted = true;
+  }
+
+  // Format the response
+  const response = {
+    content: {
+      id: content._id.toString(),
+      title: content.title,
+      description: content.description,
+      type: content.type,
+      url: content.url,
+      instructions: content.instructions,
+      duration: content.duration,
+      section: content.section,
+    },
+    module: {
+      id: content.moduleId._id.toString(),
+      title: content.moduleId.title,
+      description: content.moduleId.description,
+      icon: content.moduleId.icon,
+      color: content.moduleId.color,
+      difficulty: content.moduleId.difficulty,
+    },
+    progress: {
+      id: progress.id,
+      status: progress.status,
+      progressPercentage: progress.progressPercentage,
+      startedAt: progress.startedAt,
+      completedAt: progress.completedAt,
+      score: progress.score,
+      maxScore: progress.maxScore,
+      wasStarted: wasStarted, // Indicates if startContent logic was executed
+    },
+  };
+
+  res.status(200).json({
+    success: true,
+    message: "Content with module and progress retrieved successfully",
+    data: response,
+  });
+});
+
 module.exports = {
   getAllContent,
   getContentById,
@@ -340,4 +511,8 @@ module.exports = {
   deleteContent,
   permanentDeleteContent,
   getModuleOverview,
+  getFirstContentByModule,
+  getContentByModuleGroupedOptimized,
+  getContentWithNavigation,
+  getContentWithModuleAndProgress,
 };

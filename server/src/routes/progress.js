@@ -6,6 +6,7 @@ const {
   getUserOverallProgress,
   getUserModuleProgress,
   getUserContentTypeProgress,
+  getContentProgress,
 } = require("../controllers/progressController");
 const { protect } = require("../middleware/auth");
 const { validateRequest } = require("../middleware/validation");
@@ -67,7 +68,14 @@ const router = express.Router();
  * @swagger
  * /progress/content/start:
  *   post:
- *     summary: Mark content as started (when content is loaded/accessed)
+ *     summary: Mark content as started (when content is loaded/accessed) with progress validation
+ *     description: |
+ *       Marks content as started when first accessed. Includes progress validation to prevent unnecessary API calls.
+ *       - If content is already in-progress or completed, returns existing progress without changes
+ *       - If content is not-started, marks it as in-progress
+ *       - If no progress record exists, creates new in-progress record
+ *
+ *       **T007 Optimization**: Reduces unnecessary API calls by validating existing progress state.
  *     tags: [Progress]
  *     security:
  *       - bearerAuth: []
@@ -85,7 +93,7 @@ const router = express.Router();
  *                 description: Content ID to mark as started
  *     responses:
  *       200:
- *         description: Content started successfully
+ *         description: Content started successfully or already started/completed
  *         content:
  *           application/json:
  *             schema:
@@ -95,8 +103,12 @@ const router = express.Router();
  *                   type: boolean
  *                 message:
  *                   type: string
+ *                   description: Either "Content started successfully" or "Content already in-progress/completed"
  *                 data:
  *                   $ref: '#/components/schemas/UserProgress'
+ *                 alreadyStarted:
+ *                   type: boolean
+ *                   description: True if content was already in-progress or completed (no action taken)
  *       400:
  *         description: Invalid input data
  *       403:
@@ -203,6 +215,51 @@ router.post("/content/complete", protect, markContentComplete);
  *         description: Content not found
  */
 router.post("/content/update", protect, updateContentProgress);
+
+/**
+ * @swagger
+ * /progress/content/{contentId}:
+ *   get:
+ *     summary: Get content progress without starting it (T019 - avoids redundant /start calls)
+ *     description: |
+ *       Gets current progress status for content without triggering a start action.
+ *       This prevents redundant API calls when content is already started or completed.
+ *       Returns null if content has never been started.
+ *     tags: [Progress]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: contentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Content ID to check progress for
+ *     responses:
+ *       200:
+ *         description: Content progress retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   oneOf:
+ *                     - $ref: '#/components/schemas/UserProgress'
+ *                     - type: "null"
+ *                       description: Content has never been started
+ *       400:
+ *         description: Invalid content ID format
+ *       403:
+ *         description: User not enrolled in module
+ *       404:
+ *         description: Content not found
+ */
+router.get("/content/:contentId", protect, getContentProgress);
 
 /**
  * @swagger

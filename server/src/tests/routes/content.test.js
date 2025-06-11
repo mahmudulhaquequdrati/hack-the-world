@@ -568,6 +568,71 @@ describe("Content API Endpoints", () => {
     });
   });
 
+  describe("GET /api/content/module/:moduleId/grouped-optimized", () => {
+    beforeEach(async () => {
+      await Content.create([
+        {
+          ...testContent,
+          title: "Content 1",
+          section: "Section A",
+          duration: 20,
+        },
+        {
+          ...testContent,
+          title: "Content 2",
+          section: "Section B",
+          duration: 30,
+        },
+        {
+          ...testContent,
+          title: "Content 3",
+          section: "Section A",
+          duration: 15,
+        },
+      ]);
+    });
+
+    it("should get optimized content grouped by sections with contentId", async () => {
+      const response = await request(app)
+        .get(`/api/content/module/${testModule.id}/grouped-optimized`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeInstanceOf(Object);
+      expect(response.body.data["Section A"]).toHaveLength(2);
+      expect(response.body.data["Section B"]).toHaveLength(1);
+
+      // Check optimized fields for progress tracking
+      const sectionAContent = response.body.data["Section A"][0];
+      expect(sectionAContent).toHaveProperty("contentId");
+      expect(sectionAContent).toHaveProperty("contentTitle");
+      expect(sectionAContent).toHaveProperty("contentType");
+      expect(sectionAContent).toHaveProperty("sectionTitle");
+      expect(sectionAContent).toHaveProperty("duration");
+
+      // Verify contentId is a valid MongoDB ObjectId string
+      expect(sectionAContent.contentId).toMatch(/^[0-9a-fA-F]{24}$/);
+      expect(sectionAContent.contentTitle).toBe("Content 1");
+      expect(sectionAContent.contentType).toBe("video");
+      expect(sectionAContent.sectionTitle).toBe("Section A");
+      expect(sectionAContent.duration).toBe(20);
+    });
+
+    it("should return 400 for invalid module ID format", async () => {
+      await request(app)
+        .get("/api/content/module/invalid-id/grouped-optimized")
+        .set("Authorization", `Bearer ${authToken}`)
+        .expect(400);
+    });
+
+    it("should return 401 without authentication", async () => {
+      await request(app)
+        .get(`/api/content/module/${testModule.id}/grouped-optimized`)
+        .expect(401);
+    });
+  });
+
   describe("GET /api/content/type/:type", () => {
     beforeEach(async () => {
       await Content.create([

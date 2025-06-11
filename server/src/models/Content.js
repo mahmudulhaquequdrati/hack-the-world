@@ -200,6 +200,104 @@ ContentSchema.statics.getByModuleGrouped = async function (moduleId) {
   return sections;
 };
 
+// Static method to get first content by module (T004)
+ContentSchema.statics.getFirstContentByModule = async function (moduleId) {
+  const firstContent = await this.findOne({ moduleId, isActive: true })
+    .populate("module", "title")
+    .sort({ section: 1, createdAt: 1 });
+
+  return firstContent;
+};
+
+// Static method to get content by module grouped by sections with optimized fields (T005)
+ContentSchema.statics.getByModuleGroupedOptimized = async function (moduleId) {
+  const content = await this.find({ moduleId, isActive: true })
+    .select("_id title type section duration")
+    .sort({
+      section: 1,
+      createdAt: 1,
+    })
+    .lean();
+
+  // Group content by sections with optimized structure
+  const sections = {};
+  content.forEach((item) => {
+    if (!sections[item.section]) {
+      sections[item.section] = [];
+    }
+    sections[item.section].push({
+      contentId: item._id.toString(), // Keep as contentId for API response consistency
+      contentTitle: item.title,
+      contentType: item.type,
+      sectionTitle: item.section,
+      duration: item.duration || 15, // Default 15 minutes if not specified
+    });
+  });
+
+  return sections;
+};
+
+// Static method to get content with navigation context (T006)
+ContentSchema.statics.getContentWithNavigation = async function (contentId) {
+  // First get the current content
+  const currentContent = await this.findById(contentId)
+    .where({ isActive: true })
+    .populate("module", "title")
+    .lean();
+
+  if (!currentContent) {
+    return null;
+  }
+
+  // Get all content for the same module, sorted by navigation order (section, createdAt)
+  const allModuleContent = await this.find({
+    moduleId: currentContent.moduleId,
+    isActive: true,
+  })
+    .select("_id title section createdAt")
+    .sort({ section: 1, createdAt: 1 })
+    .lean();
+
+  // Find current content's position in the ordered list
+  const currentIndex = allModuleContent.findIndex(
+    (item) => item._id.toString() === contentId.toString()
+  );
+
+  if (currentIndex === -1) {
+    return null;
+  }
+
+  // Get previous and next content IDs
+  const previousContent =
+    currentIndex > 0 ? allModuleContent[currentIndex - 1] : null;
+  const nextContent =
+    currentIndex < allModuleContent.length - 1
+      ? allModuleContent[currentIndex + 1]
+      : null;
+
+  // Return content with navigation context
+  // Note: When using .lean(), _id is not transformed to id, so we need to handle it manually
+  const transformedContent = {
+    ...currentContent,
+    id: currentContent._id.toString(),
+  };
+  delete transformedContent._id;
+
+  return {
+    ...transformedContent,
+    navigation: {
+      previousContentId: previousContent
+        ? previousContent._id.toString()
+        : null,
+      nextContentId: nextContent ? nextContent._id.toString() : null,
+      currentPosition: currentIndex + 1,
+      totalCount: allModuleContent.length,
+      previousTitle: previousContent ? previousContent.title : null,
+      nextTitle: nextContent ? nextContent.title : null,
+    },
+  };
+};
+
 // Static method to get distinct sections by module
 ContentSchema.statics.getSectionsByModule = async function (moduleId) {
   const sections = await this.distinct("section", {
@@ -254,7 +352,7 @@ ContentSchema.statics.updateModuleStats = async function (moduleId) {
 // Post-save middleware to update module statistics
 ContentSchema.post("save", async function (doc) {
   if (doc.moduleId) {
-    await this.updateModuleStats(doc.moduleId);
+    await this.constructor.updateModuleStats(doc.moduleId);
   }
 });
 
@@ -263,11 +361,12 @@ ContentSchema.post("insertMany", async function (docs) {
   if (docs && docs.length > 0) {
     // Get unique module IDs from inserted documents
     const moduleIds = [...new Set(docs.map((doc) => doc.moduleId))];
+    const Content = mongoose.model("Content");
 
     // Update each affected module
     for (const moduleId of moduleIds) {
       if (moduleId) {
-        await this.updateModuleStats(moduleId);
+        await Content.updateModuleStats(moduleId);
       }
     }
   }
@@ -276,14 +375,15 @@ ContentSchema.post("insertMany", async function (docs) {
 // Post-remove middleware to update module statistics
 ContentSchema.post("remove", async function (doc) {
   if (doc.moduleId) {
-    await this.updateModuleStats(doc.moduleId);
+    await this.constructor.updateModuleStats(doc.moduleId);
   }
 });
 
 // Post-findOneAndDelete middleware to update module statistics
 ContentSchema.post("findOneAndDelete", async function (doc) {
   if (doc && doc.moduleId) {
-    await this.updateModuleStats(doc.moduleId);
+    const Content = mongoose.model("Content");
+    await Content.updateModuleStats(doc.moduleId);
   }
 });
 
@@ -292,10 +392,11 @@ ContentSchema.post("deleteMany", async function (result) {
   // For bulk operations, we need to update all affected modules
   // This is less efficient but ensures consistency
   const Module = mongoose.model("Module");
+  const Content = mongoose.model("Content");
   const modules = await Module.find({});
 
   for (const module of modules) {
-    await this.updateModuleStats(module.id);
+    await Content.updateModuleStats(module.id);
   }
 });
 

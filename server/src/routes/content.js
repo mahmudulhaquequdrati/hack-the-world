@@ -11,6 +11,10 @@ const {
   getContentByType,
   getSectionsByModule,
   getModuleOverview,
+  getFirstContentByModule,
+  getContentByModuleGroupedOptimized,
+  getContentWithNavigation,
+  getContentWithModuleAndProgress,
 } = require("../controllers/contentController");
 const { protect, authorize } = require("../middleware/auth");
 
@@ -624,6 +628,144 @@ router.get("/module/:moduleId/grouped", protect, getContentByModuleGrouped);
 
 /**
  * @swagger
+ * /content/module/{moduleId}/first:
+ *   get:
+ *     summary: 🚀 Get first content by module (T004)
+ *     description: |
+ *       Retrieve only the first content item for a module. Optimized for initial enroll page load.
+ *
+ *       **⚡ Performance Features:**
+ *       - Returns only first content item
+ *       - Minimal data transfer
+ *       - Optimized for initial page load
+ *       - Reduces initial loading time
+ *
+ *       **🎯 Use Cases:**
+ *       - Initial enroll page content
+ *       - First lesson preview
+ *       - Quick module entry point
+ *     tags: [📚 Content Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: moduleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Module ObjectId
+ *         example: "64a1b2c3d4e5f6789012346"
+ *     responses:
+ *       200:
+ *         description: First content retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "First content for module retrieved successfully"
+ *                 data:
+ *                   $ref: '#/components/schemas/Content'
+ *       400:
+ *         description: Invalid module ID format
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: No content found for this module
+ */
+router.get("/module/:moduleId/first", protect, getFirstContentByModule);
+
+/**
+ * @swagger
+ * /content/module/{moduleId}/grouped-optimized:
+ *   get:
+ *     summary: ⚡ Get optimized grouped content (T005)
+ *     description: |
+ *       Retrieve content grouped by sections with minimal fields for performance optimization.
+ *
+ *       **🎯 Optimized Fields:**
+ *       - sectionTitle: Section name
+ *       - contentType: Type of content (video, lab, game, document)
+ *       - contentTitle: Content title
+ *       - duration: Duration in minutes
+ *
+ *       **⚡ Performance Benefits:**
+ *       - Reduced payload size
+ *       - Faster content list loading
+ *       - Optimized for content expansion trigger
+ *       - Minimal data transfer
+ *
+ *       **🎯 Use Cases:**
+ *       - Content list expansion
+ *       - Navigation menus
+ *       - Quick content overview
+ *     tags: [📚 Content Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: moduleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Module ObjectId
+ *         example: "64a1b2c3d4e5f6789012346"
+ *     responses:
+ *       200:
+ *         description: Optimized grouped content retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Optimized grouped content for module retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   additionalProperties:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         contentId:
+ *                           type: string
+ *                           description: MongoDB ObjectId of the content
+ *                           example: "64a1b2c3d4e5f6789012345"
+ *                         sectionTitle:
+ *                           type: string
+ *                           example: "Fundamentals"
+ *                         contentType:
+ *                           type: string
+ *                           enum: [video, lab, game, document]
+ *                           example: "video"
+ *                         contentTitle:
+ *                           type: string
+ *                           example: "Introduction to Cybersecurity"
+ *                         duration:
+ *                           type: number
+ *                           example: 15
+ *       400:
+ *         description: Invalid module ID format
+ *       401:
+ *         description: Unauthorized
+ */
+router.get(
+  "/module/:moduleId/grouped-optimized",
+  protect,
+  getContentByModuleGroupedOptimized
+);
+
+/**
+ * @swagger
  * /content/type/{type}:
  *   get:
  *     summary: 🎯 Get content by type
@@ -870,6 +1012,151 @@ router.get("/sections/by-module/:moduleId", protect, getSectionsByModule);
  *               message: 'Content not found'
  */
 router.get("/:id", protect, getContentById);
+
+/**
+ * @swagger
+ * /content/{id}/with-navigation:
+ *   get:
+ *     summary: 🧭 Get content with navigation context (T006)
+ *     description: |
+ *       Retrieve content with navigation information including previous and next content IDs for seamless learning flow.
+ *
+ *       **🧭 Navigation Features:**
+ *       - Previous content ID and title
+ *       - Next content ID and title
+ *       - Current position in module
+ *       - Total content count in module
+ *       - Navigation validation
+ *       - Disabled state management
+ *
+ *       **📍 Position Information:**
+ *       - Current content position (1-based index)
+ *       - Total number of content items in module
+ *       - Navigation boundaries (first/last content)
+ *       - Section-aware ordering
+ *
+ *       **🔄 Ordering Logic:**
+ *       - Content sorted by section first, then by creation date
+ *       - Consistent navigation order across module
+ *       - Handles missing or null content gracefully
+ *       - Only includes active content in navigation
+ *
+ *       **⚡ Performance Optimized:**
+ *       - Single database query for navigation data
+ *       - Lean queries for navigation metadata
+ *       - Minimal data transfer for position info
+ *       - Efficient indexing on moduleId and section
+ *     tags: [📚 Content Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Content MongoDB ObjectId
+ *         example: "64a1b2c3d4e5f6789012347"
+ *     responses:
+ *       200:
+ *         description: Content with navigation retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Content with navigation retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   allOf:
+ *                     - $ref: '#/components/schemas/Content'
+ *                     - type: object
+ *                       properties:
+ *                         navigation:
+ *                           type: object
+ *                           properties:
+ *                             previousContentId:
+ *                               type: string
+ *                               nullable: true
+ *                               description: Previous content ID (null if first)
+ *                               example: "64a1b2c3d4e5f6789012346"
+ *                             nextContentId:
+ *                               type: string
+ *                               nullable: true
+ *                               description: Next content ID (null if last)
+ *                               example: "64a1b2c3d4e5f6789012348"
+ *                             currentPosition:
+ *                               type: number
+ *                               description: Current position (1-based)
+ *                               example: 2
+ *                             totalCount:
+ *                               type: number
+ *                               description: Total content count in module
+ *                               example: 5
+ *                             previousTitle:
+ *                               type: string
+ *                               nullable: true
+ *                               description: Previous content title
+ *                               example: "Introduction to Cybersecurity"
+ *                             nextTitle:
+ *                               type: string
+ *                               nullable: true
+ *                               description: Next content title
+ *                               example: "Advanced Security Concepts"
+ *             example:
+ *               success: true
+ *               message: "Content with navigation retrieved successfully"
+ *               data:
+ *                 id: "64a1b2c3d4e5f6789012347"
+ *                 moduleId: "64a1b2c3d4e5f6789012346"
+ *                 type: "video"
+ *                 title: "Network Security Fundamentals"
+ *                 description: "Learn the basics of network security"
+ *                 url: "https://example.com/videos/network-security.mp4"
+ *                 section: "Fundamentals"
+ *                 duration: 25
+ *                 isActive: true
+ *                 module:
+ *                   id: "64a1b2c3d4e5f6789012346"
+ *                   title: "Cybersecurity Basics"
+ *                 navigation:
+ *                   previousContentId: "64a1b2c3d4e5f6789012346"
+ *                   nextContentId: "64a1b2c3d4e5f6789012348"
+ *                   currentPosition: 2
+ *                   totalCount: 5
+ *                   previousTitle: "Introduction to Cybersecurity"
+ *                   nextTitle: "Advanced Security Concepts"
+ *       400:
+ *         description: Invalid content ID format
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               success: false
+ *               message: 'Invalid content ID format'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Content not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               success: false
+ *               message: 'Content not found'
+ */
+router.get("/:id/with-navigation", protect, getContentWithNavigation);
 
 /**
  * @swagger
@@ -1175,6 +1462,177 @@ router.delete(
   protect,
   authorize("admin"),
   permanentDeleteContent
+);
+
+/**
+ * @swagger
+ * /content/{id}/with-module-and-progress:
+ *   get:
+ *     summary: 🚀 Get content with module and progress in one API call (T032)
+ *     description: |
+ *       Retrieve content with module information and user progress in a single optimized API call.
+ *       This endpoint combines content, module data, and progress tracking to reduce API calls for enrolled course pages.
+ *
+ *       **⚡ Performance Features:**
+ *       - Single API call for all content-related data
+ *       - Module information populated in response
+ *       - Progress tracking with auto-start logic
+ *       - Combines functionality of multiple endpoints
+ *
+ *       **🎯 StartContent Integration:**
+ *       - Automatically starts content if not already started
+ *       - Creates progress record if none exists
+ *       - Updates existing "not-started" progress to "in-progress"
+ *       - Returns wasStarted flag to indicate if start logic was executed
+ *
+ *       **📊 Progress Tracking:**
+ *       - Current progress status and percentage
+ *       - Start and completion timestamps
+ *       - Score tracking for assessments
+ *       - Enrollment validation
+ *
+ *       **🎯 Use Cases:**
+ *       - Enrolled course page content display
+ *       - Single-call content loading with progress
+ *       - Navigation with module context
+ *       - Progress tracking integration
+ *     tags: [📚 Content Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Content ObjectId
+ *         example: "64a1b2c3d4e5f6789012345"
+ *     responses:
+ *       200:
+ *         description: Content with module and progress retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Content with module and progress retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     content:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "64a1b2c3d4e5f6789012345"
+ *                         title:
+ *                           type: string
+ *                           example: "Introduction to Cybersecurity"
+ *                         description:
+ *                           type: string
+ *                           example: "Learn the fundamentals of cybersecurity"
+ *                         type:
+ *                           type: string
+ *                           enum: [video, lab, game, document]
+ *                           example: "video"
+ *                         url:
+ *                           type: string
+ *                           example: "https://example.com/videos/intro.mp4"
+ *                         instructions:
+ *                           type: string
+ *                           example: "Complete the lab exercises"
+ *                         duration:
+ *                           type: number
+ *                           example: 15
+ *                         section:
+ *                           type: string
+ *                           example: "Fundamentals"
+ *                     module:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "64a1b2c3d4e5f6789012346"
+ *                         title:
+ *                           type: string
+ *                           example: "Cybersecurity Fundamentals"
+ *                         description:
+ *                           type: string
+ *                           example: "Master the basic concepts of cybersecurity"
+ *                         icon:
+ *                           type: string
+ *                           example: "🔒"
+ *                         color:
+ *                           type: string
+ *                           example: "text-blue-400"
+ *                         difficulty:
+ *                           type: string
+ *                           example: "beginner"
+ *                     progress:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "64a1b2c3d4e5f6789012347"
+ *                         status:
+ *                           type: string
+ *                           enum: [not-started, in-progress, completed]
+ *                           example: "in-progress"
+ *                         progressPercentage:
+ *                           type: number
+ *                           example: 1
+ *                         startedAt:
+ *                           type: string
+ *                           format: date-time
+ *                           example: "2023-06-15T10:30:00.000Z"
+ *                         completedAt:
+ *                           type: string
+ *                           format: date-time
+ *                           example: null
+ *                         score:
+ *                           type: number
+ *                           example: null
+ *                         maxScore:
+ *                           type: number
+ *                           example: null
+ *                         wasStarted:
+ *                           type: boolean
+ *                           description: Indicates if startContent logic was executed
+ *                           example: true
+ *       400:
+ *         description: Invalid content ID format
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: User not enrolled in module
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Content not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get(
+  "/:id/with-module-and-progress",
+  protect,
+  getContentWithModuleAndProgress
 );
 
 module.exports = router;

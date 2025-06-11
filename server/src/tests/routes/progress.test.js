@@ -447,4 +447,222 @@ describe("Progress API Endpoints", () => {
       expect(response.body.data.games).toHaveLength(1);
     });
   });
+
+  describe("POST /api/progress/content/start - T007 Progress Validation", () => {
+    let testContent, testEnrollment, regularUser;
+
+    beforeEach(async () => {
+      // Create a unique regular user for this test (using unique identifier)
+      const timestamp = Date.now();
+      const regularUserData = await createTestRegularUser({
+        username: `testuser_${timestamp}`,
+        email: `testuser_${timestamp}@test.com`,
+      });
+      regularUser = regularUserData.user;
+      // Update authToken to use this user's token
+      authToken = regularUserData.token;
+
+      // Create enrollment for the regular user
+      testEnrollment = await UserEnrollment.create({
+        userId: regularUser._id,
+        moduleId: testModule._id,
+        status: "active",
+      });
+
+      // Create test content
+      testContent = await Content.create({
+        moduleId: testModule._id,
+        type: "video",
+        title: "Test Video Content",
+        description: "Test video for progress validation",
+        section: "Introduction",
+        duration: 120,
+        url: "https://example.com/test-video.mp4",
+      });
+    });
+
+    it("should start content successfully when no progress exists", async () => {
+      const response = await request(app)
+        .post("/api/progress/content/start")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ contentId: testContent._id })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe("Content started successfully");
+      expect(response.body.data.status).toBe("in-progress");
+      expect(response.body.data.progressPercentage).toBe(1);
+      expect(response.body.data.startedAt).toBeDefined();
+      expect(response.body.alreadyStarted).toBeUndefined();
+    });
+
+    it("should start content successfully when status is not-started", async () => {
+      // Create progress record with not-started status
+      await UserProgress.create({
+        userId: regularUser._id,
+        contentId: testContent._id,
+        contentType: testContent.type,
+        status: "not-started",
+        progressPercentage: 0,
+      });
+
+      const response = await request(app)
+        .post("/api/progress/content/start")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ contentId: testContent._id })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe("Content started successfully");
+      expect(response.body.data.status).toBe("in-progress");
+      expect(response.body.data.startedAt).toBeDefined();
+      expect(response.body.alreadyStarted).toBeUndefined();
+    });
+
+    it("should return existing progress when content is already in-progress (T007)", async () => {
+      // Create progress record with in-progress status
+      const existingProgress = await UserProgress.create({
+        userId: regularUser._id,
+        contentId: testContent._id,
+        contentType: testContent.type,
+        status: "in-progress",
+        progressPercentage: 50,
+        startedAt: new Date("2023-01-01T10:00:00Z"),
+      });
+
+      const response = await request(app)
+        .post("/api/progress/content/start")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ contentId: testContent._id })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe("Content already in-progress");
+      expect(response.body.data.status).toBe("in-progress");
+      expect(response.body.data.progressPercentage).toBe(50);
+      expect(response.body.data.startedAt).toBe("2023-01-01T10:00:00.000Z");
+      expect(response.body.alreadyStarted).toBe(true);
+
+      // Verify no changes were made to existing progress
+      const unchangedProgress = await UserProgress.findById(
+        existingProgress._id
+      );
+      expect(unchangedProgress.progressPercentage).toBe(50);
+      expect(unchangedProgress.startedAt.toISOString()).toBe(
+        "2023-01-01T10:00:00.000Z"
+      );
+    });
+
+    it("should return existing progress when content is completed (T007)", async () => {
+      // Create progress record with completed status
+      const completedProgress = await UserProgress.create({
+        userId: regularUser._id,
+        contentId: testContent._id,
+        contentType: testContent.type,
+        status: "completed",
+        progressPercentage: 100,
+        startedAt: new Date("2023-01-01T10:00:00Z"),
+        completedAt: new Date("2023-01-01T11:00:00Z"),
+        score: 85,
+        maxScore: 100,
+      });
+
+      const response = await request(app)
+        .post("/api/progress/content/start")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ contentId: testContent._id })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe("Content already completed");
+      expect(response.body.data.status).toBe("completed");
+      expect(response.body.data.progressPercentage).toBe(100);
+      expect(response.body.data.score).toBe(85);
+      expect(response.body.data.completedAt).toBe("2023-01-01T11:00:00.000Z");
+      expect(response.body.alreadyStarted).toBe(true);
+
+      // Verify no changes were made to existing progress
+      const unchangedProgress = await UserProgress.findById(
+        completedProgress._id
+      );
+      expect(unchangedProgress.progressPercentage).toBe(100);
+      expect(unchangedProgress.score).toBe(85);
+      expect(unchangedProgress.completedAt.toISOString()).toBe(
+        "2023-01-01T11:00:00.000Z"
+      );
+    });
+
+    it("should validate content ID is required", async () => {
+      const response = await request(app)
+        .post("/api/progress/content/start")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({})
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe("Content ID is required");
+    });
+
+    it("should validate content ID format", async () => {
+      const response = await request(app)
+        .post("/api/progress/content/start")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ contentId: "invalid-id" })
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe("Invalid content ID format");
+    });
+
+    it("should return 404 for non-existent content", async () => {
+      const nonExistentContentId = new mongoose.Types.ObjectId();
+
+      const response = await request(app)
+        .post("/api/progress/content/start")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ contentId: nonExistentContentId })
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe("Content not found");
+    });
+
+    it("should return 403 for users not enrolled in module", async () => {
+      // Create another user without enrollment using unique data
+      const timestamp = Date.now();
+      const unenrolledUserData = await createTestRegularUser({
+        username: `unenrolleduser_${timestamp}`,
+        email: `unenrolled_${timestamp}@example.com`,
+      });
+
+      const response = await request(app)
+        .post("/api/progress/content/start")
+        .set("Authorization", `Bearer ${unenrolledUserData.token}`)
+        .send({ contentId: testContent._id })
+        .expect(403);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe("User is not enrolled in this module");
+    });
+
+    it("should require authentication", async () => {
+      await request(app)
+        .post("/api/progress/content/start")
+        .send({ contentId: testContent._id })
+        .expect(401);
+    });
+
+    it("should populate content information in response", async () => {
+      const response = await request(app)
+        .post("/api/progress/content/start")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ contentId: testContent._id })
+        .expect(200);
+
+      expect(response.body.data.contentId).toBeDefined();
+      expect(response.body.data.contentId.title).toBe("Test Video Content");
+      expect(response.body.data.contentId.type).toBe("video");
+      expect(response.body.data.contentId.section).toBe("Introduction");
+    });
+  });
 });

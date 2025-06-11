@@ -1,6 +1,5 @@
 import useProgressTracking from "@/hooks/useProgressTracking";
 import { Lesson } from "@/lib/types";
-import { useEffect, useRef } from "react";
 import { ContentContainer } from "./ContentContainer";
 import { LoadingContent } from "./LoadingContent";
 import { NavigationControls } from "./NavigationControls";
@@ -15,6 +14,12 @@ interface FullScreenContentProps {
   onNext: () => void;
   onMarkComplete: () => void;
   onOpenInNewTab?: () => void;
+  // T013: Enhanced navigation props with server-side validation
+  canGoBack?: boolean;
+  canGoForward?: boolean;
+  // T022: Loading states for navigation buttons
+  isNavigatingNext?: boolean;
+  isNavigatingPrev?: boolean;
 }
 
 export const FullScreenContent = ({
@@ -26,26 +31,23 @@ export const FullScreenContent = ({
   onNext,
   onMarkComplete,
   onOpenInNewTab,
+  // T013: Enhanced navigation props with server-side validation
+  canGoBack,
+  canGoForward,
+  // T022: Loading states for navigation buttons
+  isNavigatingNext,
+  isNavigatingPrev,
 }: FullScreenContentProps) => {
-  // Progress tracking
+  // Progress tracking (simplified for 2-API system)
   const progressTracking = useProgressTracking();
-  const contentStartedRef = useRef(false);
 
   // Get actual MongoDB content ID directly from lesson
   const contentId = lesson.contentId || "";
 
-  // Auto-start content tracking when lesson loads
-  useEffect(() => {
-    if (contentId && !contentStartedRef.current) {
-      contentStartedRef.current = true;
-      progressTracking.startContent(contentId);
-    }
-  }, [contentId, progressTracking]);
-
   // Handle manual completion with progress tracking
   const handleMarkComplete = async () => {
     if (contentId) {
-      await progressTracking.markAsComplete(contentId);
+      await progressTracking.handleCompleteContent(contentId);
     }
     onMarkComplete();
   };
@@ -100,8 +102,16 @@ export const FullScreenContent = ({
         onPrevious={onPrevious}
         onNext={onNext}
         onMarkComplete={handleMarkComplete}
-        canGoBack={currentIndex > 0}
-        canGoForward={currentIndex < totalCount - 1}
+        canGoBack={canGoBack !== undefined ? canGoBack : currentIndex > 0}
+        canGoForward={
+          canGoForward !== undefined
+            ? canGoForward
+            : currentIndex < totalCount - 1
+        }
+        // TODO: Future enhancement - use navigationTitles for enhanced button tooltips
+        // navigationTitles={navigationTitles}
+        isNavigatingNext={isNavigatingNext}
+        isNavigatingPrev={isNavigatingPrev}
       />
     </ContentContainer>
   );

@@ -173,7 +173,10 @@ const getContentByModuleGroupedOptimized = asyncHandler(
       return next(new ErrorResponse("Invalid module ID format", 400));
     }
 
-    const groupedContent = await Content.getByModuleGroupedOptimized(moduleId);
+    const groupedContent = await Content.getByModuleGroupedOptimized(
+      moduleId,
+      req.user.id
+    );
 
     res.status(200).json({
       success: true,

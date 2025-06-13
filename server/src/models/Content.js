@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const UserProgress = require("./UserProgress");
 
 /**
  * Unified Content Model
@@ -210,14 +211,41 @@ ContentSchema.statics.getFirstContentByModule = async function (moduleId) {
 };
 
 // Static method to get content by module grouped by sections with optimized fields (T005)
-ContentSchema.statics.getByModuleGroupedOptimized = async function (moduleId) {
+ContentSchema.statics.getByModuleGroupedOptimized = async function (
+  moduleId,
+  userId
+) {
   const content = await this.find({ moduleId, isActive: true })
     .select("_id title type section duration")
     .sort({
       section: 1,
       createdAt: 1,
     })
-    .lean();
+    .lean()
+    .then((content) => {
+      return content.map((item) => {
+        return {
+          id: item._id.toString(),
+          title: item.title,
+          type: item.type,
+          section: item.section,
+          duration: item.duration,
+        };
+      });
+    });
+
+  const completedLessons = await UserProgress.find({
+    userId: userId,
+    contentId: { $in: content.map((item) => item.id) },
+    status: "completed",
+  }).then((lessons) => {
+    return lessons.map((lesson) => {
+      return {
+        contentId: lesson.contentId.toString(),
+        status: lesson.status,
+      };
+    });
+  });
 
   // Group content by sections with optimized structure
   const sections = {};
@@ -226,11 +254,14 @@ ContentSchema.statics.getByModuleGroupedOptimized = async function (moduleId) {
       sections[item.section] = [];
     }
     sections[item.section].push({
-      contentId: item._id.toString(), // Keep as contentId for API response consistency
+      contentId: item.id, // Keep as contentId for API response consistency
       contentTitle: item.title,
       contentType: item.type,
       sectionTitle: item.section,
       duration: item.duration || 15, // Default 15 minutes if not specified
+      isCompleted: completedLessons.some(
+        (lesson) => lesson.contentId === item.id
+      ),
     });
   });
 

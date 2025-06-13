@@ -15,7 +15,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 
 interface VideoPlayerProps {
@@ -23,8 +23,7 @@ interface VideoPlayerProps {
   isPlaying: boolean;
   currentVideo: number;
   totalLessons: number;
-  completedLessons: string[];
-  progressData?: Record<string, { status: string; progressPercentage: number }>;
+  isCompleted: boolean;
   isMaximized?: boolean;
   onPlayPause: () => void;
   onPrevious: () => void;
@@ -44,8 +43,7 @@ const VideoPlayer = ({
   isPlaying,
   currentVideo,
   totalLessons,
-  completedLessons,
-  progressData = {},
+  isCompleted,
   isMaximized = false,
   onPlayPause,
   onPrevious,
@@ -82,32 +80,65 @@ const VideoPlayer = ({
     setHasStarted(false);
     setProgress(0);
     setPlayed(0);
+    // Add a small delay before setting player ready to true
+    const timeoutId = setTimeout(() => {
+      setIsPlayerReady(true);
+    }, 100);
+    return () => clearTimeout(timeoutId);
   }, [contentId]);
-
-  // Get progress status from props instead of useProgressTracking
-  const progressStatus = contentId ? progressData[contentId] : null;
 
   // Lazy loading for video URL if missing (T012 fix)
   const needsVideoUrl =
     lesson?.type === "video" && !lesson?.videoUrl && contentId;
 
-  const { data: contentData } = apiSlice.endpoints.getContentById.useQuery(
-    contentId,
-    {
+  const { data: contentData, isLoading: contentLoading } =
+    apiSlice.endpoints.getContentById.useQuery(contentId, {
       skip: !needsVideoUrl,
-    }
-  );
+    });
 
   // Enhanced lesson with lazy-loaded video URL
-  const enhancedLesson =
-    needsVideoUrl && contentData?.success
-      ? {
-          ...lesson,
-          videoUrl: contentData.data.url,
-          description: contentData.data.description || lesson.description,
-          instructions: contentData.data.instructions || lesson.content,
-        }
-      : lesson;
+  const enhancedLesson = useMemo(() => {
+    if (needsVideoUrl && contentData?.success) {
+      return {
+        ...lesson,
+        videoUrl: contentData.data.url,
+        description: contentData.data.description || lesson.description,
+        instructions: contentData.data.instructions || lesson.content,
+      };
+    }
+    return lesson;
+  }, [needsVideoUrl, contentData, lesson]);
+
+  // Check if we have a valid video URL
+  const hasVideoUrl = useMemo(() => {
+    const url = enhancedLesson?.videoUrl;
+    return (
+      url &&
+      url.trim() !== "" &&
+      (url.startsWith("http") || url.startsWith("blob"))
+    );
+  }, [enhancedLesson?.videoUrl]);
+
+  // Log video loading state for debugging
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Video loading state:", {
+        contentId,
+        videoUrl: enhancedLesson?.videoUrl,
+        hasVideoUrl,
+        isPlayerReady,
+        needsVideoUrl,
+        contentLoading,
+      });
+    }
+  }, [
+    contentId,
+    enhancedLesson?.videoUrl,
+    hasVideoUrl,
+    isPlayerReady,
+    needsVideoUrl,
+    contentLoading,
+  ]);
 
   // Security: Prevent tab switching and visibility change during video
   useEffect(() => {
@@ -235,7 +266,7 @@ const VideoPlayer = ({
 
   const handleVideoEnd = async () => {
     // Auto-mark as complete when video ends
-    if (enhancedLesson && !completedLessons.includes(enhancedLesson.id)) {
+    if (enhancedLesson && !isCompleted) {
       onMarkComplete(enhancedLesson.id);
     }
 
@@ -368,10 +399,6 @@ const VideoPlayer = ({
       return () => window.removeEventListener("keydown", handleKeyPress);
     }
   }, [hasStarted, onPlayPause, duration]);
-
-  // Check if lesson has a video URL (using enhanced lesson with lazy-loaded URL)
-  const hasVideoUrl =
-    enhancedLesson?.videoUrl && enhancedLesson.videoUrl.trim() !== "";
 
   // Determine if we should show the center play button
   const showCenterPlayButton =
@@ -740,7 +767,7 @@ const VideoPlayer = ({
 
             <div className="flex items-center space-x-2">
               {/* Simplified completion button */}
-              {progressStatus?.status === "completed" ? (
+              {isCompleted ? (
                 <Button
                   disabled
                   className="bg-green-500/20 text-green-400 border-green-400/30 cursor-not-allowed"

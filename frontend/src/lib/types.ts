@@ -254,7 +254,7 @@ export interface EnrolledCourse {
 }
 
 export interface TerminalMessage {
-  type: "command" | "output" | "ai";
+  type: string;
   content: string;
 }
 

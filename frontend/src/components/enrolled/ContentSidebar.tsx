@@ -22,8 +22,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 interface ContentSidebarProps {
   course: EnrolledCourse;
   currentVideo: number;
-  completedLessons: string[];
-  progressData?: Record<string, { status: string; progressPercentage: number }>;
   isOpen: boolean;
   onClose: () => void;
   onLessonSelect: (lessonIndex: number) => void;
@@ -32,8 +30,6 @@ interface ContentSidebarProps {
 const ContentSidebar = ({
   course,
   currentVideo,
-  completedLessons,
-  progressData = {},
   isOpen,
   onClose,
   onLessonSelect,
@@ -44,30 +40,10 @@ const ContentSidebar = ({
   // Collapsible section states (default collapsed)
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
-  // T024: Enhanced completion check with multiple data sources
-  const isLessonCompleted = useCallback(
-    (lesson: { id: string; contentId?: string }) => {
-      // Check completion status from multiple sources
-      return (
-        completedLessons.includes(lesson.id) ||
-        (lesson.contentId && completedLessons.includes(lesson.contentId)) ||
-        (lesson.contentId &&
-          progressData?.[lesson.contentId]?.status === "completed")
-      );
-    },
-    [completedLessons, progressData]
-  );
-
-  // NEW: Get progress status for a lesson
-  const getLessonProgress = useCallback(
-    (lesson: { id: string; contentId?: string }) => {
-      if (lesson.contentId && progressData?.[lesson.contentId]) {
-        return progressData[lesson.contentId];
-      }
-      return null;
-    },
-    [progressData]
-  );
+  // Determine completion based on lesson.completed flag coming from API
+  const isLessonCompleted = useCallback((lesson: { completed?: boolean }) => {
+    return Boolean(lesson.completed);
+  }, []);
 
   // Lock body scroll when sidebar is open
   useEffect(() => {
@@ -95,6 +71,8 @@ const ContentSidebar = ({
     );
   }, [course.sections]);
 
+  console.log(course, "course");
+
   // Filter lessons based on search and filter
   const filteredLessons = useMemo(() => {
     return allLessons.filter((lesson) => {
@@ -105,14 +83,12 @@ const ContentSidebar = ({
       const matchesFilter =
         selectedFilter === "all" ||
         lesson.type === selectedFilter ||
-        (selectedFilter === "completed" &&
-          completedLessons.includes(lesson.id)) ||
-        (selectedFilter === "incomplete" &&
-          !completedLessons.includes(lesson.id));
+        (selectedFilter === "completed" && lesson.completed) ||
+        (selectedFilter === "incomplete" && !lesson.completed);
 
       return matchesSearch && matchesFilter;
     });
-  }, [allLessons, searchTerm, selectedFilter, completedLessons]);
+  }, [allLessons, searchTerm, selectedFilter]);
 
   const getLessonIcon = (type: string) => {
     switch (type) {
@@ -172,20 +148,6 @@ const ContentSidebar = ({
     }
     return title.trim();
   };
-
-  // F003: Comment out unused progress stats function
-  // const getProgressStats = () => {
-  //   const total = allLessons.length;
-  //   const completed = allLessons.filter((lesson) =>
-  //     completedLessons.includes(lesson.id)
-  //   ).length;
-  //   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-  //   return { total, completed, percentage };
-  // };
-
-  // F003: Remove unused progressStats to fix linter warnings
-  // const progressStats = getProgressStats();
 
   const filterOptions = [
     { value: "all", label: "All Content", count: allLessons.length },
@@ -348,9 +310,8 @@ const ContentSidebar = ({
                       <div className="flex items-center space-x-2">
                         <div className="text-xs text-green-400/70 font-mono">
                           {
-                            section.lessons.filter((lesson) =>
-                              completedLessons.includes(lesson.id)
-                            ).length
+                            section.lessons.filter((lesson) => lesson.completed)
+                              .length
                           }
                           /{section.lessons.length}
                         </div>
@@ -360,8 +321,8 @@ const ContentSidebar = ({
                             style={{
                               width: `${
                                 section.lessons.length > 0
-                                  ? (section.lessons.filter((lesson) =>
-                                      completedLessons.includes(lesson.id)
+                                  ? (section.lessons.filter(
+                                      (lesson) => lesson.completed
                                     ).length /
                                       section.lessons.length) *
                                     100
@@ -409,12 +370,6 @@ const ContentSidebar = ({
                                     <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
                                     <div className="absolute -inset-1 bg-green-400/20 rounded-full animate-pulse" />
                                   </div>
-                                ) : getLessonProgress(lesson)?.status ===
-                                  "in-progress" ? (
-                                  <div className="relative">
-                                    <div className="w-4 h-4 border-2 border-yellow-400 rounded-full flex-shrink-0 bg-yellow-400/10" />
-                                    <div className="absolute inset-1 bg-yellow-400 rounded-full animate-pulse" />
-                                  </div>
                                 ) : (
                                   <div className="relative">
                                     <div className="w-4 h-4 border-2 border-green-400/40 rounded-full flex-shrink-0 bg-transparent" />
@@ -428,19 +383,6 @@ const ContentSidebar = ({
 
                               {/* Type Badge with Progress Indicator */}
                               <div className="flex items-center space-x-2">
-                                {(() => {
-                                  const progressPercentage =
-                                    getLessonProgress(
-                                      lesson
-                                    )?.progressPercentage;
-                                  return progressPercentage &&
-                                    progressPercentage > 0 &&
-                                    !isCompleted ? (
-                                    <div className="text-xs text-yellow-400 font-mono">
-                                      {Math.round(progressPercentage)}%
-                                    </div>
-                                  ) : null;
-                                })()}
                                 <div
                                   className={`px-2 py-1 border rounded-none text-xs font-mono font-bold ${getTypeColor(
                                     lesson.type

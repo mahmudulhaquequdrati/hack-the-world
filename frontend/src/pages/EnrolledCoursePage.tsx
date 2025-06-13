@@ -17,26 +17,41 @@ import {
   useGetContentWithModuleAndProgressQuery,
   useGetModuleContentGroupedOptimizedQuery,
 } from "@/features/api/apiSlice";
-import {
-  ChatMessage,
-  EnrolledCourse,
-  PlaygroundMode,
-  TerminalMessage,
-} from "@/lib/types";
+import { EnrolledCourse } from "@/lib/types";
 import { Brain, Calculator, Target, Terminal } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+
+interface ContentItem {
+  contentId: string;
+  contentTitle: string;
+  contentType: "video" | "lab" | "game" | "document";
+  sectionTitle: string;
+  duration?: number;
+  isCompleted?: boolean;
+}
+
+interface ContentItemWithCompletion extends ContentItem {
+  isCompleted: boolean;
+}
+
+interface GroupedContentResponse {
+  success: boolean;
+  message: string;
+  data: {
+    [key: string]: ContentItem[];
+  };
+}
 
 const EnrolledCoursePage = () => {
   const navigate = useNavigate();
   const { courseId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  // const { user } = useAuthRTK(); // Not used in 2-API system
 
-  // Simple state - only what we need for 2-API system
-  const [activeTab, setActiveTab] = useState(() => {
-    return searchParams.get("tab") || "details";
-  });
+  // Core states
+  const [activeTab, setActiveTab] = useState(
+    () => searchParams.get("tab") || "details"
+  );
   const [currentContentId, setCurrentContentId] = useState<string | null>(null);
   const [course, setCourse] = useState<EnrolledCourse | null>(null);
 
@@ -46,47 +61,41 @@ const EnrolledCoursePage = () => {
   const [isResizing, setIsResizing] = useState(false);
   const [videoMaximized, setVideoMaximized] = useState(false);
   const [playgroundMaximized, setPlaygroundMaximized] = useState(false);
+  const [playgroundMode, setPlaygroundMode] = useState("chat");
   const [activeLab, setActiveLab] = useState<string | null>(null);
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // T036: Enhanced Loading states
+  // Loading states
   const [isNavigating, setIsNavigating] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isAutoCompleting, setIsAutoCompleting] = useState(false);
 
-  // T035: Video progress tracking for auto-completion
+  // Video progress tracking
   const [videoProgress, setVideoProgress] = useState(0);
   const [hasAutoCompleted, setHasAutoCompleted] = useState(false);
 
-  // AI Playground State
-  const [playgroundMode, setPlaygroundMode] =
-    useState<PlaygroundMode["id"]>("terminal");
-  const [terminalHistory, setTerminalHistory] = useState<TerminalMessage[]>([
+  // Video and playground states
+  const [terminalHistory, setTerminalHistory] = useState([
     {
       type: "output",
       content: "Welcome to AI-Enhanced Cybersecurity Terminal",
     },
   ]);
-  const [aiChatMessages, setAiChatMessages] = useState<ChatMessage[]>([
-    {
-      role: "ai",
-      content: "Hello! I'm your AI learning assistant.",
-    },
-  ]);
-  const [analysisResult, setAnalysisResult] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // API 1: Get grouped content structure (called once on page load)
+  // API Queries
   const {
     data: groupedContentData,
     isLoading: groupedContentLoading,
     error: groupedContentError,
   } = useGetModuleContentGroupedOptimizedQuery(courseId || "", {
     skip: !courseId,
-  });
+  }) as {
+    data: GroupedContentResponse | undefined;
+    isLoading: boolean;
+    error: unknown;
+  };
 
-  // API 2: Get current content with module and progress (called when content changes)
   const {
     data: currentContentData,
     isLoading: currentContentLoading,
@@ -96,39 +105,28 @@ const EnrolledCoursePage = () => {
     skip: !currentContentId,
   });
 
-  // Complete content mutation
   const [completeContent] = useCompleteContentMutation();
 
-  // T034: Create flat array of all content items from grouped data for smart navigation
-  const allContentItems = useMemo(() => {
+  // Create flat array of content items for navigation
+  const allContentItems = useMemo<ContentItemWithCompletion[]>(() => {
     if (!groupedContentData?.success) return [];
-
-    const items: Array<{
-      contentId: string;
-      contentTitle: string;
-      contentType: "video" | "lab" | "game" | "document";
-      sectionTitle: string;
-      duration?: number;
-    }> = [];
-
-    Object.values(groupedContentData.data).forEach((sectionItems) => {
-      items.push(...sectionItems);
-    });
-
-    return items;
+    return Object.values(groupedContentData.data).flatMap((sectionItems) =>
+      sectionItems.map((item) => ({
+        ...item,
+        isCompleted: item.isCompleted || false,
+      }))
+    );
   }, [groupedContentData]);
 
-  // T034: Smart navigation - Get current content index and navigation state
+  // Navigation state
   const currentContentIndex = useMemo(() => {
     if (!currentContentId || !allContentItems.length) return 0;
     const index = allContentItems.findIndex(
       (item) => item.contentId === currentContentId
     );
-    // If content not found, return 0 (first item)
     return index === -1 ? 0 : index;
   }, [currentContentId, allContentItems]);
 
-  // T034: Smart navigation helpers
   const navigationState = useMemo(() => {
     const hasPrevious = currentContentIndex > 0;
     const hasNext = currentContentIndex < allContentItems.length - 1;
@@ -149,209 +147,210 @@ const EnrolledCoursePage = () => {
     };
   }, [currentContentIndex, allContentItems]);
 
-  // Build course data from APIs
-  useEffect(() => {
-    if (groupedContentData?.success && currentContentData?.success) {
-      const moduleData = currentContentData.data.module;
+  // Build course data from APIs - optimize to prevent unnecessary updates
+  const courseData = useMemo(() => {
+    if (!groupedContentData?.success || !currentContentData?.success)
+      return null;
 
-      // Transform grouped data into course sections
-      const sections = Object.entries(groupedContentData.data).map(
-        ([sectionTitle, items], index) => ({
-          id: `section-${index}`,
-          title: sectionTitle,
-          lessons: items.map((item, itemIndex) => ({
-            id: `lesson-${index}-${itemIndex}`,
-            contentId: item.contentId,
-            title: item.contentTitle,
-            duration: item.duration ? `${item.duration}:00` : "15:00",
-            type:
-              item.contentType === "document"
-                ? ("text" as const)
-                : item.contentType,
-            completed: false, // Will be determined from currentContentData
-            description: `Learn about ${item.contentTitle}`,
-            videoUrl: undefined,
-            content: undefined,
-          })),
-        })
-      );
+    const moduleData = currentContentData.data.module;
+    const sections = Object.entries(groupedContentData.data).map(
+      ([sectionTitle, items], index) => ({
+        id: `section-${index}`,
+        title: sectionTitle,
+        lessons: items.map((item, itemIndex) => ({
+          id: `lesson-${index}-${itemIndex}`,
+          contentId: item.contentId,
+          title: item.contentTitle,
+          duration: item.duration ? `${item.duration}:00` : "15:00",
+          type:
+            item.contentType === "document"
+              ? ("text" as const)
+              : (item.contentType as "video" | "lab" | "game" | "quiz"),
+          completed: item.isCompleted || false,
+          description: `Learn about ${item.contentTitle}`,
+          videoUrl: undefined,
+          content: undefined,
+        })),
+      })
+    );
 
-      const totalLessons = allContentItems.length;
-
-      const enrolledCourse: EnrolledCourse = {
-        title: moduleData.title,
-        description: moduleData.description,
-        icon: moduleData.icon || "🔒",
-        color: moduleData.color || "text-green-400",
-        bgColor: "bg-green-400/10",
-        borderColor: "border-green-400/30",
-        totalLessons,
-        completedLessons: 0, // Will be calculated separately if needed
-        progress: 0, // Will be calculated separately if needed
-        sections,
-        labs: [],
-        games: [],
-        resources: [],
-        playground: {
-          title: "AI Playground",
-          description: "Interactive learning environment",
-          tools: [],
-          available: true,
-        },
-      };
-
-      setCourse(enrolledCourse);
-    }
+    return {
+      title: moduleData.title,
+      description: moduleData.description,
+      icon: moduleData.icon || "🔒",
+      color: `text-${moduleData.color || "green"}-400`,
+      bgColor: `bg-${moduleData.color || "green"}-400/10`,
+      borderColor: `border-${moduleData.color || "green"}-400/30`,
+      totalLessons: allContentItems.length,
+      completedLessons: allContentItems.filter((item) => item.isCompleted)
+        .length,
+      progress: Math.round(
+        (allContentItems.filter((item) => item.isCompleted).length /
+          allContentItems.length) *
+          100
+      ),
+      sections,
+      labs: [],
+      games: [],
+      resources: [],
+      playground: {
+        title: "AI Playground",
+        description: "Interactive learning environment",
+        tools: [],
+        available: true,
+      },
+    } as EnrolledCourse;
   }, [groupedContentData, currentContentData, allContentItems]);
 
-  // Initialize current content ID from URL or use first content
+  // Loading state management
+  const isInitialLoading =
+    groupedContentLoading ||
+    (!currentContentId && allContentItems.length === 0);
+  const isContentLoading = currentContentLoading || !courseData;
+  const isActionLoading = isNavigating || isCompleting || isAutoCompleting;
+  const showFullPageLoading =
+    (isInitialLoading || isContentLoading) && !isActionLoading;
+
+  // Clear navigation loading only when content and course data are ready
+  useEffect(() => {
+    if (
+      !currentContentLoading &&
+      courseData &&
+      (isNavigating || isCompleting || isAutoCompleting)
+    ) {
+      // Small delay to ensure UI updates are complete
+      const timeoutId = setTimeout(() => {
+        setIsNavigating(false);
+        setIsCompleting(false);
+        setIsAutoCompleting(false);
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [
+    currentContentLoading,
+    courseData,
+    isNavigating,
+    isCompleting,
+    isAutoCompleting,
+  ]);
+
+  // Update course state only when courseData changes
+  useEffect(() => {
+    if (courseData) {
+      setCourse(courseData);
+    }
+  }, [courseData]);
+
+  // Initialize current content ID from URL only on mount
   useEffect(() => {
     const contentIdFromUrl = searchParams.get("contentId");
     const contentIndexFromUrl = searchParams.get("content");
 
-    if (contentIdFromUrl) {
-      setCurrentContentId(contentIdFromUrl);
-    } else if (contentIndexFromUrl && allContentItems.length > 0) {
-      const index = parseInt(contentIndexFromUrl, 10);
-      if (!isNaN(index) && index >= 0 && index < allContentItems.length) {
-        setCurrentContentId(allContentItems[index].contentId);
+    if (!currentContentId && allContentItems.length > 0) {
+      if (contentIdFromUrl) {
+        setCurrentContentId(contentIdFromUrl);
+      } else if (contentIndexFromUrl) {
+        const index = parseInt(contentIndexFromUrl, 10);
+        if (!isNaN(index) && index >= 0 && index < allContentItems.length) {
+          setCurrentContentId(allContentItems[index].contentId);
+        } else {
+          setCurrentContentId(allContentItems[0].contentId);
+        }
       } else {
-        // Default to first content
-        setCurrentContentId(allContentItems[0]?.contentId || null);
+        setCurrentContentId(allContentItems[0].contentId);
       }
-    } else if (allContentItems.length > 0 && !currentContentId) {
-      // Default to first content
-      setCurrentContentId(allContentItems[0].contentId);
     }
   }, [searchParams, allContentItems, currentContentId]);
 
-  // Update URL when content changes (debounced to prevent rapid updates)
-  useEffect(() => {
-    if (currentContentId && currentContentIndex >= 0) {
-      const timeoutId = setTimeout(() => {
-        const params = new URLSearchParams();
-
-        if (currentContentIndex > 0) {
-          params.set("content", currentContentIndex.toString());
-        }
-        params.set("contentId", currentContentId);
-        if (activeTab !== "details") {
-          params.set("tab", activeTab);
-        }
-
-        setSearchParams(params, { replace: true });
-      }, 150); // 150ms debounce to prevent rapid URL updates
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [currentContentId, currentContentIndex, activeTab, setSearchParams]);
-
-  // Simple navigation with loading states
+  // Navigation handlers
   const nextLesson = useCallback(() => {
     if (!allContentItems.length || isNavigating) return;
-
     const targetIndex = currentContentIndex + 1;
     if (targetIndex < allContentItems.length) {
-      const targetContent = allContentItems[targetIndex];
-
-      // Set loading state before navigation
       setIsNavigating(true);
-
-      // Update URL params - this will trigger content refetch
-      const params = new URLSearchParams();
-      params.set("contentId", targetContent.contentId);
-      if (targetIndex > 0) {
-        params.set("content", targetIndex.toString());
-      }
-      if (activeTab !== "details") {
-        params.set("tab", activeTab);
-      }
-
+      const nextContentId = allContentItems[targetIndex].contentId;
+      setCurrentContentId(nextContentId);
+      const params = new URLSearchParams(searchParams);
+      params.set("contentId", nextContentId);
+      params.set("content", targetIndex.toString());
       setSearchParams(params, { replace: true });
     }
   }, [
     allContentItems,
     currentContentIndex,
-    setSearchParams,
-    activeTab,
     isNavigating,
+    searchParams,
+    setSearchParams,
   ]);
 
   const prevLesson = useCallback(() => {
     if (!allContentItems.length || isNavigating) return;
-
     const targetIndex = currentContentIndex - 1;
     if (targetIndex >= 0) {
-      const targetContent = allContentItems[targetIndex];
-
-      // Set loading state before navigation
       setIsNavigating(true);
-
-      // Update URL params - this will trigger content refetch
-      const params = new URLSearchParams();
-      params.set("contentId", targetContent.contentId);
+      const prevContentId = allContentItems[targetIndex].contentId;
+      setCurrentContentId(prevContentId);
+      const params = new URLSearchParams(searchParams);
+      params.set("contentId", prevContentId);
       if (targetIndex > 0) {
         params.set("content", targetIndex.toString());
       }
-      if (activeTab !== "details") {
-        params.set("tab", activeTab);
-      }
-
       setSearchParams(params, { replace: true });
     }
   }, [
     allContentItems,
     currentContentIndex,
-    setSearchParams,
-    activeTab,
     isNavigating,
+    searchParams,
+    setSearchParams,
   ]);
 
-  // Navigate to specific content by ID - simple URL update
   const navigateToContentById = useCallback(
     (contentId: string) => {
-      if (!allContentItems.length || contentId === currentContentId) return;
-
+      if (
+        !allContentItems.length ||
+        contentId === currentContentId ||
+        isNavigating
+      )
+        return;
       const targetIndex = allContentItems.findIndex(
         (item) => item.contentId === contentId
       );
       if (targetIndex === -1) return;
 
-      // Simply update URL params - this will trigger content refetch
-      const params = new URLSearchParams();
+      setIsNavigating(true);
+      setCurrentContentId(contentId);
+      const params = new URLSearchParams(searchParams);
       params.set("contentId", contentId);
       if (targetIndex > 0) {
         params.set("content", targetIndex.toString());
       }
-      if (activeTab !== "details") {
-        params.set("tab", activeTab);
-      }
-
       setSearchParams(params, { replace: true });
     },
-    [allContentItems, currentContentId, activeTab, setSearchParams]
+    [
+      allContentItems,
+      currentContentId,
+      isNavigating,
+      searchParams,
+      setSearchParams,
+    ]
   );
 
-  // Handle lesson selection from sidebar - using smart navigation
   const handleLessonSelect = useCallback(
     (lessonIndex: number) => {
       if (!allContentItems.length) return;
-
       if (lessonIndex >= 0 && lessonIndex < allContentItems.length) {
-        const selectedContent = allContentItems[lessonIndex];
-        navigateToContentById(selectedContent.contentId);
+        navigateToContentById(allContentItems[lessonIndex].contentId);
         setContentSidebarOpen(false);
       }
     },
     [allContentItems, navigateToContentById]
   );
 
-  // T035: Video progress handler for auto-completion
+  // Video progress and completion
   const handleVideoProgress = useCallback(
     async (progressPercentage: number) => {
       setVideoProgress(progressPercentage);
-
-      // Auto-complete video at 90% watched
       if (
         currentContentData?.success &&
         currentContentData.data.content.type === "video" &&
@@ -362,13 +361,12 @@ const EnrolledCoursePage = () => {
       ) {
         setIsAutoCompleting(true);
         setHasAutoCompleted(true);
-
         try {
           await completeContent({ contentId: currentContentId! }).unwrap();
           await refetchCurrentContent();
         } catch (error) {
           console.error("Auto-completion failed:", error);
-          setHasAutoCompleted(false); // Allow retry
+          setHasAutoCompleted(false);
         } finally {
           setIsAutoCompleting(false);
         }
@@ -384,34 +382,23 @@ const EnrolledCoursePage = () => {
     ]
   );
 
-  // Mark lesson as completed
-  const markLessonComplete = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async (_lessonId: string) => {
-      if (!currentContentId || isCompleting) return;
+  const markLessonComplete = useCallback(async () => {
+    if (!currentContentId || isCompleting) return;
+    setIsCompleting(true);
+    try {
+      await completeContent({ contentId: currentContentId }).unwrap();
+      await refetchCurrentContent();
+    } catch (error) {
+      console.error("Failed to mark lesson complete:", error);
+    } finally {
+      setIsCompleting(false);
+    }
+  }, [currentContentId, completeContent, refetchCurrentContent, isCompleting]);
 
-      setIsCompleting(true);
-
-      try {
-        await completeContent({ contentId: currentContentId }).unwrap();
-        // Refetch current content to get updated progress
-        await refetchCurrentContent();
-      } catch (error) {
-        console.error("Failed to mark lesson complete:", error);
-      } finally {
-        setIsCompleting(false);
-      }
-    },
-    [currentContentId, completeContent, refetchCurrentContent, isCompleting]
-  );
-
-  // Get current lesson from current content data
+  // Get current lesson
   const getCurrentLesson = useCallback(() => {
     if (!currentContentData?.success || !course) return undefined;
-
     const contentData = currentContentData.data.content;
-
-    // Find the lesson in course sections that matches current content
     for (const section of course.sections) {
       const lesson = section.lessons.find(
         (l) => l.contentId === currentContentId
@@ -419,75 +406,100 @@ const EnrolledCoursePage = () => {
       if (lesson) {
         return {
           ...lesson,
-          // Update with real data from API
           title: contentData.title,
           description: contentData.description || "",
           type:
             contentData.type === "document"
               ? ("text" as const)
-              : contentData.type,
+              : (contentData.type as "video" | "lab" | "game" | "quiz"),
           videoUrl: contentData.url,
           content: contentData.instructions,
+          completed: currentContentData.data.progress.status === "completed",
         };
       }
     }
-
     return undefined;
   }, [currentContentData, course, currentContentId]);
 
-  // Get completion status from current content data
-  const isCurrentContentCompleted = useMemo(() => {
-    return Boolean(
-      currentContentData?.success &&
-        currentContentData.data.progress.status === "completed"
-    );
-  }, [currentContentData]);
-
-  // Dynamic playground modes
-  const getDynamicPlaygroundModes = useCallback((): PlaygroundMode[] => {
-    const currentLesson = getCurrentLesson();
-    const lessonTitle = currentLesson?.title?.toLowerCase() || "";
-
-    const baseModes: PlaygroundMode[] = [
-      {
-        id: "terminal",
-        name: "Terminal",
-        icon: Terminal,
-        description: "AI-enhanced terminal for cybersecurity commands",
-      },
-      {
-        id: "chat",
-        name: "AI Assistant",
-        icon: Brain,
-        description: "Chat with AI learning assistant",
-      },
-    ];
-
-    const additionalModes: PlaygroundMode[] = [];
-
-    if (lessonTitle.includes("threat")) {
-      additionalModes.push({
-        id: "threat-intel",
-        name: "Threat Intel",
-        icon: Target,
-        description: "Threat intelligence analysis",
-      });
+  // Video security
+  useEffect(() => {
+    if (isPlaying) {
+      document.body.classList.add("video-security-active");
+      const style = document.createElement("style");
+      style.id = "video-security-styles";
+      style.textContent = `
+        .video-security-active {
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          user-select: none !important;
+        }
+        .video-security-active video {
+          -webkit-user-drag: none !important;
+          pointer-events: none !important;
+        }
+        @media print {
+          .video-security-active { display: none !important; }
+        }
+      `;
+      if (!document.getElementById("video-security-styles")) {
+        document.head.appendChild(style);
+      }
+    } else {
+      document.body.classList.remove("video-security-active");
+      const existingStyle = document.getElementById("video-security-styles");
+      if (existingStyle) {
+        existingStyle.remove();
+      }
     }
+    return () => {
+      document.body.classList.remove("video-security-active");
+      const existingStyle = document.getElementById("video-security-styles");
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+    };
+  }, [isPlaying]);
 
-    if (lessonTitle.includes("cia") || lessonTitle.includes("triad")) {
-      additionalModes.push({
-        id: "risk-calc",
-        name: "Risk Calculator",
-        icon: Calculator,
-        description: "Risk assessment tools",
-      });
+  // Reset states on content change
+  useEffect(() => {
+    if (currentContentId) {
+      setVideoProgress(0);
+      setHasAutoCompleted(false);
+      setIsPlaying(false);
+      setVideoMaximized(false);
+      setPlaygroundMaximized(false);
     }
+  }, [currentContentId]);
 
-    return [...baseModes, ...additionalModes];
-  }, [getCurrentLesson]);
+  // Handle video maximize/minimize
+  const handleVideoMaximize = useCallback(() => {
+    setVideoMaximized(true);
+    setPlaygroundMaximized(false);
+  }, []);
 
-  // AI playground handlers
-  const handleTerminalCommand = (command: string) => {
+  const handleVideoRestore = useCallback(() => {
+    setVideoMaximized(false);
+    setPlaygroundMaximized(false);
+  }, []);
+
+  // Handle playground maximize/minimize
+  const handlePlaygroundMaximize = useCallback(() => {
+    setPlaygroundMaximized(true);
+    setVideoMaximized(false);
+  }, []);
+
+  const handlePlaygroundRestore = useCallback(() => {
+    setPlaygroundMaximized(false);
+    setVideoMaximized(false);
+  }, []);
+
+  // Handle video play/pause
+  const handleVideoPlayPause = useCallback(() => {
+    setIsPlaying((prev) => !prev);
+  }, []);
+
+  // Handle terminal command
+  const handleTerminalCommand = useCallback((command: string) => {
     setTerminalHistory((prev) => [
       ...prev,
       { type: "command", content: `user@terminal:~$ ${command}` },
@@ -511,145 +523,60 @@ const EnrolledCoursePage = () => {
         { type: "output", content: response },
       ]);
     }, 1000);
-  };
-
-  const handleAiChat = (message: string) => {
-    setAiChatMessages((prev) => [...prev, { role: "user", content: message }]);
-
-    setTimeout(() => {
-      setAiChatMessages((prev) => [
-        ...prev,
-        {
-          role: "ai",
-          content: "That's a great question! Let me help you understand...",
-        },
-      ]);
-    }, 1500);
-  };
-
-  const handleAnalysis = (input: string) => {
-    setIsAnalyzing(true);
-    setTimeout(() => {
-      setAnalysisResult(`Analysis complete for: "${input}"\n\nKey findings...`);
-      setIsAnalyzing(false);
-    }, 2000);
-  };
-
-  // Video security
-  useEffect(() => {
-    if (isPlaying) {
-      document.body.classList.add("video-security-active");
-
-      const style = document.createElement("style");
-      style.id = "video-security-styles";
-      style.textContent = `
-        .video-security-active {
-          -webkit-user-select: none !important;
-          -moz-user-select: none !important;
-          user-select: none !important;
-        }
-        .video-security-active video {
-          -webkit-user-drag: none !important;
-          pointer-events: none !important;
-        }
-        @media print {
-          .video-security-active { display: none !important; }
-        }
-      `;
-
-      if (!document.getElementById("video-security-styles")) {
-        document.head.appendChild(style);
-      }
-    } else {
-      document.body.classList.remove("video-security-active");
-      const existingStyle = document.getElementById("video-security-styles");
-      if (existingStyle) {
-        existingStyle.remove();
-      }
-    }
-
-    return () => {
-      document.body.classList.remove("video-security-active");
-      const existingStyle = document.getElementById("video-security-styles");
-      if (existingStyle) {
-        existingStyle.remove();
-      }
-    };
-  }, [isPlaying]);
-
-  // Handle browser navigation
-  useEffect(() => {
-    const contentParam = searchParams.get("content");
-    const contentIdParam = searchParams.get("contentId");
-    const tabParam = searchParams.get("tab");
-
-    if (contentIdParam && contentIdParam !== currentContentId) {
-      setCurrentContentId(contentIdParam);
-    } else if (contentParam && allContentItems.length > 0) {
-      const index = parseInt(contentParam, 10);
-      if (!isNaN(index) && index >= 0 && index < allContentItems.length) {
-        const targetContentId = allContentItems[index].contentId;
-        if (targetContentId !== currentContentId) {
-          setCurrentContentId(targetContentId);
-        }
-      }
-    }
-
-    if (tabParam && tabParam !== activeTab) {
-      setActiveTab(tabParam);
-    } else if (!tabParam && activeTab !== "details") {
-      setActiveTab("details");
-    }
-  }, [searchParams, allContentItems, currentContentId, activeTab]);
-
-  // Create progress data for sidebar from current content (moved before early returns)
-  const progressData = useMemo(() => {
-    if (!currentContentData?.success) return {};
-
-    return {
-      [currentContentId!]: {
-        status: currentContentData.data.progress.status,
-        progressPercentage: currentContentData.data.progress.progressPercentage,
-      },
-    };
-  }, [currentContentData, currentContentId]);
-
-  // Create completed lessons array for sidebar (moved before early returns)
-  const completedLessons = useMemo(() => {
-    if (!isCurrentContentCompleted) return [];
-    const currentLesson = getCurrentLesson();
-    if (!currentLesson) return [];
-    return [currentLesson.id];
-  }, [isCurrentContentCompleted, getCurrentLesson]);
-
-  // Scroll to top on mount
-  useEffect(() => {
-    window.scrollTo(0, 100);
   }, []);
 
-  // Reset video progress when content changes
-  useEffect(() => {
-    if (currentContentId) {
-      setVideoProgress(0);
-      setHasAutoCompleted(false);
-      setIsPlaying(false); // Reset playing state for new content
-    }
-  }, [currentContentId]);
+  // Get playground modes based on content
+  const getPlaygroundModes = useCallback(() => {
+    const currentLesson = getCurrentLesson();
+    const lessonTitle = currentLesson?.title?.toLowerCase() || "";
 
-  // Clear navigation loading state when content has loaded
-  useEffect(() => {
-    if (!currentContentLoading && isNavigating) {
-      setIsNavigating(false);
-    }
-  }, [currentContentLoading, isNavigating]);
+    const modes = [
+      {
+        id: "terminal",
+        name: "Terminal",
+        icon: Terminal,
+        description: "AI-enhanced terminal for cybersecurity commands",
+      },
+      {
+        id: "chat",
+        name: "AI Assistant",
+        icon: Brain,
+        description: "Chat with AI learning assistant",
+      },
+    ];
 
-  // Loading state
-  if (groupedContentLoading || (currentContentId && currentContentLoading)) {
-    return <LoadingSpinner message="Loading course data..." />;
+    if (lessonTitle.includes("threat")) {
+      modes.push({
+        id: "threat-intel",
+        name: "Threat Intel",
+        icon: Target,
+        description: "Threat intelligence analysis",
+      });
+    }
+
+    if (lessonTitle.includes("cia") || lessonTitle.includes("triad")) {
+      modes.push({
+        id: "risk-calc",
+        name: "Risk Calculator",
+        icon: Calculator,
+        description: "Risk assessment tools",
+      });
+    }
+
+    return modes;
+  }, [getCurrentLesson]);
+
+  if (showFullPageLoading) {
+    return <LoadingSpinner message="Loading course content..." />;
   }
 
-  // Error state
-  if (groupedContentError || currentContentError || !course) {
+  // Error state - only show if we have actual errors and initial load is complete
+  if (
+    (groupedContentError || currentContentError) &&
+    !isInitialLoading &&
+    !isContentLoading &&
+    !isActionLoading
+  ) {
     return (
       <ErrorState
         title="Course Not Found"
@@ -658,6 +585,11 @@ const EnrolledCoursePage = () => {
         onButtonClick={() => navigate("/overview")}
       />
     );
+  }
+
+  // Don't render until we have both course data and content
+  if (!course || !currentContentData?.success) {
+    return <LoadingSpinner message="Preparing course content..." />;
   }
 
   const currentLesson = getCurrentLesson();
@@ -714,10 +646,12 @@ const EnrolledCoursePage = () => {
               lesson={currentLesson}
               currentIndex={currentContentIndex}
               totalCount={course.totalLessons}
-              isCompleted={isCurrentContentCompleted}
+              isCompleted={
+                currentContentData?.data.progress.status === "completed"
+              }
               onPrevious={prevLesson}
               onNext={nextLesson}
-              onMarkComplete={() => markLessonComplete(currentLesson.id)}
+              onMarkComplete={() => markLessonComplete()}
               onOpenInNewTab={
                 currentLesson.type === "lab"
                   ? () =>
@@ -733,10 +667,8 @@ const EnrolledCoursePage = () => {
                       )
                   : undefined
               }
-              // T034: Use smart navigation state
               canGoBack={navigationState.hasPrevious}
               canGoForward={navigationState.hasNext}
-              // Navigation loading states
               isNavigatingNext={isNavigating}
               isNavigatingPrev={isNavigating}
             />
@@ -751,54 +683,50 @@ const EnrolledCoursePage = () => {
               playgroundMaximized={playgroundMaximized}
               leftPane={
                 <VideoPlayer
-                  key={`video-${currentContentId}-${currentContentIndex}`} // Force re-render on content change
+                  key={`video-${currentContentId}-${currentContentIndex}`}
                   lesson={currentLesson}
                   isPlaying={isPlaying}
                   currentVideo={currentContentIndex}
                   totalLessons={course.totalLessons}
-                  completedLessons={completedLessons}
-                  progressData={progressData}
-                  isMaximized={videoMaximized}
-                  onPlayPause={() => setIsPlaying(!isPlaying)}
+                  isCompleted={
+                    currentContentData?.data.progress.status === "completed"
+                  }
+                  onPlayPause={handleVideoPlayPause}
                   onPrevious={prevLesson}
                   onNext={nextLesson}
-                  onMarkComplete={() => markLessonComplete(currentLesson.id)}
-                  onMaximize={() => {
-                    setVideoMaximized(true);
-                    setPlaygroundMaximized(false);
-                  }}
-                  onRestore={() => {
-                    setVideoMaximized(false);
-                    setPlaygroundMaximized(false);
-                  }}
-                  // T035: Pass video progress handler for auto-completion
+                  onMarkComplete={markLessonComplete}
+                  onMaximize={handleVideoMaximize}
+                  onRestore={handleVideoRestore}
                   onVideoProgress={handleVideoProgress}
-                  // Navigation loading states
                   isNavigatingNext={isNavigating}
                   isNavigatingPrev={isNavigating}
+                  isMaximized={videoMaximized}
                 />
               }
               rightPane={
                 <AIPlayground
-                  playgroundModes={getDynamicPlaygroundModes()}
+                  playgroundModes={getPlaygroundModes()}
                   activeMode={playgroundMode}
                   terminalHistory={terminalHistory}
-                  chatMessages={aiChatMessages}
-                  analysisResult={analysisResult}
-                  isAnalyzing={isAnalyzing}
+                  chatMessages={[
+                    {
+                      role: "ai",
+                      content: "Hello! I'm your AI learning assistant.",
+                    },
+                  ]}
+                  analysisResult=""
+                  isAnalyzing={false}
                   isMaximized={playgroundMaximized}
                   onModeChange={setPlaygroundMode}
                   onTerminalCommand={handleTerminalCommand}
-                  onChatMessage={handleAiChat}
-                  onAnalysis={handleAnalysis}
-                  onMaximize={() => {
-                    setPlaygroundMaximized(true);
-                    setVideoMaximized(false);
+                  onChatMessage={(msg) => {
+                    console.log("Chat message:", msg);
                   }}
-                  onRestore={() => {
-                    setVideoMaximized(false);
-                    setPlaygroundMaximized(false);
+                  onAnalysis={(input) => {
+                    console.log("Analysis input:", input);
                   }}
+                  onMaximize={handlePlaygroundMaximize}
+                  onRestore={handlePlaygroundRestore}
                 />
               }
             />
@@ -827,18 +755,62 @@ const EnrolledCoursePage = () => {
 
       {/* Content Sidebar */}
       <ContentSidebar
-        course={course}
+        course={{
+          title: currentContentData?.data.module.title || "",
+          description: currentContentData?.data.module.description || "",
+          icon: currentContentData?.data.module.icon || "🔒",
+          color: `text-${currentContentData?.data.module.color || "green"}-400`,
+          bgColor: `bg-${
+            currentContentData?.data.module.color || "green"
+          }-400/10`,
+          borderColor: `border-${
+            currentContentData?.data.module.color || "green"
+          }-400/30`,
+          totalLessons: allContentItems.length,
+          completedLessons: allContentItems.filter((item) => item.isCompleted)
+            .length,
+          progress: Math.round(
+            (allContentItems.filter((item) => item.isCompleted).length /
+              allContentItems.length) *
+              100
+          ),
+          sections: Object.entries(groupedContentData?.data || {}).map(
+            ([sectionTitle, items], index) => ({
+              id: `section-${index}`,
+              title: sectionTitle,
+              lessons: items.map((item) => ({
+                id: item.contentId,
+                contentId: item.contentId,
+                title: item.contentTitle,
+                duration: item.duration ? `${item.duration}:00` : "15:00",
+                type:
+                  item.contentType === "document" ? "text" : item.contentType,
+                completed: item.isCompleted || false,
+                description: `Learn about ${item.contentTitle}`,
+                videoUrl: undefined,
+                content: undefined,
+              })),
+            })
+          ),
+          labs: [],
+          games: [],
+          resources: [],
+          playground: {
+            title: "AI Playground",
+            description: "Interactive learning environment",
+            tools: [],
+            available: true,
+          },
+        }}
         currentVideo={currentContentIndex}
-        completedLessons={completedLessons}
-        progressData={progressData}
         isOpen={contentSidebarOpen}
         onClose={() => setContentSidebarOpen(false)}
         onLessonSelect={handleLessonSelect}
       />
 
-      {/* T036: Enhanced Loading overlay */}
+      {/* Loading overlay - show only for navigation and completion actions */}
       <LoadingOverlay
-        isLoading={isNavigating || isCompleting || isAutoCompleting}
+        isLoading={isActionLoading}
         message={
           isNavigating
             ? "Loading next content..."

@@ -661,4 +661,143 @@ describe('VideoPlayer', () => {
 - **Learning paths**: Personalized curriculum recommendations
 - **Integration APIs**: Connect with external security tools
 
+## 🎨 UI Design Patterns & Enhancements
+
+### Retro Cybersecurity Design System
+**Files**: `frontend/src/components/dashboard/`, `frontend/src/pages/Dashboard.tsx`
+
+**Design Philosophy**: CyberSecOverview-inspired terminal aesthetic with matrix/hacker theme
+
+#### Core Design Elements
+
+**Terminal Interface Patterns**:
+```css
+/* Terminal header paths */
+.terminal-path {
+  font-family: mono;
+  color: text-green-400;
+  format: ~/section/subsection/
+}
+
+/* Scanline effects */
+.scanlines {
+  background: linear-gradient(transparent, rgba(green, 0.2), transparent);
+  background-size: 100% 4px;
+  animation: pulse;
+  opacity: 0.1;
+}
+
+/* Glitch border animations */
+.glitch-border:hover {
+  background: linear-gradient(from-color/0 via-color/20 to-color/0);
+  opacity: 0-100 transition;
+}
+```
+
+**Tree Structure Components**:
+- **Characters**: `├──` (branch), `└──` (last item)
+- **Vertical lines**: `w-px h-20 bg-green-400/30`
+- **Usage**: Module timelines, file system navigation
+
+**Color System**:
+- **Primary**: Green matrix theme (`text-green-400`, `border-green-400/30`)
+- **Discovery**: Cyan accents (`text-cyan-400`) for course discovery
+- **Phase-based**: Green (beginner), Yellow (intermediate), Red (advanced)
+- **Background**: `bg-black/60`, `bg-gradient-to-br from-gray-900/80 to-black/80`
+
+#### Enhanced Dashboard Components
+
+**LearningDashboard.tsx**:
+- Retro progress cards with hover animations
+- Terminal command simulation
+- Real-time data integration with API
+- Circular progress with cyberpunk styling
+
+**EnhancedProgressTab.tsx**:
+- Tree-structured module timeline
+- Interactive phase filtering
+- Enhanced course discovery section
+- Terminal file system aesthetic
+
+**Course Discovery Section**:
+- Cyber-themed course cards with retro styling
+- Difficulty-based filtering with neon borders
+- Only shows non-enrolled courses
+- Enhanced grid layout with hover effects
+
+### Loading State Management System
+**Files**: `frontend/src/pages/EnrolledCoursePage.tsx`
+
+#### Problem Solved
+**Issue**: Loading overlay cleared based on API completion, but content rendering took additional time, causing visible content updates after loading disappeared.
+
+#### Solution Implementation
+
+**Content Rendering Tracking**:
+```typescript
+const [isContentRendering, setIsContentRendering] = useState(false);
+
+// Track content rendering completion
+useEffect(() => {
+  if (currentContentData?.success && courseData) {
+    setIsContentRendering(true);
+    
+    const frameId = requestAnimationFrame(() => {
+      setTimeout(() => {
+        setIsContentRendering(false);
+      }, 100);
+    });
+    
+    return () => cancelAnimationFrame(frameId);
+  }
+}, [currentContentData, courseData, currentContentId]);
+```
+
+**Enhanced Loading States**:
+- `isNavigating`: Navigation between content
+- `isCompleting`: Marking content complete
+- `isAutoCompleting`: Auto-completion of videos
+- `isContentRendering`: Content render completion
+
+**Loading Logic**:
+```typescript
+const isActionLoading = isNavigating || isCompleting || isAutoCompleting || isContentRendering;
+
+// Clear loading only when both API and rendering complete
+useEffect(() => {
+  if (!currentContentLoading && courseData && !isContentRendering && 
+      (isNavigating || isCompleting || isAutoCompleting)) {
+    setTimeout(() => {
+      // Clear all loading states
+    }, 200);
+  }
+}, [currentContentLoading, courseData, isContentRendering, ...]);
+```
+
+**Benefits**:
+- Loading overlay persists until content fully rendered
+- Smooth user experience without content flashing
+- Accurate loading state representation
+- Enhanced loading messages with context
+
+### Implementation Guidelines
+
+**When to Use Retro Styling**:
+- Dashboard and overview interfaces
+- Terminal-based components
+- Cybersecurity-themed sections
+
+**Color Guidelines**:
+- Green: Primary interface, enrolled content
+- Cyan: Discovery, available content
+- Yellow: In-progress, intermediate
+- Red: Advanced, alerts
+- Orange: Streaks, achievements
+
+**Animation Patterns**:
+- `animate-pulse`: Scanlines, status indicators
+- `animate-spin`: Loading icons, activity indicators
+- `animate-bounce`: Interactive elements
+- `transition-all duration-300`: Standard hover effects
+
 This comprehensive features and workflows documentation provides complete understanding of every system component, enabling rapid development and extension of the Hack The World platform.

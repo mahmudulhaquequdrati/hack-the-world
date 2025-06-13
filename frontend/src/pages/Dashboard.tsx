@@ -4,22 +4,50 @@ import {
   ProgressOverview,
 } from "@/components/dashboard";
 import {
-  ACHIEVEMENTS_DATA,
-  getAllModules,
-  getEnrolledModules,
-} from "@/lib/appData";
+  useGetCurrentUserEnrollmentsQuery,
+  useGetModulesQuery,
+  useGetPhasesQuery,
+} from "@/features/api/apiSlice";
+import { useAuthRTK } from "@/hooks/useAuthRTK";
+import { ACHIEVEMENTS_DATA } from "@/lib/appData";
 import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
 import { Module } from "@/lib/types";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("progress");
+  const { user } = useAuthRTK();
 
-  // Use centralized data
+  // Fetch real data from API
+  const { data: enrollmentsData, isLoading: enrollmentsLoading } = useGetCurrentUserEnrollmentsQuery();
+  const { data: allModules, isLoading: modulesLoading } = useGetModulesQuery();
+
+  // Use centralized data for achievements (keeping mock data as requested)
   const achievements = ACHIEVEMENTS_DATA;
-  const enrolledModules = getEnrolledModules();
+
+  // Convert enrollment data to enrolled modules format
+  const enrolledModules: Module[] = React.useMemo(() => {
+    if (!enrollmentsData?.success || !allModules || !enrollmentsData.data) return [];
+    
+    return enrollmentsData.data.map(enrollment => {
+      const module = allModules.find(m => m.id === enrollment.moduleId);
+      if (!module) return null;
+      
+      return {
+        ...module,
+        enrolled: true,
+        progress: enrollment.progressPercentage,
+        completed: enrollment.isCompleted,
+        enrolledAt: enrollment.enrolledAt,
+      };
+    }).filter(Boolean) as Module[];
+  }, [enrollmentsData, allModules]);
+
+  // Helper functions for dashboard tabs
+  const getAllModulesHelper = () => allModules || [];
+  const getEnrolledModulesHelper = () => enrolledModules;
 
   const handleModuleClick = (module: Module) => {
     if (module.enrolled) {
@@ -33,6 +61,21 @@ const Dashboard = () => {
     }
   };
 
+  // Show loading state while data is being fetched
+  if (enrollmentsLoading || modulesLoading) {
+    return (
+      <div className="min-h-screen bg-black text-green-400">
+        <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
+          <div className="text-center">
+            <div className="animate-pulse text-green-400/60 font-mono">
+              Loading dashboard...
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-green-400">
       <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
@@ -44,8 +87,8 @@ const Dashboard = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onModuleClick={handleModuleClick}
-          getAllModules={getAllModules}
-          getEnrolledModules={getEnrolledModules}
+          getAllModules={getAllModulesHelper}
+          getEnrolledModules={getEnrolledModulesHelper}
           achievements={achievements}
         />
       </div>

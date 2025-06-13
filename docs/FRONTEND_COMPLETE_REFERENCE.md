@@ -308,33 +308,54 @@ export const CourseTabsContainer = ({ module }) => // Overview, curriculum, labs
 // - AssetsTab.tsx - Downloadable resources
 ```
 
-#### 5. **Dashboard Components (`/src/components/dashboard/`)**
-**Purpose**: Main learning dashboard interface
+#### 5. **Dashboard Components (`/src/components/dashboard/`) - Enhanced Retro Design**
+**Purpose**: Main learning dashboard interface with cybersecurity terminal aesthetic
 
 ```typescript
-// LearningDashboard.tsx - Main dashboard layout
-export const LearningDashboard = () => // Orchestrates all dashboard components
+// LearningDashboard.tsx - Main dashboard layout with retro styling
+export const LearningDashboard = () => {
+  // Features: Terminal-style headers, retro progress cards, scanline effects
+  // Design: CyberSecOverview-inspired styling with green matrix theme
+  // Components: Circular progress, retro stats grid, glitch animations
+  // Real API integration for enrollment and progress data
+}
 
-// DashboardTabs.tsx - Main navigation tabs
-export const DashboardTabs = () => // Overview, Progress, Courses, Labs, Games, etc.
+// DashboardTabs.tsx - Main navigation tabs with tree structure
+export const DashboardTabs = () => {
+  // Features: Terminal-style tabs, phase-based filtering
+  // Design: Retro tab styling with hover effects and active states
+  // Integration: Real phases and enrollment data from API
+}
 
-// OverviewTab.tsx - Dashboard overview
-export const OverviewTab = () => // Quick stats, recent activity, recommendations
+// EnhancedProgressTab.tsx - Advanced progress view with retro design
+export const EnhancedProgressTab = () => {
+  // Features: Tree-structured module timeline, retro phase cards
+  // Design: Terminal header paths (~/dashboard/progress/), scanline effects
+  // Components: Interactive phase filters, module progress tree
+  // Enhanced course discovery section with cyber-themed cards
+}
 
-// ProgressTab.tsx - Progress tracking
-export const ProgressTab = () => // Detailed progress across all enrollments
+// DashboardLabsTab.tsx - Hands-on laboratories with tree hierarchy  
+export const DashboardLabsTab = () => {
+  // Features: Phase → Module → Labs structure, expandable tree
+  // Design: Terminal file system aesthetic with tree characters (├──, └──)
+  // Real data: Generated from enrolled modules and content
+}
 
-// EnhancedProgressTab.tsx - Advanced progress view
-export const EnhancedProgressTab = () => // Visual progress with charts
+// DashboardGamesTab.tsx - Interactive games with retro styling
+export const DashboardGamesTab = () => {
+  // Features: Gamified interface, points tracking, achievement system
+  // Design: Retro game card styling with neon borders and effects
+  // Organization: Phase-based hierarchy with expandable modules
+}
 
-// AvailableCourseCard.tsx - Course discovery
-export const AvailableCourseCard = ({ module }) => // Course preview for enrollment
-
-// ModuleProgressCard.tsx - Individual module progress
-export const ModuleProgressCard = ({ enrollment }) => // Progress within specific module
-
-// StatsGrid.tsx - Statistics overview
-export const StatsGrid = () => // Points, level, completions, achievements
+// Retro Design Elements:
+// - Scanline effects: bg-gradient-to-b with animate-pulse
+// - Glitch borders: opacity-based hover animations
+// - Terminal paths: ~/dashboard/section/ formatting
+// - Tree structure: ├── and └── characters for hierarchy
+// - Color themes: Green matrix, cyan discovery, phase-specific colors
+// - Typography: font-mono, uppercase, tracking-wider
 ```
 
 #### 6. **Enrolled Course Components (`/src/components/enrolled/`)**
@@ -443,11 +464,13 @@ export const ResetPasswordPage = () => {
 
 #### Protected Pages
 ```typescript
-// Dashboard.tsx - Main learning dashboard
+// Dashboard.tsx - Main learning dashboard with retro design
 export const Dashboard = () => {
-  // Features: Learning overview, progress tracking, course discovery
-  // Tabbed interface: Overview, Progress, Available Courses
-  // Quick access to enrolled courses and recent activity
+  // Features: Real-time progress tracking, course discovery, retro styling
+  // Design: CyberSecOverview-inspired terminal aesthetic
+  // API Integration: Live enrollment and progress data from backend
+  // Components: LearningDashboard, ProgressOverview, DashboardTabs
+  // Enhanced course discovery with filtering and retro cards
 }
 
 // CourseDetailPage.tsx - Course information and enrollment
@@ -457,11 +480,16 @@ export const CourseDetailPage = () => {
   // Enrollment/unenrollment actions
 }
 
-// EnrolledCoursePage.tsx - Course content consumption
+// EnrolledCoursePage.tsx - Course content consumption with enhanced loading
 export const EnrolledCoursePage = () => {
   // Features: Content player, progress tracking, navigation
   // Video player, lab interface, game integration
   // Content sidebar, progress indicators
+  // Enhanced Loading System:
+  // - isContentRendering state for tracking render completion
+  // - requestAnimationFrame + setTimeout for accurate timing
+  // - Loading overlay persists until content fully rendered
+  // - Improved user experience with proper loading states
 }
 
 // ProfilePage.tsx - User profile management

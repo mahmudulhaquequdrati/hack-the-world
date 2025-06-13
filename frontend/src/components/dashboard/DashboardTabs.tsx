@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getEnrolledPhases, getModulesByPhase } from "@/lib/appData";
-import { Module } from "@/lib/types";
+import { useGetPhasesQuery } from "@/features/api/apiSlice";
+import { Module, Phase } from "@/lib/types";
 import { AchievementsTab } from "./AchievementsTab";
 import { DashboardGamesTab } from "./DashboardGamesTab";
 import { DashboardLabsTab } from "./DashboardLabsTab";
@@ -28,6 +28,33 @@ export const DashboardTabs = ({
   getEnrolledModules,
   achievements,
 }: DashboardTabsProps) => {
+  const { data: phasesData } = useGetPhasesQuery();
+  const phases = phasesData || [];
+  
+  // Helper function to get enrolled phases (phases that have enrolled modules)
+  const getEnrolledPhases = (): Phase[] => {
+    const enrolledModules = getEnrolledModules();
+    return phases.filter(phase => 
+      enrolledModules.some(module => 
+        module.phaseId === phase.id || 
+        (phase.id === "beginner" && module.difficulty === "Beginner") ||
+        (phase.id === "intermediate" && module.difficulty === "Intermediate") ||
+        (phase.id === "advanced" && module.difficulty === "Advanced")
+      )
+    );
+  };
+
+  // Helper function to get modules by phase
+  const getModulesByPhase = (phaseId: string, enrolledOnly = false): Module[] => {
+    const modules = enrolledOnly ? getEnrolledModules() : getAllModules();
+    return modules.filter(module => 
+      module.phaseId === phaseId || 
+      (phaseId === "beginner" && module.difficulty === "Beginner") ||
+      (phaseId === "intermediate" && module.difficulty === "Intermediate") ||
+      (phaseId === "advanced" && module.difficulty === "Advanced")
+    );
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-6">
       <TabsList className="bg-black/50 border border-green-400/30">

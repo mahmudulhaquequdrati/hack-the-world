@@ -70,9 +70,9 @@ const EnrolledCoursePage = () => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isAutoCompleting, setIsAutoCompleting] = useState(false);
+  const [isContentRendering, setIsContentRendering] = useState(false);
 
   // Video progress tracking
-  const [videoProgress, setVideoProgress] = useState(0);
   const [hasAutoCompleted, setHasAutoCompleted] = useState(false);
 
   // Video and playground states
@@ -207,28 +207,30 @@ const EnrolledCoursePage = () => {
     groupedContentLoading ||
     (!currentContentId && allContentItems.length === 0);
   const isContentLoading = currentContentLoading || !courseData;
-  const isActionLoading = isNavigating || isCompleting || isAutoCompleting;
+  const isActionLoading = isNavigating || isCompleting || isAutoCompleting || isContentRendering;
   const showFullPageLoading =
     (isInitialLoading || isContentLoading) && !isActionLoading;
 
-  // Clear navigation loading only when content and course data are ready
+  // Clear navigation loading only when content and course data are ready AND content is rendered
   useEffect(() => {
     if (
       !currentContentLoading &&
       courseData &&
+      !isContentRendering &&
       (isNavigating || isCompleting || isAutoCompleting)
     ) {
-      // Small delay to ensure UI updates are complete
+      // Delay to ensure content is fully rendered
       const timeoutId = setTimeout(() => {
         setIsNavigating(false);
         setIsCompleting(false);
         setIsAutoCompleting(false);
-      }, 100);
+      }, 200);
       return () => clearTimeout(timeoutId);
     }
   }, [
     currentContentLoading,
     courseData,
+    isContentRendering,
     isNavigating,
     isCompleting,
     isAutoCompleting,
@@ -240,6 +242,25 @@ const EnrolledCoursePage = () => {
       setCourse(courseData);
     }
   }, [courseData]);
+
+  // Track content rendering state
+  useEffect(() => {
+    if (currentContentData?.success && courseData) {
+      setIsContentRendering(true);
+      
+      // Use requestAnimationFrame to wait for the next paint cycle
+      const frameId = requestAnimationFrame(() => {
+        // Additional delay to ensure content is fully painted
+        setTimeout(() => {
+          setIsContentRendering(false);
+        }, 100);
+      });
+      
+      return () => {
+        cancelAnimationFrame(frameId);
+      };
+    }
+  }, [currentContentData, courseData, currentContentId]);
 
   // Initialize current content ID from URL only on mount
   useEffect(() => {
@@ -264,10 +285,11 @@ const EnrolledCoursePage = () => {
 
   // Navigation handlers
   const nextLesson = useCallback(() => {
-    if (!allContentItems.length || isNavigating) return;
+    if (!allContentItems.length || isNavigating || isContentRendering) return;
     const targetIndex = currentContentIndex + 1;
     if (targetIndex < allContentItems.length) {
       setIsNavigating(true);
+      setIsContentRendering(true);
       const nextContentId = allContentItems[targetIndex].contentId;
       setCurrentContentId(nextContentId);
       const params = new URLSearchParams(searchParams);
@@ -279,15 +301,17 @@ const EnrolledCoursePage = () => {
     allContentItems,
     currentContentIndex,
     isNavigating,
+    isContentRendering,
     searchParams,
     setSearchParams,
   ]);
 
   const prevLesson = useCallback(() => {
-    if (!allContentItems.length || isNavigating) return;
+    if (!allContentItems.length || isNavigating || isContentRendering) return;
     const targetIndex = currentContentIndex - 1;
     if (targetIndex >= 0) {
       setIsNavigating(true);
+      setIsContentRendering(true);
       const prevContentId = allContentItems[targetIndex].contentId;
       setCurrentContentId(prevContentId);
       const params = new URLSearchParams(searchParams);
@@ -301,6 +325,7 @@ const EnrolledCoursePage = () => {
     allContentItems,
     currentContentIndex,
     isNavigating,
+    isContentRendering,
     searchParams,
     setSearchParams,
   ]);
@@ -310,7 +335,8 @@ const EnrolledCoursePage = () => {
       if (
         !allContentItems.length ||
         contentId === currentContentId ||
-        isNavigating
+        isNavigating ||
+        isContentRendering
       )
         return;
       const targetIndex = allContentItems.findIndex(
@@ -319,6 +345,7 @@ const EnrolledCoursePage = () => {
       if (targetIndex === -1) return;
 
       setIsNavigating(true);
+      setIsContentRendering(true);
       setCurrentContentId(contentId);
       const params = new URLSearchParams(searchParams);
       params.set("contentId", contentId);
@@ -331,6 +358,7 @@ const EnrolledCoursePage = () => {
       allContentItems,
       currentContentId,
       isNavigating,
+      isContentRendering,
       searchParams,
       setSearchParams,
     ]
@@ -350,7 +378,6 @@ const EnrolledCoursePage = () => {
   // Video progress and completion
   const handleVideoProgress = useCallback(
     async (progressPercentage: number) => {
-      setVideoProgress(progressPercentage);
       if (
         currentContentData?.success &&
         currentContentData.data.content.type === "video" &&
@@ -383,8 +410,9 @@ const EnrolledCoursePage = () => {
   );
 
   const markLessonComplete = useCallback(async () => {
-    if (!currentContentId || isCompleting) return;
+    if (!currentContentId || isCompleting || isContentRendering) return;
     setIsCompleting(true);
+    setIsContentRendering(true);
     try {
       await completeContent({ contentId: currentContentId }).unwrap();
       await refetchCurrentContent();
@@ -392,8 +420,9 @@ const EnrolledCoursePage = () => {
       console.error("Failed to mark lesson complete:", error);
     } finally {
       setIsCompleting(false);
+      // isContentRendering will be cleared by the content tracking useEffect
     }
-  }, [currentContentId, completeContent, refetchCurrentContent, isCompleting]);
+  }, [currentContentId, completeContent, refetchCurrentContent, isCompleting, isContentRendering]);
 
   // Get current lesson
   const getCurrentLesson = useCallback(() => {
@@ -463,11 +492,11 @@ const EnrolledCoursePage = () => {
   // Reset states on content change
   useEffect(() => {
     if (currentContentId) {
-      setVideoProgress(0);
       setHasAutoCompleted(false);
       setIsPlaying(false);
       setVideoMaximized(false);
       setPlaygroundMaximized(false);
+      // Content rendering state will be managed by the content tracking useEffect
     }
   }, [currentContentId]);
 
@@ -808,18 +837,10 @@ const EnrolledCoursePage = () => {
         onLessonSelect={handleLessonSelect}
       />
 
-      {/* Loading overlay - show only for navigation and completion actions */}
+      {/* Loading overlay - show for navigation, completion, and content rendering */}
       <LoadingOverlay
         isLoading={isActionLoading}
-        message={
-          isNavigating
-            ? "Loading next content..."
-            : isAutoCompleting
-            ? `Auto-completing video (${Math.round(videoProgress)}% watched)...`
-            : isCompleting
-            ? "Marking as complete..."
-            : ""
-        }
+        message="Loading content..."
       />
     </div>
   );

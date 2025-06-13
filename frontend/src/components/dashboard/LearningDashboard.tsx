@@ -131,80 +131,139 @@ export const LearningDashboard = ({
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      {/* Header with Terminal Style */}
       <div className="text-center">
         <div className="flex items-center justify-center space-x-2 mb-4">
           <Terminal className="w-6 h-6 text-green-400" />
-          <h2 className="text-3xl font-bold text-green-400 font-mono">
+          <h2 className="text-3xl font-bold text-green-400 font-mono uppercase tracking-wider">
             LEARNING_DASHBOARD
           </h2>
         </div>
-        <p className="text-green-400 font-mono">
-          ~/progress$ track --learning-journey --detailed-analytics
-        </p>
+        <div className="bg-black/60 border border-green-400/30 rounded-lg p-3 max-w-2xl mx-auto">
+          <p className="text-green-400 font-mono text-sm">
+            ~/dashboard$ track --learning-journey --detailed-analytics
+          </p>
+        </div>
       </div>
 
-      {/* Main Progress Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Circular Progress */}
-        <div className="lg:col-span-1">
-          <div className="bg-gradient-to-br from-black/80 to-black/40 border border-green-400/30 rounded-2xl p-8 text-center backdrop-blur-sm">
-            <h3 className="text-xl font-bold text-white mb-6 font-mono">
-              OVERALL PROGRESS
-            </h3>
-            <CircularProgress
-              percentage={totalProgress}
-              size={160}
-              strokeWidth={12}
-              color="text-green-400"
-            />
-            <div className="mt-6 space-y-2">
-              <p className="text-sm text-gray-400">
-                {completedModules} of {enrolledModules.length} modules completed
-              </p>
-              <div className="flex items-center justify-center space-x-2">
-                <Flame className="w-4 h-4 text-orange-400" />
-                <span className="text-orange-400 font-mono text-sm">
-                  {currentStreak} day streak
-                </span>
+      {/* Main Progress Overview with Retro Styling */}
+      <div className="bg-black/60 border border-green-400/30 rounded-xl p-8 relative overflow-hidden">
+        {/* Retro Scanlines Effect */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="h-full w-full bg-gradient-to-b from-transparent via-green-400/20 to-transparent bg-[length:100%_4px] animate-pulse"></div>
+        </div>
+
+        {/* Terminal Header */}
+        <div className="flex items-center space-x-2 mb-8">
+          <Terminal className="w-5 h-5 text-green-400" />
+          <span className="text-green-400 font-mono text-sm">~/dashboard/overview/</span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+          {/* Circular Progress with Retro Style */}
+          <div className="lg:col-span-1">
+            <div className="bg-gradient-to-br from-gray-900/80 to-black/80 border-2 border-green-400/30 rounded-xl p-8 text-center relative overflow-hidden">
+              {/* Glitch Border Animation */}
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-400/0 via-green-400/20 to-green-400/0 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+              
+              <h3 className="text-xl font-bold text-green-400 mb-6 font-mono uppercase tracking-wider relative z-10">
+                MISSION_PROGRESS
+              </h3>
+              <div className="relative z-10">
+                <CircularProgress
+                  percentage={totalProgress}
+                  size={160}
+                  strokeWidth={12}
+                  color="text-green-400"
+                />
+              </div>
+              <div className="mt-6 space-y-3 relative z-10">
+                <div className="bg-black/40 border border-green-400/20 rounded-lg p-3">
+                  <p className="text-green-400 font-mono text-sm">
+                    <span className="text-green-300">STATUS:</span> {completedModules}/{enrolledModules.length} MODULES
+                  </p>
+                </div>
+                <div className="flex items-center justify-center space-x-2 bg-orange-400/10 border border-orange-400/30 rounded-lg p-2">
+                  <Flame className="w-4 h-4 text-orange-400 animate-pulse" />
+                  <span className="text-orange-400 font-mono text-sm font-bold">
+                    {currentStreak}_DAY_STREAK
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Grid with Enhanced Retro Design */}
+          <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Completed Modules */}
+              <div className="relative overflow-hidden rounded-xl border-2 border-green-400/30 bg-gradient-to-br from-gray-900/80 to-black/80 p-6 group hover:border-green-400/50 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/10 to-green-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="flex items-center justify-between relative z-10">
+                  <div>
+                    <p className="text-xs font-mono text-green-400/80 uppercase tracking-wider mb-1">COMPLETED</p>
+                    <p className="text-3xl font-bold text-green-400 font-mono">{completedModules}</p>
+                    <p className="text-xs text-green-300/60 font-mono mt-1">MODULES_FINISHED</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-full bg-green-400/20 border-2 border-green-400/40 flex items-center justify-center group-hover:animate-pulse">
+                    <Trophy className="w-6 h-6 text-green-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* In Progress */}
+              <div className="relative overflow-hidden rounded-xl border-2 border-yellow-400/30 bg-gradient-to-br from-gray-900/80 to-black/80 p-6 group hover:border-yellow-400/50 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/0 via-yellow-400/10 to-yellow-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="flex items-center justify-between relative z-10">
+                  <div>
+                    <p className="text-xs font-mono text-yellow-400/80 uppercase tracking-wider mb-1">IN_PROGRESS</p>
+                    <p className="text-3xl font-bold text-yellow-400 font-mono">{inProgressModules}</p>
+                    <p className="text-xs text-yellow-300/60 font-mono mt-1">CURRENTLY_LEARNING</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-full bg-yellow-400/20 border-2 border-yellow-400/40 flex items-center justify-center group-hover:animate-spin">
+                    <Zap className="w-6 h-6 text-yellow-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Total XP */}
+              <div className="relative overflow-hidden rounded-xl border-2 border-blue-400/30 bg-gradient-to-br from-gray-900/80 to-black/80 p-6 group hover:border-blue-400/50 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/10 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="flex items-center justify-between relative z-10">
+                  <div>
+                    <p className="text-xs font-mono text-blue-400/80 uppercase tracking-wider mb-1">TOTAL_XP</p>
+                    <p className="text-3xl font-bold text-blue-400 font-mono">{Math.round(totalXP)}</p>
+                    <p className="text-xs text-blue-300/60 font-mono mt-1">{nextMilestone - Math.round(totalXP)}_TO_NEXT</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-full bg-blue-400/20 border-2 border-blue-400/40 flex items-center justify-center group-hover:animate-bounce">
+                    <Star className="w-6 h-6 text-blue-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Learning Streak */}
+              <div className="relative overflow-hidden rounded-xl border-2 border-orange-400/30 bg-gradient-to-br from-gray-900/80 to-black/80 p-6 group hover:border-orange-400/50 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400/0 via-orange-400/10 to-orange-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="flex items-center justify-between relative z-10">
+                  <div>
+                    <p className="text-xs font-mono text-orange-400/80 uppercase tracking-wider mb-1">STREAK</p>
+                    <p className="text-3xl font-bold text-orange-400 font-mono">{currentStreak}</p>
+                    <p className="text-xs text-orange-300/60 font-mono mt-1">DAYS_ACTIVE</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-full bg-orange-400/20 border-2 border-orange-400/40 flex items-center justify-center group-hover:animate-pulse">
+                    <Flame className="w-6 h-6 text-orange-400" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="lg:col-span-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ProgressStatsCard
-              title="Completed"
-              value={completedModules}
-              icon={Trophy}
-              color="border-green-400/30"
-              description="Modules finished"
-            />
-            <ProgressStatsCard
-              title="In Progress"
-              value={inProgressModules}
-              icon={Zap}
-              color="border-yellow-400/30"
-              description="Currently learning"
-            />
-            <ProgressStatsCard
-              title="Total XP"
-              value={Math.round(totalXP)}
-              icon={Star}
-              color="border-blue-400/30"
-              description={`${
-                nextMilestone - Math.round(totalXP)
-              } to next milestone`}
-            />
-            <ProgressStatsCard
-              title="Learning Streak"
-              value={`${currentStreak} days`}
-              icon={Flame}
-              color="border-orange-400/30"
-              description="Keep it up!"
-            />
+        {/* Terminal Footer */}
+        <div className="mt-8 pt-6 border-t border-green-400/30 relative z-10">
+          <div className="flex items-center justify-between text-xs font-mono text-green-300/70">
+            <span>{enrolledModules.length} modules enrolled, {completedModules} completed</span>
+            <span>last_updated: {new Date().toLocaleTimeString()}</span>
           </div>
         </div>
       </div>

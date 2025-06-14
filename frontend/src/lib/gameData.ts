@@ -62,7 +62,7 @@ export const PHASE_ICONS = {
   advanced: "🧠",
 } as const;
 
-// Port scanning game data
+// Common port constants for port scanning games
 export const PORT_SCAN_PORTS = [22, 80, 443, 3389, 21] as const;
 
 // Utility functions for games

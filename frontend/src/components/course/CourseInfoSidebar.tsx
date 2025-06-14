@@ -1,5 +1,3 @@
-import { getDetailedCourseProgress } from "@/lib/appData";
-import { isUserLoggedIn } from "@/lib/helpers";
 import { Course } from "@/lib/types";
 
 interface CourseInfoSidebarProps {
@@ -7,12 +5,6 @@ interface CourseInfoSidebarProps {
 }
 
 const CourseInfoSidebar = ({ course }: CourseInfoSidebarProps) => {
-  // Get detailed progress information
-  const detailedProgress = getDetailedCourseProgress(course.id);
-
-  // Check if user is logged in
-  const userLoggedIn = isUserLoggedIn();
-
   return (
     <div className="space-y-6">
       {/* Course Info Terminal */}
@@ -63,66 +55,7 @@ const CourseInfoSidebar = ({ course }: CourseInfoSidebarProps) => {
         </div>
       </div>
 
-      {/* Progress Terminal - Only show if user is logged in */}
-      {userLoggedIn &&
-        detailedProgress &&
-        detailedProgress.isEnrolled &&
-        detailedProgress.overallProgress > 0 && (
-          <div className="bg-black border-2 border-blue-400/50 rounded-lg overflow-hidden">
-            <div className="bg-blue-400/10 border-b border-blue-400/30 px-4 py-2">
-              <div className="text-blue-400 font-mono text-sm font-bold">
-                PROGRESS.LOG
-              </div>
-            </div>
-
-            <div className="p-6 font-mono">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-green-300/70">Completion:</span>
-                <span className="text-blue-400 font-bold text-lg">
-                  {detailedProgress.overallProgress}%
-                </span>
-              </div>
-
-              {/* Custom progress bar */}
-              <div className="bg-black border border-green-400/30 rounded h-4 relative overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-green-400/60 to-blue-400/60 relative"
-                  style={{ width: `${detailedProgress.overallProgress}%` }}
-                >
-                  <div className="absolute inset-0 bg-green-400/20 animate-pulse"></div>
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center text-xs font-mono text-green-400">
-                  {detailedProgress.overallProgress}% COMPLETE
-                </div>
-              </div>
-
-              {/* Dynamic progress details */}
-              <div className="mt-4 space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-green-300/60">Lessons:</span>
-                  <span className="text-green-400">
-                    {detailedProgress.completedLessons}/
-                    {detailedProgress.totalLessons}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-green-300/60">Labs:</span>
-                  <span className="text-yellow-400">
-                    {detailedProgress.completedLabs}/
-                    {detailedProgress.totalLabs}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-green-300/60">Games:</span>
-                  <span className="text-red-400">
-                    {detailedProgress.completedGames}/
-                    {detailedProgress.totalGames}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Progress Terminal - Removed mock data, will need real API integration */}
     </div>
   );
 };

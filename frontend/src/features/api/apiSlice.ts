@@ -100,13 +100,7 @@ export const apiSlice = createApi({
     "Progress",
   ],
   endpoints: (builder) => ({
-    // Phase Discovery endpoints
-    getPhases: builder.query<Phase[], void>({
-      query: () => "/phases",
-      transformResponse: (response: { success: boolean; data: Phase[] }) =>
-        response.data,
-      providesTags: ["Phase"],
-    }),
+    // NOTE: getPhases removed - replaced by getPhasesWithModules for efficiency
 
     // Get phases with modules and user progress populated - comprehensive query
     getPhasesWithModules: builder.query<Phase[], void>({
@@ -118,40 +112,7 @@ export const apiSlice = createApi({
       providesTags: ["Phase", "Module", "Progress", "Enrollment"],
     }),
 
-    getPhaseById: builder.query<Phase, string>({
-      query: (phaseId) => `/phases/${phaseId}`,
-      transformResponse: (response: { success: boolean; data: Phase }) =>
-        response.data,
-      providesTags: (result, error, phaseId) => [
-        { type: "Phase", id: phaseId },
-      ],
-    }),
-
-    // Module Organization endpoints
-    getModules: builder.query<Module[], void>({
-      query: () => "/modules",
-      transformResponse: (response: { success: boolean; data: Module[] }) =>
-        response.data,
-      providesTags: ["Module"],
-    }),
-
-    getModulesByPhase: builder.query<Module[], string>({
-      query: (phaseId) => `/modules/phase/${phaseId}`,
-      transformResponse: (response: { success: boolean; data: Module[] }) =>
-        response.data,
-      providesTags: (result, error, phaseId) => [
-        { type: "Module", id: phaseId },
-      ],
-    }),
-
-    getModuleById: builder.query<Module, string>({
-      query: (moduleId) => `/modules/${moduleId}`,
-      transformResponse: (response: { success: boolean; data: Module }) =>
-        response.data,
-      providesTags: (result, error, moduleId) => [
-        { type: "Module", id: moduleId },
-      ],
-    }),
+    // NOTE: Individual phase/module queries removed - use comprehensive getPhasesWithModules instead
 
     // Course Content endpoints - using modules API
     getCourseById: builder.query<Course, string>({
@@ -217,17 +178,7 @@ export const apiSlice = createApi({
       ],
     }),
 
-    unenrollFromModule: builder.mutation<
-      { success: boolean; message: string },
-      string
-    >({
-      query: (moduleId) => ({
-        url: `/enrollments/unenroll`,
-        method: "DELETE",
-        body: { moduleId },
-      }),
-      invalidatesTags: ["Enrollment", "Progress"],
-    }),
+    // NOTE: unenrollFromModule removed - feature not implemented in UI
 
     // Get current user enrollments (without populate)
     getCurrentUserEnrollments: builder.query<
@@ -257,34 +208,7 @@ export const apiSlice = createApi({
       providesTags: ["Enrollment"],
     }),
 
-    getUserEnrollments: builder.query<
-      { moduleId: string; enrolledAt: string; progress: number }[],
-      void
-    >({
-      query: () => "/enrollments",
-      providesTags: ["Enrollment"],
-    }),
-
-    // Progress Tracking endpoints
-    getUserProgress: builder.query<
-      { moduleId: string; progress: number; completedAt?: string }[],
-      void
-    >({
-      query: () => "/progress",
-      providesTags: ["Progress"],
-    }),
-
-    updateProgress: builder.mutation<
-      { success: boolean },
-      { moduleId: string; progress: number }
-    >({
-      query: ({ moduleId, progress }) => ({
-        url: `/progress/${moduleId}`,
-        method: "PUT",
-        body: { progress },
-      }),
-      invalidatesTags: ["Progress"],
-    }),
+    // NOTE: Basic progress endpoints removed - use content-specific progress tracking instead
 
     // T037: Removed deprecated progress endpoints - now handled by getContentWithModuleAndProgress
     // Deprecated: getContentProgress, startContent, updateContentProgress
@@ -502,20 +426,7 @@ export const apiSlice = createApi({
       ],
     }),
 
-    // Content endpoints
-    getGamesByModule: builder.query<{ [gameId: string]: GameData }, string>({
-      query: (moduleId) => `/modules/${moduleId}/games`,
-      providesTags: (result, error, moduleId) => [
-        { type: "Course", id: `${moduleId}-games` },
-      ],
-    }),
-
-    getLabsByModule: builder.query<{ [labId: string]: LabData }, string>({
-      query: (moduleId) => `/modules/${moduleId}/labs`,
-      providesTags: (result, error, moduleId) => [
-        { type: "Course", id: `${moduleId}-labs` },
-      ],
-    }),
+    // NOTE: Individual games/labs queries removed - use comprehensive content queries instead
 
     // Module overview endpoint for curriculum, labs, and games content
     getModuleOverview: builder.query<
@@ -549,58 +460,7 @@ export const apiSlice = createApi({
       ],
     }),
 
-    // Get module content grouped by sections for enrolled course page
-    getModuleContentGrouped: builder.query<
-      {
-        success: boolean;
-        data: Record<
-          string,
-          Array<{
-            id: string;
-            title: string;
-            description?: string;
-            type: "video" | "lab" | "game" | "document";
-            duration?: number;
-            url?: string;
-            instructions?: string;
-            metadata?: Record<string, unknown>;
-            order?: number;
-          }>
-        >;
-      },
-      string
-    >({
-      query: (moduleId) => `/content/module/${moduleId}/grouped`,
-      providesTags: (result, error, moduleId) => [
-        { type: "Course", id: `content-${moduleId}` },
-      ],
-    }),
-
-    // Get first content item only for initial page load optimization (T004)
-    getFirstContentByModule: builder.query<
-      {
-        success: boolean;
-        message: string;
-        data: {
-          id: string;
-          title: string;
-          description?: string;
-          type: "video" | "lab" | "game" | "document";
-          duration?: number;
-          url?: string;
-          instructions?: string;
-          metadata?: Record<string, unknown>;
-          order?: number;
-          section?: string;
-        } | null;
-      },
-      string
-    >({
-      query: (moduleId) => `/content/module/${moduleId}/first`,
-      providesTags: (result, error, moduleId) => [
-        { type: "Course", id: `first-content-${moduleId}` },
-      ],
-    }),
+    // NOTE: Basic content queries removed - use optimized versions instead
 
     // T005/T012: Get optimized content list for lazy loading (reduced payload)
     getModuleContentGroupedOptimized: builder.query<
@@ -626,45 +486,7 @@ export const apiSlice = createApi({
       ],
     }),
 
-    // T006/T013: Get content with navigation context (next/prev IDs, position, etc.)
-    getContentWithNavigation: builder.query<
-      {
-        success: boolean;
-        message: string;
-        data: {
-          content: {
-            id: string;
-            title: string;
-            description?: string;
-            type: "video" | "lab" | "game" | "document";
-            duration?: number;
-            url?: string;
-            instructions?: string;
-            metadata?: Record<string, unknown>;
-            section?: string;
-            moduleId: string;
-          };
-          navigation: {
-            previous: {
-              id: string;
-              title: string;
-            } | null;
-            next: {
-              id: string;
-              title: string;
-            } | null;
-            position: number;
-            total: number;
-          };
-        };
-      },
-      string
-    >({
-      query: (contentId) => `/content/${contentId}/with-navigation`,
-      providesTags: (result, error, contentId) => [
-        { type: "Course", id: `navigation-${contentId}` },
-      ],
-    }),
+    // NOTE: Navigation context query removed - navigation handled client-side for better performance
 
     // T032: Get content with module and progress in one API call
     getContentWithModuleAndProgress: builder.query<
@@ -711,31 +533,7 @@ export const apiSlice = createApi({
       ],
     }),
 
-    // Get individual content by ID - kept for VideoPlayer lazy loading
-    getContentById: builder.query<
-      {
-        success: boolean;
-        message: string;
-        data: {
-          _id: string;
-          title: string;
-          description?: string;
-          type: "video" | "lab" | "game" | "document";
-          duration?: number;
-          url?: string;
-          instructions?: string;
-          metadata?: Record<string, unknown>;
-          section?: string;
-          moduleId: string;
-        };
-      },
-      string
-    >({
-      query: (contentId) => `/content/${contentId}`,
-      providesTags: (result, error, contentId) => [
-        { type: "Course", id: `content-${contentId}` },
-      ],
-    }),
+    // NOTE: Individual content query removed - use getContentWithModuleAndProgress for comprehensive data
 
     // Achievement endpoints
     getUserAchievements: builder.query<
@@ -785,35 +583,7 @@ export const apiSlice = createApi({
       providesTags: ["Achievement"],
     }),
 
-    getUserAchievementStats: builder.query<
-      {
-        success: boolean;
-        data: {
-          achievements: {
-            total: number;
-            completed: number;
-            percentage: number;
-          };
-          xp: {
-            current: number;
-            level: number;
-            nextLevelXP: number;
-            xpToNext: number;
-          };
-          progress: {
-            enrollments: number;
-            completedContent: number;
-            modulesCompleted: number;
-            labsCompleted: number;
-            gamesCompleted: number;
-          };
-        };
-      },
-      void
-    >({
-      query: () => "/achievements/user/stats",
-      providesTags: ["Achievement", "Progress"],
-    }),
+    // NOTE: Achievement stats removed - basic achievements sufficient for current UI
 
     // Streak endpoints
     getStreakStatus: builder.query<
@@ -834,88 +604,172 @@ export const apiSlice = createApi({
       providesTags: ["Streak"],
     }),
 
-    updateStreak: builder.mutation<
+    // NOTE: Streak mutations and leaderboard removed - read-only streak status sufficient for current UI
+
+    // OPTIMIZED: Consolidated dashboard endpoint - reduces 4 API calls to 1
+    getDashboardData: builder.query<
       {
         success: boolean;
         message: string;
         data: {
-          currentStreak: number;
-          longestStreak: number;
-          streakStatus: 'start' | 'active' | 'at_risk' | 'broken';
-          daysSinceLastActivity: number | null;
-          lastActivityDate: string | null;
+          enrollments: Array<{
+            userId: string;
+            moduleId: string;
+            status: string;
+            completedSections: number;
+            totalSections: number;
+            progressPercentage: number;
+            estimatedCompletionDate: string | null;
+            enrolledAt: string;
+            lastAccessedAt: string;
+            createdAt: string;
+            updatedAt: string;
+            isCompleted: boolean;
+            isActive: boolean;
+            id: string;
+          }>;
+          phases: Phase[];
+          achievements: Array<{
+            id: string;
+            slug: string;
+            title: string;
+            description: string;
+            category: "module" | "lab" | "game" | "xp" | "general";
+            requirements: {
+              type: string;
+              target: number;
+              resource: string;
+            };
+            rewards: {
+              xp: number;
+              badge?: string;
+              title?: string;
+            };
+            icon: string;
+            difficulty: string;
+            userProgress: {
+              progress: number;
+              target: number;
+              progressPercentage: number;
+              isCompleted: boolean;
+              completedAt: string | null;
+              earnedRewards: {
+                xp: number;
+                badge?: string;
+                title?: string;
+              };
+            };
+          }>;
+          streak: {
+            currentStreak: number;
+            longestStreak: number;
+            streakStatus: 'start' | 'active' | 'at_risk' | 'broken';
+            daysSinceLastActivity: number | null;
+            lastActivityDate: string | null;
+          };
         };
       },
       void
     >({
-      query: () => ({
-        url: "/streak/update",
-        method: "POST",
-      }),
-      invalidatesTags: ["Streak"],
+      query: () => "/dashboard/comprehensive",
+      providesTags: ["User", "Enrollment", "Progress", "Achievement", "Streak"],
     }),
 
-    getStreakLeaderboard: builder.query<
+    // OPTIMIZED: Consolidated course detail endpoint - reduces 3-4 API calls to 1
+    getCourseDetailComplete: builder.query<
       {
         success: boolean;
         message: string;
         data: {
-          type: string;
-          leaderboard: Array<{
+          course: {
             id: string;
-            username: string;
-            displayName: string;
-            avatar: string;
-            currentStreak: number;
-            longestStreak: number;
-            lastActivityDate: string | null;
-            streakStatus: string;
-          }>;
+            title: string;
+            description: string;
+            icon: string;
+            duration: string;
+            difficulty: string;
+            topics?: string[];
+            prerequisites?: string[];
+            learningOutcomes?: string[];
+            content?: {
+              videos: string[];
+              labs: string[];
+              games: string[];
+              documents: string[];
+              estimatedHours: number;
+            };
+            phase?: {
+              id: string;
+              title: string;
+              description: string;
+              icon: string;
+              color: string;
+              order: number;
+            };
+            order?: number;
+            isActive?: boolean;
+            createdAt?: string;
+            updatedAt?: string;
+          };
+          enrollment: {
+            id: string;
+            status: string;
+            progressPercentage: number;
+            enrolledAt: string;
+            moduleId: { id: string; title: string };
+          } | null;
+          moduleOverview?: {
+            [sectionName: string]: Array<{
+              id: string;
+              type: "video" | "lab" | "game" | "text" | "quiz";
+              title: string;
+              description: string;
+              section: string;
+            }>;
+          };
         };
       },
-      { limit?: number; type?: 'current' | 'longest' }
+      { courseId: string; includeOverview?: boolean }
     >({
-      query: ({ limit = 10, type = 'current' } = {}) => 
-        `/streak/leaderboard?limit=${limit}&type=${type}`,
-      providesTags: ["Streak"],
+      query: ({ courseId, includeOverview = false }) => 
+        `/course/${courseId}/complete?includeOverview=${includeOverview}`,
+      providesTags: (result, error, { courseId }) => [
+        { type: "Course", id: courseId },
+        { type: "Enrollment", id: courseId },
+      ],
     }),
   }),
 });
 
-// Export hooks for usage in components
+// Export hooks for usage in components - OPTIMIZED (removed unused endpoints)
 export const {
-  useGetPhasesQuery,
+  // Core optimized endpoints
   useGetPhasesWithModulesQuery,
-  useGetPhaseByIdQuery,
-  useGetModulesQuery,
-  useGetModulesByPhaseQuery,
-  useGetModuleByIdQuery,
   useGetCourseByIdQuery,
+  
+  // Enrollment management
   useEnrollInModuleMutation,
   useGetEnrollmentByModuleQuery,
-  useUnenrollFromModuleMutation,
   useGetCurrentUserEnrollmentsQuery,
-  useGetUserEnrollmentsQuery,
-  useGetUserProgressQuery,
-  useUpdateProgressMutation,
-  useGetGamesByModuleQuery,
-  useGetLabsByModuleQuery,
+  
+  // Content management - optimized endpoints only
   useGetModuleOverviewQuery,
-  useGetModuleContentGroupedQuery,
+  useGetModuleContentGroupedOptimizedQuery,
+  useGetContentWithModuleAndProgressQuery,
   useCompleteContentMutation,
+  
+  // Progress tracking - comprehensive endpoints
   useGetOverallProgressQuery,
   useGetModuleProgressQuery,
   useGetContentTypeProgressQuery,
-  useGetFirstContentByModuleQuery,
-  useGetModuleContentGroupedOptimizedQuery,
-  useGetContentWithNavigationQuery,
-  useGetContentWithModuleAndProgressQuery,
-  useGetContentByIdQuery,
+  
+  // User features
   useGetUserAchievementsQuery,
-  useGetUserAchievementStatsQuery,
   useGetStreakStatusQuery,
-  useUpdateStreakMutation,
-  useGetStreakLeaderboardQuery,
+  
+  // OPTIMIZED: Consolidated endpoints
+  useGetDashboardDataQuery,
+  useGetCourseDetailCompleteQuery,
 } = apiSlice;
 
 export default apiSlice;

@@ -1,4 +1,3 @@
-import { USER_LESSON_PROGRESS } from "./appData";
 import {
   ContextualContent,
   Course,
@@ -570,18 +569,13 @@ const generateEnhancedGames = (course: Course): Game[] => {
   return enhancedGames;
 };
 
-// Helper function to check if a lesson is completed based on USER_LESSON_PROGRESS
+// Helper function to check if a lesson is completed - now returns false since mock data is removed
 const isLessonCompletedByIndex = (
-  moduleId: string,
-  lessonIndex: number
+  _moduleId: string,
+  _lessonIndex: number
 ): boolean => {
-  return USER_LESSON_PROGRESS.some(
-    (lp) =>
-      lp.moduleId === moduleId &&
-      lp.lessonIndex === lessonIndex &&
-      lp.completed &&
-      lp.userId === "user-1" // Default user for now
-  );
+  // TODO: Replace with real API call to check lesson completion status
+  return false;
 };
 
 // Convert Course curriculum to EnrolledCourse sections

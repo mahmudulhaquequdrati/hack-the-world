@@ -236,70 +236,20 @@ export const authApi = apiSlice.injectEndpoints({
       },
     }),
 
-    // Update avatar endpoint
-    updateAvatar: builder.mutation<
-      { success: true; message: string; data: { user: User } },
-      UpdateAvatarRequest
-    >({
-      query: (data) => ({
-        url: "/profile/avatar",
-        method: "PUT",
-        body: data,
-      }),
-      // Optimistic update for avatar with proper Redux sync
-      async onQueryStarted(patch, { dispatch, queryFulfilled }) {
-        // 1. Optimistically update RTK Query cache
-        const patchResult = dispatch(
-          authApi.util.updateQueryData("getCurrentUser", undefined, (draft) => {
-            if (draft.data?.user?.profile) {
-              draft.data.user.profile.avatar = patch.avatar;
-            }
-          })
-        );
-
-        try {
-          // 2. Wait for the actual API call to complete
-          const { data } = await queryFulfilled;
-
-          // 3. Update Redux auth state with the server response
-          if (data.data?.user) {
-            dispatch(updateUser(data.data.user));
-          }
-        } catch {
-          // 4. Rollback optimistic update if the API call fails
-          patchResult.undo();
-        }
-      },
-      invalidatesTags: ["User"],
-    }),
-
-    // Get profile stats endpoint
-    getProfileStats: builder.query<
-      {
-        success: true;
-        data: {
-          stats: User["stats"];
-          experienceLevel: User["experienceLevel"];
-          username: string;
-        };
-      },
-      void
-    >({
-      query: () => "/profile/stats",
-      providesTags: ["User"],
-    }),
+    // NOTE: Avatar and profile stats endpoints removed - not currently used in UI
   }),
 });
 
 export const {
+  // Authentication core
   useRegisterMutation,
   useLoginMutation,
   useGetCurrentUserQuery,
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useLogoutMutation,
+  
+  // Profile management - active endpoints only
   useUpdateProfileMutation,
   useChangePasswordMutation,
-  useUpdateAvatarMutation,
-  useGetProfileStatsQuery,
 } = authApi;

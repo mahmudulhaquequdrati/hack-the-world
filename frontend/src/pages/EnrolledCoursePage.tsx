@@ -83,7 +83,12 @@ const EnrolledCoursePage = () => {
     },
   ]);
 
-  // API Queries
+  // ALREADY OPTIMIZED: EnrolledCoursePage uses efficient API pattern
+  // ✅ useGetModuleContentGroupedOptimizedQuery - Lightweight content structure
+  // ✅ useGetContentWithModuleAndProgressQuery - Combined content + module + progress
+  // ✅ Smart loading state management with priorities
+  // ✅ Client-side navigation for performance
+
   const {
     data: groupedContentData,
     isLoading: groupedContentLoading,
@@ -206,20 +211,27 @@ const EnrolledCoursePage = () => {
   const isInitialLoading = groupedContentLoading && !groupedContentData;
   const isContentLoading = currentContentLoading && !currentContentData;
   const isUserAction = isNavigating || isCompleting || isAutoCompleting;
-  
+
   // Single loading priority: Initial > User Action > Content > Rendering
-  const currentLoadingState = isInitialLoading ? 'initial' : 
-                             isUserAction ? 'navigation' :
-                             isContentLoading ? 'content' :
-                             isContentRendering ? 'rendering' : 'none';
-  
-  const showMainLoading = currentLoadingState === 'initial';
-  const showActionLoading = currentLoadingState === 'navigation';
-  const isAnyLoading = currentLoadingState !== 'none';
-  
+  const currentLoadingState = isInitialLoading
+    ? "initial"
+    : isUserAction
+    ? "navigation"
+    : isContentLoading
+    ? "content"
+    : isContentRendering
+    ? "rendering"
+    : "none";
+
+  const showMainLoading = currentLoadingState === "initial";
+  const showActionLoading = currentLoadingState === "navigation";
+  const isAnyLoading = currentLoadingState !== "none";
+
   // Empty state management - check if we have successful response but no content
-  const hasNoContent = groupedContentData?.success && allContentItems.length === 0;
-  const hasContentError = groupedContentError || (groupedContentData && !groupedContentData.success);
+  const hasNoContent =
+    groupedContentData?.success && allContentItems.length === 0;
+  const hasContentError =
+    groupedContentError || (groupedContentData && !groupedContentData.success);
   const showEmptyState = hasNoContent && !isAnyLoading;
   const showErrorState = hasContentError && !isAnyLoading;
 
@@ -257,22 +269,32 @@ const EnrolledCoursePage = () => {
 
   // Track content rendering state - only when content actually changes and not during navigation
   useEffect(() => {
-    if (currentContentData?.success && courseData && !isNavigating && !isCompleting) {
+    if (
+      currentContentData?.success &&
+      courseData &&
+      !isNavigating &&
+      !isCompleting
+    ) {
       // Small delay to prevent flickering during rapid navigation
       const timeoutId = setTimeout(() => {
         setIsContentRendering(true);
-        
+
         // Quick render cycle
         const frameId = requestAnimationFrame(() => {
           setIsContentRendering(false);
         });
-        
+
         return () => cancelAnimationFrame(frameId);
       }, 50);
-      
+
       return () => clearTimeout(timeoutId);
     }
-  }, [currentContentData?.data?.content?._id, courseData, isNavigating, isCompleting]);
+  }, [
+    currentContentData?.data?.content?._id,
+    courseData,
+    isNavigating,
+    isCompleting,
+  ]);
 
   // Initialize current content ID from URL only on mount
   useEffect(() => {
@@ -434,7 +456,13 @@ const EnrolledCoursePage = () => {
       setIsCompleting(false);
       // isContentRendering will be cleared by the content tracking useEffect
     }
-  }, [currentContentId, completeContent, refetchCurrentContent, isCompleting, isContentRendering]);
+  }, [
+    currentContentId,
+    completeContent,
+    refetchCurrentContent,
+    isCompleting,
+    isContentRendering,
+  ]);
 
   // Get current lesson
   const getCurrentLesson = useCallback(() => {
@@ -656,6 +684,8 @@ const EnrolledCoursePage = () => {
   }
 
   const currentLesson = getCurrentLesson();
+
+  console.log("currentLesson", currentLesson);
   const needsPlayground =
     currentLesson?.type === "video" || currentLesson?.type === "text";
   const needsFullScreen =
@@ -680,28 +710,30 @@ const EnrolledCoursePage = () => {
             <LabContent
               course={course}
               activeLab={activeLab}
-              onOpenInNewTab={(labId) =>
-                window.open(
+              onOpenInNewTab={(labId) => {
+                console.log("labId", labId);
+                return window.open(
                   `/learn/${courseId}/lab/${labId
                     .toLowerCase()
                     .replace(/\s+/g, "-")}`,
                   "_blank"
-                )
-              }
+                );
+              }}
               onClose={() => setActiveLab(null)}
             />
           ) : activeGame ? (
             <GameContent
               course={course}
               activeGame={activeGame}
-              onOpenInNewTab={(gameId) =>
-                window.open(
+              onOpenInNewTab={(gameId) => {
+                console.log("gameId", gameId);
+                return window.open(
                   `/learn/${courseId}/game/${gameId
                     .toLowerCase()
                     .replace(/\s+/g, "-")}`,
                   "_blank"
-                )
-              }
+                );
+              }}
               onClose={() => setActiveGame(null)}
             />
           ) : needsFullScreen && currentLesson ? (
@@ -719,13 +751,13 @@ const EnrolledCoursePage = () => {
                 currentLesson.type === "lab"
                   ? () =>
                       window.open(
-                        `/learn/${courseId}/lab/${currentLesson.id}`,
+                        `/learn/${courseId}/lab/${currentLesson.contentId}`,
                         "_blank"
                       )
                   : currentLesson.type === "game"
                   ? () =>
                       window.open(
-                        `/learn/${courseId}/game/${currentLesson.id}`,
+                        `/learn/${courseId}/game/${currentLesson.contentId}`,
                         "_blank"
                       )
                   : undefined

@@ -20,38 +20,70 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("progress");
   const { user } = useAuthRTK();
 
-  // Fetch real data from API with enriched module content statistics
-  const { data: enrollmentsData, isLoading: enrollmentsLoading } =
-    useGetCurrentUserEnrollmentsQuery(undefined, {
-      skip: !user,
-    });
+  // OPTIMIZED: Apply CyberSecOverview efficient pattern - comprehensive query + enrollments
+  const { 
+    data: phasesWithModules, 
+    isLoading: phasesLoading 
+  } = useGetPhasesWithModulesQuery();
+  
+  const { 
+    data: enrollmentsData, 
+    isLoading: enrollmentsLoading 
+  } = useGetCurrentUserEnrollmentsQuery(undefined, { skip: !user });
+  
+  const { 
+    data: achievementsData, 
+    isLoading: achievementsLoading 
+  } = useGetUserAchievementsQuery(undefined, { skip: !user });
+  
+  const { 
+    data: streakData, 
+    isLoading: streakLoading 
+  } = useGetStreakStatusQuery(undefined, { skip: !user });
 
-  const { data: phasesWithModules, isLoading: modulesLoading } = useGetPhasesWithModulesQuery();
+  // TODO: Replace above 4 API calls with single consolidated endpoint:
+  // const { data: dashboardData, isLoading: dashboardLoading } = useGetDashboardDataQuery(undefined, { skip: !user });
+
+  // OPTIMIZED: Apply CyberSecOverview enrollment mapping pattern for O(1) lookups
+  const enrollmentMap = React.useMemo(() => {
+    const map = new Map();
+    if (enrollmentsData?.success && enrollmentsData?.data) {
+      enrollmentsData.data.forEach((enrollment) => {
+        map.set(enrollment.moduleId, {
+          enrollmentId: enrollment.id,
+          status: enrollment.status,
+          progressPercentage: enrollment.progressPercentage,
+          isCompleted: enrollment.isCompleted,
+          isActive: enrollment.isActive,
+          enrolledAt: enrollment.enrolledAt,
+        });
+      });
+    }
+    return map;
+  }, [enrollmentsData]);
   
-  // Fetch real achievement and streak data
-  const { data: achievementsData, isLoading: achievementsLoading } = useGetUserAchievementsQuery(
-    undefined,
-    { skip: !user }
-  );
-  const { data: streakData, isLoading: streakLoading } = useGetStreakStatusQuery(
-    undefined,
-    { skip: !user }
-  );
-  
-  // Extract all modules from phases with enhanced content statistics
+  // Extract all modules from phases with enhanced content statistics + enrollment info
   const allModules = React.useMemo(() => {
     if (!phasesWithModules) return [];
     return phasesWithModules.flatMap(phase => 
-      (phase.modules || []).map(module => ({
-        ...module,
-        // Add enhanced content statistics like in CyberSecOverview
-        labs: module.content?.labs?.length || 0,
-        games: module.content?.games?.length || 0,
-        videos: module.content?.videos?.length || 0,
-        assets: module.content?.documents?.length || 0,
-      }))
+      (phase.modules || []).map(module => {
+        const enrollmentInfo = enrollmentMap.get(module.id);
+        return {
+          ...module,
+          // Add enhanced content statistics like in CyberSecOverview
+          labs: module.content?.labs?.length || 0,
+          games: module.content?.games?.length || 0,
+          videos: module.content?.videos?.length || 0,
+          assets: module.content?.documents?.length || 0,
+          // Add enrollment status using efficient map lookup
+          enrolled: !!enrollmentInfo,
+          completed: enrollmentInfo?.isCompleted || false,
+          progress: enrollmentInfo?.progressPercentage || 0,
+          enrollmentInfo,
+        };
+      })
     );
-  }, [phasesWithModules]);
+  }, [phasesWithModules, enrollmentMap]);
 
   // Process real achievements data
   const achievements = React.useMemo(() => {
@@ -59,26 +91,10 @@ const Dashboard = () => {
     return achievementsData.data.slice(0, 6); // Show only first 6 in dashboard
   }, [achievementsData]);
 
-  // Convert enrollment data to enrolled modules format
+  // OPTIMIZED: Use efficient enrollment filtering instead of nested loops
   const enrolledModules: Module[] = React.useMemo(() => {
-    if (!enrollmentsData?.success || !allModules || !enrollmentsData.data)
-      return [];
-
-    return enrollmentsData.data
-      .map((enrollment) => {
-        const module = allModules.find((m) => m.id === enrollment.moduleId);
-        if (!module) return null;
-
-        return {
-          ...module,
-          enrolled: true,
-          progress: enrollment.progressPercentage,
-          completed: enrollment.isCompleted,
-          enrolledAt: enrollment.enrolledAt,
-        };
-      })
-      .filter(Boolean) as Module[];
-  }, [enrollmentsData, allModules]);
+    return allModules.filter(module => module.enrolled);
+  }, [allModules]);
 
   // Helper functions for dashboard tabs
   const getAllModulesHelper = () => allModules || [];
@@ -97,8 +113,11 @@ const Dashboard = () => {
     }
   };
 
-  // Show loading state while data is being fetched
-  if (enrollmentsLoading || modulesLoading || achievementsLoading || streakLoading) {
+  // OPTIMIZED: Single loading check - prioritize core data first
+  const isLoadingCoreData = phasesLoading;
+  const isLoadingUserData = enrollmentsLoading || achievementsLoading || streakLoading;
+  
+  if (isLoadingCoreData || (user && isLoadingUserData)) {
     return (
       <div className="min-h-screen bg-black text-green-400">
         <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">

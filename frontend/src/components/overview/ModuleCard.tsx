@@ -4,7 +4,6 @@ import { Progress } from "@/components/ui/progress";
 import { apiSlice } from "@/features/api/apiSlice";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { cn } from "@/lib";
-import { getVideosCountForModule } from "@/lib/appData";
 import { getIconFromName } from "@/lib/iconUtils";
 import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
 import { Module } from "@/lib/types";
@@ -69,9 +68,7 @@ const ModuleCard = ({
   // Calculate stats from module data (API provides content arrays with counts)
   const stats: ModuleStatsType = useMemo(() => {
     return {
-      videos:
-        moduleWithContent.content?.videos?.length ||
-        getVideosCountForModule(initialModule.id),
+      videos: moduleWithContent.content?.videos?.length || 0,
       labs:
         moduleWithContent.content?.labs?.length || moduleWithContent.labs || 0,
       games:
@@ -79,7 +76,7 @@ const ModuleCard = ({
         moduleWithContent.games ||
         0,
     };
-  }, [moduleWithContent, initialModule.id]);
+  }, [moduleWithContent]);
 
   const handleEnroll = async (e: React.MouseEvent) => {
     e.stopPropagation();

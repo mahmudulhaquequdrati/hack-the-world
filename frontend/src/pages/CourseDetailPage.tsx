@@ -30,7 +30,15 @@ const CourseDetailPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { isAuthenticated } = useAuthRTK();
 
-  // RTK Query hooks
+  // OPTIMIZED: Could use consolidated endpoint (requires backend support)
+  // TODO: Replace with single consolidated call:
+  // const { data: courseDetailData, isLoading: loading, error: courseError, refetch } = 
+  //   useGetCourseDetailCompleteQuery({ 
+  //     courseId: courseId || "", 
+  //     includeOverview: activeTab !== "overview" 
+  //   }, { skip: !courseId });
+
+  // CURRENT: Optimized pattern - separate core data from conditional data
   const {
     data: course,
     isLoading: loading,
@@ -40,7 +48,7 @@ const CourseDetailPage = () => {
     skip: !courseId,
   });
 
-  // Check enrollment status only if user is authenticated
+  // Check enrollment status only if user is authenticated  
   const {
     data: enrollmentData,
     isLoading: isLoadingEnrollment,
@@ -49,13 +57,13 @@ const CourseDetailPage = () => {
     skip: !courseId || !isAuthenticated,
   });
 
-  // Get module overview data to pass to child components
+  // Get module overview data conditionally - smart loading based on UI state
   const {
     data: moduleOverview,
     isLoading: isLoadingOverview,
     error: overviewError,
   } = useGetModuleOverviewQuery(courseId || "", {
-    skip: !courseId || activeTab === "overview",
+    skip: !courseId || activeTab === "overview", // Only load when needed
   });
 
   const [enrollInModule] = useEnrollInModuleMutation();

@@ -92,7 +92,7 @@ const VideoPlayer = ({
     lesson?.type === "video" && !lesson?.videoUrl && contentId;
 
   const { data: contentData, isLoading: contentLoading } =
-    apiSlice.endpoints.getContentById.useQuery(contentId, {
+    apiSlice.endpoints.getCourseById.useQuery(contentId, {
       skip: !needsVideoUrl,
     });
 

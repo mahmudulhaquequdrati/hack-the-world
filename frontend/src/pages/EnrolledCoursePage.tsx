@@ -290,10 +290,11 @@ const EnrolledCoursePage = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [
-    currentContentData?.data?.content?._id,
+    currentContentData?.data?.content?.id,
     courseData,
     isNavigating,
     isCompleting,
+    currentContentData?.success,
   ]);
 
   // Initialize current content ID from URL only on mount

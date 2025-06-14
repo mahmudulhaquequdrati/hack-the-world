@@ -1,5 +1,5 @@
 import { transformApiModuleToCourse } from "@/lib/dataTransformers";
-import type { Course, GameData, LabData, Module, Phase } from "@/lib/types";
+import type { Course, Phase } from "@/lib/types";
 import type {
   BaseQueryApi,
   FetchArgs,
@@ -98,6 +98,8 @@ export const apiSlice = createApi({
     "Course",
     "Enrollment",
     "Progress",
+    "Achievement",
+    "Streak",
   ],
   endpoints: (builder) => ({
     // NOTE: getPhases removed - replaced by getPhasesWithModules for efficiency
@@ -123,7 +125,7 @@ export const apiSlice = createApi({
       }) => {
         return transformApiModuleToCourse(response.data);
       },
-      providesTags: (result, error, courseId) => [
+      providesTags: (_result, _error, courseId) => [
         { type: "Course", id: courseId },
       ],
     }),
@@ -173,7 +175,7 @@ export const apiSlice = createApi({
         }
         return { success: true, data: response.data };
       },
-      providesTags: (result, error, moduleId) => [
+      providesTags: (_result, _error, moduleId) => [
         { type: "Enrollment", id: moduleId },
       ],
     }),
@@ -349,7 +351,7 @@ export const apiSlice = createApi({
       { userId: string; moduleId: string }
     >({
       query: ({ userId, moduleId }) => `/progress/module/${userId}/${moduleId}`,
-      providesTags: (result, error, { moduleId }) => [
+      providesTags: (_result, _error, { moduleId }) => [
         { type: "Progress", id: `module-${moduleId}` },
       ],
     }),
@@ -421,7 +423,7 @@ export const apiSlice = createApi({
 
         return `/progress/content/${userId}/${contentType}?${params.toString()}`;
       },
-      providesTags: (result, error, { contentType }) => [
+      providesTags: (_result, _error, { contentType }) => [
         { type: "Progress", id: `content-${contentType}` },
       ],
     }),
@@ -455,7 +457,7 @@ export const apiSlice = createApi({
           }>;
         };
       }) => response.data,
-      providesTags: (result, error, moduleId) => [
+      providesTags: (_result, _error, moduleId) => [
         { type: "Course", id: `${moduleId}-overview` },
       ],
     }),
@@ -481,7 +483,7 @@ export const apiSlice = createApi({
       string
     >({
       query: (moduleId) => `/content/module/${moduleId}/grouped-optimized`,
-      providesTags: (result, error, moduleId) => [
+      providesTags: (_result, _error, moduleId) => [
         { type: "Course", id: `optimized-content-${moduleId}` },
       ],
     }),
@@ -527,7 +529,7 @@ export const apiSlice = createApi({
       string
     >({
       query: (contentId) => `/content/${contentId}/with-module-and-progress`,
-      providesTags: (result, error, contentId) => [
+      providesTags: (_result, _error, contentId) => [
         { type: "Course", id: `content-progress-${contentId}` },
         { type: "Progress", id: contentId },
       ],
@@ -733,7 +735,7 @@ export const apiSlice = createApi({
     >({
       query: ({ courseId, includeOverview = false }) => 
         `/course/${courseId}/complete?includeOverview=${includeOverview}`,
-      providesTags: (result, error, { courseId }) => [
+      providesTags: (_result, _error, { courseId }) => [
         { type: "Course", id: courseId },
         { type: "Enrollment", id: courseId },
       ],

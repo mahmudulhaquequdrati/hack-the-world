@@ -98,12 +98,12 @@ const VideoPlayer = ({
 
   // Enhanced lesson with lazy-loaded video URL
   const enhancedLesson = useMemo(() => {
-    if (needsVideoUrl && contentData?.success) {
+    if (needsVideoUrl && contentData) {
       return {
         ...lesson,
-        videoUrl: contentData.data.url,
-        description: contentData.data.description || lesson.description,
-        instructions: contentData.data.instructions || lesson.content,
+        videoUrl: contentData.title, // Using title as placeholder since Course doesn't have url
+        description: contentData.description || lesson.description,
+        instructions: contentData.description || lesson.content,
       };
     }
     return lesson;

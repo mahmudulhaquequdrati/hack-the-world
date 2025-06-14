@@ -4,6 +4,8 @@ const Content = require("../models/Content");
 const asyncHandler = require("../middleware/asyncHandler");
 const ErrorResponse = require("../utils/errorResponse");
 const { validationResult } = require("express-validator");
+const { awardEnrollmentXP } = require("../utils/xpUtils");
+const { updateAchievementProgress } = require("./achievementController");
 
 /**
  * @desc    Enroll user in a module
@@ -52,10 +54,18 @@ const enrollUser = asyncHandler(async (req, res, next) => {
     "title description difficulty duration"
   );
 
+  // Award XP for enrollment
+  const xpResult = await awardEnrollmentXP(userId, module);
+
+  // Update achievement progress
+  await updateAchievementProgress(userId, "explorer", 1);
+  await updateAchievementProgress(userId, "welcome-aboard", 1);
+
   res.status(201).json({
     success: true,
     message: "Successfully enrolled in module",
     data: enrollment,
+    xpAwarded: xpResult,
   });
 });
 

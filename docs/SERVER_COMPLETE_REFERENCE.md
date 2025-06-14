@@ -25,14 +25,17 @@ server/
 │   │   ├── moduleController.js # Course modules with complex logic
 │   │   ├── contentController.js # Content management with navigation
 │   │   ├── enrollmentController.js # Module enrollment system
-│   │   └── progressController.js # Progress tracking engine
+│   │   ├── progressController.js # Progress tracking engine
+│   │   └── achievementController.js # Achievement system management
 │   ├── models/                 # MongoDB schemas with Mongoose
 │   │   ├── User.js            # User accounts, profiles, security
 │   │   ├── Phase.js           # Learning phases
 │   │   ├── Module.js          # Course modules with content arrays
 │   │   ├── Content.js         # Learning materials (videos, labs, games)
 │   │   ├── UserEnrollment.js  # Module enrollment tracking
-│   │   └── UserProgress.js    # Individual content progress
+│   │   ├── UserProgress.js    # Individual content progress
+│   │   ├── Achievement.js     # Achievement definitions and rewards
+│   │   └── UserAchievement.js # User achievement progress tracking
 │   ├── routes/                # Express routes - map endpoints to controllers
 │   │   ├── auth.js           # /api/auth/* routes
 │   │   ├── profile.js        # /api/profile/* routes  
@@ -40,7 +43,8 @@ server/
 │   │   ├── modules.js        # /api/modules/* routes
 │   │   ├── content.js        # /api/content/* routes
 │   │   ├── enrollment.js     # /api/enrollments/* routes
-│   │   └── progress.js       # /api/progress/* routes
+│   │   ├── progress.js       # /api/progress/* routes
+│   │   └── achievementRoutes.js # /api/achievements/* routes
 │   ├── middleware/            # Request processing middleware
 │   │   ├── auth.js           # JWT authentication & authorization
 │   │   ├── errorHandler.js   # Global error handling
@@ -48,6 +52,9 @@ server/
 │   │   └── validation/       # Input validation schemas
 │   └── utils/                 # Helper functions
 │       ├── emailService.js   # Email sending (welcome, reset)
+│       ├── xpUtils.js        # XP reward system and calculations
+│       ├── appError.js       # Custom error class for operational errors
+│       └── catchAsync.js     # Async error wrapper for controllers
 │       ├── seedData.js       # Database seeding utilities
 │       └── moduleHelpers.js  # Module-related calculations
 └── scripts/                   # Database seeding scripts
@@ -805,6 +812,272 @@ UserProgress.updateProgress(userId, contentId, progressData) // Update progress
 1. Build filter object (userId, contentType, optional moduleId/status)
 2. Get progress records with populated content details
 3. Return filtered progress list
+
+---
+
+## 🏆 Achievement System
+
+The Achievement System provides gamification through rewards, progress tracking, and user engagement metrics. It integrates with the XP system and tracks user accomplishments across different categories.
+
+### Core Models
+
+#### Achievement Model
+**File**: `/src/models/Achievement.js`
+
+**Schema Structure**:
+```javascript
+{
+  slug: String,           // Unique identifier (e.g., "first-steps")
+  title: String,          // Display name (e.g., "First Steps")
+  description: String,    // Achievement description
+  category: String,       // "module", "lab", "game", "xp", "general"
+  requirements: {
+    type: String,         // "count", "progress", "action", "special"
+    target: Number,       // Target value to reach
+    resource: String,     // What to track (e.g., "modules_completed")
+    conditions: []        // Additional conditions
+  },
+  rewards: {
+    xp: Number,          // XP reward amount
+    badge: String,       // Optional badge name
+    title: String        // Optional title reward
+  },
+  icon: String,          // Icon name for UI
+  difficulty: String,    // "easy", "medium", "hard", "legendary"
+  isActive: Boolean,     // Whether achievement is available
+  isHidden: Boolean,     // Whether achievement is visible
+  order: Number,         // Display order within category
+  earnedCount: Number    // How many users earned this
+}
+```
+
+**Static Methods**:
+- `findByCategory(category)` - Get achievements by category
+- `findActive()` - Get all active, visible achievements
+- `findBySlug(slug)` - Find achievement by unique slug
+
+#### UserAchievement Model
+**File**: `/src/models/UserAchievement.js`
+
+**Schema Structure**:
+```javascript
+{
+  userId: ObjectId,           // Reference to User
+  achievementId: ObjectId,    // Reference to Achievement
+  progress: {
+    current: Number,          // Current progress value
+    target: Number           // Target value for completion
+  },
+  isCompleted: Boolean,      // Whether achievement is completed
+  completedAt: Date,         // Completion timestamp
+  earnedRewards: {
+    xp: Number,             // XP earned from this achievement
+    badge: String,          // Badge earned
+    title: String           // Title earned
+  },
+  metadata: {
+    lastProgressUpdate: Date,
+    progressHistory: []     // Progress tracking history
+  }
+}
+```
+
+**Key Features**:
+- **Automatic Completion**: Pre-save middleware detects when progress reaches target
+- **Reward Distribution**: Automatically awards XP, badges, and titles on completion
+- **Progress History**: Tracks progress changes over time
+- **User Stats Integration**: Updates user's achievement count and total XP
+
+### Achievement Controller
+**File**: `/src/controllers/achievementController.js`
+
+#### GET `/api/achievements` - Get All Achievements
+**Purpose**: Retrieve all available achievements
+**Access**: Public
+**Response**:
+```javascript
+{
+  success: true,
+  data: [achievements],
+  total: number
+}
+```
+
+#### GET `/api/achievements/category/:category` - Get Achievements by Category
+**Purpose**: Filter achievements by category
+**Categories**: "module", "lab", "game", "xp", "general"
+**Access**: Public
+**Response**: Same as above, filtered by category
+
+#### GET `/api/achievements/user` - Get User Achievements
+**Purpose**: Get user's achievement progress and statistics
+**Access**: Protected (requires authentication)
+**Query Parameters**:
+- `completed` (optional) - Filter by completion status
+**Response**:
+```javascript
+{
+  success: true,
+  data: [achievementsWithProgress],
+  stats: {
+    total: number,
+    completed: number,
+    percentage: number,
+    totalXP: number
+  }
+}
+```
+
+#### GET `/api/achievements/user/stats` - Get User Achievement Statistics
+**Purpose**: Comprehensive achievement and XP statistics
+**Access**: Protected
+**Response**:
+```javascript
+{
+  success: true,
+  data: {
+    achievements: {
+      total: number,
+      completed: number,
+      percentage: number
+    },
+    xp: {
+      current: number,
+      level: number,
+      nextLevelXP: number,
+      xpToNext: number
+    },
+    progress: {
+      enrollments: number,
+      completedContent: number,
+      modulesCompleted: number,
+      labsCompleted: number,
+      gamesCompleted: number
+    }
+  }
+}
+```
+
+#### POST `/api/achievements/default` - Create Default Achievements
+**Purpose**: Initialize platform with default achievement set
+**Access**: Admin only
+**Creates**: 15 default achievements across all categories
+
+### XP System Integration
+**File**: `/src/utils/xpUtils.js`
+
+#### XP Reward Configuration
+```javascript
+const XP_REWARDS = {
+  VIDEO_COMPLETE: 10,
+  LAB_COMPLETE: 25,
+  GAME_COMPLETE: 20,
+  DOCUMENT_READ: 5,
+  MODULE_ENROLL: 5,
+  MODULE_COMPLETE: 100,
+  MODULE_PERFECT: 150,
+  PROFILE_COMPLETE: 15,
+  FIRST_LOGIN: 10,
+  DAILY_LOGIN: 5
+};
+```
+
+#### Core Functions
+- `awardXP(userId, amount, reason)` - Award XP to user
+- `awardContentXP(userId, contentType, metadata)` - Content completion XP
+- `awardModuleXP(userId, moduleData, completion%)` - Module completion XP
+- `getUserXPStats(userId)` - Get user's XP statistics
+
+#### Level System
+- **Level Calculation**: 500 XP per level
+- **Automatic Level Updates**: Updates user level when XP thresholds are reached
+- **Achievement Integration**: Triggers achievement checks on XP awards
+
+### Achievement Categories & Examples
+
+#### Module Achievements
+- **First Steps** (1 module) - 50 XP
+- **Learning Streak** (3 modules) - 150 XP
+- **Knowledge Seeker** (5 modules) - 300 XP
+- **Module Master** (10 modules) - 500 XP
+
+#### Lab Achievements
+- **Lab Rookie** (1 lab) - 25 XP
+- **Hands-On Learner** (5 labs) - 100 XP
+- **Lab Expert** (15 labs) - 250 XP
+
+#### Game Achievements
+- **Game On** (1 game) - 25 XP
+- **Gaming Enthusiast** (5 games) - 100 XP
+- **Game Master** (10 games) - 200 XP
+
+#### XP Achievements
+- **XP Collector** (100 XP) - 50 XP bonus
+- **XP Hunter** (500 XP) - 100 XP bonus
+- **XP Legend** (1000 XP) - 200 XP bonus
+
+#### General Achievements
+- **Welcome Aboard** (Join platform) - 10 XP
+- **Explorer** (First enrollment) - 25 XP
+
+### Integration Points
+
+#### Progress Controller Integration
+**File**: `/src/controllers/progressController.js`
+- Awards XP when content is completed
+- Triggers achievement checks via `checkAchievements(userId)`
+- Uses content type to determine appropriate XP rewards
+
+#### Enrollment Controller Integration
+**File**: `/src/controllers/enrollmentController.js`
+- Awards enrollment XP when user enrolls in modules
+- Triggers achievement checks for enrollment-based achievements
+
+#### User Model Integration
+- Updates `stats.totalPoints` with earned XP
+- Updates `stats.level` based on XP total
+- Tracks `stats.achievementsEarned` count
+
+### Performance Optimizations
+
+#### Database Indexes
+- `{ userId: 1, achievementId: 1 }` - Unique compound index
+- `{ userId: 1, isCompleted: 1 }` - User completion queries
+- `{ category: 1, isActive: 1 }` - Category filtering
+- `{ slug: 1 }` - Fast slug lookups
+
+#### Achievement Checking
+- Batch processing for multiple achievement updates
+- Efficient queries using aggregation pipelines
+- Caching of achievement definitions
+
+### Error Handling
+**Files**: `/src/utils/appError.js`, `/src/utils/catchAsync.js`
+- Custom error classes for operational vs programming errors
+- Async error wrapper prevents unhandled promise rejections
+- Consistent error responses across achievement endpoints
+
+### Usage Patterns
+
+#### Progress-Based Achievements
+```javascript
+// When user completes content
+await awardContentXP(userId, contentType, metadata);
+await checkAchievements(userId); // Checks all applicable achievements
+```
+
+#### Manual Achievement Updates
+```javascript
+// Direct achievement progress update
+await updateAchievementProgress(userId, "first-steps", 1);
+```
+
+#### Achievement Statistics
+```javascript
+// Get comprehensive user statistics
+const stats = await getUserAchievementStats(userId);
+// Includes achievements, XP, level, and progress metrics
+```
 
 ---
 

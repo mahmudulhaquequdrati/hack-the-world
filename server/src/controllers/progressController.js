@@ -6,6 +6,8 @@ const User = require("../models/User");
 const asyncHandler = require("../middleware/asyncHandler");
 const ErrorResponse = require("../utils/errorResponse");
 const mongoose = require("mongoose");
+const { awardContentXP, awardModuleXP } = require("../utils/xpUtils");
+const { updateAchievementProgress } = require("./achievementController");
 
 /**
  * @desc    Mark content as started (when content is loaded/accessed)
@@ -155,8 +157,37 @@ const markContentComplete = asyncHandler(async (req, res, next) => {
 
   await progress.save();
 
+  // Award XP for content completion
+  const module = await Module.findById(content.moduleId);
+  const xpResult = await awardContentXP(userId, content.type, {
+    difficulty: module?.difficulty,
+    duration: content.duration,
+  });
+
+  // Update achievement progress based on content type
+  if (content.type === 'labs') {
+    await updateAchievementProgress(userId, "lab-rookie", 1);
+    await updateAchievementProgress(userId, "hands-on-learner", 1);
+    await updateAchievementProgress(userId, "lab-expert", 1);
+  } else if (content.type === 'games') {
+    await updateAchievementProgress(userId, "game-on", 1);
+    await updateAchievementProgress(userId, "gaming-enthusiast", 1);
+    await updateAchievementProgress(userId, "game-master", 1);
+  }
+
   // Update module progress
-  await updateModuleProgress(userId, content.moduleId);
+  const moduleProgressResult = await updateModuleProgress(userId, content.moduleId);
+
+  // Check if module was completed and award module XP
+  if (moduleProgressResult?.moduleCompleted) {
+    const moduleXPResult = await awardModuleXP(userId, module, 100);
+    
+    // Update module achievement progress
+    await updateAchievementProgress(userId, "first-steps", 1);
+    await updateAchievementProgress(userId, "learning-streak", 1);
+    await updateAchievementProgress(userId, "knowledge-seeker", 1);
+    await updateAchievementProgress(userId, "module-master", 1);
+  }
 
   // Populate content information for response
   await progress.populate("contentId", "title type section moduleId");
@@ -165,6 +196,7 @@ const markContentComplete = asyncHandler(async (req, res, next) => {
     success: true,
     message: "Content marked as completed successfully",
     data: progress,
+    xpAwarded: xpResult,
   });
 });
 

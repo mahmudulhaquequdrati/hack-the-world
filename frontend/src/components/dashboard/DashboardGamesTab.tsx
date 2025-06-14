@@ -79,8 +79,9 @@ export const DashboardGamesTab = ({
       const phaseModules = getModulesByPhase(phase.id, true); // Only enrolled modules
 
       phaseModules.forEach((module) => {
-        for (let i = 1; i <= module.games; i++) {
-          const isAvailable = module.progress > (i - 1) * (100 / module.games);
+        const gameCount = module.games || module.content?.games?.length || 0;
+        for (let i = 1; i <= gameCount; i++) {
+          const isAvailable = module.progress > (i - 1) * (100 / gameCount);
           const isCompleted = module.completed && Math.random() > 0.4;
           const gameType = GAME_TYPES[i % GAME_TYPES.length];
 

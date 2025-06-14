@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetPhasesQuery } from "@/features/api/apiSlice";
-import { Module, Phase } from "@/lib/types";
+import { Module } from "@/lib/types";
 import { AchievementsTab } from "./AchievementsTab";
 import { DashboardGamesTab } from "./DashboardGamesTab";
 import { DashboardLabsTab } from "./DashboardLabsTab";
@@ -30,28 +30,20 @@ export const DashboardTabs = ({
 }: DashboardTabsProps) => {
   const { data: phasesData } = useGetPhasesQuery();
   const phases = phasesData || [];
-  
-  // Helper function to get enrolled phases (phases that have enrolled modules)
-  const getEnrolledPhases = (): Phase[] => {
-    const enrolledModules = getEnrolledModules();
-    return phases.filter(phase => 
-      enrolledModules.some(module => 
-        module.phaseId === phase.id || 
-        (phase.id === "beginner" && module.difficulty === "Beginner") ||
-        (phase.id === "intermediate" && module.difficulty === "Intermediate") ||
-        (phase.id === "advanced" && module.difficulty === "Advanced")
-      )
-    );
-  };
+  console.log(getEnrolledModules(), "getEnrolledModules");
 
   // Helper function to get modules by phase
-  const getModulesByPhase = (phaseId: string, enrolledOnly = false): Module[] => {
+  const getModulesByPhase = (
+    phaseId: string,
+    enrolledOnly = false
+  ): Module[] => {
     const modules = enrolledOnly ? getEnrolledModules() : getAllModules();
-    return modules.filter(module => 
-      module.phaseId === phaseId || 
-      (phaseId === "beginner" && module.difficulty === "Beginner") ||
-      (phaseId === "intermediate" && module.difficulty === "Intermediate") ||
-      (phaseId === "advanced" && module.difficulty === "Advanced")
+    return modules.filter(
+      (module) =>
+        module.phaseId === phaseId ||
+        (phaseId === "beginner" && module.difficulty === "Beginner") ||
+        (phaseId === "intermediate" && module.difficulty === "Intermediate") ||
+        (phaseId === "advanced" && module.difficulty === "Advanced")
     );
   };
 
@@ -94,20 +86,23 @@ export const DashboardTabs = ({
 
       <TabsContent value="labs" className="space-y-6">
         <DashboardLabsTab
-          phases={getEnrolledPhases()}
+          phases={phases}
           getModulesByPhase={getModulesByPhase}
         />
       </TabsContent>
 
       <TabsContent value="games" className="space-y-6">
         <DashboardGamesTab
-          phases={getEnrolledPhases()}
+          phases={phases}
           getModulesByPhase={getModulesByPhase}
         />
       </TabsContent>
 
       <TabsContent value="achievements" className="space-y-6">
-        <AchievementsTab achievements={achievements} />
+        <AchievementsTab
+          achievements={achievements}
+          enrolledModules={getEnrolledModules()}
+        />
       </TabsContent>
     </Tabs>
   );

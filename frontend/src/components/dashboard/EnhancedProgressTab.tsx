@@ -1,12 +1,8 @@
-import { useGetPhasesQuery } from "@/features/api/apiSlice";
+import { getIconFromName } from "@/lib/iconUtils";
 import { Module } from "@/lib/types";
 import { BookOpen, Clock, Play, Star, UserCheck, Zap } from "lucide-react";
 import { useState } from "react";
-import { AvailableCourseCard } from "./AvailableCourseCard";
-import { EmptyState } from "./EmptyState";
-import { FilterTab } from "./FilterTab";
 import { ModuleTimelineCard } from "./ModuleTimelineCard";
-import { PhaseProgressCard } from "./PhaseProgressCard";
 
 interface EnhancedProgressTabProps {
   enrolledModules: Module[];
@@ -25,26 +21,28 @@ export const EnhancedProgressTab = ({
 
   // Get all available modules for enrollment
   const allModules = getAllModules();
-  const availableModules = allModules.filter((module) => !module.enrolled);
-
-  // Get phases data from API
-  const { data: phasesData } = useGetPhasesQuery();
-  const phases = phasesData || [];
+  const availableModules = allModules.filter(
+    (module) => !enrolledModules.some((m) => m.id === module.id)
+  );
 
   // Categorize enrolled modules by phase using API data
   const categorizedModules = {
-    beginner: enrolledModules.filter((module) => 
-      module.phaseId === "beginner" || module.difficulty === "Beginner"
+    beginner: enrolledModules.filter(
+      (module) =>
+        module.phaseId === "beginner" || module.difficulty === "Beginner"
     ),
-    intermediate: enrolledModules.filter((module) => 
-      module.phaseId === "intermediate" || module.difficulty === "Intermediate"
+    intermediate: enrolledModules.filter(
+      (module) =>
+        module.phaseId === "intermediate" ||
+        module.difficulty === "Intermediate"
     ),
-    advanced: enrolledModules.filter((module) => 
-      module.phaseId === "advanced" || module.difficulty === "Advanced"
+    advanced: enrolledModules.filter(
+      (module) =>
+        module.phaseId === "advanced" || module.difficulty === "Advanced"
     ),
   };
 
-  // Categorize available modules by difficulty
+  // Categorize available modules by difficulty for discovery section
   const categorizedAvailableModules = {
     beginner: availableModules.filter(
       (module) => module.difficulty === "Beginner"
@@ -92,7 +90,9 @@ export const EnhancedProgressTab = ({
         {/* Terminal Header */}
         <div className="flex items-center space-x-2 mb-6 relative z-10">
           <BookOpen className="w-5 h-5 text-green-400" />
-          <span className="text-green-400 font-mono text-sm">~/dashboard/progress/</span>
+          <span className="text-green-400 font-mono text-sm">
+            ~/dashboard/progress/
+          </span>
         </div>
 
         <div className="flex items-center justify-between mb-8 relative z-10">
@@ -107,7 +107,7 @@ export const EnhancedProgressTab = ({
         </div>
 
         {/* Enhanced Progress Summary by Phase */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 relative z-10">
           {Object.entries(categorizedModules).map(([phase, modules]) => (
             <button
               key={phase}
@@ -123,35 +123,41 @@ export const EnhancedProgressTab = ({
               }`}
             >
               {/* Glitch Border Animation */}
-              <div className={`absolute inset-0 rounded-xl bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                phase === "beginner"
-                  ? "from-green-400/0 via-green-400/20 to-green-400/0"
-                  : phase === "intermediate"
-                  ? "from-yellow-400/0 via-yellow-400/20 to-yellow-400/0"
-                  : "from-red-400/0 via-red-400/20 to-red-400/0"
-              }`}></div>
-              
-              <div className="relative z-10">
-                <h4 className={`font-mono text-lg font-bold uppercase tracking-wider mb-2 ${
+              <div
+                className={`absolute inset-0 rounded-xl bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
                   phase === "beginner"
-                    ? "text-green-400"
+                    ? "from-green-400/0 via-green-400/20 to-green-400/0"
                     : phase === "intermediate"
-                    ? "text-yellow-400"
-                    : "text-red-400"
-                }`}>
+                    ? "from-yellow-400/0 via-yellow-400/20 to-yellow-400/0"
+                    : "from-red-400/0 via-red-400/20 to-red-400/0"
+                }`}
+              ></div>
+
+              <div className="relative z-10">
+                <h4
+                  className={`font-mono text-lg font-bold uppercase tracking-wider mb-2 ${
+                    phase === "beginner"
+                      ? "text-green-400"
+                      : phase === "intermediate"
+                      ? "text-yellow-400"
+                      : "text-red-400"
+                  }`}
+                >
                   {phase}_PHASE
                 </h4>
                 <div className="text-3xl font-bold text-white font-mono mb-2">
                   {modules.length}
                 </div>
-                <div className={`text-sm font-mono ${
-                  phase === "beginner"
-                    ? "text-green-300/70"
-                    : phase === "intermediate"
-                    ? "text-yellow-300/70"
-                    : "text-red-300/70"
-                }`}>
-                  {modules.filter(m => m.completed).length} COMPLETED
+                <div
+                  className={`text-sm font-mono ${
+                    phase === "beginner"
+                      ? "text-green-300/70"
+                      : phase === "intermediate"
+                      ? "text-yellow-300/70"
+                      : "text-red-300/70"
+                  }`}
+                >
+                  {modules.filter((m) => m.completed).length} COMPLETED
                 </div>
               </div>
             </button>
@@ -175,15 +181,17 @@ export const EnhancedProgressTab = ({
           <div className="relative z-10">
             {/* Tree Structure Header */}
             <div className="flex items-center space-x-2 mb-6">
-              <span className="text-green-400 font-mono text-sm">~/enrolled_modules/</span>
+              <span className="text-green-400 font-mono text-sm">
+                ~/enrolled_modules/
+              </span>
             </div>
-            
+
             <div className="bg-black/40 border border-green-400/20 rounded-xl p-6">
               <div className="space-y-0">
                 {sortedModules.map((module, index) => {
                   const isLast = index === sortedModules.length - 1;
                   const treeChar = isLast ? "└──" : "├──";
-                  
+
                   return (
                     <div key={module.id} className="relative">
                       <div className="flex items-start space-x-1">
@@ -191,9 +199,11 @@ export const EnhancedProgressTab = ({
                           <span className="text-green-400/70 text-sm leading-none font-mono">
                             {treeChar}
                           </span>
-                          {!isLast && <div className="w-px h-20 bg-green-400/30 mt-1"></div>}
+                          {!isLast && (
+                            <div className="w-px h-20 bg-green-400/30 mt-1"></div>
+                          )}
                         </div>
-                        
+
                         <div className="flex-1 ml-2 mb-4">
                           <ModuleTimelineCard
                             module={module}
@@ -206,16 +216,20 @@ export const EnhancedProgressTab = ({
                   );
                 })}
               </div>
-              
+
               {/* Terminal Footer */}
               <div className="mt-6 pt-4 border-t border-green-400/30">
                 <div className="flex items-center justify-between text-xs font-mono text-green-300/70">
                   <span>
-                    {sortedModules.filter(m => m.completed).length} completed, {sortedModules.filter(m => m.progress > 0 && !m.completed).length} in progress
+                    {sortedModules.filter((m) => m.completed).length} completed,{" "}
+                    {
+                      sortedModules.filter(
+                        (m) => m.progress > 0 && !m.completed
+                      ).length
+                    }{" "}
+                    in progress
                   </span>
-                  <span>
-                    total_modules: {sortedModules.length}
-                  </span>
+                  <span>total_modules: {sortedModules.length}</span>
                 </div>
               </div>
             </div>
@@ -234,7 +248,9 @@ export const EnhancedProgressTab = ({
           {/* Terminal Header */}
           <div className="flex items-center space-x-2 mb-6 relative z-10">
             <BookOpen className="w-5 h-5 text-cyan-400" />
-            <span className="text-cyan-400 font-mono text-sm">~/dashboard/discover/</span>
+            <span className="text-cyan-400 font-mono text-sm">
+              ~/dashboard/discover/
+            </span>
           </div>
 
           <div className="flex items-center justify-between mb-8 relative z-10">
@@ -307,8 +323,8 @@ export const EnhancedProgressTab = ({
           ) : (
             <div className="relative z-10">
               {/* Enhanced Course Grid with ModuleCard styling */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {filteredAvailableModules.slice(0, 6).map((module, index) => {
+              <div className="grid grid-cols-1  gap-6 mb-8">
+                {filteredAvailableModules.map((module, index) => {
                   const getDifficultyColor = (difficulty: string) => {
                     switch (difficulty.toLowerCase()) {
                       case "beginner":
@@ -329,8 +345,12 @@ export const EnhancedProgressTab = ({
                     return match ? match[1] : "cyan";
                   };
 
-                  const colorName = getColorName(module.color || "text-cyan-400");
-                  const ModuleIcon = module.icon || BookOpen;
+                  // Get module-specific color from module.color property
+                  const moduleColorName = getColorName(
+                    module.color || "text-cyan-400"
+                  );
+
+                  const ModuleIcon = getIconFromName(module.icon);
 
                   // Calculate stats from module data
                   const stats = {
@@ -346,19 +366,29 @@ export const EnhancedProgressTab = ({
                       onClick={() => onModuleClick(module)}
                     >
                       {/* Main Card Container with Retro Design */}
-                      <div className="relative overflow-hidden rounded-lg border-2 bg-gradient-to-br from-black/95 via-gray-900/90 to-black/95 border-cyan-400/30 shadow-lg hover:shadow-2xl transition-all duration-300 hover:shadow-cyan-400/20">
+                      <div
+                        className={`relative overflow-hidden rounded-lg border-2 bg-gradient-to-br from-black/95 via-gray-900/90 to-black/95 ${
+                          module.borderColor || "border-cyan-400/30"
+                        } shadow-lg hover:shadow-2xl transition-all duration-300 hover:shadow-${moduleColorName}-400/20`}
+                      >
                         {/* Retro Scanlines Effect */}
                         <div className="absolute inset-0 opacity-20 pointer-events-none">
                           <div className="h-full w-full bg-gradient-to-b from-transparent via-white/5 to-transparent bg-[length:100%_4px] animate-pulse"></div>
                         </div>
 
                         {/* Glitch Border Animation */}
-                        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-400/0 via-cyan-400/20 to-cyan-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div
+                          className={`absolute inset-0 rounded-lg bg-gradient-to-r from-${moduleColorName}-400/0 via-${moduleColorName}-400/20 to-${moduleColorName}-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                        ></div>
 
                         {/* Course Number Badge */}
                         <div className="absolute top-3 right-3 z-10">
-                          <div className="w-8 h-8 bg-cyan-400/20 border-2 border-cyan-400/40 rounded-full flex items-center justify-center animate-pulse">
-                            <span className="text-cyan-400 font-mono text-xs font-bold">
+                          <div
+                            className={`w-8 h-8 bg-${moduleColorName}-400/20 border-2 border-${moduleColorName}-400/40 rounded-full flex items-center justify-center animate-pulse`}
+                          >
+                            <span
+                              className={`text-${moduleColorName}-400 font-mono text-xs font-bold`}
+                            >
                               {index + 1}
                             </span>
                           </div>
@@ -368,21 +398,41 @@ export const EnhancedProgressTab = ({
                         <div className="p-6 pb-4">
                           <div className="flex items-start space-x-4">
                             {/* Module Icon with Retro Styling */}
-                            <div className="relative w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-gray-800/50 to-black/50 border-2 border-cyan-400/30 shadow-lg shadow-cyan-400/30 group-hover:animate-pulse">
+                            <div
+                              className={`relative w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-gray-800/50 to-black/50 border-2 ${
+                                module.borderColor || "border-cyan-400/30"
+                              }  shadow-${moduleColorName}-400/30 group-hover:animate-pulse`}
+                            >
                               {/* Icon Glow Effect */}
-                              <div className="absolute inset-0 rounded-xl blur-sm opacity-50 bg-cyan-500/10"></div>
-                              <ModuleIcon className="w-8 h-8 relative z-10 text-cyan-400" />
+                              <div
+                                className={`absolute inset-0 rounded-xl blur-sm opacity-50 ${
+                                  module.bgColor || "bg-cyan-500/10"
+                                }`}
+                              ></div>
+                              <ModuleIcon
+                                className={`w-8 h-8 relative z-10 ${
+                                  module.color || "text-cyan-400"
+                                }`}
+                              />
                             </div>
 
                             {/* Title and Description */}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center space-x-3 mb-2">
-                                <h3 className="text-xl font-bold font-mono uppercase tracking-wider text-white transition-colors truncate group-hover:text-cyan-400">
+                                <h3
+                                  className={`text-xl font-bold font-mono uppercase tracking-wider text-white transition-colors truncate group-hover:${
+                                    module.color || "text-cyan-400"
+                                  }`}
+                                >
                                   {module.title}
                                 </h3>
 
                                 {/* Retro Difficulty Badge */}
-                                <div className={`px-3 py-1 rounded-full border-2 text-xs font-mono uppercase bg-black/50 backdrop-blur-sm animate-pulse ${getDifficultyColor(module.difficulty)}`}>
+                                <div
+                                  className={`px-3 py-1 rounded-full border-2 text-xs font-mono uppercase bg-black/50 backdrop-blur-sm animate-pulse ${getDifficultyColor(
+                                    module.difficulty
+                                  )}`}
+                                >
                                   {module.difficulty}
                                 </div>
                               </div>
@@ -505,15 +555,6 @@ export const EnhancedProgressTab = ({
                   );
                 })}
               </div>
-
-              {/* View More Button */}
-              {filteredAvailableModules.length > 6 && (
-                <div className="text-center">
-                  <button className="px-8 py-3 bg-gradient-to-r from-cyan-400/20 to-cyan-400/10 border-2 border-cyan-400/30 rounded-lg text-cyan-400 font-mono text-sm font-bold uppercase tracking-wider hover:bg-cyan-400/30 hover:border-cyan-400/50 transition-all duration-300">
-                    SCAN_ALL_COURSES ({filteredAvailableModules.length - 6} more)
-                  </button>
-                </div>
-              )}
             </div>
           )}
 

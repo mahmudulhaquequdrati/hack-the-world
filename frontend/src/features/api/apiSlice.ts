@@ -736,6 +736,84 @@ export const apiSlice = createApi({
         { type: "Course", id: `content-${contentId}` },
       ],
     }),
+
+    // Achievement endpoints
+    getUserAchievements: builder.query<
+      {
+        success: boolean;
+        data: Array<{
+          id: string;
+          slug: string;
+          title: string;
+          description: string;
+          category: "module" | "lab" | "game" | "xp" | "general";
+          requirements: {
+            type: string;
+            target: number;
+            resource: string;
+          };
+          rewards: {
+            xp: number;
+            badge?: string;
+            title?: string;
+          };
+          icon: string;
+          difficulty: string;
+          userProgress: {
+            progress: number;
+            target: number;
+            progressPercentage: number;
+            isCompleted: boolean;
+            completedAt: string | null;
+            earnedRewards: {
+              xp: number;
+              badge?: string;
+              title?: string;
+            };
+          };
+        }>;
+        stats: {
+          total: number;
+          completed: number;
+          percentage: number;
+          totalXP: number;
+        };
+      },
+      void
+    >({
+      query: () => "/achievements/user",
+      providesTags: ["Achievement"],
+    }),
+
+    getUserAchievementStats: builder.query<
+      {
+        success: boolean;
+        data: {
+          achievements: {
+            total: number;
+            completed: number;
+            percentage: number;
+          };
+          xp: {
+            current: number;
+            level: number;
+            nextLevelXP: number;
+            xpToNext: number;
+          };
+          progress: {
+            enrollments: number;
+            completedContent: number;
+            modulesCompleted: number;
+            labsCompleted: number;
+            gamesCompleted: number;
+          };
+        };
+      },
+      void
+    >({
+      query: () => "/achievements/user/stats",
+      providesTags: ["Achievement", "Progress"],
+    }),
   }),
 });
 
@@ -769,6 +847,8 @@ export const {
   useGetContentWithNavigationQuery,
   useGetContentWithModuleAndProgressQuery,
   useGetContentByIdQuery,
+  useGetUserAchievementsQuery,
+  useGetUserAchievementStatsQuery,
 } = apiSlice;
 
 export default apiSlice;

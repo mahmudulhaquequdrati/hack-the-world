@@ -22,7 +22,7 @@ frontend/
 │   │
 │   ├── features/                  # Redux Toolkit Query API slices
 │   │   ├── api/
-│   │   │   └── apiSlice.ts       # Main RTK Query API setup, all endpoints
+│   │   │   └── apiSlice.ts       # Main RTK Query API setup, all endpoints + achievements
 │   │   └── auth/
 │   │       ├── authApi.ts        # Authentication endpoints & types
 │   │       └── authSlice.ts      # Auth state management
@@ -347,6 +347,22 @@ export const DashboardGamesTab = () => {
   // Features: Gamified interface, points tracking, achievement system
   // Design: Retro game card styling with neon borders and effects
   // Organization: Phase-based hierarchy with expandable modules
+}
+
+// AchievementsTab.tsx - Achievement tracking and display
+export const AchievementsTab = () => {
+  // Features: Achievement gallery, progress tracking, unlock conditions
+  // Design: Retro achievement card styling with unlock animations
+  // Integration: Real achievement data from API with progress tracking
+  // Categories: Module, Lab, Game, XP, General with tab navigation
+}
+
+// AchievementCard.tsx - Individual achievement display component
+export const AchievementCard = () => {
+  // Features: Achievement icon, title, description, progress indicator
+  // Design: Retro card styling with glow effects for unlocked achievements
+  // States: Locked, in-progress, unlocked with appropriate visual feedback
+  // XP display: Shows reward amount and completion status
 }
 
 // Retro Design Elements:

@@ -6,7 +6,6 @@ import {
 import {
   useGetCurrentUserEnrollmentsQuery,
   useGetModulesQuery,
-  useGetPhasesQuery,
 } from "@/features/api/apiSlice";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { ACHIEVEMENTS_DATA } from "@/lib/appData";
@@ -21,7 +20,11 @@ const Dashboard = () => {
   const { user } = useAuthRTK();
 
   // Fetch real data from API
-  const { data: enrollmentsData, isLoading: enrollmentsLoading } = useGetCurrentUserEnrollmentsQuery();
+  const { data: enrollmentsData, isLoading: enrollmentsLoading } =
+    useGetCurrentUserEnrollmentsQuery(undefined, {
+      skip: !user,
+    });
+
   const { data: allModules, isLoading: modulesLoading } = useGetModulesQuery();
 
   // Use centralized data for achievements (keeping mock data as requested)
@@ -29,20 +32,23 @@ const Dashboard = () => {
 
   // Convert enrollment data to enrolled modules format
   const enrolledModules: Module[] = React.useMemo(() => {
-    if (!enrollmentsData?.success || !allModules || !enrollmentsData.data) return [];
-    
-    return enrollmentsData.data.map(enrollment => {
-      const module = allModules.find(m => m.id === enrollment.moduleId);
-      if (!module) return null;
-      
-      return {
-        ...module,
-        enrolled: true,
-        progress: enrollment.progressPercentage,
-        completed: enrollment.isCompleted,
-        enrolledAt: enrollment.enrolledAt,
-      };
-    }).filter(Boolean) as Module[];
+    if (!enrollmentsData?.success || !allModules || !enrollmentsData.data)
+      return [];
+
+    return enrollmentsData.data
+      .map((enrollment) => {
+        const module = allModules.find((m) => m.id === enrollment.moduleId);
+        if (!module) return null;
+
+        return {
+          ...module,
+          enrolled: true,
+          progress: enrollment.progressPercentage,
+          completed: enrollment.isCompleted,
+          enrolledAt: enrollment.enrolledAt,
+        };
+      })
+      .filter(Boolean) as Module[];
   }, [enrollmentsData, allModules]);
 
   // Helper functions for dashboard tabs

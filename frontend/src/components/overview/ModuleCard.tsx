@@ -166,20 +166,6 @@ const ModuleCard = ({
               `hover:shadow-${colorName}-400/20`
             )}
           >
-            {/* Retro Scanlines Effect */}
-            <div className="absolute inset-0 opacity-20 pointer-events-none">
-              <div className="h-full w-full bg-gradient-to-b from-transparent via-white/5 to-transparent bg-[length:100%_4px] animate-pulse"></div>
-            </div>
-
-            {/* Glitch Border Animation */}
-            <div
-              className={cn(
-                "absolute inset-0 rounded-lg",
-                "bg-gradient-to-r",
-                `from-${colorName}-400/0 via-${colorName}-400/20 to-${colorName}-400/0`,
-                "opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              )}
-            ></div>
 
             {/* Status Corner Badge */}
             <div className="absolute top-3 right-3 z-10">

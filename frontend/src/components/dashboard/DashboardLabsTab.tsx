@@ -67,8 +67,9 @@ export const DashboardLabsTab = ({
       const phaseModules = getModulesByPhase(phase.id, true); // Only enrolled modules
 
       phaseModules.forEach((module) => {
-        for (let i = 1; i <= module.labs; i++) {
-          const isAvailable = module.progress > (i - 1) * (100 / module.labs);
+        const labCount = module.labs || module.content?.labs?.length || 0;
+        for (let i = 1; i <= labCount; i++) {
+          const isAvailable = module.progress > (i - 1) * (100 / labCount);
           const isCompleted = module.completed && Math.random() > 0.3;
 
           labs.push({

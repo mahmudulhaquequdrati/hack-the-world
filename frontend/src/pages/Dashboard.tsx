@@ -6,9 +6,10 @@ import {
 import {
   useGetCurrentUserEnrollmentsQuery,
   useGetPhasesWithModulesQuery,
+  useGetUserAchievementsQuery,
+  useGetStreakStatusQuery,
 } from "@/features/api/apiSlice";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
-import { ACHIEVEMENTS_DATA } from "@/lib/appData";
 import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
 import { Module } from "@/lib/types";
 import React, { useState } from "react";
@@ -27,6 +28,16 @@ const Dashboard = () => {
 
   const { data: phasesWithModules, isLoading: modulesLoading } = useGetPhasesWithModulesQuery();
   
+  // Fetch real achievement and streak data
+  const { data: achievementsData, isLoading: achievementsLoading } = useGetUserAchievementsQuery(
+    undefined,
+    { skip: !user }
+  );
+  const { data: streakData, isLoading: streakLoading } = useGetStreakStatusQuery(
+    undefined,
+    { skip: !user }
+  );
+  
   // Extract all modules from phases with enhanced content statistics
   const allModules = React.useMemo(() => {
     if (!phasesWithModules) return [];
@@ -42,8 +53,11 @@ const Dashboard = () => {
     );
   }, [phasesWithModules]);
 
-  // Use centralized data for achievements (keeping mock data as requested)
-  const achievements = ACHIEVEMENTS_DATA;
+  // Process real achievements data
+  const achievements = React.useMemo(() => {
+    if (!achievementsData?.success || !achievementsData?.data) return [];
+    return achievementsData.data.slice(0, 6); // Show only first 6 in dashboard
+  }, [achievementsData]);
 
   // Convert enrollment data to enrolled modules format
   const enrolledModules: Module[] = React.useMemo(() => {
@@ -84,7 +98,7 @@ const Dashboard = () => {
   };
 
   // Show loading state while data is being fetched
-  if (enrollmentsLoading || modulesLoading) {
+  if (enrollmentsLoading || modulesLoading || achievementsLoading || streakLoading) {
     return (
       <div className="min-h-screen bg-black text-green-400">
         <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
@@ -101,7 +115,10 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-black text-green-400">
       <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
-        <LearningDashboard enrolledModules={enrolledModules} />
+        <LearningDashboard 
+          enrolledModules={enrolledModules} 
+          streakData={streakData?.success ? streakData.data : undefined}
+        />
 
         <ProgressOverview />
 

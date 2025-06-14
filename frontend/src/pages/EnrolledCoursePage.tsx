@@ -202,18 +202,26 @@ const EnrolledCoursePage = () => {
     } as EnrolledCourse;
   }, [groupedContentData, currentContentData, allContentItems]);
 
-  // Loading state management
-  const isInitialLoading =
-    groupedContentLoading ||
-    (!currentContentId && allContentItems.length === 0);
-  const isContentLoading = currentContentLoading || !courseData;
-  const isActionLoading = isNavigating || isCompleting || isAutoCompleting || isContentRendering;
-  const showFullPageLoading =
-    (isInitialLoading || isContentLoading) && !isActionLoading;
+  // Unified loading state management - ONLY ONE loading state at a time
+  const isInitialLoading = groupedContentLoading && !groupedContentData;
+  const isContentLoading = currentContentLoading && !currentContentData;
+  const isUserAction = isNavigating || isCompleting || isAutoCompleting;
   
-  // Empty state management
+  // Single loading priority: Initial > User Action > Content > Rendering
+  const currentLoadingState = isInitialLoading ? 'initial' : 
+                             isUserAction ? 'navigation' :
+                             isContentLoading ? 'content' :
+                             isContentRendering ? 'rendering' : 'none';
+  
+  const showMainLoading = currentLoadingState === 'initial';
+  const showActionLoading = currentLoadingState === 'navigation';
+  const isAnyLoading = currentLoadingState !== 'none';
+  
+  // Empty state management - check if we have successful response but no content
   const hasNoContent = groupedContentData?.success && allContentItems.length === 0;
-  const showEmptyState = hasNoContent && !isInitialLoading && !isContentLoading && !isActionLoading;
+  const hasContentError = groupedContentError || (groupedContentData && !groupedContentData.success);
+  const showEmptyState = hasNoContent && !isAnyLoading;
+  const showErrorState = hasContentError && !isAnyLoading;
 
   // Clear navigation loading only when content and course data are ready AND content is rendered
   useEffect(() => {
@@ -247,24 +255,24 @@ const EnrolledCoursePage = () => {
     }
   }, [courseData]);
 
-  // Track content rendering state
+  // Track content rendering state - only when content actually changes and not during navigation
   useEffect(() => {
-    if (currentContentData?.success && courseData) {
-      setIsContentRendering(true);
-      
-      // Use requestAnimationFrame to wait for the next paint cycle
-      const frameId = requestAnimationFrame(() => {
-        // Additional delay to ensure content is fully painted
-        setTimeout(() => {
+    if (currentContentData?.success && courseData && !isNavigating && !isCompleting) {
+      // Small delay to prevent flickering during rapid navigation
+      const timeoutId = setTimeout(() => {
+        setIsContentRendering(true);
+        
+        // Quick render cycle
+        const frameId = requestAnimationFrame(() => {
           setIsContentRendering(false);
-        }, 100);
-      });
+        });
+        
+        return () => cancelAnimationFrame(frameId);
+      }, 50);
       
-      return () => {
-        cancelAnimationFrame(frameId);
-      };
+      return () => clearTimeout(timeoutId);
     }
-  }, [currentContentData, courseData, currentContentId]);
+  }, [currentContentData?.data?.content?._id, courseData, isNavigating, isCompleting]);
 
   // Initialize current content ID from URL only on mount
   useEffect(() => {
@@ -293,7 +301,7 @@ const EnrolledCoursePage = () => {
     const targetIndex = currentContentIndex + 1;
     if (targetIndex < allContentItems.length) {
       setIsNavigating(true);
-      setIsContentRendering(true);
+      // Don't set isContentRendering here - let the useEffect handle it
       const nextContentId = allContentItems[targetIndex].contentId;
       setCurrentContentId(nextContentId);
       const params = new URLSearchParams(searchParams);
@@ -315,7 +323,7 @@ const EnrolledCoursePage = () => {
     const targetIndex = currentContentIndex - 1;
     if (targetIndex >= 0) {
       setIsNavigating(true);
-      setIsContentRendering(true);
+      // Don't set isContentRendering here - let the useEffect handle it
       const prevContentId = allContentItems[targetIndex].contentId;
       setCurrentContentId(prevContentId);
       const params = new URLSearchParams(searchParams);
@@ -349,7 +357,7 @@ const EnrolledCoursePage = () => {
       if (targetIndex === -1) return;
 
       setIsNavigating(true);
-      setIsContentRendering(true);
+      // Don't set isContentRendering here - let the useEffect handle it
       setCurrentContentId(contentId);
       const params = new URLSearchParams(searchParams);
       params.set("contentId", contentId);
@@ -416,7 +424,7 @@ const EnrolledCoursePage = () => {
   const markLessonComplete = useCallback(async () => {
     if (!currentContentId || isCompleting || isContentRendering) return;
     setIsCompleting(true);
-    setIsContentRendering(true);
+    // Don't set isContentRendering here - let the useEffect handle it
     try {
       await completeContent({ contentId: currentContentId }).unwrap();
       await refetchCurrentContent();
@@ -599,9 +607,7 @@ const EnrolledCoursePage = () => {
     return modes;
   }, [getCurrentLesson]);
 
-  if (showFullPageLoading) {
-    return <LoadingSpinner message="Loading course content..." />;
-  }
+  // This check is now handled by the hierarchical loading states above
 
   // Empty state - show when content is successfully loaded but empty
   if (showEmptyState) {
@@ -615,26 +621,38 @@ const EnrolledCoursePage = () => {
     );
   }
 
-  // Error state - only show if we have actual errors and initial load is complete
-  if (
-    (groupedContentError || currentContentError) &&
-    !isInitialLoading &&
-    !isContentLoading &&
-    !isActionLoading
-  ) {
+  // Error state - show for actual API errors or failed responses
+  if (showErrorState || currentContentError) {
     return (
       <ErrorState
         title="Course Not Found"
-        message="The requested course could not be found."
+        message="The requested course could not be found or failed to load."
         buttonText="Back to Overview"
         onButtonClick={() => navigate("/overview")}
       />
     );
   }
 
-  // Don't render until we have both course data and content
-  if (!course || !currentContentData?.success) {
-    return <LoadingSpinner message="Preparing course content..." />;
+  // Show ONLY ONE loading state at a time
+  if (showMainLoading) {
+    return <LoadingSpinner message="Loading course content..." />;
+  }
+
+  // Don't render course content until we have basic data
+  if (!course && !showEmptyState && !showErrorState) {
+    return <LoadingSpinner message="Preparing course..." />;
+  }
+
+  // If we reach here but still don't have course data, something is wrong
+  if (!course) {
+    return (
+      <ErrorState
+        title="Course Data Missing"
+        message="Unable to load course information."
+        buttonText="Back to Overview"
+        onButtonClick={() => navigate("/overview")}
+      />
+    );
   }
 
   const currentLesson = getCurrentLesson();
@@ -853,9 +871,9 @@ const EnrolledCoursePage = () => {
         onLessonSelect={handleLessonSelect}
       />
 
-      {/* Loading overlay - show for navigation, completion, and content rendering */}
+      {/* Single loading overlay - only show for navigation actions */}
       <LoadingOverlay
-        isLoading={isActionLoading}
+        isLoading={showActionLoading}
         message="Loading content..."
       />
     </div>

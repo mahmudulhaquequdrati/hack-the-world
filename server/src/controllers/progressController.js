@@ -189,6 +189,12 @@ const markContentComplete = asyncHandler(async (req, res, next) => {
     await updateAchievementProgress(userId, "module-master", 1);
   }
 
+  // Update user streak when content is completed
+  const user = await User.findById(userId);
+  if (user) {
+    await user.updateStreak();
+  }
+
   // Populate content information for response
   await progress.populate("contentId", "title type section moduleId");
 

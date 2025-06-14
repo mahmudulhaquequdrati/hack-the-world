@@ -814,6 +814,71 @@ export const apiSlice = createApi({
       query: () => "/achievements/user/stats",
       providesTags: ["Achievement", "Progress"],
     }),
+
+    // Streak endpoints
+    getStreakStatus: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          currentStreak: number;
+          longestStreak: number;
+          streakStatus: 'start' | 'active' | 'at_risk' | 'broken';
+          daysSinceLastActivity: number | null;
+          lastActivityDate: string | null;
+        };
+      },
+      void
+    >({
+      query: () => "/streak/status",
+      providesTags: ["Streak"],
+    }),
+
+    updateStreak: builder.mutation<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          currentStreak: number;
+          longestStreak: number;
+          streakStatus: 'start' | 'active' | 'at_risk' | 'broken';
+          daysSinceLastActivity: number | null;
+          lastActivityDate: string | null;
+        };
+      },
+      void
+    >({
+      query: () => ({
+        url: "/streak/update",
+        method: "POST",
+      }),
+      invalidatesTags: ["Streak"],
+    }),
+
+    getStreakLeaderboard: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          type: string;
+          leaderboard: Array<{
+            id: string;
+            username: string;
+            displayName: string;
+            avatar: string;
+            currentStreak: number;
+            longestStreak: number;
+            lastActivityDate: string | null;
+            streakStatus: string;
+          }>;
+        };
+      },
+      { limit?: number; type?: 'current' | 'longest' }
+    >({
+      query: ({ limit = 10, type = 'current' } = {}) => 
+        `/streak/leaderboard?limit=${limit}&type=${type}`,
+      providesTags: ["Streak"],
+    }),
   }),
 });
 
@@ -848,6 +913,9 @@ export const {
   useGetContentByIdQuery,
   useGetUserAchievementsQuery,
   useGetUserAchievementStatsQuery,
+  useGetStreakStatusQuery,
+  useUpdateStreakMutation,
+  useGetStreakLeaderboardQuery,
 } = apiSlice;
 
 export default apiSlice;

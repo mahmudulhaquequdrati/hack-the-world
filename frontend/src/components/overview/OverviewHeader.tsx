@@ -3,9 +3,10 @@ import { Progress } from "@/components/ui/progress";
 
 interface OverviewHeaderProps {
   overallProgress: number;
+  showProgress?: boolean;
 }
 
-const OverviewHeader = ({ overallProgress }: OverviewHeaderProps) => {
+const OverviewHeader = ({ overallProgress, showProgress = true }: OverviewHeaderProps) => {
   return (
     <div className="text-center mb-12">
       <Badge className="bg-green-400/20 text-green-400 border-green-400 mb-4">
@@ -20,19 +21,21 @@ const OverviewHeader = ({ overallProgress }: OverviewHeaderProps) => {
         advanced specialized expertise.
       </p>
 
-      {/* Overall Progress */}
-      <div className="max-w-md mx-auto mb-8">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-green-300">Overall Progress</span>
-          <span className="text-sm text-green-400 font-bold">
-            {overallProgress}%
-          </span>
+      {/* Overall Progress - Only show when authenticated */}
+      {showProgress && (
+        <div className="max-w-md mx-auto mb-8">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-green-300">Overall Progress</span>
+            <span className="text-sm text-green-400 font-bold">
+              {overallProgress}%
+            </span>
+          </div>
+          <Progress
+            value={overallProgress}
+            className="h-3 bg-black border border-green-400/30"
+          />
         </div>
-        <Progress
-          value={overallProgress}
-          className="h-3 bg-black border border-green-400/30"
-        />
-      </div>
+      )}
     </div>
   );
 };

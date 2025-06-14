@@ -4,6 +4,11 @@ import { useGetCurrentUserQuery } from "@/features/auth/authApi";
 
 interface LearningDashboardProps {
   enrolledModules: Module[];
+  streakData?: {
+    currentStreak: number;
+    longestStreak: number;
+    streakStatus: 'start' | 'active' | 'at_risk' | 'broken';
+  };
 }
 
 // Circular Progress Component
@@ -106,6 +111,7 @@ const ProgressStatsCard = ({
 
 export const LearningDashboard = ({
   enrolledModules,
+  streakData,
 }: LearningDashboardProps) => {
   // Get current user data for real stats
   const { data: currentUser } = useGetCurrentUserQuery();
@@ -126,7 +132,8 @@ export const LearningDashboard = ({
   ).length;
 
   // Use real user data instead of dummy values
-  const currentStreak = 7; // TODO: Add streak tracking to backend API
+  const currentStreak = streakData?.currentStreak || 0;
+  const streakStatus = streakData?.streakStatus || 'start';
   const totalXP = currentUser?.data?.user?.stats?.totalPoints || 0;
   const userLevel = currentUser?.data?.user?.stats?.level || 1;
   const nextMilestone = userLevel * 1000;
@@ -188,7 +195,7 @@ export const LearningDashboard = ({
                 <div className="flex items-center justify-center space-x-2 bg-orange-400/10 border border-orange-400/30 rounded-lg p-2">
                   <Flame className="w-4 h-4 text-orange-400 animate-pulse" />
                   <span className="text-orange-400 font-mono text-sm font-bold">
-                    {currentStreak}_DAY_STREAK
+                    {currentStreak > 0 ? `${currentStreak}_DAY_STREAK` : 'START_STREAK'}
                   </span>
                 </div>
               </div>
@@ -250,7 +257,11 @@ export const LearningDashboard = ({
                   <div>
                     <p className="text-xs font-mono text-orange-400/80 uppercase tracking-wider mb-1">STREAK</p>
                     <p className="text-3xl font-bold text-orange-400 font-mono">{currentStreak}</p>
-                    <p className="text-xs text-orange-300/60 font-mono mt-1">DAYS_ACTIVE</p>
+                    <p className="text-xs text-orange-300/60 font-mono mt-1">
+                      {streakStatus === 'active' ? 'ACTIVE_STREAK' : 
+                       streakStatus === 'at_risk' ? 'AT_RISK' :
+                       streakStatus === 'broken' ? 'STREAK_BROKEN' : 'START_TODAY'}
+                    </p>
                   </div>
                   <div className="w-12 h-12 rounded-full bg-orange-400/20 border-2 border-orange-400/40 flex items-center justify-center group-hover:animate-pulse">
                     <Flame className="w-6 h-6 text-orange-400" />

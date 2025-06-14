@@ -19,6 +19,7 @@ const contentRoutes = require("./src/routes/content");
 const enrollmentRoutes = require("./src/routes/enrollment");
 const progressRoutes = require("./src/routes/progress");
 const achievementRoutes = require("./src/routes/achievementRoutes");
+const streakRoutes = require("./src/routes/streak");
 
 /**
  * Terminal Hacks - Terminal Hacks Learning Platform API
@@ -128,6 +129,7 @@ app.use("/api/content", contentRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/achievements", achievementRoutes);
+app.use("/api/streak", streakRoutes);
 
 // Swagger API Documentation
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(specs, swaggerOptions));
@@ -147,6 +149,7 @@ app.get("/api", (req, res) => {
       enrollments: "/api/enrollments",
       progress: "/api/progress",
       achievements: "/api/achievements",
+      streak: "/api/streak",
     },
   });
 });

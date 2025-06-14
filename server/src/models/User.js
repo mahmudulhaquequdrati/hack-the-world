@@ -136,6 +136,17 @@ const userSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
+      currentStreak: {
+        type: Number,
+        default: 0,
+      },
+      longestStreak: {
+        type: Number,
+        default: 0,
+      },
+      lastActivityDate: {
+        type: Date,
+      },
     },
 
     // Essential security fields
@@ -307,6 +318,80 @@ userSchema.methods.resetLoginAttempts = async function () {
       "security.lockUntil": 1,
     },
   });
+};
+
+// Streak management methods
+userSchema.methods.updateStreak = function () {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Start of day
+  
+  const lastActivity = this.stats.lastActivityDate;
+  
+  if (!lastActivity) {
+    // First activity ever
+    this.stats.currentStreak = 1;
+    this.stats.longestStreak = Math.max(this.stats.longestStreak, 1);
+    this.stats.lastActivityDate = today;
+  } else {
+    const lastActivityDate = new Date(lastActivity);
+    lastActivityDate.setHours(0, 0, 0, 0);
+    
+    const daysDiff = Math.floor((today - lastActivityDate) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff === 0) {
+      // Same day - no change to streak
+      return;
+    } else if (daysDiff === 1) {
+      // Consecutive day - increment streak
+      this.stats.currentStreak += 1;
+      this.stats.longestStreak = Math.max(this.stats.longestStreak, this.stats.currentStreak);
+      this.stats.lastActivityDate = today;
+    } else {
+      // Streak broken - reset to 1
+      this.stats.currentStreak = 1;
+      this.stats.lastActivityDate = today;
+    }
+  }
+  
+  return this.save({ validateBeforeSave: false });
+};
+
+userSchema.methods.getStreakStatus = function () {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const lastActivity = this.stats.lastActivityDate;
+  
+  if (!lastActivity) {
+    return {
+      currentStreak: 0,
+      longestStreak: this.stats.longestStreak,
+      streakStatus: 'start', // Ready to start streak
+      daysSinceLastActivity: null
+    };
+  }
+  
+  const lastActivityDate = new Date(lastActivity);
+  lastActivityDate.setHours(0, 0, 0, 0);
+  
+  const daysDiff = Math.floor((today - lastActivityDate) / (1000 * 60 * 60 * 24));
+  
+  let streakStatus;
+  if (daysDiff === 0) {
+    streakStatus = 'active'; // Activity today
+  } else if (daysDiff === 1) {
+    streakStatus = 'at_risk'; // No activity today, but can continue
+  } else {
+    streakStatus = 'broken'; // Streak is broken
+  }
+  
+  return {
+    currentStreak: this.stats.currentStreak,
+    longestStreak: this.stats.longestStreak,
+    streakStatus,
+    daysSinceLastActivity: daysDiff,
+    lastActivityDate: lastActivity
+  };
 };
 
 // Static methods for common queries

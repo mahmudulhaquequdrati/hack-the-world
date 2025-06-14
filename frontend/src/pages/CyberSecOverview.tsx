@@ -13,6 +13,7 @@ import {
   useGetCurrentUserEnrollmentsQuery,
   useGetPhasesWithModulesQuery,
 } from "@/features/api/apiSlice";
+import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
 import { Module, Phase } from "@/lib/types";
 import { useEffect, useMemo, useState } from "react";
@@ -45,6 +46,7 @@ const getColorsForModule = (color: string) => {
 
 const CyberSecOverview = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuthRTK();
 
   // Single comprehensive RTK Query hook
   const {
@@ -54,8 +56,11 @@ const CyberSecOverview = () => {
     refetch: refetchData,
   } = useGetPhasesWithModulesQuery();
 
-  // Get user enrollments
-  const { data: enrollmentResponse } = useGetCurrentUserEnrollmentsQuery();
+  // Get user enrollments only if authenticated
+  const { data: enrollmentResponse } = useGetCurrentUserEnrollmentsQuery(
+    undefined,
+    { skip: !isAuthenticated }
+  );
 
   const [enrollInModule] = useEnrollInModuleMutation();
 
@@ -242,7 +247,10 @@ const CyberSecOverview = () => {
       <div className="pt-20 px-6">
         <div className="mx-auto max-w-6xl">
           {/* Header */}
-          <OverviewHeader overallProgress={overallProgress} />
+          <OverviewHeader
+            overallProgress={overallProgress}
+            showProgress={isAuthenticated}
+          />
 
           {/* Phase Navigation */}
           <Tabs

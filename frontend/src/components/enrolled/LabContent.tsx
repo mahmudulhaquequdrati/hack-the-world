@@ -1,6 +1,5 @@
 import { EnrolledCourse } from "@/lib/types";
-import { ContentContainer } from "./ContentContainer";
-import { LoadingContent } from "./LoadingContent";
+import { InteractiveContent } from "./InteractiveContent";
 
 interface LabContentProps {
   course: EnrolledCourse;
@@ -15,21 +14,13 @@ export const LabContent = ({
   onOpenInNewTab,
   onClose,
 }: LabContentProps) => {
-  const lab = course.labs.find((lab) => lab.id === activeLab);
-
-  if (!lab) return null;
-
   return (
-    <ContentContainer
-      title={lab.name}
+    <InteractiveContent
+      items={course.labs}
+      activeItemId={activeLab}
       contentType="lab"
-      onOpenInNewTab={() => onOpenInNewTab(activeLab)}
+      onOpenInNewTab={onOpenInNewTab}
       onClose={onClose}
-    >
-      <LoadingContent
-        title="Lab Environment Loading..."
-        description={lab.description}
-      />
-    </ContentContainer>
+    />
   );
 };

@@ -1,6 +1,5 @@
 import { EnrolledCourse } from "@/lib/types";
-import { ContentContainer } from "./ContentContainer";
-import { LoadingContent } from "./LoadingContent";
+import { InteractiveContent } from "./InteractiveContent";
 
 interface GameContentProps {
   course: EnrolledCourse;
@@ -15,18 +14,13 @@ export const GameContent = ({
   onOpenInNewTab,
   onClose,
 }: GameContentProps) => {
-  const game = course.games.find((game) => game.id === activeGame);
-
-  if (!game) return null;
-
   return (
-    <ContentContainer
-      title={game.name}
+    <InteractiveContent
+      items={course.games}
+      activeItemId={activeGame}
       contentType="game"
-      onOpenInNewTab={() => onOpenInNewTab(activeGame)}
+      onOpenInNewTab={onOpenInNewTab}
       onClose={onClose}
-    >
-      <LoadingContent title="Game Loading..." description={game.description} />
-    </ContentContainer>
+    />
   );
 };

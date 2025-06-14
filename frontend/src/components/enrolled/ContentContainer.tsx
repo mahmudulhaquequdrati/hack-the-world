@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ContentContainerProps {
   title: string;
@@ -7,6 +8,9 @@ interface ContentContainerProps {
   onOpenInNewTab?: () => void;
   onClose?: () => void;
   children: React.ReactNode;
+  className?: string;
+  headerClassName?: string;
+  bodyClassName?: string;
 }
 
 export const ContentContainer = ({
@@ -15,10 +19,19 @@ export const ContentContainer = ({
   onOpenInNewTab,
   onClose,
   children,
+  className,
+  headerClassName,
+  bodyClassName,
 }: ContentContainerProps) => {
   return (
-    <div className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden mb-6">
-      <div className="p-4 border-b border-green-400/30 bg-green-400/10">
+    <div className={cn(
+      "bg-black/50 border border-green-400/30 rounded-lg overflow-hidden mb-6",
+      className
+    )}>
+      <div className={cn(
+        "p-4 border-b border-green-400/30 bg-green-400/10",
+        headerClassName
+      )}>
         <div className="flex items-center justify-between">
           <h3 className="text-green-400 font-semibold text-lg">{title}</h3>
           <div className="flex items-center space-x-2">
@@ -42,14 +55,15 @@ export const ContentContainer = ({
                 size="sm"
                 onClick={onClose}
                 className="text-green-400 hover:bg-green-400/10"
+                aria-label="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </Button>
             )}
           </div>
         </div>
       </div>
-      <div className="p-6">{children}</div>
+      <div className={cn("p-6", bodyClassName)}>{children}</div>
     </div>
   );
 };

@@ -50,26 +50,40 @@ const achievementSchema = new mongoose.Schema(
       },
       target: {
         type: Number,
-        required: function() {
-          return this.requirements.type === "count" || this.requirements.type === "progress";
+        required: function () {
+          return (
+            this.requirements.type === "count" ||
+            this.requirements.type === "progress"
+          );
         },
         min: [1, "Target must be at least 1"],
       },
       resource: {
         type: String,
-        required: function() {
-          return this.requirements.type === "count" || this.requirements.type === "progress";
+        required: function () {
+          return (
+            this.requirements.type === "count" ||
+            this.requirements.type === "progress"
+          );
         },
-        enum: ["modules_completed", "labs_completed", "games_completed", "xp_earned", "enrollments_created"],
+        enum: [
+          "modules_completed",
+          "labs_completed",
+          "games_completed",
+          "xp_earned",
+          "enrollments_created",
+        ],
       },
-      conditions: [{
-        field: String,
-        operator: {
-          type: String,
-          enum: [">=", "<=", "==", "!=", ">", "<"],
+      conditions: [
+        {
+          field: String,
+          operator: {
+            type: String,
+            enum: [">=", "<=", "==", "!=", ">", "<"],
+          },
+          value: mongoose.Schema.Types.Mixed,
         },
-        value: mongoose.Schema.Types.Mixed,
-      }],
+      ],
     },
 
     // Rewards
@@ -154,18 +168,23 @@ const achievementSchema = new mongoose.Schema(
 
 // Indexes for performance
 achievementSchema.index({ category: 1, isActive: 1 });
-achievementSchema.index({ slug: 1 });
 achievementSchema.index({ isActive: 1, isHidden: 1 });
 achievementSchema.index({ category: 1, order: 1 });
 achievementSchema.index({ difficulty: 1 });
 
 // Static methods
 achievementSchema.statics.findByCategory = function (category) {
-  return this.find({ category, isActive: true }).sort({ order: 1, createdAt: 1 });
+  return this.find({ category, isActive: true }).sort({
+    order: 1,
+    createdAt: 1,
+  });
 };
 
 achievementSchema.statics.findActive = function () {
-  return this.find({ isActive: true, isHidden: false }).sort({ category: 1, order: 1 });
+  return this.find({ isActive: true, isHidden: false }).sort({
+    category: 1,
+    order: 1,
+  });
 };
 
 achievementSchema.statics.findBySlug = function (slug) {

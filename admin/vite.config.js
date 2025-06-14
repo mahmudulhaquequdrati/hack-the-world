@@ -9,13 +9,13 @@ export default defineConfig({
     port: 5174,
     host: "localhost",
     cors: true,
-    proxy: {
-      "/api": {
-        target: "http://localhost:5001",
-        changeOrigin: true,
-        secure: false,
-      },
-    },
+    // proxy: {
+    //   "/api": {
+    //     target: "http://localhost:5001",
+    //     changeOrigin: true,
+    //     secure: false,
+    //   },
+    // },
   },
   test: {
     globals: true,

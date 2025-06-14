@@ -72,6 +72,7 @@ const corsOptions = {
     const allowedOrigins = [
       process.env.CLIENT_URL || "http://localhost:5173", // Frontend app
       process.env.ADMIN_URL || "http://localhost:5174", // Admin panel
+      "http://localhost:5175", // API
       "http://localhost:5001", // Same-origin requests
     ];
 

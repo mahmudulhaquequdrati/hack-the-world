@@ -1,67 +1,355 @@
 @import "tailwindcss";
 
-@theme {
-  --color-cyber-green: #00ff00;
-  --color-cyber-green-dark: #00cc00;
-  --color-cyber-green-light: #33ff33;
-  --color-terminal-bg: #0a0a0a;
-  --color-terminal-border: #333333;
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Cybersecurity theme base styles */
+:root {
+  --radius: 0.375rem;
+  --background: oklch(0.05 0 0);
+  --foreground: oklch(0.8 0.15 150);
+  --card: oklch(0.08 0 0);
+  --card-foreground: oklch(0.8 0.15 150);
+  --popover: oklch(0.08 0 0);
+  --popover-foreground: oklch(0.8 0.15 150);
+  --primary: oklch(0.7 0.2 150);
+  --primary-foreground: oklch(0.05 0 0);
+  --secondary: oklch(0.15 0 0);
+  --secondary-foreground: oklch(0.8 0.15 150);
+  --muted: oklch(0.12 0 0);
+  --muted-foreground: oklch(0.5 0.1 150);
+  --accent: oklch(0.15 0 0);
+  --accent-foreground: oklch(0.8 0.15 150);
+  --destructive: oklch(0.6 0.2 0);
+  --border: oklch(0.8 0.15 150);
+  --input: oklch(0.12 0 0);
+  --ring: oklch(0.7 0.2 150);
+  --chart-1: oklch(0.7 0.2 150);
+  --chart-2: oklch(0.6 0.2 200);
+  --chart-3: oklch(0.5 0.2 250);
+  --chart-4: oklch(0.8 0.2 100);
+  --chart-5: oklch(0.65 0.2 300);
+  --sidebar: oklch(0.08 0 0);
+  --sidebar-foreground: oklch(0.8 0.15 150);
+  --sidebar-primary: oklch(0.7 0.2 150);
+  --sidebar-primary-foreground: oklch(0.05 0 0);
+  --sidebar-accent: oklch(0.15 0 0);
+  --sidebar-accent-foreground: oklch(0.8 0.15 150);
+  --sidebar-border: oklch(0.2 0.05 150);
+  --sidebar-ring: oklch(0.7 0.2 150);
+}
+
+.dark {
+  --background: oklch(0.05 0 0);
+  --foreground: oklch(0.8 0.15 150);
+  --card: oklch(0.08 0 0);
+  --card-foreground: oklch(0.8 0.15 150);
+  --popover: oklch(0.08 0 0);
+  --popover-foreground: oklch(0.8 0.15 150);
+  --primary: oklch(0.7 0.2 150);
+  --primary-foreground: oklch(0.05 0 0);
+  --secondary: oklch(0.15 0 0);
+  --secondary-foreground: oklch(0.8 0.15 150);
+  --muted: oklch(0.12 0 0);
+  --muted-foreground: oklch(0.5 0.1 150);
+  --accent: oklch(0.15 0 0);
+  --accent-foreground: oklch(0.8 0.15 150);
+  --destructive: oklch(0.6 0.2 0);
+  --border: oklch(0.8 0.15 150);
+  --input: oklch(0.5 0.1 150);
+  --ring: oklch(0.7 0.2 150);
+  --chart-1: oklch(0.7 0.2 150);
+  --chart-2: oklch(0.6 0.2 200);
+  --chart-3: oklch(0.5 0.2 250);
+  --chart-4: oklch(0.8 0.2 100);
+  --chart-5: oklch(0.65 0.2 300);
+  --sidebar: oklch(0.08 0 0);
+  --sidebar-foreground: oklch(0.8 0.15 150);
+  --sidebar-primary: oklch(0.7 0.2 150);
+  --sidebar-primary-foreground: oklch(0.05 0 0);
+  --sidebar-accent: oklch(0.15 0 0);
+  --sidebar-accent-foreground: oklch(0.8 0.15 150);
+  --sidebar-border: oklch(0.2 0.05 150);
+  --sidebar-ring: oklch(0.7 0.2 150);
+}
+
 @layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
   body {
-    @apply bg-gray-900 text-green-400 font-mono;
+    @apply bg-background text-foreground font-mono;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply text-cyber-green;
+  /* Fix autofill background to maintain cybersecurity theme */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px oklch(0.12 0 0) inset !important;
+    -webkit-text-fill-color: oklch(0.8 0.15 150) !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  /* For dark mode autofill */
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px oklch(0.12 0 0) inset !important;
+    -webkit-text-fill-color: oklch(0.8 0.15 150) !important;
+  }
+
+  /* Additional autofill fix for different browsers */
+  input:-moz-autofill {
+    background-color: oklch(0.12 0 0) !important;
+    color: oklch(0.8 0.15 150) !important;
+  }
+
+  /* Enhanced focus ring for autofill that works consistently */
+  input:-webkit-autofill:focus-visible {
+    outline: 2px solid oklch(0.7 0.2 150) !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Fallback focus ring for all inputs to ensure visibility */
+  input:focus-visible {
+    outline: 2px solid oklch(0.7 0.2 150);
+    outline-offset: 2px;
+  }
+
+  /* Override default focus styles for consistency */
+  input:focus {
+    outline: 2px solid oklch(0.7 0.2 150);
+    outline-offset: 2px;
+  }
+
+  /* Input cursor styling for cybersecurity theme */
+  input,
+  textarea {
+    caret-color: oklch(0.7 0.2 150);
+    cursor: text;
+  }
+
+  /* Ensure cursor is visible and themed */
+  input:focus,
+  textarea:focus {
+    caret-color: oklch(0.7 0.2 150);
+  }
+
+  /* For WebKit browsers - additional cursor styling */
+  input::-webkit-input-placeholder,
+  textarea::-webkit-input-placeholder {
+    color: oklch(0.5 0.1 150);
+  }
+
+  /* Ensure text selection is visible */
+  input::selection,
+  textarea::selection {
+    background-color: oklch(0.7 0.2 150 / 0.3);
+    color: oklch(0.9 0.15 150);
+  }
+
+  /* Force cursor visibility for all input states */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea {
+    caret-color: oklch(0.7 0.2 150) !important;
+    cursor: text !important;
+  }
+
+  /* Ensure cursor remains visible even when clicking in already focused input */
+  input:active,
+  textarea:active {
+    caret-color: oklch(0.7 0.2 150) !important;
+  }
+
+  /* Override any potential cursor hiding */
+  input:not(:disabled),
+  textarea:not(:disabled) {
+    cursor: text !important;
+  }
+
+  /* Line clamp utilities for responsive text truncation */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
 }
 
 /* Custom components */
 @layer components {
   .btn-primary {
-    @apply bg-cyber-green text-black px-4 py-2 rounded-md font-medium hover:bg-green-400 transition-colors duration-200 flex items-center;
+    @apply bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-all duration-200 flex items-center shadow-sm hover:shadow-md;
   }
 
   .btn-secondary {
-    @apply bg-gray-700 text-cyber-green px-4 py-2 rounded border border-cyber-green hover:bg-gray-600 transition-colors;
+    @apply bg-secondary text-secondary-foreground px-4 py-2 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-all duration-200;
   }
 
   .input-field {
-    @apply bg-gray-800 border border-gray-600 text-green-400 px-3 py-2 rounded focus:outline-0 focus:border-cyber-green;
+    @apply bg-input border border-border text-foreground px-3 py-2 rounded-lg focus:outline-0 focus:ring-2 focus:ring-ring focus:border-ring placeholder:text-muted-foreground;
   }
 
   .card {
-    @apply bg-gray-800 border border-gray-700 rounded-lg p-6 shadow-lg;
+    @apply bg-card border border-border/50 rounded-lg p-6 shadow-sm backdrop-blur-sm;
   }
 
   .terminal-window {
-    @apply bg-terminal-bg border-2 border-terminal-border rounded-lg p-4 font-mono text-green-400;
+    @apply bg-card border border-border rounded-lg p-4 font-mono text-foreground shadow-sm;
   }
 }
 
-/* Custom cybersecurity theme styles */
-.bg-cyber-green {
-  background-color: #00ff00;
+/* Matrix Rain Animation */
+@keyframes matrix-rain {
+  0% {
+    transform: translateY(-100vh);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
 }
 
-.text-cyber-green {
-  color: #00ff00;
+.matrix-rain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
 }
 
-.border-cyber-green {
-  border-color: #00ff00;
+.matrix-column {
+  position: absolute;
+  top: -100vh;
+  color: oklch(0.7 0.2 150);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  line-height: 1.2;
+  animation: matrix-rain linear infinite;
+  opacity: 0.3;
 }
 
-.ring-cyber-green {
-  --tw-ring-color: #00ff00;
+/* Terminal Cursor */
+@keyframes cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.terminal-cursor {
+  animation: cursor-blink 1s infinite;
+  color: oklch(0.7 0.2 150);
+}
+
+/* Glitch Effect */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+.glitch {
+  animation: glitch 0.3s infinite;
+}
+
+/* Scanlines */
+.scanlines::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(transparent 50%, rgba(0, 255, 65, 0.03) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Enhanced animations for admin panel */
@@ -103,36 +391,6 @@
   }
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
-@keyframes glow {
-  0%,
-  100% {
-    box-shadow: 0 0 5px currentColor;
-  }
-  50% {
-    box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
-  }
-}
-
-@keyframes bounce-subtle {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-2px);
-  }
-}
-
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
 }
@@ -149,27 +407,24 @@
   animation: progressFill 1s ease-out forwards;
 }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
-}
-
-.animate-bounce-subtle {
-  animation: bounce-subtle 1s ease-in-out infinite;
+/* Progress Bar */
+.progress-bar {
+  background: linear-gradient(90deg, oklch(0.7 0.2 150), oklch(0.6 0.2 150));
+  box-shadow: 0 0 10px oklch(0.7 0.2 150 / 0.5);
 }
 
 /* Enhanced progress bar styles */
 .progress-bar-container {
   position: relative;
   overflow: hidden;
+  background: oklch(0.12 0 0);
+  border-radius: 0.375rem;
 }
 
 .progress-bar-fill {
   transition: width 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
   position: relative;
+  background: linear-gradient(90deg, oklch(0.7 0.2 150), oklch(0.6 0.2 150));
 }
 
 .progress-bar-glow {
@@ -178,7 +433,7 @@
   right: 0;
   bottom: 0;
   width: 20px;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3));
+  background: linear-gradient(to right, transparent, oklch(0.9 0.15 150 / 0.3));
   animation: shimmer 2s infinite;
 }
 
@@ -199,19 +454,19 @@
 }
 
 .status-indicator.status-active::before {
-  background-color: #10b981;
+  background-color: oklch(0.7 0.2 150);
 }
 
 .status-indicator.status-completed::before {
-  background-color: #3b82f6;
+  background-color: oklch(0.6 0.2 200);
 }
 
 .status-indicator.status-paused::before {
-  background-color: #f59e0b;
+  background-color: oklch(0.65 0.2 80);
 }
 
 .status-indicator.status-dropped::before {
-  background-color: #ef4444;
+  background-color: oklch(0.6 0.2 0);
 }
 
 /* Progress ring animation */
@@ -232,12 +487,23 @@
   stroke-dasharray: 251.2;
   stroke-dashoffset: 251.2;
   animation: drawCircle 1.5s ease-out forwards;
+  stroke: oklch(0.7 0.2 150);
 }
 
-/* Line clamp utility */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: oklch(0.08 0 0);
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.7 0.2 150);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.6 0.2 150);
 }

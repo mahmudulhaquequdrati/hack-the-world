@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import useProgressTracking from "@/hooks/useProgressTracking";
-import { getGameData, getGamesByModule } from "@/lib/appData";
-import { GameData } from "@/lib/types";
+import { useGetContentWithModuleAndProgressQuery } from "@/features/api/apiSlice";
 import {
   ArrowLeft,
   Network,
@@ -28,83 +27,61 @@ const GamePage = () => {
 
   // Progress tracking
   const progressTracking = useProgressTracking();
-  const contentStartedRef = useRef(false);
 
-  // Get game data from centralized system
-  const getGameDataFromCentral = (): GameData => {
-    if (!courseId || !gameId) {
-      return {
-        name: "Cybersecurity Game",
-        description: "Interactive cybersecurity challenge",
-        type: "Challenge",
-        maxPoints: 200,
-        objectives: ["Complete game objectives"],
-      };
+  // Fetch real game data from API using the content ID
+  const { data: gameData, isLoading: gameLoading, error: gameError } = useGetContentWithModuleAndProgressQuery(
+    gameId || "",
+    {
+      skip: !gameId
     }
+  );
 
-    // First try direct lookup
-    let gameData = getGameData(courseId, gameId);
-
-    // If not found, try to find by matching name converted to URL-friendly ID
-    if (!gameData) {
-      const gamesForModule = getGamesByModule(courseId);
-      for (const [, game] of Object.entries(gamesForModule)) {
-        const gameUrlId = game.name
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "");
-        if (gameUrlId === gameId) {
-          gameData = game;
-          break;
-        }
-      }
-    }
-
-    if (gameData) {
-      return gameData;
-    }
-
-    // Fallback data if game not found
-    return {
-      name: "Cybersecurity Game",
-      description: "Interactive cybersecurity challenge",
-      type: "Challenge",
-      maxPoints: 200,
-      objectives: ["Complete game objectives"],
-    };
+  // Transform API data to match expected format
+  const game = gameData?.success ? {
+    name: gameData.data.content.title,
+    description: gameData.data.content.description || "Interactive cybersecurity challenge",
+    type: "Challenge", // Default type, could be enhanced with content metadata
+    maxPoints: gameData.data.progress.maxScore || 200,
+    objectives: ["Complete the cybersecurity challenge", "Achieve high score", "Learn security concepts"],
+    timeLimit: gameData.data.content.duration ? `${Math.ceil(gameData.data.content.duration / 60)} min` : undefined
+  } : {
+    name: "Cybersecurity Game",
+    description: "Interactive cybersecurity challenge",
+    type: "Challenge",
+    maxPoints: 200,
+    objectives: ["Complete game objectives"],
   };
 
-  const game = getGameDataFromCentral();
-
-  // Use the gameId from URL as the MongoDB content ID
+  // Use the gameId from URL as the MongoDB content ID (it's already the real content ID now)
   const contentId = gameId || "";
+  
+  // Get current score from API data
+  const currentScore = gameData?.data?.progress?.score || 0;
+  const progressPercentage = gameData?.data?.progress?.progressPercentage || 0;
 
-  // Auto-start content tracking when game loads
+  // Initialize score from API data and timer based on game's timeLimit
   useEffect(() => {
-    if (contentId && !contentStartedRef.current) {
-      contentStartedRef.current = true;
-      progressTracking.startContent(contentId);
+    if (gameData?.data?.progress?.score) {
+      setScore(gameData.data.progress.score);
     }
-  }, [contentId, progressTracking]);
-
-  // Initialize timer based on game's timeLimit
-  useEffect(() => {
     if (game.timeLimit) {
       const minutes = parseInt(game.timeLimit.split(" ")[0]);
       setTimeRemaining(minutes * 60);
     }
-  }, [game.timeLimit]);
+  }, [game.timeLimit, gameData]);
 
   const getGameTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
       case "challenge":
-        return "text-red-400 bg-red-400/20";
+        return "text-red-400 bg-red-400/20 border-red-400/40";
       case "simulation":
-        return "text-blue-400 bg-blue-400/20";
+        return "text-blue-400 bg-blue-400/20 border-blue-400/40";
       case "quiz":
-        return "text-green-400 bg-green-400/20";
+        return "text-green-400 bg-green-400/20 border-green-400/40";
+      case "puzzle":
+        return "text-purple-400 bg-purple-400/20 border-purple-400/40";
       default:
-        return "text-purple-400 bg-purple-400/20";
+        return "text-cyan-400 bg-cyan-400/20 border-cyan-400/40";
     }
   };
 
@@ -132,29 +109,70 @@ const GamePage = () => {
 
   const handleGameComplete = async () => {
     if (contentId) {
-      await progressTracking.completeLabGame(contentId, score, game.maxPoints);
+      await progressTracking.handleCompleteContent(contentId, score, game.maxPoints);
     }
     // Additional game completion logic here
   };
 
+  // Loading state
+  if (gameLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-purple-950/20 to-black text-cyan-400 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-pulse text-cyan-400 font-mono text-xl mb-2">
+            Loading game...
+          </div>
+          <div className="text-cyan-400/60 font-mono text-sm">
+            Initializing game environment
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (gameError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black text-red-400 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 font-mono text-xl mb-2">
+            Error loading game
+          </div>
+          <div className="text-red-400/60 font-mono text-sm mb-4">
+            {gameError.toString()}
+          </div>
+          <Button 
+            onClick={() => navigate(`/learn/${courseId}`)}
+            className="bg-red-400 text-black hover:bg-red-300"
+          >
+            Back to Course
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-black text-green-400 relative">
-      <div className="pt-5 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-purple-950/20 to-black text-cyan-400 relative overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0iIzAwRkZGRiIgZmlsbC1vcGFjaXR5PSIwLjA1Ii8+Cjwvc3ZnPgo=')] opacity-30 animate-pulse"></div>
+      
+      <div className="relative z-10 pt-5 px-6">
         <div className="max-w-7xl mx-auto">
-          {/* Terminal-style Header */}
-          <div className="bg-black border border-green-400/50 rounded-lg mb-6 overflow-hidden">
-            {/* <div className="bg-green-400/10 border-b border-green-400/30 px-4 py-2">
+          {/* Retro Game Header */}
+          <div className="bg-gradient-to-r from-purple-900/80 to-pink-900/80 border-2 border-cyan-400/50 rounded-lg mb-6 overflow-hidden shadow-lg shadow-cyan-400/20">
+            <div className="bg-gradient-to-r from-cyan-900/30 to-purple-900/30 border-b border-cyan-400/30 px-4 py-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
                 </div>
-                <div className="text-green-400/60 text-xs font-mono">
-                  game-arena/{courseId}/{gameId}
+                <div className="text-cyan-400/80 text-xs font-mono">
+                  ARCADE://game-arena/{courseId}/{gameId}
                 </div>
               </div>
-            </div> */}
+            </div>
 
             <div className="p-4">
               <div className="flex items-center justify-between">
@@ -162,20 +180,20 @@ const GamePage = () => {
                   <Button
                     variant="ghost"
                     onClick={() => navigate(`/learn/${courseId}`)}
-                    className="text-green-400 hover:bg-green-400/10 border border-green-400/30 font-mono text-xs"
+                    className="text-cyan-400 hover:bg-cyan-400/10 border border-cyan-400/30 font-mono text-xs hover:scale-105 transition-all"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    BACK_TO_COURSE
+                    EXIT_GAME
                   </Button>
                 </div>
-                <div className="flex items-center space-x-4 bg-green-400/10 rounded-lg p-2">
-                  <div className="flex items-center space-x-2 text-green-400 font-mono text-sm">
-                    <span className="text-green-400/60">🎮</span>
-                    <span className="text-green-400/60">games</span>
-                    <span className="text-green-400/60">/</span>
-                    <span className="text-green-400">{courseId}</span>
-                    <span className="text-green-400/60">/</span>
-                    <span className="text-green-400 animate-pulse">
+                <div className="flex items-center space-x-4 bg-gradient-to-r from-cyan-400/10 to-purple-400/10 rounded-lg p-2 border border-cyan-400/20">
+                  <div className="flex items-center space-x-2 text-cyan-400 font-mono text-sm">
+                    <span className="text-cyan-400/60">🎮</span>
+                    <span className="text-cyan-400/60">games</span>
+                    <span className="text-cyan-400/60">/</span>
+                    <span className="text-cyan-400">{courseId}</span>
+                    <span className="text-cyan-400/60">/</span>
+                    <span className="text-cyan-400 animate-pulse font-bold">
                       {gameId}
                     </span>
                   </div>
@@ -184,51 +202,59 @@ const GamePage = () => {
             </div>
           </div>
 
-          {/* Game Header */}
-          <div className="bg-black/50 border border-green-400/30 rounded-lg p-6 mb-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-3xl font-bold text-green-400 mb-2 font-mono">
-                  {game.name}
-                </h1>
-                <p className="text-green-300/80 mb-4">{game.description}</p>
-                <div className="flex items-center space-x-4">
-                  <Badge className={getGameTypeColor(game.type)}>
-                    {game.type}
-                  </Badge>
-                  {game.timeLimit && (
-                    <div className="flex items-center space-x-1 text-green-300/70">
-                      <Target className="w-4 h-4" />
-                      <span className="text-sm font-mono">
-                        {game.timeLimit}
-                      </span>
+          {/* Retro Game Header */}
+          <div className="bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-cyan-400/40 rounded-lg p-6 mb-6 relative overflow-hidden">
+            {/* Scanlines effect */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/5 to-transparent bg-[length:100%_4px] opacity-30"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2 font-mono">
+                    {game.name}
+                  </h1>
+                  <p className="text-gray-300 mb-4 text-lg">{game.description}</p>
+                  <div className="flex items-center space-x-4">
+                    <Badge className={`${getGameTypeColor(game.type)} border-2 font-mono font-bold`}>
+                      {game.type.toUpperCase()}
+                    </Badge>
+                    {game.timeLimit && (
+                      <div className="flex items-center space-x-1 text-cyan-300 bg-cyan-400/10 px-3 py-1 rounded border border-cyan-400/30">
+                        <Target className="w-4 h-4" />
+                        <span className="text-sm font-mono font-bold">
+                          {game.timeLimit}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="text-right bg-gradient-to-br from-cyan-900/40 to-purple-900/40 p-4 rounded-lg border border-cyan-400/30">
+                  <div className="text-3xl font-bold text-cyan-400 font-mono">
+                    {score} / {game.maxPoints}
+                  </div>
+                  <div className="text-sm text-cyan-300/70 font-mono">SCORE</div>
+                  {gameStarted && game.timeLimit && (
+                    <div className="mt-2">
+                      <div className="text-2xl font-bold text-yellow-400 font-mono animate-pulse">
+                        {formatTime(timeRemaining)}
+                      </div>
+                      <div className="text-xs text-cyan-300/70 font-mono">TIME LEFT</div>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="text-right">
-                <div className="text-2xl font-bold text-green-400 font-mono">
-                  {score} / {game.maxPoints}
+              {/* Enhanced Score Progress Bar */}
+              <div className="bg-black border-2 border-cyan-400/30 rounded-lg h-4 overflow-hidden relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent animate-pulse"></div>
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 transition-all duration-500 relative"
+                  style={{ width: `${(score / game.maxPoints) * 100}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                 </div>
-                <div className="text-sm text-green-300/70">Points</div>
-                {gameStarted && game.timeLimit && (
-                  <div className="mt-2">
-                    <div className="text-lg font-bold text-yellow-400 font-mono">
-                      {formatTime(timeRemaining)}
-                    </div>
-                    <div className="text-xs text-green-300/70">Time Left</div>
-                  </div>
-                )}
               </div>
-            </div>
-
-            {/* Score Progress Bar */}
-            <div className="bg-black border border-green-400/30 rounded h-2 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-green-400/60 to-yellow-400/60 transition-all duration-500"
-                style={{ width: `${(score / game.maxPoints) * 100}%` }}
-              />
             </div>
           </div>
 
@@ -236,11 +262,12 @@ const GamePage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Game Area */}
             <div className="lg:col-span-2">
-              <Card className="bg-black/50 border-green-400/30">
-                <CardHeader>
-                  <CardTitle className="text-green-400 flex items-center">
-                    <Trophy className="w-5 h-5 mr-2" />
-                    Game Arena
+              <Card className="bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-cyan-400/40 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/5 to-transparent bg-[length:100%_4px] opacity-20"></div>
+                <CardHeader className="relative z-10 bg-gradient-to-r from-cyan-900/40 to-purple-900/40 border-b border-cyan-400/30">
+                  <CardTitle className="text-cyan-400 flex items-center font-mono text-xl">
+                    <Trophy className="w-6 h-6 mr-2 text-yellow-400" />
+                    GAME_ARENA.EXE
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

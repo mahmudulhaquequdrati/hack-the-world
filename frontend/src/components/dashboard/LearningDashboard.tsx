@@ -1,5 +1,6 @@
 import { Module } from "@/lib/types";
 import { Flame, Star, Terminal, Trophy, Zap } from "lucide-react";
+import { useGetUserAchievementStatsQuery } from "@/features/api/apiSlice";
 
 interface LearningDashboardProps {
   enrolledModules: Module[];
@@ -106,6 +107,9 @@ const ProgressStatsCard = ({
 export const LearningDashboard = ({
   enrolledModules,
 }: LearningDashboardProps) => {
+  // Fetch real user achievement stats
+  const { data: achievementStats } = useGetUserAchievementStatsQuery();
+
   const totalProgress =
     enrolledModules.length > 0
       ? Math.round(
@@ -121,13 +125,14 @@ export const LearningDashboard = ({
     (module) => module.progress > 0 && !module.completed
   ).length;
 
-  // Calculate streak and achievements
-  const currentStreak = 7; // Mock data
-  const totalXP = enrolledModules.reduce(
-    (sum, module) => sum + module.progress * 10,
-    0
-  );
-  const nextMilestone = 1000;
+  // Use real data from API or fallback to calculated values
+  const currentStreak = 7; // TODO: Add streak tracking to backend API
+  const totalXP = achievementStats?.success 
+    ? achievementStats.data.xp.current 
+    : enrolledModules.reduce((sum, module) => sum + module.progress * 10, 0);
+  const nextMilestone = achievementStats?.success 
+    ? achievementStats.data.xp.nextLevelXP 
+    : 1000;
 
   return (
     <div className="space-y-8">

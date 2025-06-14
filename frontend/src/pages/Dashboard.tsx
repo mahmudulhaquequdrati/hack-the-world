@@ -5,7 +5,7 @@ import {
 } from "@/components/dashboard";
 import {
   useGetCurrentUserEnrollmentsQuery,
-  useGetModulesQuery,
+  useGetPhasesWithModulesQuery,
 } from "@/features/api/apiSlice";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { ACHIEVEMENTS_DATA } from "@/lib/appData";
@@ -19,13 +19,28 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("progress");
   const { user } = useAuthRTK();
 
-  // Fetch real data from API
+  // Fetch real data from API with enriched module content statistics
   const { data: enrollmentsData, isLoading: enrollmentsLoading } =
     useGetCurrentUserEnrollmentsQuery(undefined, {
       skip: !user,
     });
 
-  const { data: allModules, isLoading: modulesLoading } = useGetModulesQuery();
+  const { data: phasesWithModules, isLoading: modulesLoading } = useGetPhasesWithModulesQuery();
+  
+  // Extract all modules from phases with enhanced content statistics
+  const allModules = React.useMemo(() => {
+    if (!phasesWithModules) return [];
+    return phasesWithModules.flatMap(phase => 
+      (phase.modules || []).map(module => ({
+        ...module,
+        // Add enhanced content statistics like in CyberSecOverview
+        labs: module.content?.labs?.length || 0,
+        games: module.content?.games?.length || 0,
+        videos: module.content?.videos?.length || 0,
+        assets: module.content?.documents?.length || 0,
+      }))
+    );
+  }, [phasesWithModules]);
 
   // Use centralized data for achievements (keeping mock data as requested)
   const achievements = ACHIEVEMENTS_DATA;
@@ -54,6 +69,7 @@ const Dashboard = () => {
   // Helper functions for dashboard tabs
   const getAllModulesHelper = () => allModules || [];
   const getEnrolledModulesHelper = () => enrolledModules;
+  const getPhasesHelper = () => phasesWithModules || [];
 
   const handleModuleClick = (module: Module) => {
     if (module.enrolled) {
@@ -95,6 +111,7 @@ const Dashboard = () => {
           onModuleClick={handleModuleClick}
           getAllModules={getAllModulesHelper}
           getEnrolledModules={getEnrolledModulesHelper}
+          getPhases={getPhasesHelper}
           achievements={achievements}
         />
       </div>

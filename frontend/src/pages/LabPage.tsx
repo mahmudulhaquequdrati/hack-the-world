@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 import useProgressTracking from "@/hooks/useProgressTracking";
-import { getLabData, getLabsByModule } from "@/lib/appData";
-import { LabData } from "@/lib/types";
+import { useGetContentWithModuleAndProgressQuery } from "@/features/api/apiSlice";
 import {
   ArrowLeft,
   CheckCircle,
@@ -33,66 +32,57 @@ const LabPage = () => {
 
   // Progress tracking
   const progressTracking = useProgressTracking();
-  const contentStartedRef = useRef(false);
 
-  // Get lab data from centralized system
-  const getLabDataFromCentral = (): LabData => {
-    if (!courseId || !labId) {
-      return {
-        name: "Lab Environment",
-        description: "Interactive cybersecurity lab",
-        difficulty: "Intermediate",
-        duration: "60 min",
-        objectives: ["Complete lab objectives"],
-        steps: [],
-      };
+  // Fetch real lab data from API using the content ID
+  const { data: labData, isLoading: labLoading, error: labError } = useGetContentWithModuleAndProgressQuery(
+    labId || "",
+    {
+      skip: !labId
     }
+  );
 
-    // First try direct lookup
-    let labData = getLabData(courseId, labId);
-
-    // If not found, try to find by matching name converted to URL-friendly ID
-    if (!labData) {
-      const labsForModule = getLabsByModule(courseId);
-      for (const [, lab] of Object.entries(labsForModule)) {
-        const labUrlId = lab.name
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "");
-        if (labUrlId === labId) {
-          labData = lab;
-          break;
-        }
+  // Transform API data to match expected format
+  const lab = labData?.success ? {
+    name: labData.data.content.title,
+    description: labData.data.content.description || "Interactive cybersecurity lab",
+    difficulty: labData.data.module.difficulty,
+    duration: labData.data.content.duration ? `${Math.ceil(labData.data.content.duration / 60)} min` : "60 min",
+    objectives: ["Complete the lab exercises", "Practice security techniques", "Gain hands-on experience"],
+    steps: [
+      {
+        id: "step-1",
+        title: "Setup Environment",
+        description: "Initialize the lab environment and tools",
+        completed: false
+      },
+      {
+        id: "step-2", 
+        title: "Execute Lab Tasks",
+        description: "Complete the main lab objectives",
+        completed: false
+      },
+      {
+        id: "step-3",
+        title: "Document Results",
+        description: "Record findings and submit results",
+        completed: false
       }
-    }
-
-    if (labData) {
-      return labData;
-    }
-
-    // Fallback data if lab not found
-    return {
-      name: "Lab Environment",
-      description: "Interactive cybersecurity lab",
-      difficulty: "Intermediate",
-      duration: "60 min",
-      objectives: ["Complete lab objectives"],
-      steps: [],
-    };
+    ]
+  } : {
+    name: "Lab Environment",
+    description: "Interactive cybersecurity lab",
+    difficulty: "Intermediate", 
+    duration: "60 min",
+    objectives: ["Complete lab objectives"],
+    steps: [],
   };
 
-  const lab = getLabDataFromCentral();
-
-  // Use the labId from URL as the MongoDB content ID
+  // Use the labId from URL as the MongoDB content ID (it's already the real content ID now)
   const contentId = labId || "";
-
-  // Auto-start content tracking when lab loads
-  useEffect(() => {
-    if (contentId && !contentStartedRef.current) {
-      contentStartedRef.current = true;
-      progressTracking.startContent(contentId);
-    }
-  }, [contentId, progressTracking]);
+  
+  // Get current progress from API data
+  const currentProgress = labData?.data?.progress?.progressPercentage || 0;
+  const currentScore = labData?.data?.progress?.score || 0;
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
@@ -107,6 +97,17 @@ const LabPage = () => {
     }
   };
 
+  // Initialize progress from API data
+  useEffect(() => {
+    if (labData?.data?.progress) {
+      setLabProgress(labData.data.progress.progressPercentage);
+      // If lab was already completed, mark all steps as completed
+      if (labData.data.progress.status === 'completed') {
+        setCompletedSteps(lab.steps.map(step => step.id));
+      }
+    }
+  }, [labData, lab.steps]);
+
   const completeStep = (stepId: string) => {
     if (!completedSteps.includes(stepId)) {
       const newCompleted = [...completedSteps, stepId];
@@ -116,7 +117,7 @@ const LabPage = () => {
 
       // If lab is fully completed, mark it as complete with score
       if (newCompleted.length === lab.steps.length && contentId) {
-        progressTracking.completeLabGame(
+        progressTracking.handleCompleteContent(
           contentId,
           newCompleted.length,
           lab.steps.length
@@ -125,19 +126,65 @@ const LabPage = () => {
     }
   };
 
+  // Loading state
+  if (labLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-green-950/20 to-black text-green-400 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-pulse text-green-400 font-mono text-xl mb-2">
+            Loading lab environment...
+          </div>
+          <div className="text-green-400/60 font-mono text-sm">
+            Initializing laboratory
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (labError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black text-red-400 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 font-mono text-xl mb-2">
+            Error loading lab
+          </div>
+          <div className="text-red-400/60 font-mono text-sm mb-4">
+            {labError.toString()}
+          </div>
+          <Button 
+            onClick={() => navigate(`/learn/${courseId}`)}
+            className="bg-red-400 text-black hover:bg-red-300"
+          >
+            Back to Course
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-black text-green-400 relative">
-      <div className="pt-5 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-green-950/20 to-black text-green-400 relative overflow-hidden">
+      {/* Matrix-style background */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iOSIgeT0iOSIgd2lkdGg9IjIiIGhlaWdodD0iMiIgZmlsbD0iIzAwRkY0MSIgZmlsbC1vcGFjaXR5PSIwLjA1Ii8+Cjwvc3ZnPgo=')] opacity-20 animate-pulse"></div>
+      
+      <div className="relative z-10 pt-5 px-6">
         <div className="max-w-7xl mx-auto">
-          {/* Terminal-style Header */}
-          <div className="bg-black border border-green-400/50 rounded-lg mb-6 overflow-hidden">
-            {/* <div className="bg-green-400/10 border-b border-green-400/30 px-4 py-2">
+          {/* Retro Lab Header */}
+          <div className="bg-gradient-to-r from-green-900/80 to-cyan-900/80 border-2 border-green-400/50 rounded-lg mb-6 overflow-hidden shadow-lg shadow-green-400/20">
+            <div className="bg-gradient-to-r from-green-900/30 to-cyan-900/30 border-b border-green-400/30 px-4 py-2">
               <div className="flex items-center justify-between">
-                <div className="text-green-400/60 text-xs font-mono">
-                  lab-environment/{courseId}/{labId}
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                </div>
+                <div className="text-green-400/80 text-xs font-mono">
+                  LAB://environment/{courseId}/{labId}
                 </div>
               </div>
-            </div> */}
+            </div>
 
             <div className="p-4">
               <div className="flex items-center justify-between">
@@ -145,20 +192,20 @@ const LabPage = () => {
                   <Button
                     variant="ghost"
                     onClick={() => navigate(`/learn/${courseId}`)}
-                    className="text-green-400 hover:bg-green-400/10 border border-green-400/30 font-mono text-xs"
+                    className="text-green-400 hover:bg-green-400/10 border border-green-400/30 font-mono text-xs hover:scale-105 transition-all"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    BACK_TO_COURSE
+                    EXIT_LAB
                   </Button>
                 </div>
-                <div className="flex items-center space-x-4 bg-green-400/10 rounded-lg p-2">
+                <div className="flex items-center space-x-4 bg-gradient-to-r from-green-400/10 to-cyan-400/10 rounded-lg p-2 border border-green-400/20">
                   <div className="flex items-center space-x-2 text-green-400 font-mono text-sm">
                     <span className="text-green-400/60">🧪</span>
                     <span className="text-green-400/60">labs</span>
                     <span className="text-green-400/60">/</span>
                     <span className="text-green-400">{courseId}</span>
                     <span className="text-green-400/60">/</span>
-                    <span className="text-green-400 animate-pulse">
+                    <span className="text-green-400 animate-pulse font-bold">
                       {labId}
                     </span>
                   </div>
@@ -167,39 +214,57 @@ const LabPage = () => {
             </div>
           </div>
 
-          {/* Lab Header */}
-          <div className="bg-black/50 border border-green-400/30 rounded-lg p-6 mb-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-3xl font-bold text-green-400 mb-2 font-mono">
-                  {lab.name}
-                </h1>
-                <p className="text-green-300/80 mb-4">{lab.description}</p>
-                <div className="flex items-center space-x-4">
-                  <Badge className={getDifficultyColor(lab.difficulty)}>
-                    {lab.difficulty}
-                  </Badge>
-                  <div className="flex items-center space-x-1 text-green-300/70">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-sm font-mono">{lab.duration}</span>
+          {/* Retro Lab Header */}
+          <div className="bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-green-400/40 rounded-lg p-6 mb-6 relative overflow-hidden">
+            {/* Matrix scanlines effect */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-green-400/3 to-transparent bg-[length:100%_8px] opacity-30"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-green-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent mb-2 font-mono">
+                    {lab.name}
+                  </h1>
+                  <p className="text-gray-300 mb-4 text-lg">{lab.description}</p>
+                  <div className="flex items-center space-x-4">
+                    <Badge className={`${getDifficultyColor(lab.difficulty)} border-2 font-mono font-bold`}>
+                      {lab.difficulty.toUpperCase()}
+                    </Badge>
+                    <div className="flex items-center space-x-1 text-green-300 bg-green-400/10 px-3 py-1 rounded border border-green-400/30">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-sm font-mono font-bold">{lab.duration}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-right bg-gradient-to-br from-green-900/40 to-cyan-900/40 p-4 rounded-lg border border-green-400/30">
+                  <div className="text-3xl font-bold text-green-400 font-mono">
+                    {Math.round(labProgress)}%
+                  </div>
+                  <div className="text-sm text-green-300/70 font-mono">PROGRESS</div>
+                  <div className="mt-2">
+                    <div className="text-xs text-cyan-300 font-mono">
+                      LAB_STATUS:
+                    </div>
+                    <div className={`text-sm font-mono font-bold ${
+                      labProgress === 100 ? 'text-green-400 animate-pulse' : 'text-cyan-400'
+                    }`}>
+                      {labProgress === 100 ? 'COMPLETE' : 'IN_PROGRESS'}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="text-right">
-                <div className="text-2xl font-bold text-green-400 font-mono">
-                  {Math.round(labProgress)}%
+              {/* Enhanced Progress Bar */}
+              <div className="bg-black border-2 border-green-400/30 rounded-lg h-4 overflow-hidden relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-400/10 to-transparent animate-pulse"></div>
+                <div
+                  className="h-full bg-gradient-to-r from-green-400 via-cyan-500 to-blue-500 transition-all duration-500 relative"
+                  style={{ width: `${labProgress}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                 </div>
-                <div className="text-sm text-green-300/70">Complete</div>
               </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="bg-black border border-green-400/30 rounded h-2 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-green-400/60 to-green-300/60 transition-all duration-500"
-                style={{ width: `${labProgress}%` }}
-              />
             </div>
           </div>
 
@@ -207,11 +272,12 @@ const LabPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Lab Environment */}
             <div className="lg:col-span-2">
-              <Card className="bg-black/50 border-green-400/30">
-                <CardHeader>
-                  <CardTitle className="text-green-400 flex items-center">
-                    <Terminal className="w-5 h-5 mr-2" />
-                    Lab Environment
+              <Card className="bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-green-400/40 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-green-400/3 to-transparent bg-[length:100%_8px] opacity-30"></div>
+                <CardHeader className="relative z-10 bg-gradient-to-r from-green-900/40 to-cyan-900/40 border-b border-green-400/30">
+                  <CardTitle className="text-green-400 flex items-center font-mono text-xl">
+                    <Terminal className="w-6 h-6 mr-2 text-cyan-400" />
+                    LAB_ENVIRONMENT.SYS
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

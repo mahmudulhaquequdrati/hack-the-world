@@ -1,8 +1,18 @@
-import { getDifficultyColor, getPhaseColor, getPhaseIcon } from "@/lib";
+import { getDifficultyColor } from "@/lib";
 import { Module, Phase } from "@/lib/types";
-import { ChevronDown, ChevronRight, Target, Terminal } from "lucide-react";
-import { useState } from "react";
+import {
+  Beaker,
+  Clock,
+  Target,
+  Zap,
+  Shield,
+  Code,
+  Network,
+  Lock,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useGetContentTypeProgressQuery } from "@/features/api/apiSlice";
+import { useAuthRTK } from "@/hooks/useAuthRTK";
 
 interface DashboardLabsTabProps {
   phases: Phase[];
@@ -11,7 +21,7 @@ interface DashboardLabsTabProps {
 
 interface LabItem {
   id: string;
-  name: string;
+  title: string;
   description: string;
   difficulty: string;
   duration: string;
@@ -24,6 +34,10 @@ interface LabItem {
   phaseId: string;
   phaseTitle: string;
   moduleId: string;
+  type: string;
+  progressPercentage: number;
+  score?: number;
+  maxScore?: number;
 }
 
 export const DashboardLabsTab = ({
@@ -31,411 +45,288 @@ export const DashboardLabsTab = ({
   getModulesByPhase,
 }: DashboardLabsTabProps) => {
   const navigate = useNavigate();
-  const [expandedPhases, setExpandedPhases] = useState<string[]>(["beginner"]);
-  const [expandedModules, setExpandedModules] = useState<string[]>([]);
+  const { user } = useAuthRTK();
 
-  const togglePhase = (phaseId: string) => {
-    setExpandedPhases((prev) =>
-      prev.includes(phaseId)
-        ? prev.filter((id) => id !== phaseId)
-        : [...prev, phaseId]
-    );
-  };
-
-  const toggleModule = (moduleId: string) => {
-    setExpandedModules((prev) =>
-      prev.includes(moduleId)
-        ? prev.filter((id) => id !== moduleId)
-        : [...prev, moduleId]
-    );
-  };
+  // Fetch real labs data from API
+  const {
+    data: labsData,
+    isLoading: labsLoading,
+    error: labsError,
+  } = useGetContentTypeProgressQuery(
+    {
+      userId: user?.id || "",
+      contentType: "lab",
+    },
+    {
+      skip: !user?.id,
+    }
+  );
 
   const handleStartLab = (lab: LabItem) => {
-    // Navigate to dedicated lab route
-    const labId = lab.name
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
-    navigate(`/learn/${lab.moduleId}/lab/${labId}`);
+    // Navigate to dedicated lab route using the real content ID
+    navigate(`/learn/${lab.moduleId}/lab/${lab.id}`);
   };
 
-  // Generate lab items from enrolled modules, organized by module
-  const generateLabsFromModules = (): LabItem[] => {
-    const labs: LabItem[] = [];
+  // Transform real API data into LabItem format
+  const transformLabsData = (): LabItem[] => {
+    if (!labsData?.success || !labsData.data?.content) {
+      return [];
+    }
 
-    phases.forEach((phase) => {
-      const phaseModules = getModulesByPhase(phase.id, true); // Only enrolled modules
+    return labsData.data.content.map((labContent) => {
+      const module = labContent.module;
+      const progress = labContent.progress;
+      const isCompleted = progress?.status === "completed";
 
-      phaseModules.forEach((module) => {
-        const labCount = module.labs || module.content?.labs?.length || 0;
-        for (let i = 1; i <= labCount; i++) {
-          const isAvailable = module.progress > (i - 1) * (100 / labCount);
-          const isCompleted = module.completed && Math.random() > 0.3;
+      // Find the phase this module belongs to
+      const phase = phases.find((p) => p.id === module.phase) || phases[0];
 
-          labs.push({
-            id: `${module.id}-lab-${i}`,
-            name: `Lab ${i}: ${module.topics[i % module.topics.length]}`,
-            description: `Hands-on laboratory exercise focusing on ${
-              module.topics[Math.floor(Math.random() * module.topics.length)]
-            }. Practice real-world scenarios in a controlled environment.`,
-            difficulty: module.difficulty,
-            duration: `${Math.floor(Math.random() * 60) + 30} min`,
-            skills: module.topics.slice(0, 3),
-            moduleTitle: module.title,
-            moduleColor: module.color,
-            moduleBgColor: module.bgColor,
-            completed: isCompleted,
-            available: isAvailable,
-            phaseId: phase.id,
-            phaseTitle: phase.title,
-            moduleId: module.id,
-          });
-        }
-      });
+      // Calculate estimated duration from content duration (convert seconds to minutes)
+      const durationMinutes = labContent.duration
+        ? Math.ceil(labContent.duration / 60)
+        : 45;
+
+      return {
+        id: labContent.id,
+        title: labContent.title,
+        description:
+          labContent.description ||
+          `Hands-on laboratory exercise in ${module.title}. Practice real-world cybersecurity scenarios in a controlled environment.`,
+        difficulty: module.difficulty,
+        duration: `${durationMinutes} min`,
+        skills: ["Cybersecurity", "Hands-on Practice", module.title], // Default skills, could be enhanced with content metadata
+        moduleTitle: module.title,
+        moduleColor: "#00ff41", // Default green, could be enhanced with module data
+        moduleBgColor: "#001100", // Default dark green, could be enhanced
+        completed: isCompleted,
+        available: true,
+        phaseId: phase.id,
+        phaseTitle: phase.title,
+        moduleId: module.id,
+        type: "Lab Environment", // Default type, could be enhanced with content metadata
+        progressPercentage: progress?.progressPercentage || 0,
+        score: progress?.score || undefined,
+        maxScore: progress?.maxScore || undefined,
+      };
     });
-
-    return labs;
   };
 
-  const labs = generateLabsFromModules();
+  const labs = transformLabsData();
 
-  // Group labs by phase, then by module
-  const labsByPhase = phases.reduce((acc, phase) => {
-    const phaseModules = getModulesByPhase(phase.id, true);
-    if (phaseModules.length === 0) return acc;
+  const getLabIcon = (type: string) => {
+    switch (type) {
+      case "Web Security":
+        return <Shield className="w-5 h-5 text-green-400" />;
+      case "Network Analysis":
+        return <Network className="w-5 h-5 text-blue-400" />;
+      case "Penetration Testing":
+        return <Target className="w-5 h-5 text-red-400" />;
+      case "Forensics":
+        return <Code className="w-5 h-5 text-purple-400" />;
+      case "Social Engineering":
+        return <Lock className="w-5 h-5 text-orange-400" />;
+      default:
+        return <Beaker className="w-5 h-5 text-cyan-400" />;
+    }
+  };
 
-    acc[phase.id] = {
-      phase,
-      modules: phaseModules.reduce((moduleAcc, module) => {
-        const moduleLabs = labs.filter((lab) => lab.moduleId === module.id);
-        if (moduleLabs.length > 0) {
-          moduleAcc[module.id] = {
-            module,
-            labs: moduleLabs,
-          };
-        }
-        return moduleAcc;
-      }, {} as Record<string, { module: Module; labs: LabItem[] }>),
-    };
-    return acc;
-  }, {} as Record<string, { phase: Phase; modules: Record<string, { module: Module; labs: LabItem[] }> }>);
+  // Loading state
+  if (labsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-green-900/80 to-cyan-900/80 border-2 border-green-400/50 rounded-lg p-6">
+          <div className="text-center text-green-400 font-mono animate-pulse">
+            Loading labs data...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (labsError) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-red-900/80 to-red-800/80 border-2 border-red-400/50 rounded-lg p-6">
+          <div className="text-center text-red-400 font-mono">
+            Error loading labs: {labsError.toString()}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="bg-black/60 border border-green-400/30 rounded-lg p-6">
-        <div className="flex items-center space-x-2 mb-6">
-          <Terminal className="w-5 h-5 text-green-400" />
-          <span className="text-green-400 font-mono text-sm">
-            ~/labs$ find . -name "*.lab" -type f | grep enrolled | sort -k1,2
-          </span>
-        </div>
+      {/* Retro Header */}
+      <div className="bg-gradient-to-r from-green-900/80 to-cyan-900/80 border-2 border-green-400/50 rounded-lg p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iOSIgeT0iOSIgd2lkdGg9IjIiIGhlaWdodD0iMiIgZmlsbD0iIzAwRkY0MSIgZmlsbC1vcGFjaXR5PSIwLjEiLz4KPC9zdmc+')] opacity-20"></div>
 
-        <div className="text-center mb-8">
-          <h3 className="text-2xl font-bold text-green-400 font-mono mb-2">
-            HANDS-ON_LABORATORIES
-          </h3>
-          <p className="text-green-300/70 font-mono text-sm">
-            Organized by phases → modules → labs • {labs.length} total labs
-            available
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg shadow-green-400/25">
+                <Beaker className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent font-mono">
+                  LAB COMPLEX
+                </h1>
+                <p className="text-green-300/80 font-mono text-sm">
+                  {labs.length} hands-on cybersecurity laboratories
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-green-400 font-mono animate-pulse">
+                ONLINE
+              </div>
+              <div className="text-xs text-cyan-300 font-mono">
+                {user?.username || "lab_user"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {labs.length === 0 ? (
+        <div className="bg-black/60 border border-green-400/30 rounded-lg p-12 text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-green-400/20 to-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Beaker className="w-10 h-10 text-green-400" />
+          </div>
+          <h4 className="text-green-400 font-mono text-xl mb-2">LAB_OFFLINE</h4>
+          <p className="text-cyan-300 font-mono text-sm">
+            Initializing laboratory environment... // No labs available
           </p>
         </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Lab Grid - Show all labs in a retro lab style */}
+          <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
+            {labs.map((lab, index) => (
+              <div
+                key={lab.id}
+                className="group relative bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-green-400/30 rounded-lg overflow-hidden hover:border-cyan-400/60 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-400/25"
+              >
+                {/* Matrix-like pattern overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-green-400/3 to-transparent bg-[length:100%_8px] opacity-30"></div>
 
-        {labs.length === 0 ? (
-          <div className="text-center py-12">
-            <Target className="w-16 h-16 text-green-400/30 mx-auto mb-4" />
-            <h4 className="text-green-400 font-mono text-lg mb-2">
-              NO_LABS_AVAILABLE
-            </h4>
-            <p className="text-green-300/60 font-mono text-sm">
-              Enroll in courses to access hands-on laboratories
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {Object.entries(labsByPhase).map(
-              ([phaseId, { phase, modules }]) => {
-                const isPhaseExpanded = expandedPhases.includes(phaseId);
-                const phaseLabCount = Object.values(modules).reduce(
-                  (sum, { labs }) => sum + labs.length,
-                  0
-                );
-                const phaseCompletedCount = Object.values(modules).reduce(
-                  (sum, { labs }) =>
-                    sum + labs.filter((lab) => lab.completed).length,
-                  0
-                );
-
-                if (phaseLabCount === 0) return null;
-
-                return (
-                  <div key={phaseId} className="space-y-4">
-                    {/* Phase Header */}
-                    <div
-                      className={`bg-gradient-to-r from-${
-                        phaseId === "beginner"
-                          ? "green"
-                          : phaseId === "intermediate"
-                          ? "yellow"
-                          : "red"
-                      }-400/10 to-transparent border border-${
-                        phaseId === "beginner"
-                          ? "green"
-                          : phaseId === "intermediate"
-                          ? "yellow"
-                          : "red"
-                      }-400/30 rounded-lg p-4 cursor-pointer transition-all hover:border-opacity-80`}
-                      onClick={() => togglePhase(phaseId)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="text-2xl">
-                            {getPhaseIcon(phaseId)}
-                          </div>
-                          <div>
-                            <div className="flex items-center space-x-3 mb-1">
-                              <h2
-                                className={`text-xl font-bold font-mono ${getPhaseColor(
-                                  phaseId
-                                )}`}
-                              >
-                                {phase.title.toUpperCase()}
-                              </h2>
-                              <span className="text-xs font-mono px-2 py-1 rounded bg-black/40 text-green-300">
-                                {Object.keys(modules).length} modules
-                              </span>
-                            </div>
-                            <p className="text-green-300/70 text-sm">
-                              {phaseLabCount} labs • {phaseCompletedCount}{" "}
-                              completed • {phaseLabCount - phaseCompletedCount}{" "}
-                              remaining
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <div className="text-right">
-                            <div
-                              className={`${getPhaseColor(
-                                phaseId
-                              )} font-mono text-sm font-bold`}
-                            >
-                              {Math.round(
-                                (phaseCompletedCount / phaseLabCount) * 100
-                              )}
-                              % COMPLETE
-                            </div>
-                            <div className="text-xs text-green-300/60">
-                              phase progress
-                            </div>
-                          </div>
-                          {isPhaseExpanded ? (
-                            <ChevronDown
-                              className={`w-5 h-5 ${getPhaseColor(phaseId)}`}
-                            />
-                          ) : (
-                            <ChevronRight
-                              className={`w-5 h-5 ${getPhaseColor(phaseId)}`}
-                            />
-                          )}
-                        </div>
+                {/* Lab Header */}
+                <div className="relative z-10 bg-gradient-to-r from-green-900/40 to-cyan-900/40 border-b border-green-400/20 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      {/* Lab Icon */}
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-400/20 to-cyan-500/20 rounded border border-green-400/40 flex items-center justify-center">
+                        {getLabIcon(lab.type)}
+                      </div>
+                      <div>
+                        <h3 className="text-green-400 font-mono text-sm font-bold">
+                          {lab.title}
+                        </h3>
+                        <p className="text-cyan-300/80 text-xs font-mono">
+                          {lab.phaseTitle} • {lab.moduleTitle}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Phase Modules */}
-                    {isPhaseExpanded && (
-                      <div className="ml-6 space-y-4">
-                        {Object.entries(modules).map(
-                          ([moduleId, { module, labs: moduleLabs }]) => {
-                            const isModuleExpanded =
-                              expandedModules.includes(moduleId);
-
-                            return (
-                              <div key={moduleId} className="space-y-3">
-                                {/* Module Header */}
-                                <div
-                                  className={`${module.bgColor} ${module.borderColor} border rounded-lg p-4 cursor-pointer transition-all hover:border-opacity-80`}
-                                  onClick={() => toggleModule(moduleId)}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                      <div
-                                        className={`p-2 rounded-lg ${module.bgColor}`}
-                                      >
-                                        <module.icon
-                                          className={`w-5 h-5 ${module.color}`}
-                                        />
-                                      </div>
-                                      <div>
-                                        <div className="flex items-center space-x-2 mb-1">
-                                          <h3 className="text-lg font-bold font-mono text-green-400">
-                                            {module.title}
-                                          </h3>
-                                        </div>
-                                        <p className="text-green-300/70 text-sm">
-                                          {moduleLabs.length} labs •{" "}
-                                          {
-                                            moduleLabs.filter(
-                                              (lab) => lab.completed
-                                            ).length
-                                          }{" "}
-                                          completed
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center space-x-3">
-                                      <div className="text-right">
-                                        <div className="text-green-400 font-mono text-sm font-bold">
-                                          {Math.round(
-                                            (moduleLabs.filter(
-                                              (lab) => lab.completed
-                                            ).length /
-                                              moduleLabs.length) *
-                                              100
-                                          )}
-                                          % COMPLETE
-                                        </div>
-                                        <div className="text-xs text-green-300/60">
-                                          {module.progress}% module progress
-                                        </div>
-                                      </div>
-                                      {isModuleExpanded ? (
-                                        <ChevronDown className="w-5 h-5 text-green-400" />
-                                      ) : (
-                                        <ChevronRight className="w-5 h-5 text-green-400" />
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Module Labs */}
-                                {isModuleExpanded && (
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 ml-6">
-                                    {moduleLabs.map((lab, index) => (
-                                      <div
-                                        key={lab.id}
-                                        className={`bg-black/40 border border-green-400/30 rounded-lg overflow-hidden hover:border-green-400/60 transition-all duration-300 ${
-                                          !lab.available ? "opacity-50" : ""
-                                        }`}
-                                      >
-                                        {/* Lab Header */}
-                                        <div className="bg-gradient-to-r from-cyan-400/10 to-cyan-400/5 border-b border-cyan-400/20 px-4 py-3">
-                                          <div className="flex items-center justify-between">
-                                            <div className="flex items-center space-x-3">
-                                              <div className="w-8 h-8 rounded bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center">
-                                                <Target className="w-4 h-4 text-cyan-400" />
-                                              </div>
-                                              <div>
-                                                <div className="text-cyan-400 font-mono text-sm font-bold">
-                                                  LAB_
-                                                  {(index + 1)
-                                                    .toString()
-                                                    .padStart(2, "0")}
-                                                </div>
-                                                <h4 className="text-green-400 font-semibold">
-                                                  {lab.name}
-                                                </h4>
-                                              </div>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                              <div
-                                                className={`px-2 py-1 rounded border text-xs font-mono font-bold ${getDifficultyColor(
-                                                  lab.difficulty
-                                                )}`}
-                                              >
-                                                {lab.difficulty.toUpperCase()}
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Lab Content */}
-                                        <div className="p-4">
-                                          <p className="text-green-300/90 mb-4 text-sm leading-relaxed">
-                                            {lab.description}
-                                          </p>
-
-                                          {/* Lab Stats */}
-                                          <div className="grid grid-cols-2 gap-3 mb-4">
-                                            <div className="bg-black/40 border border-green-400/20 rounded p-2">
-                                              <div className="text-green-400 font-mono text-xs font-bold mb-1">
-                                                DURATION
-                                              </div>
-                                              <div className="text-green-300 text-sm">
-                                                {lab.duration}
-                                              </div>
-                                            </div>
-                                            <div className="bg-black/40 border border-green-400/20 rounded p-2">
-                                              <div className="text-green-400 font-mono text-xs font-bold mb-1">
-                                                SKILLS
-                                              </div>
-                                              <div className="text-green-300 text-sm">
-                                                {lab.skills.length} topics
-                                              </div>
-                                            </div>
-                                          </div>
-
-                                          {/* Skills Tags */}
-                                          <div className="flex flex-wrap gap-1 mb-4">
-                                            {lab.skills.map(
-                                              (skill, skillIndex) => (
-                                                <span
-                                                  key={skillIndex}
-                                                  className="px-2 py-1 bg-green-400/10 border border-green-400/30 rounded text-xs text-green-300 font-mono"
-                                                >
-                                                  {skill}
-                                                </span>
-                                              )
-                                            )}
-                                          </div>
-
-                                          {/* Lab Actions & Status */}
-                                          <div className="flex items-center justify-between pt-3 border-t border-green-400/20">
-                                            <div className="flex items-center space-x-2">
-                                              <div className="text-green-400 font-mono text-xs">
-                                                {lab.completed ? (
-                                                  <div className="flex items-center space-x-1">
-                                                    <span className="text-green-400">
-                                                      ✓
-                                                    </span>
-                                                    <span>COMPLETED</span>
-                                                  </div>
-                                                ) : lab.available ? (
-                                                  "○ AVAILABLE"
-                                                ) : (
-                                                  "⚬ LOCKED"
-                                                )}
-                                              </div>
-                                            </div>
-                                            {lab.available && (
-                                              <button
-                                                className="px-3 py-1 bg-cyan-400/20 border border-cyan-400/40 rounded text-cyan-400 font-mono text-xs hover:bg-cyan-400/30 transition-colors"
-                                                onClick={() =>
-                                                  handleStartLab(lab)
-                                                }
-                                              >
-                                                {lab.completed
-                                                  ? "REVIEW_LAB"
-                                                  : "START_LAB"}
-                                              </button>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          }
-                        )}
-                      </div>
-                    )}
+                    {/* Lab Status */}
+                    <div className="text-right">
+                      {lab.completed ? (
+                        <div className="text-green-400 text-xs font-mono font-bold">
+                          ✓ COMPLETE
+                        </div>
+                      ) : (
+                        <div className="text-cyan-400 text-xs font-mono font-bold animate-pulse">
+                          ⚡ READY
+                        </div>
+                      )}
+                    </div>
                   </div>
-                );
-              }
-            )}
+                </div>
+
+                {/* Lab Info */}
+                <div className="relative z-10 p-4">
+                  <p className="text-gray-300 text-sm mb-4 line-clamp-2">
+                    {lab.description}
+                  </p>
+
+                  {/* Lab Stats */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="bg-black/40 border border-green-400/20 rounded p-2">
+                      <div className="text-green-400 font-mono text-xs font-bold">
+                        DURATION
+                      </div>
+                      <div className="text-white text-sm flex items-center">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {lab.duration}
+                      </div>
+                    </div>
+                    <div className="bg-black/40 border border-cyan-400/20 rounded p-2">
+                      <div className="text-cyan-400 font-mono text-xs font-bold">
+                        LEVEL
+                      </div>
+                      <div
+                        className={`text-sm ${
+                          getDifficultyColor(lab.difficulty).split(" ")[0]
+                        }`}
+                      >
+                        {lab.difficulty}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Skills Tags */}
+                  <div className="mb-4">
+                    <div className="text-green-400 font-mono text-xs font-bold mb-2">
+                      SKILLS
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {lab.skills.slice(0, 2).map((skill, skillIndex) => (
+                        <span
+                          key={skillIndex}
+                          className="px-2 py-1 bg-green-400/10 border border-green-400/30 rounded text-xs text-green-300 font-mono"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                      {lab.skills.length > 2 && (
+                        <span className="px-2 py-1 bg-cyan-400/10 border border-cyan-400/30 rounded text-xs text-cyan-300 font-mono">
+                          +{lab.skills.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Progress indicator for completed labs */}
+                  {lab.completed && (
+                    <div className="mb-4 p-2 bg-gradient-to-r from-green-400/10 to-cyan-400/10 border border-green-400/30 rounded">
+                      <div className="flex items-center justify-between">
+                        <span className="text-green-400 font-mono text-xs font-bold">
+                          EXPERIMENT COMPLETE
+                        </span>
+                        <span className="text-green-300 font-mono text-xs">
+                          ✓ Verified
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Start Lab Button */}
+                  <button
+                    onClick={() => handleStartLab(lab)}
+                    className="w-full bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 text-white font-mono text-sm font-bold py-2 px-4 rounded border border-green-400/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-400/25"
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <Zap className="w-4 h-4" />
+                      <span>{lab.completed ? "REVIEW LAB" : "START LAB"}</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -837,11 +837,10 @@ export const {
   useGetLabsByModuleQuery,
   useGetModuleOverviewQuery,
   useGetModuleContentGroupedQuery,
-  // T037: Removed deprecated hooks for 2-API optimization
-  // useGetContentProgressQuery, useStartContentMutation, useUpdateContentProgressMutation,
-  // useGetModuleProgressQuery, useGetContentTypeProgressQuery - now handled by combined API
   useCompleteContentMutation,
   useGetOverallProgressQuery,
+  useGetModuleProgressQuery,
+  useGetContentTypeProgressQuery,
   useGetFirstContentByModuleQuery,
   useGetModuleContentGroupedOptimizedQuery,
   useGetContentWithNavigationQuery,

@@ -1,19 +1,8 @@
-import {
-  GAME_TYPES,
-  getGameTypeColor,
-  getPhaseColor,
-  getPhaseIcon,
-} from "@/lib";
 import { Module, Phase } from "@/lib/types";
-import {
-  ChevronDown,
-  ChevronRight,
-  Gamepad2,
-  Terminal,
-  Trophy,
-} from "lucide-react";
-import { useState } from "react";
+import { Gamepad2, Network, Target, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useGetContentTypeProgressQuery } from "@/features/api/apiSlice";
+import { useAuthRTK } from "@/hooks/useAuthRTK";
 
 interface DashboardGamesTabProps {
   phases: Phase[];
@@ -22,7 +11,7 @@ interface DashboardGamesTabProps {
 
 interface GameItem {
   id: string;
-  name: string;
+  title: string;
   description: string;
   type: string;
   points: number;
@@ -36,6 +25,8 @@ interface GameItem {
   phaseId: string;
   phaseTitle: string;
   moduleId: string;
+  progressPercentage: number;
+  maxScore?: number;
 }
 
 export const DashboardGamesTab = ({
@@ -43,423 +34,247 @@ export const DashboardGamesTab = ({
   getModulesByPhase,
 }: DashboardGamesTabProps) => {
   const navigate = useNavigate();
-  const [expandedPhases, setExpandedPhases] = useState<string[]>(["beginner"]);
-  const [expandedModules, setExpandedModules] = useState<string[]>([]);
+  const { user } = useAuthRTK();
 
-  const togglePhase = (phaseId: string) => {
-    setExpandedPhases((prev) =>
-      prev.includes(phaseId)
-        ? prev.filter((id) => id !== phaseId)
-        : [...prev, phaseId]
-    );
-  };
-
-  const toggleModule = (moduleId: string) => {
-    setExpandedModules((prev) =>
-      prev.includes(moduleId)
-        ? prev.filter((id) => id !== moduleId)
-        : [...prev, moduleId]
-    );
-  };
+  // Fetch real games data from API
+  const {
+    data: gamesData,
+    isLoading: gamesLoading,
+    error: gamesError,
+  } = useGetContentTypeProgressQuery(
+    {
+      userId: user?.id || "",
+      contentType: "game",
+    },
+    {
+      skip: !user?.id,
+    }
+  );
 
   const handlePlayGame = (game: GameItem) => {
-    // Navigate to dedicated game route
-    const gameId = game.name
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
-    navigate(`/learn/${game.moduleId}/game/${gameId}`);
+    // Navigate to dedicated game route using the real content ID
+    navigate(`/learn/${game.moduleId}/game/${game.id}`);
   };
 
-  // Generate game items from enrolled modules, organized by module
-  const generateGamesFromModules = (): GameItem[] => {
-    const games: GameItem[] = [];
+  // Transform real API data into GameItem format
+  const transformGamesData = (): GameItem[] => {
+    if (!gamesData?.success || !gamesData.data?.content) {
+      return [];
+    }
 
-    phases.forEach((phase) => {
-      const phaseModules = getModulesByPhase(phase.id, true); // Only enrolled modules
+    return gamesData.data.content.map((gameContent) => {
+      const module = gameContent.module;
+      const progress = gameContent.progress;
+      const isCompleted = progress?.status === "completed";
 
-      phaseModules.forEach((module) => {
-        const gameCount = module.games || module.content?.games?.length || 0;
-        for (let i = 1; i <= gameCount; i++) {
-          const isAvailable = module.progress > (i - 1) * (100 / gameCount);
-          const isCompleted = module.completed && Math.random() > 0.4;
-          const gameType = GAME_TYPES[i % GAME_TYPES.length];
+      // Find the phase this module belongs to
+      const phase = phases.find((p) => p.id === module.phase) || phases[0];
 
-          games.push({
-            id: `${module.id}-game-${i}`,
-            name: `${gameType}: ${module.topics[i % module.topics.length]}`,
-            description: `Interactive ${gameType.toLowerCase()} challenge focused on ${
-              module.topics[Math.floor(Math.random() * module.topics.length)]
-            }. Test your skills and compete for high scores in this gamified learning experience.`,
-            type: gameType,
-            points: Math.floor(Math.random() * 300) + 100,
-            difficulty: module.difficulty,
-            moduleTitle: module.title,
-            moduleColor: module.color,
-            moduleBgColor: module.bgColor,
-            completed: isCompleted,
-            available: isAvailable,
-            score: isCompleted
-              ? Math.floor(Math.random() * 300) + 200
-              : undefined,
-            phaseId: phase.id,
-            phaseTitle: phase.title,
-            moduleId: module.id,
-          });
-        }
-      });
+      return {
+        id: gameContent.id,
+        title: gameContent.title,
+        description:
+          gameContent.description ||
+          `Interactive cybersecurity game in ${module.title}. Test your skills and compete for high scores.`,
+        type: "Challenge", // Default type, could be enhanced with content metadata
+        points: progress?.maxScore || 100,
+        difficulty: module.difficulty,
+        moduleTitle: module.title,
+        moduleColor: "#00ff41", // Default green, could be enhanced with module data
+        moduleBgColor: "#001100", // Default dark green, could be enhanced
+        completed: isCompleted,
+        available: true,
+        score: progress?.score || undefined,
+        phaseId: phase.id,
+        phaseTitle: phase.title,
+        moduleId: module.id,
+        progressPercentage: progress?.progressPercentage || 0,
+        maxScore: progress?.maxScore || undefined,
+      };
     });
-
-    return games;
   };
 
-  const games = generateGamesFromModules();
+  const games = transformGamesData();
 
-  // Group games by phase, then by module
-  const gamesByPhase = phases.reduce((acc, phase) => {
-    const phaseModules = getModulesByPhase(phase.id, true);
-    if (phaseModules.length === 0) return acc;
+  // Loading state
+  if (gamesLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-purple-900/80 to-pink-900/80 border-2 border-cyan-400/50 rounded-lg p-6">
+          <div className="text-center text-cyan-400 font-mono animate-pulse">
+            Loading games data...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    acc[phase.id] = {
-      phase,
-      modules: phaseModules.reduce((moduleAcc, module) => {
-        const moduleGames = games.filter((game) => game.moduleId === module.id);
-        if (moduleGames.length > 0) {
-          moduleAcc[module.id] = {
-            module,
-            games: moduleGames,
-          };
-        }
-        return moduleAcc;
-      }, {} as Record<string, { module: Module; games: GameItem[] }>),
-    };
-    return acc;
-  }, {} as Record<string, { phase: Phase; modules: Record<string, { module: Module; games: GameItem[] }> }>);
+  // Error state
+  if (gamesError) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gradient-to-r from-red-900/80 to-red-800/80 border-2 border-red-400/50 rounded-lg p-6">
+          <div className="text-center text-red-400 font-mono">
+            Error loading games: {gamesError.toString()}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="bg-black/60 border border-green-400/30 rounded-lg p-6">
-        <div className="flex items-center space-x-2 mb-6">
-          <Terminal className="w-5 h-5 text-green-400" />
-          <span className="text-green-400 font-mono text-sm">
-            ~/games$ find . -name "*.game" -type f | grep enrolled | sort -k1,2
-          </span>
-        </div>
+      {/* Retro Header */}
+      <div className="bg-gradient-to-r from-purple-900/80 to-pink-900/80 border-2 border-cyan-400/50 rounded-lg p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMiIgZmlsbD0iIzAwRkZGRiIgZmlsbC1vcGFjaXR5PSIwLjA1Ii8+Cjwvc3ZnPgo=')] opacity-30"></div>
 
-        <div className="text-center mb-8">
-          <h3 className="text-2xl font-bold text-green-400 font-mono mb-2">
-            INTERACTIVE_GAMES
-          </h3>
-          <p className="text-green-300/70 font-mono text-sm">
-            Organized by phases → modules → games • {games.length} total games
-            available
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-purple-500 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-400/25">
+                <Gamepad2 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-mono">
+                  ARCADE ZONE
+                </h1>
+                <p className="text-cyan-300/80 font-mono text-sm">
+                  {games.length} cybersecurity games available
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-cyan-400 font-mono animate-pulse">
+                READY
+              </div>
+              <div className="text-xs text-purple-300 font-mono">
+                {user?.username || "player_one"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {games.length === 0 ? (
+        <div className="bg-black/60 border border-cyan-400/30 rounded-lg p-12 text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-cyan-400/20 to-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Gamepad2 className="w-10 h-10 text-cyan-400" />
+          </div>
+          <h4 className="text-cyan-400 font-mono text-xl mb-2">GAME_OVER</h4>
+          <p className="text-purple-300 font-mono text-sm">
+            Insert coin to continue // No games available
           </p>
         </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Game Grid - Show all games in a retro arcade style */}
+          <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
+            {games.map((game, index) => (
+              <div
+                key={game.id}
+                className="group relative bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-cyan-400/30 rounded-lg overflow-hidden hover:border-purple-400/60 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/25"
+              >
+                {/* Retro scanlines effect */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/5 to-transparent bg-[length:100%_4px] opacity-20"></div>
 
-        {games.length === 0 ? (
-          <div className="text-center py-12">
-            <Gamepad2 className="w-16 h-16 text-green-400/30 mx-auto mb-4" />
-            <h4 className="text-green-400 font-mono text-lg mb-2">
-              NO_GAMES_AVAILABLE
-            </h4>
-            <p className="text-green-300/60 font-mono text-sm">
-              Enroll in courses to access interactive games
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {Object.entries(gamesByPhase).map(
-              ([phaseId, { phase, modules }]) => {
-                const isPhaseExpanded = expandedPhases.includes(phaseId);
-                const phaseGameCount = Object.values(modules).reduce(
-                  (sum, { games }) => sum + games.length,
-                  0
-                );
-                const phaseCompletedCount = Object.values(modules).reduce(
-                  (sum, { games }) =>
-                    sum + games.filter((game) => game.completed).length,
-                  0
-                );
-                const phaseTotalPoints = Object.values(modules).reduce(
-                  (sum, { games }) =>
-                    sum +
-                    games.reduce(
-                      (gameSum, game) =>
-                        gameSum + (game.completed ? game.points : 0),
-                      0
-                    ),
-                  0
-                );
-
-                if (phaseGameCount === 0) return null;
-
-                return (
-                  <div key={phaseId} className="space-y-4">
-                    {/* Phase Header */}
-                    <div
-                      className={`bg-gradient-to-r from-${
-                        phaseId === "beginner"
-                          ? "green"
-                          : phaseId === "intermediate"
-                          ? "yellow"
-                          : "red"
-                      }-400/10 to-transparent border border-${
-                        phaseId === "beginner"
-                          ? "green"
-                          : phaseId === "intermediate"
-                          ? "yellow"
-                          : "red"
-                      }-400/30 rounded-lg p-4 cursor-pointer transition-all hover:border-opacity-80`}
-                      onClick={() => togglePhase(phaseId)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="text-2xl">
-                            {getPhaseIcon(phaseId)}
-                          </div>
-                          <div>
-                            <div className="flex items-center space-x-3 mb-1">
-                              <h2
-                                className={`text-xl font-bold font-mono ${getPhaseColor(
-                                  phaseId
-                                )}`}
-                              >
-                                {phase.title.toUpperCase()}
-                              </h2>
-                              <span className="text-xs font-mono px-2 py-1 rounded bg-black/40 text-green-300">
-                                {Object.keys(modules).length} modules
-                              </span>
-                            </div>
-                            <p className="text-green-300/70 text-sm">
-                              {phaseGameCount} games • {phaseCompletedCount}{" "}
-                              completed • {phaseTotalPoints} points earned
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <div className="text-right">
-                            <div
-                              className={`${getPhaseColor(
-                                phaseId
-                              )} font-mono text-sm font-bold`}
-                            >
-                              {Math.round(
-                                (phaseCompletedCount / phaseGameCount) * 100
-                              )}
-                              % COMPLETE
-                            </div>
-                            <div className="text-xs text-green-300/60">
-                              phase progress
-                            </div>
-                          </div>
-                          {isPhaseExpanded ? (
-                            <ChevronDown
-                              className={`w-5 h-5 ${getPhaseColor(phaseId)}`}
-                            />
-                          ) : (
-                            <ChevronRight
-                              className={`w-5 h-5 ${getPhaseColor(phaseId)}`}
-                            />
-                          )}
-                        </div>
+                {/* Game Header */}
+                <div className="relative z-10 bg-gradient-to-r from-cyan-900/40 to-purple-900/40 border-b border-cyan-400/20 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      {/* Game Icon */}
+                      <div className="w-10 h-10 bg-gradient-to-br from-cyan-400/20 to-purple-500/20 rounded border border-cyan-400/40 flex items-center justify-center">
+                        {game.type === "Challenge" && (
+                          <Target className="w-5 h-5 text-red-400" />
+                        )}
+                        {game.type === "Simulation" && (
+                          <Network className="w-5 h-5 text-blue-400" />
+                        )}
+                        {game.type === "Puzzle" && (
+                          <Trophy className="w-5 h-5 text-yellow-400" />
+                        )}
+                        {!["Challenge", "Simulation", "Puzzle"].includes(
+                          game.type
+                        ) && <Gamepad2 className="w-5 h-5 text-cyan-400" />}
+                      </div>
+                      <div>
+                        <h3 className="text-cyan-400 font-mono text-sm font-bold">
+                          {game.title}
+                        </h3>
+                        <p className="text-purple-300/80 text-xs font-mono">
+                          {game.phaseTitle} • {game.moduleTitle}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Phase Modules */}
-                    {isPhaseExpanded && (
-                      <div className="ml-6 space-y-4">
-                        {Object.entries(modules).map(
-                          ([moduleId, { module, games: moduleGames }]) => {
-                            const isModuleExpanded =
-                              expandedModules.includes(moduleId);
-
-                            return (
-                              <div key={moduleId} className="space-y-3">
-                                {/* Module Header */}
-                                <div
-                                  className={`${module.bgColor} ${module.borderColor} border rounded-lg p-4 cursor-pointer transition-all hover:border-opacity-80`}
-                                  onClick={() => toggleModule(moduleId)}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                      <div
-                                        className={`p-2 rounded-lg ${module.bgColor}`}
-                                      >
-                                        <module.icon
-                                          className={`w-5 h-5 ${module.color}`}
-                                        />
-                                      </div>
-                                      <div>
-                                        <div className="flex items-center space-x-2 mb-1">
-                                          <h3 className="text-lg font-bold font-mono text-green-400">
-                                            {module.title}
-                                          </h3>
-                                        </div>
-                                        <p className="text-green-300/70 text-sm">
-                                          {moduleGames.length} games •{" "}
-                                          {
-                                            moduleGames.filter(
-                                              (game) => game.completed
-                                            ).length
-                                          }{" "}
-                                          completed
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center space-x-3">
-                                      <div className="text-right">
-                                        <div className="text-green-400 font-mono text-sm font-bold">
-                                          {Math.round(
-                                            (moduleGames.filter(
-                                              (game) => game.completed
-                                            ).length /
-                                              moduleGames.length) *
-                                              100
-                                          )}
-                                          % COMPLETE
-                                        </div>
-                                        <div className="text-xs text-green-300/60">
-                                          {module.progress}% module progress
-                                        </div>
-                                      </div>
-                                      {isModuleExpanded ? (
-                                        <ChevronDown className="w-5 h-5 text-green-400" />
-                                      ) : (
-                                        <ChevronRight className="w-5 h-5 text-green-400" />
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Module Games */}
-                                {isModuleExpanded && (
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 ml-6">
-                                    {moduleGames.map((game, index) => (
-                                      <div
-                                        key={game.id}
-                                        className={`bg-black/40 border border-green-400/30 rounded-lg overflow-hidden hover:border-green-400/60 transition-all duration-300 ${
-                                          !game.available ? "opacity-50" : ""
-                                        }`}
-                                      >
-                                        {/* Game Header */}
-                                        <div className="bg-gradient-to-r from-red-400/10 to-red-400/5 border-b border-red-400/20 px-4 py-3">
-                                          <div className="flex items-center justify-between">
-                                            <div className="flex items-center space-x-3">
-                                              <div className="w-8 h-8 rounded bg-red-400/20 border border-red-400/40 flex items-center justify-center">
-                                                <Gamepad2 className="w-4 h-4 text-red-400" />
-                                              </div>
-                                              <div>
-                                                <div className="text-red-400 font-mono text-sm font-bold">
-                                                  GAME_
-                                                  {(index + 1)
-                                                    .toString()
-                                                    .padStart(2, "0")}
-                                                </div>
-                                                <h4 className="text-green-400 font-semibold">
-                                                  {game.name}
-                                                </h4>
-                                              </div>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                              <div
-                                                className={`px-2 py-1 rounded border text-xs font-mono font-bold ${getGameTypeColor(
-                                                  game.type
-                                                )}`}
-                                              >
-                                                {game.type.toUpperCase()}
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Game Content */}
-                                        <div className="p-4">
-                                          <p className="text-green-300/90 mb-4 text-sm leading-relaxed">
-                                            {game.description}
-                                          </p>
-
-                                          {/* Game Stats */}
-                                          <div className="grid grid-cols-2 gap-3 mb-4">
-                                            <div className="bg-black/40 border border-green-400/20 rounded p-2">
-                                              <div className="text-green-400 font-mono text-xs font-bold mb-1">
-                                                POINTS
-                                              </div>
-                                              <div className="text-green-300 text-sm">
-                                                {game.points} pts
-                                              </div>
-                                            </div>
-                                            <div className="bg-black/40 border border-green-400/20 rounded p-2">
-                                              <div className="text-green-400 font-mono text-xs font-bold mb-1">
-                                                TYPE
-                                              </div>
-                                              <div className="text-green-300 text-sm">
-                                                {game.type}
-                                              </div>
-                                            </div>
-                                          </div>
-
-                                          {/* Score Display */}
-                                          {game.completed && game.score && (
-                                            <div className="mb-4 p-2 bg-green-400/10 border border-green-400/30 rounded">
-                                              <div className="text-green-400 font-mono text-xs font-bold mb-1">
-                                                BEST SCORE
-                                              </div>
-                                              <div className="text-green-300 text-sm flex items-center">
-                                                <Trophy className="w-4 h-4 mr-1 text-yellow-400" />
-                                                {game.score} points
-                                              </div>
-                                            </div>
-                                          )}
-
-                                          {/* Game Actions & Status */}
-                                          <div className="flex items-center justify-between pt-3 border-t border-green-400/20">
-                                            <div className="flex items-center space-x-2">
-                                              <div className="text-green-400 font-mono text-xs">
-                                                {game.completed ? (
-                                                  <div className="flex items-center space-x-1">
-                                                    <span className="text-green-400">
-                                                      ✓
-                                                    </span>
-                                                    <span>COMPLETED</span>
-                                                  </div>
-                                                ) : game.available ? (
-                                                  "○ AVAILABLE"
-                                                ) : (
-                                                  "⚬ LOCKED"
-                                                )}
-                                              </div>
-                                            </div>
-                                            {game.available && (
-                                              <button
-                                                className="px-3 py-1 bg-red-400/20 border border-red-400/40 rounded text-red-400 font-mono text-xs hover:bg-red-400/30 transition-colors"
-                                                onClick={() =>
-                                                  handlePlayGame(game)
-                                                }
-                                              >
-                                                {game.completed
-                                                  ? "PLAY_AGAIN"
-                                                  : "START_GAME"}
-                                              </button>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          }
-                        )}
-                      </div>
-                    )}
+                    {/* Game Status */}
+                    <div className="text-right">
+                      {game.completed ? (
+                        <div className="text-green-400 text-xs font-mono font-bold">
+                          ✓ COMPLETE
+                        </div>
+                      ) : (
+                        <div className="text-cyan-400 text-xs font-mono font-bold animate-pulse">
+                          ▶ READY
+                        </div>
+                      )}
+                    </div>
                   </div>
-                );
-              }
-            )}
+                </div>
+
+                {/* Game Info */}
+                <div className="relative z-10 p-4">
+                  <p className="text-gray-300 text-sm mb-4 line-clamp-2">
+                    {game.description}
+                  </p>
+
+                  {/* Game Stats */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="bg-black/40 border border-cyan-400/20 rounded p-2">
+                      <div className="text-cyan-400 font-mono text-xs font-bold">
+                        POINTS
+                      </div>
+                      <div className="text-white text-sm">{game.points}</div>
+                    </div>
+                    <div className="bg-black/40 border border-purple-400/20 rounded p-2">
+                      <div className="text-purple-400 font-mono text-xs font-bold">
+                        TYPE
+                      </div>
+                      <div className="text-white text-sm">{game.type}</div>
+                    </div>
+                  </div>
+
+                  {/* High Score */}
+                  {game.completed && game.score && (
+                    <div className="mb-4 p-2 bg-gradient-to-r from-yellow-400/10 to-orange-400/10 border border-yellow-400/30 rounded">
+                      <div className="flex items-center justify-between">
+                        <span className="text-yellow-400 font-mono text-xs font-bold">
+                          HIGH SCORE
+                        </span>
+                        <span className="text-yellow-300 font-mono text-sm font-bold">
+                          {game.score}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Play Button */}
+                  <button
+                    onClick={() => handlePlayGame(game)}
+                    className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white font-mono text-sm font-bold py-2 px-4 rounded border border-cyan-400/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/25"
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <Gamepad2 className="w-4 h-4" />
+                      <span>
+                        {game.completed ? "PLAY AGAIN" : "START GAME"}
+                      </span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

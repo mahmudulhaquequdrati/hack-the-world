@@ -210,6 +210,10 @@ const EnrolledCoursePage = () => {
   const isActionLoading = isNavigating || isCompleting || isAutoCompleting || isContentRendering;
   const showFullPageLoading =
     (isInitialLoading || isContentLoading) && !isActionLoading;
+  
+  // Empty state management
+  const hasNoContent = groupedContentData?.success && allContentItems.length === 0;
+  const showEmptyState = hasNoContent && !isInitialLoading && !isContentLoading && !isActionLoading;
 
   // Clear navigation loading only when content and course data are ready AND content is rendered
   useEffect(() => {
@@ -597,6 +601,18 @@ const EnrolledCoursePage = () => {
 
   if (showFullPageLoading) {
     return <LoadingSpinner message="Loading course content..." />;
+  }
+
+  // Empty state - show when content is successfully loaded but empty
+  if (showEmptyState) {
+    return (
+      <ErrorState
+        title="No Content Available"
+        message="This module doesn't have any content yet. Please check back later or contact your instructor."
+        buttonText="Back to Overview"
+        onButtonClick={() => navigate("/overview")}
+      />
+    );
   }
 
   // Error state - only show if we have actual errors and initial load is complete

@@ -1,6 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useGetPhasesQuery } from "@/features/api/apiSlice";
-import { Module } from "@/lib/types";
+import { Module, Phase } from "@/lib/types";
 import { AchievementsTab } from "./AchievementsTab";
 import { DashboardGamesTab } from "./DashboardGamesTab";
 import { DashboardLabsTab } from "./DashboardLabsTab";
@@ -12,6 +11,7 @@ interface DashboardTabsProps {
   onModuleClick: (module: Module) => void;
   getAllModules: () => Module[];
   getEnrolledModules: () => Module[];
+  getPhases: () => Phase[];
   achievements: Array<{
     title: string;
     description: string;
@@ -26,10 +26,10 @@ export const DashboardTabs = ({
   onModuleClick,
   getAllModules,
   getEnrolledModules,
+  getPhases,
   achievements,
 }: DashboardTabsProps) => {
-  const { data: phasesData } = useGetPhasesQuery();
-  const phases = phasesData || [];
+  const phases = getPhases();
   console.log(getEnrolledModules(), "getEnrolledModules");
 
   // Helper function to get modules by phase

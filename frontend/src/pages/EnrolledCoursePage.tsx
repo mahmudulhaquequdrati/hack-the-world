@@ -696,8 +696,8 @@ const EnrolledCoursePage = () => {
 
   return (
     <div className="min-h-screen bg-black text-green-400 relative">
-      <div className="pb-5 pt-3 px-6">
-        <div className="w-full px-2 mx-auto">
+      <div className="pb-5 pt-3 px-2 sm:px-4 lg:px-6">
+        <div className="w-full px-1 sm:px-2 mx-auto">
           <CourseHeader
             course={course}
             currentVideo={currentContentIndex}
@@ -827,9 +827,9 @@ const EnrolledCoursePage = () => {
               }
             />
           ) : (
-            <div className="text-center text-green-400 font-mono p-8">
-              <div className="mb-4">No content available</div>
-              <div className="text-sm text-green-400/60">
+            <div className="text-center text-green-400 font-mono p-4 sm:p-8">
+              <div className="mb-4 text-sm sm:text-base">No content available</div>
+              <div className="text-xs sm:text-sm text-green-400/60">
                 This lesson type is not yet supported.
               </div>
             </div>

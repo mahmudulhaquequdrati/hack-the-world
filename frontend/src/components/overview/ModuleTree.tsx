@@ -41,7 +41,7 @@ const ModuleTree = ({ phase, onNavigate, onEnroll }: ModuleTreeProps) => {
         </span>
       </div>
 
-      <div className="bg-black/60 border border-green-400/30 rounded-lg p-6 font-mono">
+      <div className="bg-black/60 border border-green-400/30 rounded-lg py-6 px-3 lg:p-6 font-mono ">
         <div className="space-y-0">
           {modules.map((module, index) => {
             const isLast = index === modules.length - 1;

@@ -145,60 +145,66 @@ const CourseTabs = ({
   return (
     <div className="bg-black/60 border-2 border-green-400/40 rounded-none overflow-hidden shadow-2xl shadow-green-400/10">
       {/* Terminal-style Header */}
-      <div className="bg-green-400/15 border-b-2 border-green-400/40 p-4">
+      <div className="bg-green-400/15 border-b-2 border-green-400/40 p-3 sm:p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="flex space-x-1">
-              <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-              <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-              <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+            <div className="flex space-x-1 flex-shrink-0">
+              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-400 rounded-full"></div>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-400 rounded-full"></div>
+              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-400 rounded-full animate-pulse"></div>
             </div>
-            <h2 className="text-green-400 font-bold text-lg font-mono tracking-wider">
+            <h2 className="text-green-400 font-bold text-base sm:text-lg font-mono tracking-wider truncate">
               LESSON.DETAILS
             </h2>
           </div>
-          <div className="flex items-center space-x-2 text-xs text-green-400/70 font-mono">
-            <Terminal className="w-4 h-4" />
-            <span>INTERACTIVE_MODE</span>
+          <div className="flex items-center space-x-1 sm:space-x-2 text-xs text-green-400/70 font-mono flex-shrink-0">
+            <Terminal className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">INTERACTIVE_MODE</span>
+            <span className="sm:hidden">ACTIVE</span>
           </div>
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-3 sm:p-6">
         <Tabs value={activeTab} onValueChange={onTabChange}>
           <TabsList className="grid w-full grid-cols-2 bg-black/80 border-2 border-green-400/30 rounded-none">
             <TabsTrigger
               value="details"
-              className="text-green-400 font-mono font-bold data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:shadow-lg transition-all duration-300 rounded-none"
+              className="text-green-400 font-mono font-bold data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:shadow-lg transition-all duration-300 rounded-none text-xs sm:text-sm px-2 sm:px-4"
             >
-              {`>> DETAILS`}
+              <span className="hidden sm:inline">{`>> DETAILS`}</span>
+              <span className="sm:hidden">{`DETAILS`}</span>
             </TabsTrigger>
             <TabsTrigger
               value="resources"
-              className="text-green-400 font-mono font-bold data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:shadow-lg transition-all duration-300 rounded-none"
+              className="text-green-400 font-mono font-bold data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:shadow-lg transition-all duration-300 rounded-none text-xs sm:text-sm px-2 sm:px-4"
             >
-              {`>> RESOURCES (${getAllResources().length})`}
+              <span className="hidden sm:inline">{`>> RESOURCES (${getAllResources().length})`}</span>
+              <span className="sm:hidden">{`RESOURCES`}</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Details Tab */}
-          <TabsContent value="details" className="mt-6">
-            <div className="space-y-6">
+          <TabsContent value="details" className="mt-4 sm:mt-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Current Lesson Info */}
               {currentLesson && (
-                <div className="bg-black/60 border-2 border-cyan-400/40 rounded-none p-5 shadow-lg shadow-cyan-400/10">
-                  <div className="flex items-center space-x-3 mb-4">
-                    {getLessonTypeIcon(currentLesson.type)}
-                    <h3 className="text-cyan-400 font-bold text-lg font-mono tracking-wide">
-                      CURRENT: {currentLesson.title.toUpperCase()}
+                <div className="bg-black/60 border-2 border-cyan-400/40 rounded-none p-3 sm:p-5 shadow-lg shadow-cyan-400/10">
+                  <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
+                    <div className="flex-shrink-0">
+                      {getLessonTypeIcon(currentLesson.type)}
+                    </div>
+                    <h3 className="text-cyan-400 font-bold text-sm sm:text-lg font-mono tracking-wide truncate">
+                      <span className="hidden sm:inline">CURRENT: {currentLesson.title.toUpperCase()}</span>
+                      <span className="sm:hidden">{currentLesson.title.toUpperCase()}</span>
                     </h3>
                   </div>
 
-                  <div className="bg-black/40 border border-cyan-400/30 p-4 rounded-none">
+                  <div className="bg-black/40 border border-cyan-400/30 p-3 sm:p-4 rounded-none">
                     <div className="text-xs text-cyan-400/70 font-mono mb-2">
                       DESCRIPTION
                     </div>
-                    <p className="text-cyan-300/90 text-sm leading-relaxed font-mono whitespace-pre-line">
+                    <p className="text-cyan-300/90 text-xs sm:text-sm leading-relaxed font-mono whitespace-pre-line">
                       {getDetailedDescription()}
                     </p>
                   </div>
@@ -208,18 +214,19 @@ const CourseTabs = ({
           </TabsContent>
 
           {/* Resources Tab */}
-          <TabsContent value="resources" className="mt-6">
-            <div className="space-y-6">
+          <TabsContent value="resources" className="mt-4 sm:mt-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Contextual Resources */}
               {getContextualResources().length > 0 && (
                 <div>
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Target className="w-5 h-5 text-green-400" />
-                    <h3 className="text-green-400 font-bold text-lg font-mono">
-                      LESSON RESOURCES ({getContextualResources().length})
+                  <div className="flex items-center space-x-2 mb-3 sm:mb-4">
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5 text-green-400 flex-shrink-0" />
+                    <h3 className="text-green-400 font-bold text-sm sm:text-lg font-mono truncate">
+                      <span className="hidden sm:inline">LESSON RESOURCES ({getContextualResources().length})</span>
+                      <span className="sm:hidden">RESOURCES ({getContextualResources().length})</span>
                     </h3>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {getContextualResources().map(
                       (resource: Resource, index) => (
                         <Card
@@ -228,14 +235,14 @@ const CourseTabs = ({
                             resource.category
                           )}`}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-4">
-                                <div className="bg-black/60 border border-green-400/30 p-2 rounded-none">
+                          <CardContent className="p-3 sm:p-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                              <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+                                <div className="bg-black/60 border border-green-400/30 p-2 rounded-none flex-shrink-0">
                                   {getCategoryIcon(resource.category)}
                                 </div>
-                                <div>
-                                  <div className="font-bold text-green-400 text-sm font-mono">
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-bold text-green-400 text-xs sm:text-sm font-mono truncate">
                                     {resource.name}
                                   </div>
                                   <div className="text-xs text-green-400/70 font-mono mt-1">
@@ -245,7 +252,7 @@ const CourseTabs = ({
                                       ` • ${resource.category.toUpperCase()}`}
                                   </div>
                                   {resource.description && (
-                                    <div className="text-xs text-green-300/60 font-mono mt-1">
+                                    <div className="text-xs text-green-300/60 font-mono mt-1 line-clamp-2">
                                       {resource.description}
                                     </div>
                                   )}
@@ -253,10 +260,11 @@ const CourseTabs = ({
                               </div>
                               <Button
                                 size="sm"
-                                className="bg-green-400 text-black hover:bg-green-300 font-mono font-bold rounded-none border-2 border-green-400 transition-all duration-300"
+                                className="bg-green-400 text-black hover:bg-green-300 font-mono font-bold rounded-none border-2 border-green-400 transition-all duration-300 w-full sm:w-auto flex-shrink-0"
                               >
                                 <Download className="w-4 h-4 mr-2" />
-                                DOWNLOAD
+                                <span className="hidden sm:inline">DOWNLOAD</span>
+                                <span className="sm:hidden">GET</span>
                               </Button>
                             </div>
                           </CardContent>
@@ -270,13 +278,14 @@ const CourseTabs = ({
               {/* Course Resources */}
               {getCourseResources().length > 0 && (
                 <div>
-                  <div className="flex items-center space-x-2 mb-4">
-                    <BookOpen className="w-5 h-5 text-purple-400" />
-                    <h3 className="text-purple-400 font-bold text-lg font-mono">
-                      COURSE RESOURCES ({getCourseResources().length})
+                  <div className="flex items-center space-x-2 mb-3 sm:mb-4">
+                    <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 flex-shrink-0" />
+                    <h3 className="text-purple-400 font-bold text-sm sm:text-lg font-mono truncate">
+                      <span className="hidden sm:inline">COURSE RESOURCES ({getCourseResources().length})</span>
+                      <span className="sm:hidden">COURSE ({getCourseResources().length})</span>
                     </h3>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {getCourseResources().map((resource: Resource, index) => (
                       <Card
                         key={index}
@@ -284,14 +293,14 @@ const CourseTabs = ({
                           resource.category
                         )}`}
                       >
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-4">
-                              <div className="bg-black/60 border border-purple-400/30 p-2 rounded-none">
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+                              <div className="bg-black/60 border border-purple-400/30 p-2 rounded-none flex-shrink-0">
                                 {getCategoryIcon(resource.category)}
                               </div>
-                              <div>
-                                <div className="font-bold text-purple-400 text-sm font-mono">
+                              <div className="min-w-0 flex-1">
+                                <div className="font-bold text-purple-400 text-xs sm:text-sm font-mono truncate">
                                   {resource.name}
                                 </div>
                                 <div className="text-xs text-purple-400/70 font-mono mt-1">
@@ -301,7 +310,7 @@ const CourseTabs = ({
                                     ` • ${resource.category.toUpperCase()}`}
                                 </div>
                                 {resource.description && (
-                                  <div className="text-xs text-purple-300/60 font-mono mt-1">
+                                  <div className="text-xs text-purple-300/60 font-mono mt-1 line-clamp-2">
                                     {resource.description}
                                   </div>
                                 )}
@@ -309,10 +318,11 @@ const CourseTabs = ({
                             </div>
                             <Button
                               size="sm"
-                              className="bg-purple-400 text-black hover:bg-purple-300 font-mono font-bold rounded-none border-2 border-purple-400 transition-all duration-300"
+                              className="bg-purple-400 text-black hover:bg-purple-300 font-mono font-bold rounded-none border-2 border-purple-400 transition-all duration-300 w-full sm:w-auto flex-shrink-0"
                             >
                               <Download className="w-4 h-4 mr-2" />
-                              DOWNLOAD
+                              <span className="hidden sm:inline">DOWNLOAD</span>
+                              <span className="sm:hidden">GET</span>
                             </Button>
                           </div>
                         </CardContent>

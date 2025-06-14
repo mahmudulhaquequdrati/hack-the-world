@@ -191,11 +191,11 @@ const CyberSecOverview = () => {
 
             {/* Loading Phase Navigation */}
             <div className="mb-8">
-              <div className="flex justify-center space-x-4">
+              <div className="flex justify-center space-x-2 sm:space-x-4 overflow-x-auto pb-2">
                 {[...Array(3)].map((_, i) => (
                   <div
                     key={i}
-                    className="h-10 bg-gradient-to-r from-green-400/30 to-transparent rounded w-32 animate-pulse"
+                    className="h-10 bg-gradient-to-r from-green-400/30 to-transparent rounded w-20 sm:w-32 flex-shrink-0 animate-pulse"
                     style={{ animationDelay: `${i * 200}ms` }}
                   ></div>
                 ))}
@@ -207,13 +207,13 @@ const CyberSecOverview = () => {
               <LoadingSkeleton
                 type="stats"
                 count={4}
-                className="grid grid-cols-1 md:grid-cols-4 gap-4"
+                className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4"
               />
               <LoadingSkeleton type="card" count={6} className="space-y-4" />
             </div>
 
             {/* Data Source Indicator */}
-            <div className="fixed bottom-4 right-4 bg-black/80 border border-green-500/30 rounded px-3 py-2 text-xs">
+            <div className="fixed bottom-4 right-2 sm:right-4 bg-black/80 border border-green-500/30 rounded px-2 sm:px-3 py-1 sm:py-2 text-xs">
               <span className="text-green-400">Loading data...</span>
             </div>
           </div>
@@ -244,7 +244,7 @@ const CyberSecOverview = () => {
       {/* Debug Component - Remove in production */}
       <ApiDebug />
 
-      <div className="pt-20 px-6">
+      <div className="pt-20 px-4 sm:px-6">
         <div className="mx-auto max-w-6xl">
           {/* Header */}
           <OverviewHeader
@@ -290,7 +290,7 @@ const CyberSecOverview = () => {
           </Tabs>
 
           {/* Data Source Indicator */}
-          <div className="fixed bottom-4 right-4 bg-black/80 border border-green-500/30 rounded px-3 py-2 text-xs">
+          <div className="fixed bottom-4 right-2 sm:right-4 bg-black/80 border border-green-500/30 rounded px-2 sm:px-3 py-1 sm:py-2 text-xs">
             <span className="text-green-400">API Connected</span>
           </div>
         </div>

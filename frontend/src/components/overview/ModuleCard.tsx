@@ -138,7 +138,7 @@ const ModuleCard = ({
     <div className="relative">
       {/* Tree Structure */}
       <div className="flex items-start space-x-1">
-        <div className="flex flex-col items-center">
+        <div className="md:flex flex-col items-center hidden">
           <span className="text-green-400/70 text-sm leading-none font-mono">
             {treeChar}
           </span>
@@ -163,7 +163,6 @@ const ModuleCard = ({
               `hover:shadow-${colorName}-400/20`
             )}
           >
-
             {/* Status Corner Badge */}
             <div className="absolute top-3 right-3 z-10">
               {isCompleted && (
@@ -192,12 +191,12 @@ const ModuleCard = ({
             </div>
 
             {/* Card Header */}
-            <div className="p-6 pb-4">
-              <div className="flex items-start space-x-4">
+            <div className="p-4 sm:p-6 pb-4 mt-2 md:mt-0">
+              <div className="flex items-start space-x-3 sm:space-x-4">
                 {/* Module Icon with Retro Styling */}
                 <div
                   className={cn(
-                    "relative w-16 h-16 rounded-xl flex items-center justify-center",
+                    "relative w-8 h-8  md:w-16 md:h-16 rounded-xl flex items-center justify-center flex-shrink-0",
                     "bg-gradient-to-br from-gray-800/50 to-black/50",
                     "border-2 shadow-lg",
                     initialModule.borderColor,
@@ -213,18 +212,21 @@ const ModuleCard = ({
                     )}
                   ></div>
                   <ModuleIcon
-                    className={cn("w-8 h-8 relative z-10", initialModule.color)}
+                    className={cn(
+                      "w-5 h-5 md:w-8 md:h-8 relative z-10",
+                      initialModule.color
+                    )}
                   />
                 </div>
 
                 {/* Title and Description */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-3 mb-2">
+                <div className="flex flex-col">
+                  <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
                     <h3
                       className={cn(
-                        "text-xl font-bold font-mono uppercase tracking-wider",
+                        "text-base sm:text-xl font-bold font-mono uppercase tracking-wider",
                         `text-white transition-colors`,
-                        "truncate",
+                        " w-full",
                         initialModule.color?.includes("green")
                           ? "group-hover:text-green-400"
                           : initialModule.color?.includes("blue")
@@ -244,8 +246,8 @@ const ModuleCard = ({
                     {/* Retro Difficulty Badge */}
                     <div
                       className={cn(
-                        "px-3 py-1 rounded-full border-2 text-xs font-mono uppercase",
-                        "bg-black/50 backdrop-blur-sm",
+                        "px-2 sm:px-3 py-1 rounded-full border-2 text-xs font-mono uppercase flex-shrink-0",
+                        "bg-black/50 backdrop-blur-sm hidden md:block ",
                         getDifficultyColor(initialModule.difficulty),
                         " animate-pulse"
                       )}
@@ -254,7 +256,7 @@ const ModuleCard = ({
                     </div>
                   </div>
 
-                  <p className="text-gray-300 text-sm leading-relaxed font-mono">
+                  <p className="text-gray-300 text-xs sm:text-sm leading-relaxed font-mono line-clamp-2 sm:line-clamp-none">
                     {initialModule.description}
                   </p>
                 </div>
@@ -262,8 +264,8 @@ const ModuleCard = ({
             </div>
 
             {/* Retro Stats Grid */}
-            <div className="px-6 pb-4">
-              <div className="grid grid-cols-4 gap-3">
+            <div className="px-4 sm:px-6 pb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                 {/* Duration */}
                 <div
                   className={cn(
@@ -352,7 +354,7 @@ const ModuleCard = ({
 
             {/* Progress Section (if enrolled) */}
             {isEnrolled && (
-              <div className="px-6 pb-4">
+              <div className="px-4 sm:px-6 pb-4">
                 <div
                   className={cn(
                     "p-4 rounded-lg border",
@@ -399,8 +401,8 @@ const ModuleCard = ({
             )}
 
             {/* Topics Tags */}
-            <div className="px-6 pb-4">
-              <div className="flex flex-wrap gap-2">
+            <div className="px-4 sm:px-6 pb-4">
+              <div className="flex flex-wrap gap-1 sm:gap-2">
                 {initialModule.topics.slice(0, 3).map((topic, idx) => (
                   <Badge
                     key={idx}
@@ -434,20 +436,20 @@ const ModuleCard = ({
             </div>
 
             {/* Action Buttons */}
-            <div className="px-6 pb-6">
+            <div className="px-4 sm:px-6 pb-6">
               {!isEnrolled ? (
                 // Not enrolled: Show View Details button + small Enroll button
-                <div className="flex space-x-3">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                   {/* Main View Details Button */}
                   <Button
                     onClick={handleViewDetails}
                     variant="outline"
                     className={cn(
-                      "flex-1 h-12 font-mono uppercase tracking-wider text-sm font-bold bg-gradient-to-r border shadow-lg relative overflow-hidden transition-all duration-300"
+                      "flex-1 h-10 sm:h-12 font-mono uppercase tracking-wider text-xs sm:text-sm font-bold bg-gradient-to-r border shadow-lg relative overflow-hidden transition-all duration-300"
                     )}
                   >
                     <span className="relative z-10 flex items-center justify-center space-x-2">
-                      <Play className="w-4 h-4" />
+                      <Play className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>VIEW DETAILS</span>
                     </span>
                   </Button>
@@ -457,7 +459,7 @@ const ModuleCard = ({
                     onClick={handleEnroll}
                     disabled={localEnrolling}
                     className={cn(
-                      "h-12 px-4 font-mono uppercase tracking-wider text-xs font-bold",
+                      "h-10 sm:h-12 px-3 sm:px-4 font-mono uppercase tracking-wider text-xs font-bold",
                       "bg-gradient-to-r from-green-600 to-green-500",
                       "border-2 border-green-400",
                       "text-black",
@@ -481,17 +483,17 @@ const ModuleCard = ({
                 </div>
               ) : (
                 // Enrolled: Show View Details button + Enrolled status
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                   {/* Main View Details Button */}
                   <Button
                     onClick={handleViewDetails}
                     variant="outline"
                     className={cn(
-                      "flex-1 h-12 font-mono uppercase tracking-wider text-sm font-bold bg-gradient-to-r border shadow-lg relative overflow-hidden transition-all duration-300"
+                      "flex-1 h-10 sm:h-12 font-mono uppercase tracking-wider text-xs sm:text-sm font-bold bg-gradient-to-r border shadow-lg relative overflow-hidden transition-all duration-300"
                     )}
                   >
                     <span className="relative z-10 flex items-center justify-center space-x-2">
-                      <Play className="w-4 h-4" />
+                      <Play className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>VIEW DETAILS</span>
                     </span>
                   </Button>
@@ -499,7 +501,7 @@ const ModuleCard = ({
                   {/* Enrolled Status Badge */}
                   <div
                     className={cn(
-                      "flex items-center space-x-2 px-4 py-3",
+                      "flex items-center justify-center sm:justify-start space-x-2 px-3 sm:px-4 py-2 sm:py-3",
                       "bg-gradient-to-r from-green-600/20 to-green-500/20",
                       "border-2 border-green-400",
                       "rounded-lg shadow-lg shadow-green-400/30",
@@ -507,7 +509,7 @@ const ModuleCard = ({
                       "text-green-400"
                     )}
                   >
-                    <UserCheck className="w-4 h-4" />
+                    <UserCheck className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span>ENROLLED</span>
                   </div>
                 </div>

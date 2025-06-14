@@ -28,6 +28,7 @@ const SplitView = ({
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing || !resizeRef.current) return;
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) return;
 
       const container = resizeRef.current.parentElement;
       if (!container) return;
@@ -47,7 +48,9 @@ const SplitView = ({
       }
     };
 
-    if (isResizing) {
+    const isDesktopResize = typeof window !== 'undefined' && window.innerWidth >= 1024;
+
+    if (isResizing && isDesktopResize) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     }
@@ -58,26 +61,32 @@ const SplitView = ({
     };
   }, [isResizing, onLeftPaneWidthChange, onResizeEnd]);
 
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+
   return (
-    <div className="flex gap-2 mb-6 relative h-min">
+    <div className="flex flex-col lg:flex-row gap-2 lg:gap-4 mb-6 relative">
       {/* Left Pane - Video Player */}
       {!playgroundMaximized && (
         <div
-          className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden transition-all duration-300"
+          className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden transition-all duration-300 w-full lg:w-auto"
           style={{
-            width: videoMaximized ? "100%" : `${leftPaneWidth}%`,
-            minWidth: "300px",
+            width: videoMaximized 
+              ? "100%" 
+              : isDesktop 
+                ? `${leftPaneWidth}%` 
+                : "100%",
+            minWidth: isDesktop ? "300px" : "auto",
           }}
         >
           {leftPane}
         </div>
       )}
 
-      {/* Resize Handle - only show when both panes are visible */}
+      {/* Resize Handle - only show when both panes are visible and on desktop */}
       {!videoMaximized && !playgroundMaximized && (
         <div
           ref={resizeRef}
-          className="w-1 bg-green-400/30 hover:bg-green-400/60 cursor-col-resize transition-colors relative group"
+          className="hidden lg:block w-1 bg-green-400/30 hover:bg-green-400/60 cursor-col-resize transition-colors relative group"
           onMouseDown={onResizeStart}
         >
           <div className="absolute inset-0 w-3 -ml-1" />
@@ -88,10 +97,14 @@ const SplitView = ({
       {/* Right Pane - AI Playground */}
       {!videoMaximized && (
         <div
-          className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden transition-all duration-300"
+          className="bg-black/50 border border-green-400/30 rounded-lg overflow-hidden transition-all duration-300 w-full lg:w-auto"
           style={{
-            width: playgroundMaximized ? "100%" : `${100 - leftPaneWidth}%`,
-            minWidth: "300px",
+            width: playgroundMaximized 
+              ? "100%" 
+              : isDesktop 
+                ? `${100 - leftPaneWidth}%` 
+                : "100%",
+            minWidth: isDesktop ? "300px" : "auto",
           }}
         >
           {rightPane}

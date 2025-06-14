@@ -20,9 +20,6 @@ import PricingPage from "@/pages/PricingPage";
 import ProfilePage from "@/pages/ProfilePage";
 import SettingsPage from "@/pages/SettingsPage";
 import SignupPage from "@/pages/SignupPage";
-import SocialEngLab from "@/pages/SocialEngLab";
-import TerminalLab from "@/pages/TerminalLab";
-import WebSecLab from "@/pages/WebSecLab";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 
@@ -181,36 +178,6 @@ function App() {
                 <Layout>
                   <ProtectedRoute>
                     <GamePage />
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
-            <Route
-              path="/terminal-lab"
-              element={
-                <Layout showHeader={false} showFooter={false}>
-                  <ProtectedRoute>
-                    <TerminalLab />
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
-            <Route
-              path="/websec-lab"
-              element={
-                <Layout showHeader={false} showFooter={false}>
-                  <ProtectedRoute>
-                    <WebSecLab />
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
-            <Route
-              path="/social-eng-lab"
-              element={
-                <Layout showHeader={false} showFooter={false}>
-                  <ProtectedRoute>
-                    <SocialEngLab />
                   </ProtectedRoute>
                 </Layout>
               }

@@ -14,7 +14,7 @@ import {
   Terminal,
   Zap,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 interface LabStep {
@@ -41,41 +41,43 @@ const LabPage = () => {
     }
   );
 
-  // Transform API data to match expected format
-  const lab = labData?.success ? {
-    name: labData.data.content.title,
-    description: labData.data.content.description || "Interactive cybersecurity lab",
-    difficulty: labData.data.module.difficulty,
-    duration: labData.data.content.duration ? `${Math.ceil(labData.data.content.duration / 60)} min` : "60 min",
-    objectives: ["Complete the lab exercises", "Practice security techniques", "Gain hands-on experience"],
-    steps: [
-      {
-        id: "step-1",
-        title: "Setup Environment",
-        description: "Initialize the lab environment and tools",
-        completed: false
-      },
-      {
-        id: "step-2", 
-        title: "Execute Lab Tasks",
-        description: "Complete the main lab objectives",
-        completed: false
-      },
-      {
-        id: "step-3",
-        title: "Document Results",
-        description: "Record findings and submit results",
-        completed: false
-      }
-    ]
-  } : {
-    name: "Lab Environment",
-    description: "Interactive cybersecurity lab",
-    difficulty: "Intermediate", 
-    duration: "60 min",
-    objectives: ["Complete lab objectives"],
-    steps: [],
-  };
+  // Transform API data to match expected format - use useMemo to prevent infinite re-renders
+  const lab = useMemo(() => {
+    return labData?.success ? {
+      name: labData.data.content.title,
+      description: labData.data.content.description || "Interactive cybersecurity lab",
+      difficulty: labData.data.module.difficulty,
+      duration: labData.data.content.duration ? `${Math.ceil(labData.data.content.duration / 60)} min` : "60 min",
+      objectives: ["Complete the lab exercises", "Practice security techniques", "Gain hands-on experience"],
+      steps: [
+        {
+          id: "step-1",
+          title: "Setup Environment",
+          description: "Initialize the lab environment and tools",
+          completed: false
+        },
+        {
+          id: "step-2", 
+          title: "Execute Lab Tasks",
+          description: "Complete the main lab objectives",
+          completed: false
+        },
+        {
+          id: "step-3",
+          title: "Document Results",
+          description: "Record findings and submit results",
+          completed: false
+        }
+      ]
+    } : {
+      name: "Lab Environment",
+      description: "Interactive cybersecurity lab",
+      difficulty: "Intermediate", 
+      duration: "60 min",
+      objectives: ["Complete lab objectives"],
+      steps: [],
+    };
+  }, [labData]);
 
   // Use the labId from URL as the MongoDB content ID (it's already the real content ID now)
   const contentId = labId || "";

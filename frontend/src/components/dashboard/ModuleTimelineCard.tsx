@@ -295,7 +295,7 @@ export const ModuleTimelineCard = ({
                       module.color || "text-green-400"
                     )}
                   >
-                    {module.progress}%
+                    {module.progress || 0}%
                   </span>
                 </div>
                 <div className="relative">
@@ -305,11 +305,11 @@ export const ModuleTimelineCard = ({
                         "h-full rounded-full transition-all duration-1000",
                         isCompleted
                           ? "bg-gradient-to-r from-green-400 to-green-600"
-                          : module.progress > 0
+                          : (module.progress || 0) > 0
                           ? "bg-gradient-to-r from-yellow-400 to-orange-400"
                           : "bg-gray-600"
                       )}
-                      style={{ width: `${module.progress}%` }}
+                      style={{ width: `${module.progress || 0}%` }}
                     />
                   </div>
                   {/* Retro Progress Glow */}
@@ -320,7 +320,7 @@ export const ModuleTimelineCard = ({
                       `from-${colorName}-400 to-${colorName}-600`
                     )}
                     style={{
-                      width: `${module.progress}%`,
+                      width: `${module.progress || 0}%`,
                     }}
                   ></div>
                 </div>

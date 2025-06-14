@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useGetUserAchievementsQuery, useGetUserAchievementStatsQuery } from "@/features/api/apiSlice";
+import { useGetUserAchievementsQuery } from "@/features/api/apiSlice";
+import { useGetCurrentUserQuery } from "@/features/auth/authApi";
 import { Module } from "@/lib/types";
 import {
   Award,
@@ -56,11 +57,8 @@ export const AchievementsTab = ({ achievements, enrolledModules }: AchievementsT
     error: achievementsError 
   } = useGetUserAchievementsQuery();
   
-  const { 
-    data: statsData, 
-    isLoading: statsLoading, 
-    error: statsError 
-  } = useGetUserAchievementStatsQuery();
+  // Get current user data for real stats
+  const { data: currentUser } = useGetCurrentUserQuery();
 
   // Convert API data to component format
   const apiAchievements = useMemo(() => {
@@ -81,9 +79,10 @@ export const AchievementsTab = ({ achievements, enrolledModules }: AchievementsT
   // Fallback to dynamic achievements if API fails
   const dynamicAchievements = useMemo(() => {
     const completedModules = enrolledModules.filter(m => m.completed);
-    const totalLabs = enrolledModules.reduce((sum, m) => sum + (m.labs || 0), 0);
-    const totalGames = enrolledModules.reduce((sum, m) => sum + (m.games || 0), 0);
-    const totalXP = completedModules.length * 100; // 100 XP per completed module
+    const userStats = currentUser?.data?.user?.stats;
+    const totalLabs = userStats?.labsCompleted || 0;
+    const totalGames = userStats?.gamesCompleted || 0;
+    const totalXP = userStats?.totalPoints || 0;
     
     const moduleAchievements: Achievement[] = [
       {
@@ -249,7 +248,7 @@ export const AchievementsTab = ({ achievements, enrolledModules }: AchievementsT
     ];
 
     return [...moduleAchievements, ...labAchievements, ...gameAchievements, ...xpAchievements, ...generalAchievements];
-  }, [enrolledModules]);
+  }, [enrolledModules, currentUser]);
 
   // Use API achievements if available, otherwise fallback to dynamic
   const allAchievements = useMemo(() => {
@@ -304,7 +303,7 @@ export const AchievementsTab = ({ achievements, enrolledModules }: AchievementsT
   }, [allAchievements]);
 
   // Show loading state
-  if (achievementsLoading || statsLoading) {
+  if (achievementsLoading) {
     return (
       <div className="space-y-6">
         <div className="bg-black/60 border border-green-400/30 rounded-lg p-6">
@@ -370,7 +369,7 @@ export const AchievementsTab = ({ achievements, enrolledModules }: AchievementsT
               MODULES_COMPLETED
             </div>
             <div className="text-2xl font-bold text-white font-mono">
-              {statsData?.success ? statsData.data.progress.modulesCompleted : enrolledModules.filter(m => m.completed).length}
+              {enrolledModules.filter(m => m.completed).length}
             </div>
             <div className="text-blue-300/70 text-xs font-mono">
               learning milestones
@@ -381,10 +380,10 @@ export const AchievementsTab = ({ achievements, enrolledModules }: AchievementsT
               NEXT_LEVEL_IN
             </div>
             <div className="text-2xl font-bold text-white font-mono">
-              {statsData?.success ? statsData.data.xp.xpToNext : Math.max(0, (Math.floor(stats.totalXP / 500) + 1) * 500 - stats.totalXP)}
+              {Math.max(0, (Math.floor(stats.totalXP / 500) + 1) * 500 - stats.totalXP)}
             </div>
             <div className="text-purple-300/70 text-xs font-mono">
-              XP to level {statsData?.success ? statsData.data.xp.level + 1 : Math.floor(stats.totalXP / 500) + 1}
+              XP to level {Math.floor(stats.totalXP / 500) + 1}
             </div>
           </div>
         </div>

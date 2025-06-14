@@ -38,9 +38,9 @@ export const ModuleProgressCard = ({ module }: ModuleProgressCardProps) => {
           <div>
             <div className="flex justify-between text-sm mb-2 font-mono">
               <span className="text-green-300/70">progress:</span>
-              <span className={module.color}>{module.progress}%</span>
+              <span className={module.color}>{module.progress || 0}%</span>
             </div>
-            <Progress value={module.progress} className="h-2" />
+            <Progress value={module.progress || 0} className="h-2" />
           </div>
           <div className="text-sm text-green-300/70 font-mono">
             difficulty: {module.difficulty.toLowerCase()} | duration:{" "}

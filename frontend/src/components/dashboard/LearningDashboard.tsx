@@ -1,6 +1,6 @@
 import { Module } from "@/lib/types";
 import { Flame, Star, Terminal, Trophy, Zap } from "lucide-react";
-import { useGetUserAchievementStatsQuery } from "@/features/api/apiSlice";
+import { useGetCurrentUserQuery } from "@/features/auth/authApi";
 
 interface LearningDashboardProps {
   enrolledModules: Module[];
@@ -107,13 +107,13 @@ const ProgressStatsCard = ({
 export const LearningDashboard = ({
   enrolledModules,
 }: LearningDashboardProps) => {
-  // Fetch real user achievement stats
-  const { data: achievementStats } = useGetUserAchievementStatsQuery();
-
+  // Get current user data for real stats
+  const { data: currentUser } = useGetCurrentUserQuery();
+  
   const totalProgress =
     enrolledModules.length > 0
       ? Math.round(
-          enrolledModules.reduce((sum, module) => sum + module.progress, 0) /
+          enrolledModules.reduce((sum, module) => sum + (module.progress || 0), 0) /
             enrolledModules.length
         )
       : 0;
@@ -122,17 +122,14 @@ export const LearningDashboard = ({
     (module) => module.completed
   ).length;
   const inProgressModules = enrolledModules.filter(
-    (module) => module.progress > 0 && !module.completed
+    (module) => (module.progress || 0) > 0 && !module.completed
   ).length;
 
-  // Use real data from API or fallback to calculated values
+  // Use real user data instead of dummy values
   const currentStreak = 7; // TODO: Add streak tracking to backend API
-  const totalXP = achievementStats?.success 
-    ? achievementStats.data.xp.current 
-    : enrolledModules.reduce((sum, module) => sum + module.progress * 10, 0);
-  const nextMilestone = achievementStats?.success 
-    ? achievementStats.data.xp.nextLevelXP 
-    : 1000;
+  const totalXP = currentUser?.data?.user?.stats?.totalPoints || 0;
+  const userLevel = currentUser?.data?.user?.stats?.level || 1;
+  const nextMilestone = userLevel * 1000;
 
   return (
     <div className="space-y-8">

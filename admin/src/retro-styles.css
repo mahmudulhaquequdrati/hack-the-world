@@ -1,0 +1,185 @@
+/* Retro Admin Panel Styles */
+
+.retro-glow {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+  to {
+    text-shadow: 0 0 15px currentColor, 0 0 25px currentColor, 0 0 35px currentColor;
+  }
+}
+
+.retro-border {
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 255, 0, 0.2));
+  background-clip: padding-box;
+  border-image: linear-gradient(135deg, #00ffff, #00ff00) 1;
+  box-shadow: 
+    0 0 10px rgba(0, 255, 255, 0.3),
+    inset 0 0 10px rgba(0, 255, 255, 0.1);
+}
+
+.retro-button {
+  background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 0 5px rgba(0, 255, 0, 0.3),
+    inset 0 0 5px rgba(0, 255, 0, 0.1);
+}
+
+.retro-button:hover {
+  background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+  box-shadow: 
+    0 0 15px rgba(0, 255, 0, 0.5),
+    inset 0 0 10px rgba(0, 255, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.retro-input {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #00ffff;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  box-shadow: 
+    0 0 5px rgba(0, 255, 255, 0.3),
+    inset 0 0 5px rgba(0, 255, 255, 0.1);
+}
+
+.retro-input:focus {
+  border-color: #00ff00;
+  box-shadow: 
+    0 0 10px rgba(0, 255, 0, 0.5),
+    inset 0 0 10px rgba(0, 255, 0, 0.2);
+  outline: none;
+}
+
+.terminal-window {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(26, 26, 26, 0.9));
+  border: 1px solid #00ff00;
+  border-radius: 8px;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 0, 0.3),
+    inset 0 0 20px rgba(0, 255, 0, 0.05);
+  position: relative;
+}
+
+.terminal-window::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 0, 0.03) 2px,
+      rgba(0, 255, 0, 0.03) 4px
+    );
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+.retro-card {
+  background: linear-gradient(135deg, rgba(15, 15, 15, 0.95), rgba(30, 30, 30, 0.95));
+  border: 1px solid #00ffff;
+  border-radius: 6px;
+  box-shadow: 
+    0 0 15px rgba(0, 255, 255, 0.2),
+    inset 0 0 15px rgba(0, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.retro-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 0 25px rgba(0, 255, 255, 0.4),
+    inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+.retro-text-green {
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+}
+
+.retro-text-cyan {
+  color: #00ffff;
+  font-family: 'Courier New', monospace;
+}
+
+.retro-text-amber {
+  color: #ffbf00;
+  font-family: 'Courier New', monospace;
+}
+
+.retro-grid-bg {
+  background-image: 
+    linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.retro-header {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 20, 0.95));
+  border-bottom: 2px solid #00ff00;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.cyber-green {
+  color: #00ff00;
+}
+
+.cyber-cyan {
+  color: #00ffff;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar styling for retro feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #00ff00, #00ffff);
+  border-radius: 4px;
+  box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #00ffff, #00ff00);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}

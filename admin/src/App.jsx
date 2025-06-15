@@ -18,6 +18,7 @@ import ModulesManagerEnhanced from "./components/ModulesManagerEnhanced";
 import PhaseDetailView from "./components/PhaseDetailView";
 import PhasesManager from "./components/PhasesManager";
 import Register from "./components/Register";
+import UserBasedEnrollmentView from "./components/UserBasedEnrollmentView";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Protected Route component
@@ -99,6 +100,7 @@ function App() {
               element={<ContentProgressDetailView />}
             />
             <Route path="enrollments" element={<EnrollmentTrackingPage />} />
+            <Route path="enrollments/users" element={<UserBasedEnrollmentView />} />
           </Route>
         </Routes>
       </Router>

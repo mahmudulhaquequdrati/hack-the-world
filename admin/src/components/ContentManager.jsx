@@ -12,7 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { contentAPI, modulesAPI } from "../services/api";
+import { contentAPI, modulesAPI, phasesAPI } from "../services/api";
 
 const ContentManager = () => {
   const [content, setContent] = useState([]);
@@ -46,11 +46,42 @@ const ContentManager = () => {
     instructions: "",
     duration: 1,
     resources: [],
+    // Enhanced metadata fields
+    tags: [],
+    difficulty: "beginner",
+    prerequisites: [],
+    learningObjectives: [],
+    estimatedTime: 1,
+    contentFormat: "",
+    language: "en",
+    accessibility: {
+      hasSubtitles: false,
+      hasTranscript: false,
+      hasAudioDescription: false,
+    },
+    technicalRequirements: [],
+    author: "",
+    version: "1.0",
+    lastUpdated: "",
+    isPublished: false,
+    thumbnailUrl: "",
   });
 
-  // View modes (removed groupedBySection)
-  const [viewMode, setViewMode] = useState("groupedByModule"); // Default to grid-like grouped view
+  // Multiple upload state
+  const [showMultipleUpload, setShowMultipleUpload] = useState(false);
+  const [multipleUploads, setMultipleUploads] = useState([]);
+  const [selectedPhaseForUpload, setSelectedPhaseForUpload] = useState("");
+  const [selectedModuleForUpload, setSelectedModuleForUpload] = useState("");
+  const [phases, setPhases] = useState([]);
+
+  // View modes (removed list view)
+  const [viewMode, setViewMode] = useState("hierarchical"); // Default to hierarchical view
   const [groupedContent, setGroupedContent] = useState({});
+  
+  // Hierarchical navigation state
+  const [selectedPhaseId, setSelectedPhaseId] = useState("");
+  const [selectedModuleId, setSelectedModuleId] = useState("");
+  const [hierarchicalData, setHierarchicalData] = useState([]);
 
   const contentTypes = [
     { value: "video", label: "Video", icon: "🎥", color: "bg-blue-500" },
@@ -64,16 +95,18 @@ const ContentManager = () => {
     },
   ];
 
-  const difficulties = ["beginner", "intermediate", "advanced", "expert"];
 
   useEffect(() => {
     fetchModules();
+    fetchPhases();
   }, []);
 
   // Separate useEffect for content loading based on view mode and dependencies
   useEffect(() => {
-    if (viewMode === "list") {
-      fetchContent();
+    if (viewMode === "hierarchical") {
+      if (phases.length > 0 && modules.length > 0) {
+        fetchHierarchicalData();
+      }
     } else if (viewMode === "groupedByModule") {
       if (modules.length > 0) {
         fetchAllModulesGrouped();
@@ -85,7 +118,7 @@ const ContentManager = () => {
         fetchAllContentGroupedByType();
       }
     }
-  }, [filters, viewMode, modules]); // Added modules to dependency array
+  }, [filters, viewMode, modules, phases]); // Added phases to dependency array
 
   // Fetch available sections when module is selected
   useEffect(() => {
@@ -102,6 +135,15 @@ const ContentManager = () => {
       setModules(response.data || []);
     } catch (err) {
       console.error("Error fetching modules:", err);
+    }
+  };
+
+  const fetchPhases = async () => {
+    try {
+      const response = await phasesAPI.getAll();
+      setPhases(response.data || []);
+    } catch (err) {
+      console.error("Error fetching phases:", err);
     }
   };
 
@@ -136,18 +178,6 @@ const ContentManager = () => {
     }
   };
 
-  const fetchContentByModule = async (moduleId) => {
-    try {
-      setLoading(true);
-      const response = await contentAPI.getByModule(moduleId);
-      setContent(response.data || []);
-    } catch (err) {
-      console.error("Error fetching content for module:", err);
-      setError("Failed to fetch content for module");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchSectionsByModule = async (moduleId) => {
     try {
@@ -189,6 +219,53 @@ const ContentManager = () => {
     } catch (err) {
       console.error("Error fetching content grouped by type:", err);
       setError("Failed to fetch content grouped by type");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchHierarchicalData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch all content
+      const contentResponse = await contentAPI.getAll();
+      const allContent = contentResponse.data || [];
+
+      // Create hierarchical structure: Phases -> Modules -> Content
+      const hierarchical = phases.map(phase => {
+        const phaseModules = modules.filter(module => module.phaseId === phase.id);
+        
+        return {
+          ...phase,
+          modules: phaseModules.map(module => {
+            const moduleContent = allContent.filter(content => content.moduleId === module.id);
+            
+            // Group content by sections within each module
+            const contentBySections = {};
+            moduleContent.forEach(content => {
+              const section = content.section || "Uncategorized";
+              if (!contentBySections[section]) {
+                contentBySections[section] = [];
+              }
+              contentBySections[section].push(content);
+            });
+
+            return {
+              ...module,
+              content: moduleContent,
+              contentBySections,
+              contentCount: moduleContent.length,
+              totalDuration: moduleContent.reduce((sum, item) => sum + (item.duration || 0), 0)
+            };
+          }).filter(module => module.content.length > 0) // Only show modules with content
+        };
+      }).filter(phase => phase.modules.length > 0); // Only show phases with modules that have content
+
+      setHierarchicalData(hierarchical);
+    } catch (err) {
+      console.error("Error fetching hierarchical data:", err);
+      setError("Failed to fetch hierarchical data");
     } finally {
       setLoading(false);
     }
@@ -242,7 +319,9 @@ const ContentManager = () => {
 
   const handleViewModeChange = (mode) => {
     setViewMode(mode);
-    if (mode === "groupedByModule") {
+    if (mode === "hierarchical") {
+      fetchHierarchicalData();
+    } else if (mode === "groupedByModule") {
       fetchAllModulesGrouped();
     } else if (mode === "groupedByType") {
       if (filters.type) {
@@ -264,6 +343,25 @@ const ContentManager = () => {
       instructions: "",
       duration: 1,
       resources: [],
+      // Enhanced metadata fields
+      tags: [],
+      difficulty: "beginner",
+      prerequisites: [],
+      learningObjectives: [],
+      estimatedTime: 1,
+      contentFormat: "",
+      language: "en",
+      accessibility: {
+        hasSubtitles: false,
+        hasTranscript: false,
+        hasAudioDescription: false,
+      },
+      technicalRequirements: [],
+      author: "",
+      version: "1.0",
+      lastUpdated: "",
+      isPublished: false,
+      thumbnailUrl: "",
     });
     setEditingContent(null);
     // Reset section auto-complete state
@@ -309,8 +407,7 @@ const ContentManager = () => {
 
       setShowForm(false);
       resetForm();
-      fetchContent();
-      // Refresh grouped content if in grouped view
+      // Refresh grouped content based on current view mode
       if (viewMode === "groupedByModule") {
         fetchAllModulesGrouped();
       } else if (viewMode === "groupedByType") {
@@ -342,6 +439,25 @@ const ContentManager = () => {
       instructions: contentItem.instructions || "",
       duration: contentItem.duration || 1,
       resources: contentItem.resources || [],
+      // Enhanced metadata fields
+      tags: contentItem.tags || [],
+      difficulty: contentItem.difficulty || "beginner",
+      prerequisites: contentItem.prerequisites || [],
+      learningObjectives: contentItem.learningObjectives || [],
+      estimatedTime: contentItem.estimatedTime || 1,
+      contentFormat: contentItem.contentFormat || "",
+      language: contentItem.language || "en",
+      accessibility: {
+        hasSubtitles: contentItem.accessibility?.hasSubtitles || false,
+        hasTranscript: contentItem.accessibility?.hasTranscript || false,
+        hasAudioDescription: contentItem.accessibility?.hasAudioDescription || false,
+      },
+      technicalRequirements: contentItem.technicalRequirements || [],
+      author: contentItem.author || "",
+      version: contentItem.version || "1.0",
+      lastUpdated: contentItem.lastUpdated || "",
+      isPublished: contentItem.isPublished || false,
+      thumbnailUrl: contentItem.thumbnailUrl || "",
     });
     // Set section input value for auto-complete
     setSectionInputValue(contentItem.section || "");
@@ -368,8 +484,7 @@ const ContentManager = () => {
         await contentAPI.delete(contentItem.id);
         setSuccess("Content deleted successfully");
       }
-      fetchContent();
-      // Refresh grouped content if in grouped view
+      // Refresh grouped content based on current view mode
       if (viewMode === "groupedByModule") {
         fetchAllModulesGrouped();
       } else if (viewMode === "groupedByType") {
@@ -420,263 +535,255 @@ const ContentManager = () => {
     section.toLowerCase().includes(sectionInputValue.toLowerCase())
   );
 
-  const renderContentList = () => (
-    <div className="bg-gray-800 rounded-lg shadow border border-gray-600 overflow-hidden">
-      {/* Header with statistics */}
-      <div className="bg-gradient-to-r from-gray-700 to-gray-600 px-4 sm:px-6 py-4 border-b border-gray-600">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <h3 className="text-lg font-semibold text-cyan-400 flex items-center">
-            <FolderIcon className="h-5 w-5 mr-2" />
-            Content Library
-          </h3>
-          <div className="flex flex-col sm:flex-row gap-3 text-sm">
-            <span className="text-gray-300">
-              {content.length} item{content.length !== 1 ? "s" : ""}
-            </span>
-            <span className="text-sm text-gray-400">
-              {content.reduce((total, item) => total + (item.duration || 0), 0)}{" "}
-              min total
-            </span>
-          </div>
-        </div>
-      </div>
+  // Multiple upload handlers
+  const handleMultipleUploadStart = () => {
+    setShowMultipleUpload(true);
+    setMultipleUploads([{
+      id: Date.now(),
+      type: "video",
+      title: "",
+      description: "",
+      section: "",
+      url: "",
+      instructions: "",
+      duration: 1,
+      resources: [],
+    }]);
+    setSelectedPhaseForUpload("");
+    setSelectedModuleForUpload("");
+  };
 
-      {/* Desktop Table View */}
-      <div className="hidden lg:block overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-700">
-          <thead className="bg-gray-700/50">
-            <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
-                Content Information
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
-                Type & Duration
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
-                Module & Section
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-cyan-400 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-gray-800 divide-y divide-gray-700/50">
-            {content.map((item, index) => {
-              const module = modules.find((m) => m.id === item.module?.id);
-              const contentType = contentTypes.find(
-                (t) => t.value === item.type
-              );
+  const addNewUploadItem = () => {
+    setMultipleUploads(prev => [...prev, {
+      id: Date.now(),
+      type: "video",
+      title: "",
+      description: "",
+      section: "",
+      url: "",
+      instructions: "",
+      duration: 1,
+      resources: [],
+    }]);
+  };
 
-              return (
-                <tr
-                  key={item.id}
-                  className="hover:bg-gradient-to-r hover:from-gray-700/50 hover:to-gray-600/30 transition-all duration-200 group"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-start space-x-3">
-                      <div
-                        className={`flex-shrink-0 w-10 h-10 rounded-lg ${contentType?.color} flex items-center justify-center text-white font-bold text-lg shadow-lg`}
-                      >
-                        {contentType?.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-green-400 truncate group-hover:text-green-300 transition-colors">
-                          {item.title}
-                        </div>
-                        <div className="text-sm text-gray-400 mt-1 line-clamp-2">
-                          {item.description?.substring(0, 120)}
-                          {item.description?.length > 120 && "..."}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="space-y-2">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white shadow-sm ${contentType?.color}`}
-                      >
-                        {contentType?.label}
-                      </span>
-                      <div className="flex items-center text-xs text-gray-400">
-                        <ClockIcon className="h-3 w-3 mr-1" />
-                        {item.duration} min
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="space-y-1">
-                      <div className="text-sm text-gray-300 font-medium">
-                        {module?.title || "Unknown Module"}
-                      </div>
-                      <div className="flex items-center text-xs text-cyan-400">
-                        <FolderIcon className="h-3 w-3 mr-1" />
-                        {item.section || "No Section"}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <Link
-                        to={`/content/${item.id}`}
-                        className="text-green-400 hover:text-green-300 transition-colors duration-200 flex items-center text-sm font-medium"
-                      >
-                        <EyeIcon className="h-4 w-4 mr-1" />
-                        View
-                      </Link>
-                      <div className="h-4 w-px bg-gray-600"></div>
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200 flex items-center text-sm font-medium"
-                      >
-                        <svg
-                          className="h-4 w-4 mr-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                        Edit
-                      </button>
-                      <div className="h-4 w-px bg-gray-600"></div>
-                      <button
-                        onClick={() => handleDelete(item)}
-                        className="text-red-400 hover:text-red-300 transition-colors duration-200 flex items-center text-sm font-medium"
-                      >
-                        <svg
-                          className="h-4 w-4 mr-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+  const removeUploadItem = (id) => {
+    setMultipleUploads(prev => prev.filter(item => item.id !== id));
+  };
 
-      {/* Mobile Card View */}
-      <div className="lg:hidden space-y-4 p-4">
-        {content.map((item) => {
-          const module = modules.find((m) => m.id === item.module?.id);
-          const contentType = contentTypes.find((t) => t.value === item.type);
+  const updateUploadItem = (id, field, value) => {
+    setMultipleUploads(prev => prev.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
 
-          return (
-            <div
-              key={item.id}
-              className="bg-gray-700/30 rounded-lg p-4 space-y-3 border border-gray-600"
+  const handleMultipleUploadSubmit = async () => {
+    if (!selectedModuleForUpload) {
+      setError("Please select a module for upload");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      // Validate all items
+      for (const item of multipleUploads) {
+        if (!item.title || !item.description) {
+          setError("Please fill in title and description for all items");
+          return;
+        }
+        if (item.type === "video" && !item.url) {
+          setError("URL is required for video content");
+          return;
+        }
+        if ((item.type === "lab" || item.type === "game") && !item.instructions) {
+          setError("Instructions are required for lab and game content");
+          return;
+        }
+      }
+
+      // Create all content items
+      const createPromises = multipleUploads.map(item => {
+        const contentData = {
+          ...item,
+          moduleId: selectedModuleForUpload,
+        };
+        delete contentData.id; // Remove temporary ID
+        return contentAPI.create(contentData);
+      });
+
+      await Promise.all(createPromises);
+
+      setSuccess(`Successfully created ${multipleUploads.length} content items`);
+      setShowMultipleUpload(false);
+      setMultipleUploads([]);
+      fetchContent();
+      // Refresh grouped content
+      if (viewMode === "groupedByModule") {
+        fetchAllModulesGrouped();
+      } else if (viewMode === "groupedByType") {
+        fetchAllContentGroupedByType();
+      }
+    } catch (err) {
+      console.error("Error creating multiple content:", err);
+      setError("Failed to create content items");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeMultipleUpload = () => {
+    setShowMultipleUpload(false);
+    setMultipleUploads([]);
+    setSelectedPhaseForUpload("");
+    setSelectedModuleForUpload("");
+    setError("");
+    setSuccess("");
+  };
+
+  const renderHierarchicalView = () => {
+    return (
+      <div className="space-y-8">
+        {hierarchicalData.map((phase) => (
+          <div key={phase.id} className="retro-card p-6">
+            {/* Phase Header */}
+            <div 
+              className="flex items-center justify-between mb-6 cursor-pointer p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-lg border border-purple-500/30 hover:border-purple-400/50 transition-all"
+              onClick={() => setSelectedPhaseId(selectedPhaseId === phase.id ? "" : phase.id)}
             >
-              {/* Header with type and actions */}
-              <div className="flex items-center justify-between">
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white shadow-sm ${contentType?.color}`}
-                >
-                  {contentType?.icon} {contentType?.label}
-                </span>
-                <div className="flex gap-2">
-                  <Link
-                    to={`/content/${item.id}`}
-                    className="p-2 text-green-400 hover:text-green-300 transition-colors"
-                    title="View Details"
-                  >
-                    <EyeIcon className="w-4 h-4" />
-                  </Link>
-                  <button
-                    onClick={() => handleEdit(item)}
-                    className="p-2 text-cyan-400 hover:text-cyan-300 transition-colors"
-                    title="Edit Content"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item)}
-                    className="p-2 text-red-400 hover:text-red-300 transition-colors"
-                    title="Delete Content"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center mr-4">
+                  <span className="text-2xl font-bold text-white font-mono">P</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-purple-400 font-mono retro-glow">
+                    📚 {phase.title}
+                  </h2>
+                  <p className="text-sm text-gray-400 font-mono">
+                    {phase.modules.length} modules • {phase.modules.reduce((sum, m) => sum + m.contentCount, 0)} content items
+                  </p>
                 </div>
               </div>
-
-              {/* Content Information */}
-              <div>
-                <h3 className="font-medium text-green-400 mb-1">
-                  {item.title}
-                </h3>
-                <p className="text-gray-300 text-sm mb-2">{item.description}</p>
-              </div>
-
-              {/* Metadata */}
-              <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
-                <span className="flex items-center">
-                  <ClockIcon className="h-3 w-3 mr-1" />
-                  {item.duration} min
-                </span>
-                <span className="flex items-center">
-                  <FolderIcon className="h-3 w-3 mr-1" />
-                  {module?.title || "Unknown Module"}
-                </span>
-                <span>{item.section || "No Section"}</span>
+              <div className="text-purple-400 text-2xl font-mono">
+                {selectedPhaseId === phase.id ? "▲" : "▼"}
               </div>
             </div>
-          );
-        })}
-      </div>
 
-      {content.length === 0 && (
-        <div className="text-center py-12">
-          <FolderIcon className="mx-auto h-12 w-12 text-gray-400 opacity-50" />
-          <h3 className="mt-2 text-sm font-medium text-gray-400">
-            No content found
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Get started by creating your first content item.
-          </p>
-        </div>
-      )}
-    </div>
-  );
+            {/* Modules (shown when phase is expanded) */}
+            {selectedPhaseId === phase.id && (
+              <div className="space-y-4 ml-8">
+                {phase.modules.map((module) => (
+                  <div key={module.id} className="border border-cyan-500/30 rounded-lg">
+                    {/* Module Header */}
+                    <div 
+                      className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-900/30 to-green-900/30 rounded-t-lg cursor-pointer hover:bg-gradient-to-r hover:from-cyan-800/40 hover:to-green-800/40 transition-all"
+                      onClick={() => setSelectedModuleId(selectedModuleId === module.id ? "" : module.id)}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-green-500 rounded-lg flex items-center justify-center mr-3">
+                          <span className="text-lg font-bold text-white font-mono">M</span>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-cyan-400 font-mono">
+                            📖 {module.title}
+                          </h3>
+                          <div className="flex items-center space-x-4 text-xs text-gray-400 font-mono">
+                            <span>{module.contentCount} items</span>
+                            <span>{module.totalDuration} min</span>
+                            <span className={`px-2 py-1 rounded ${
+                              module.difficulty === "Beginner" ? "bg-green-900 text-green-400" :
+                              module.difficulty === "Intermediate" ? "bg-yellow-900 text-yellow-400" :
+                              module.difficulty === "Advanced" ? "bg-orange-900 text-orange-400" :
+                              "bg-red-900 text-red-400"
+                            }`}>
+                              {module.difficulty}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-cyan-400 text-xl font-mono">
+                        {selectedModuleId === module.id ? "▲" : "▼"}
+                      </div>
+                    </div>
+
+                    {/* Content (shown when module is expanded) */}
+                    {selectedModuleId === module.id && (
+                      <div className="p-4 bg-gray-900/50 rounded-b-lg">
+                        {Object.entries(module.contentBySections).map(([sectionName, sectionContent]) => (
+                          <div key={sectionName} className="mb-6 last:mb-0">
+                            <h4 className="text-md font-medium text-green-400 font-mono mb-3 border-b border-green-500/30 pb-2">
+                              📁 {sectionName} ({sectionContent.length} items)
+                            </h4>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {sectionContent.map((contentItem) => {
+                                const contentType = contentTypes.find(t => t.value === contentItem.type);
+                                return (
+                                  <div key={contentItem.id} className="bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-600 rounded-lg p-4 hover:border-green-500/50 transition-all group">
+                                    <div className="flex items-start justify-between mb-2">
+                                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${contentType?.color} text-white`}>
+                                        {contentType?.icon} {contentType?.label}
+                                      </span>
+                                      <span className="text-xs text-gray-400 font-mono">{contentItem.duration}m</span>
+                                    </div>
+                                    
+                                    <h5 className="font-medium text-green-400 mb-1 line-clamp-2 group-hover:text-green-300 transition-colors">
+                                      {contentItem.title}
+                                    </h5>
+                                    
+                                    <p className="text-xs text-gray-400 line-clamp-2 mb-3">
+                                      {contentItem.description}
+                                    </p>
+                                    
+                                    <div className="flex gap-2">
+                                      <Link
+                                        to={`/content/${contentItem.id}`}
+                                        className="text-xs text-green-400 hover:text-green-300 transition-colors font-mono"
+                                      >
+                                        [VIEW]
+                                      </Link>
+                                      <button
+                                        onClick={() => handleEdit(contentItem)}
+                                        className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors font-mono"
+                                      >
+                                        [EDIT]
+                                      </button>
+                                      <button
+                                        onClick={() => handleDelete(contentItem)}
+                                        className="text-xs text-red-400 hover:text-red-300 transition-colors font-mono"
+                                      >
+                                        [DELETE]
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {hierarchicalData.length === 0 && (
+          <div className="text-center py-12 retro-card">
+            <div className="text-gray-400 mb-4 font-mono retro-text-cyan">
+              ◆ No content hierarchy found ◆
+            </div>
+            <p className="text-gray-600 text-sm font-mono">
+              Create some content to see the hierarchical structure
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderGroupedByModule = () => {
     return (
@@ -899,7 +1006,7 @@ const ContentManager = () => {
           {/* Module and Type Selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <label className="flex items-center text-sm font-semibold text-cyan-400">
                 <svg
                   className="h-4 w-4 mr-2"
                   fill="none"
@@ -937,7 +1044,7 @@ const ContentManager = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <label className="flex items-center text-sm font-semibold text-cyan-400">
                 <svg
                   className="h-4 w-4 mr-2"
                   fill="none"
@@ -972,7 +1079,7 @@ const ContentManager = () => {
 
           {/* Title Input */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+            <label className="flex items-center text-sm font-semibold text-cyan-400">
               <svg
                 className="h-4 w-4 mr-2"
                 fill="none"
@@ -1003,7 +1110,7 @@ const ContentManager = () => {
 
           {/* Enhanced Section Input */}
           <div className="relative">
-            <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+            <label className="flex items-center text-sm font-semibold text-cyan-400">
               <svg
                 className="h-4 w-4 mr-2"
                 fill="none"
@@ -1125,7 +1232,7 @@ const ContentManager = () => {
 
           {/* Description Input */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+            <label className="flex items-center text-sm font-semibold text-cyan-400">
               <svg
                 className="h-4 w-4 mr-2"
                 fill="none"
@@ -1159,7 +1266,7 @@ const ContentManager = () => {
           {/* URL Input */}
           {formData.type === "video" && (
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <label className="flex items-center text-sm font-semibold text-cyan-400">
                 <svg
                   className="h-4 w-4 mr-2"
                   fill="none"
@@ -1191,7 +1298,7 @@ const ContentManager = () => {
           {/* Instructions Input */}
           {(formData.type === "lab" || formData.type === "game") && (
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <label className="flex items-center text-sm font-semibold text-cyan-400">
                 <svg
                   className="h-4 w-4 mr-2"
                   fill="none"
@@ -1226,7 +1333,7 @@ const ContentManager = () => {
 
           {/* Duration Input */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+            <label className="flex items-center text-sm font-semibold text-cyan-400">
               <svg
                 className="h-4 w-4 mr-2"
                 fill="none"
@@ -1259,7 +1366,7 @@ const ContentManager = () => {
 
           {/* Resources Input */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+            <label className="flex items-center text-sm font-semibold text-cyan-400">
               <svg
                 className="h-4 w-4 mr-2"
                 fill="none"
@@ -1289,6 +1396,236 @@ const ContentManager = () => {
               rows="3"
               placeholder="Enter each resource URL or file path on a new line"
             />
+          </div>
+
+          {/* Enhanced Metadata Section */}
+          <div className="border-t border-cyan-500/30 pt-6 mt-6">
+            <h3 className="text-lg font-semibold text-cyan-400 mb-4 font-mono retro-glow">
+              📊 Advanced Metadata
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Tags */}
+              <div className="space-y-2">
+                <label className="flex items-center text-sm font-semibold text-cyan-400">
+                  🏷️ Tags (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={formData.tags.join(", ")}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      tags: e.target.value.split(",").map(tag => tag.trim()).filter(Boolean),
+                    }))
+                  }
+                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+                  placeholder="cybersecurity, network, basics"
+                />
+              </div>
+
+              {/* Difficulty */}
+              <div className="space-y-2">
+                <label className="flex items-center text-sm font-semibold text-cyan-400">
+                  📈 Difficulty Level
+                </label>
+                <select
+                  value={formData.difficulty}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, difficulty: e.target.value }))
+                  }
+                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+                >
+                  <option value="beginner">🟢 Beginner</option>
+                  <option value="intermediate">🟡 Intermediate</option>
+                  <option value="advanced">🟠 Advanced</option>
+                  <option value="expert">🔴 Expert</option>
+                </select>
+              </div>
+
+              {/* Learning Objectives */}
+              <div className="space-y-2">
+                <label className="flex items-center text-sm font-semibold text-cyan-400">
+                  🎯 Learning Objectives
+                </label>
+                <textarea
+                  value={formData.learningObjectives.join("\n")}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      learningObjectives: e.target.value.split("\n").filter(Boolean),
+                    }))
+                  }
+                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+                  rows="3"
+                  placeholder="Enter each learning objective on a new line"
+                />
+              </div>
+
+              {/* Technical Requirements */}
+              <div className="space-y-2">
+                <label className="flex items-center text-sm font-semibold text-cyan-400">
+                  💻 Technical Requirements
+                </label>
+                <textarea
+                  value={formData.technicalRequirements.join("\n")}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      technicalRequirements: e.target.value.split("\n").filter(Boolean),
+                    }))
+                  }
+                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+                  rows="3"
+                  placeholder="Virtual machine, Kali Linux, etc."
+                />
+              </div>
+
+              {/* Author & Version */}
+              <div className="space-y-2">
+                <label className="flex items-center text-sm font-semibold text-cyan-400">
+                  👤 Author
+                </label>
+                <input
+                  type="text"
+                  value={formData.author}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, author: e.target.value }))
+                  }
+                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+                  placeholder="Content author name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center text-sm font-semibold text-cyan-400">
+                  🔢 Version
+                </label>
+                <input
+                  type="text"
+                  value={formData.version}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, version: e.target.value }))
+                  }
+                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+                  placeholder="1.0"
+                />
+              </div>
+
+              {/* Language */}
+              <div className="space-y-2">
+                <label className="flex items-center text-sm font-semibold text-cyan-400">
+                  🌐 Language
+                </label>
+                <select
+                  value={formData.language}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, language: e.target.value }))
+                  }
+                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+                >
+                  <option value="en">🇺🇸 English</option>
+                  <option value="es">🇪🇸 Spanish</option>
+                  <option value="fr">🇫🇷 French</option>
+                  <option value="de">🇩🇪 German</option>
+                  <option value="zh">🇨🇳 Chinese</option>
+                  <option value="ja">🇯🇵 Japanese</option>
+                </select>
+              </div>
+
+              {/* Thumbnail URL */}
+              <div className="space-y-2">
+                <label className="flex items-center text-sm font-semibold text-cyan-400">
+                  🖼️ Thumbnail URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.thumbnailUrl}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, thumbnailUrl: e.target.value }))
+                  }
+                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
+                  placeholder="https://example.com/thumbnail.jpg"
+                />
+              </div>
+            </div>
+
+            {/* Accessibility Features */}
+            <div className="mt-6">
+              <label className="flex items-center text-sm font-semibold text-cyan-400 mb-3">
+                ♿ Accessibility Features
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.accessibility.hasSubtitles}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        accessibility: {
+                          ...prev.accessibility,
+                          hasSubtitles: e.target.checked,
+                        },
+                      }))
+                    }
+                    className="rounded bg-gray-700 border-gray-600 text-cyan-400 focus:ring-cyan-400"
+                  />
+                  <span className="text-green-400 text-sm">📝 Has Subtitles</span>
+                </label>
+                
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.accessibility.hasTranscript}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        accessibility: {
+                          ...prev.accessibility,
+                          hasTranscript: e.target.checked,
+                        },
+                      }))
+                    }
+                    className="rounded bg-gray-700 border-gray-600 text-cyan-400 focus:ring-cyan-400"
+                  />
+                  <span className="text-green-400 text-sm">📄 Has Transcript</span>
+                </label>
+                
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.accessibility.hasAudioDescription}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        accessibility: {
+                          ...prev.accessibility,
+                          hasAudioDescription: e.target.checked,
+                        },
+                      }))
+                    }
+                    className="rounded bg-gray-700 border-gray-600 text-cyan-400 focus:ring-cyan-400"
+                  />
+                  <span className="text-green-400 text-sm">🔊 Audio Description</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Publishing Status */}
+            <div className="mt-6 flex items-center space-x-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.isPublished}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, isPublished: e.target.checked }))
+                  }
+                  className="rounded bg-gray-700 border-gray-600 text-green-400 focus:ring-green-400"
+                />
+                <span className="text-green-400 font-semibold">🚀 Publish Immediately</span>
+              </label>
+            </div>
           </div>
 
           {/* Form Submission */}
@@ -1335,14 +1672,25 @@ const ContentManager = () => {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          disabled={loading}
-          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200 w-full sm:w-auto"
-        >
-          <PlusIcon className="w-5 h-5 mr-2" />
-          Add Content
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowForm(true)}
+            disabled={loading}
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            <PlusIcon className="w-5 h-5 mr-2" />
+            Add Content
+          </button>
+          <button
+            onClick={handleMultipleUploadStart}
+            disabled={loading}
+            className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            <SparklesIcon className="w-5 h-5 mr-2" />
+            <span className="hidden sm:inline">Multiple Upload</span>
+            <span className="sm:hidden">Multi</span>
+          </button>
+        </div>
       </div>
 
       {/* Success Message */}
@@ -1373,7 +1721,7 @@ const ContentManager = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap xl:items-center gap-4 lg:gap-6">
             {/* Content Type Filter */}
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <label className="flex items-center text-sm font-semibold text-cyan-400">
                 <svg
                   className="h-4 w-4 mr-2"
                   fill="none"
@@ -1405,7 +1753,7 @@ const ContentManager = () => {
 
             {/* Module Filter */}
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <label className="flex items-center text-sm font-semibold text-cyan-400">
                 <svg
                   className="h-4 w-4 mr-2"
                   fill="none"
@@ -1437,20 +1785,20 @@ const ContentManager = () => {
 
             {/* View Mode */}
             <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-              <label className="block text-sm font-semibold text-cyan-400 flex items-center">
+              <label className="flex items-center text-sm font-semibold text-cyan-400">
                 <EyeIcon className="h-4 w-4 mr-2" />
                 View Mode
               </label>
               <div className="flex rounded-lg shadow-sm border border-gray-600 overflow-hidden">
                 <button
-                  onClick={() => handleViewModeChange("list")}
+                  onClick={() => handleViewModeChange("hierarchical")}
                   className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-200 ${
-                    viewMode === "list"
+                    viewMode === "hierarchical"
                       ? "bg-gradient-to-r from-cyan-500 to-green-500 text-white shadow-lg"
                       : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
                   }`}
                 >
-                  📋 List
+                  🔗 Hierarchical
                 </button>
                 <button
                   onClick={() => handleViewModeChange("groupedByModule")}
@@ -1460,7 +1808,7 @@ const ContentManager = () => {
                       : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
                   }`}
                 >
-                  📚 Module
+                  📚 Phase/Module
                 </button>
                 <button
                   onClick={() => handleViewModeChange("groupedByType")}
@@ -1470,7 +1818,7 @@ const ContentManager = () => {
                       : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
                   }`}
                 >
-                  🎯 Type
+                  🎯 Type/Section
                 </button>
               </div>
             </div>
@@ -1505,8 +1853,8 @@ const ContentManager = () => {
         </div>
       ) : (
         <>
-          {viewMode === "list"
-            ? renderContentList()
+          {viewMode === "hierarchical"
+            ? renderHierarchicalView()
             : viewMode === "groupedByModule"
             ? renderGroupedByModule()
             : renderGroupedByType()}
@@ -1515,6 +1863,243 @@ const ContentManager = () => {
 
       {/* Form Modal */}
       {showForm && renderForm()}
+
+      {/* Multiple Upload Modal */}
+      {showMultipleUpload && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto border border-cyan-500/30 shadow-2xl">
+            {/* Header */}
+            <div className="p-6 border-b border-cyan-500/30 bg-gradient-to-r from-gray-900 to-gray-800">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                    <SparklesIcon className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-purple-400">
+                      Multiple Content Upload
+                    </h2>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Upload multiple content items to a module at once
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeMultipleUpload}
+                  className="text-gray-400 hover:text-red-400 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-700"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Phase and Module Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
+                <div>
+                  <label className="block text-sm font-semibold text-purple-400 mb-2">
+                    📚 Select Phase
+                  </label>
+                  <select
+                    value={selectedPhaseForUpload}
+                    onChange={(e) => {
+                      setSelectedPhaseForUpload(e.target.value);
+                      setSelectedModuleForUpload(""); // Reset module selection
+                    }}
+                    className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-gray-700 text-green-400"
+                  >
+                    <option value="">Select Phase</option>
+                    {phases.map((phase) => (
+                      <option key={phase.id} value={phase.id}>
+                        {phase.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-purple-400 mb-2">
+                    📖 Select Module
+                  </label>
+                  <select
+                    value={selectedModuleForUpload}
+                    onChange={(e) => setSelectedModuleForUpload(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-gray-700 text-green-400"
+                    disabled={!selectedPhaseForUpload}
+                  >
+                    <option value="">Select Module</option>
+                    {modules
+                      .filter(module => module.phaseId === selectedPhaseForUpload)
+                      .map((module) => (
+                        <option key={module.id} value={module.id}>
+                          {module.title}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Content Items */}
+              {selectedModuleForUpload && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-cyan-400">
+                      Content Items ({multipleUploads.length})
+                    </h3>
+                    <button
+                      onClick={addNewUploadItem}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors flex items-center"
+                    >
+                      <PlusIcon className="h-4 w-4 mr-2" />
+                      Add Item
+                    </button>
+                  </div>
+
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {multipleUploads.map((item, itemIndex) => (
+                      <div key={item.id} className="p-4 bg-gray-800 border border-gray-600 rounded-lg">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-md font-medium text-green-400">
+                            Item #{itemIndex + 1}
+                          </h4>
+                          {multipleUploads.length > 1 && (
+                            <button
+                              onClick={() => removeUploadItem(item.id)}
+                              className="text-red-400 hover:text-red-300 p-1"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm text-cyan-400 mb-1">Type</label>
+                            <select
+                              value={item.type}
+                              onChange={(e) => updateUploadItem(item.id, "type", e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
+                            >
+                              {contentTypes.map((type) => (
+                                <option key={type.value} value={type.value}>
+                                  {type.icon} {type.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm text-cyan-400 mb-1">Title*</label>
+                            <input
+                              type="text"
+                              value={item.title}
+                              onChange={(e) => updateUploadItem(item.id, "title", e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
+                              placeholder="Content title"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm text-cyan-400 mb-1">Section</label>
+                            <input
+                              type="text"
+                              value={item.section}
+                              onChange={(e) => updateUploadItem(item.id, "section", e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
+                              placeholder="Content section"
+                            />
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <label className="block text-sm text-cyan-400 mb-1">Description*</label>
+                            <textarea
+                              value={item.description}
+                              onChange={(e) => updateUploadItem(item.id, "description", e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
+                              rows="2"
+                              placeholder="Content description"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm text-cyan-400 mb-1">Duration (min)</label>
+                            <input
+                              type="number"
+                              value={item.duration}
+                              onChange={(e) => updateUploadItem(item.id, "duration", parseInt(e.target.value))}
+                              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
+                              min="1"
+                            />
+                          </div>
+
+                          {item.type === "video" && (
+                            <div className="md:col-span-2">
+                              <label className="block text-sm text-cyan-400 mb-1">Video URL*</label>
+                              <input
+                                type="url"
+                                value={item.url}
+                                onChange={(e) => updateUploadItem(item.id, "url", e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
+                                placeholder="https://example.com/video.mp4"
+                              />
+                            </div>
+                          )}
+
+                          {(item.type === "lab" || item.type === "game") && (
+                            <div className="md:col-span-3">
+                              <label className="block text-sm text-cyan-400 mb-1">Instructions*</label>
+                              <textarea
+                                value={item.instructions}
+                                onChange={(e) => updateUploadItem(item.id, "instructions", e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
+                                rows="3"
+                                placeholder="Detailed instructions..."
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-4 pt-4 border-t border-gray-600">
+                <button
+                  onClick={closeMultipleUpload}
+                  className="px-6 py-2 text-green-400 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleMultipleUploadSubmit}
+                  disabled={loading || !selectedModuleForUpload || multipleUploads.length === 0}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-500 disabled:opacity-50 flex items-center"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <SparklesIcon className="h-4 w-4 mr-2" />
+                      Create {multipleUploads.length} Items
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

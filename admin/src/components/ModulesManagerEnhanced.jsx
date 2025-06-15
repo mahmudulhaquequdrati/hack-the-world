@@ -44,6 +44,17 @@ const ModulesManagerEnhanced = () => {
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Bulk operations state
+  const [selectedModules, setSelectedModules] = useState(new Set());
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkOperation, setBulkOperation] = useState("");
+  const [bulkFormData, setBulkFormData] = useState({
+    phaseId: "",
+    difficulty: "",
+    isActive: true,
+    color: "",
+  });
   const [formData, setFormData] = useState({
     phaseId: "",
     title: "",
@@ -914,28 +925,62 @@ const ModulesManagerEnhanced = () => {
       {modulesWithPhases.map((phase) => (
         <div
           key={phase.id}
-          className="bg-gray-800 p-6 rounded-lg shadow border border-gray-600"
+          className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-lg shadow-xl border border-cyan-500/30 retro-border"
         >
-          <h3 className="text-lg font-medium text-green-400 mb-4">
-            {phase.title} ({phase.modules?.length || 0} modules)
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-green-400 font-mono retro-glow">
+              ▼ {phase.title} ({phase.modules?.length || 0} modules) ▼
+            </h3>
+            {phase.modules?.length > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const phaseModuleIds = phase.modules.map(m => m.id);
+                    const allSelected = phaseModuleIds.every(id => selectedModules.has(id));
+                    const newSelected = new Set(selectedModules);
+                    
+                    if (allSelected) {
+                      phaseModuleIds.forEach(id => newSelected.delete(id));
+                    } else {
+                      phaseModuleIds.forEach(id => newSelected.add(id));
+                    }
+                    setSelectedModules(newSelected);
+                  }}
+                  className="text-xs px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-500 font-mono"
+                >
+                  {phase.modules.every(m => selectedModules.has(m.id)) ? "◄ Deselect Phase" : "► Select Phase"}
+                </button>
+              </div>
+            )}
+          </div>
           {phase.modules && phase.modules.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {phase.modules.map((module) => {
                 const enrollStats = enrollmentStats[module.id] || {};
+                const isSelected = selectedModules.has(module.id);
                 return (
                   <div
                     key={module.id}
-                    className="border border-gray-600 rounded-lg p-4 bg-gray-700"
+                    className={`border rounded-lg p-4 bg-gradient-to-br transition-all duration-200 ${
+                      isSelected 
+                        ? "border-purple-500 from-purple-900/30 to-pink-900/30 shadow-lg shadow-purple-500/20" 
+                        : "border-gray-600 from-gray-700 to-gray-800 hover:border-cyan-500/50"
+                    }`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center space-x-2">
-                        <h4 className="font-medium text-green-400">
-                          {module.title}
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleModuleSelect(module.id)}
+                          className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
+                        />
+                        <h4 className="font-medium text-green-400 font-mono">
+                          ◆ {module.title}
                         </h4>
                         {getEnrollmentStatusIcon(enrollStats)}
                       </div>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-400 font-mono">
                         #{module.order}
                       </span>
                     </div>
@@ -1185,6 +1230,97 @@ const ModulesManagerEnhanced = () => {
     );
   };
 
+  // Bulk operations handlers
+  const handleModuleSelect = (moduleId) => {
+    const newSelected = new Set(selectedModules);
+    if (newSelected.has(moduleId)) {
+      newSelected.delete(moduleId);
+    } else {
+      newSelected.add(moduleId);
+    }
+    setSelectedModules(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedModules.size === modules.length) {
+      setSelectedModules(new Set());
+    } else {
+      setSelectedModules(new Set(modules.map(m => m.id)));
+    }
+  };
+
+  const handleBulkOperation = (operation) => {
+    setBulkOperation(operation);
+    setShowBulkModal(true);
+    setError("");
+    setSuccess("");
+  };
+
+  const handleBulkSubmit = async () => {
+    if (selectedModules.size === 0) {
+      setError("Please select modules to update");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+
+      const moduleIds = Array.from(selectedModules);
+      const updateData = {};
+
+      // Prepare update data based on operation
+      if (bulkOperation === "updatePhase" && bulkFormData.phaseId) {
+        updateData.phaseId = bulkFormData.phaseId;
+      }
+      if (bulkOperation === "updateDifficulty" && bulkFormData.difficulty) {
+        updateData.difficulty = bulkFormData.difficulty;
+      }
+      if (bulkOperation === "updateStatus") {
+        updateData.isActive = bulkFormData.isActive;
+      }
+      if (bulkOperation === "updateColor" && bulkFormData.color) {
+        updateData.color = bulkFormData.color;
+      }
+
+      // Execute bulk update
+      const updatePromises = moduleIds.map(moduleId => 
+        modulesAPI.update(moduleId, updateData)
+      );
+
+      await Promise.all(updatePromises);
+
+      setSuccess(`Successfully updated ${moduleIds.length} modules`);
+      setShowBulkModal(false);
+      setSelectedModules(new Set());
+      setBulkFormData({
+        phaseId: "",
+        difficulty: "",
+        isActive: true,
+        color: "",
+      });
+      await fetchData();
+    } catch (error) {
+      console.error("Error in bulk update:", error);
+      setError("Failed to update modules");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const closeBulkModal = () => {
+    setShowBulkModal(false);
+    setBulkOperation("");
+    setBulkFormData({
+      phaseId: "",
+      difficulty: "",
+      isActive: true,
+      color: "",
+    });
+    setError("");
+    setSuccess("");
+  };
+
   const difficultyLevels = ["Beginner", "Intermediate", "Advanced", "Expert"];
 
   return (
@@ -1192,24 +1328,70 @@ const ModulesManagerEnhanced = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-cyber-green">
-            [ENHANCED MODULES MANAGEMENT]
+          <h1 className="text-2xl sm:text-3xl font-bold text-cyber-green retro-glow">
+            [◄█ MODULES MANAGEMENT █►]
           </h1>
-          <p className="text-green-400 mt-2">
-            Advanced module management with phase integration and content
-            statistics
+          <p className="text-green-400 mt-2 font-mono">
+            ▲ Advanced module management with bulk operations ▲
           </p>
         </div>
-        <button
-          onClick={() => openModal()}
-          disabled={loading}
-          className="btn-primary flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <PlusIcon className="w-5 h-5 mr-2" />
-          <span className="hidden sm:inline">Add Module</span>
-          <span className="sm:hidden">Add</span>
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => openModal()}
+            disabled={loading}
+            className="btn-primary flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <PlusIcon className="w-5 h-5 mr-2" />
+            <span className="hidden sm:inline">Add Module</span>
+            <span className="sm:hidden">Add</span>
+          </button>
+        </div>
       </div>
+
+      {/* Bulk Operations Toolbar */}
+      {selectedModules.size > 0 && (
+        <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-500/50 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-purple-400 font-mono">
+                ► {selectedModules.size} module{selectedModules.size !== 1 ? 's' : ''} selected
+              </span>
+              <button
+                onClick={() => setSelectedModules(new Set())}
+                className="text-red-400 hover:text-red-300 text-sm"
+              >
+                Clear Selection
+              </button>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => handleBulkOperation("updatePhase")}
+                className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-500"
+              >
+                Change Phase
+              </button>
+              <button
+                onClick={() => handleBulkOperation("updateDifficulty")}
+                className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-500"
+              >
+                Set Difficulty
+              </button>
+              <button
+                onClick={() => handleBulkOperation("updateStatus")}
+                className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-500"
+              >
+                Toggle Status
+              </button>
+              <button
+                onClick={() => handleBulkOperation("updateColor")}
+                className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-500"
+              >
+                Change Color
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Success Message */}
       {success && (
@@ -1228,70 +1410,38 @@ const ModulesManagerEnhanced = () => {
       )}
 
       {/* Controls */}
-      <div className="terminal-window">
+      <div className="terminal-window retro-border">
         <div className="p-4 lg:p-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               {/* Phase Filter */}
               <div className="flex-1 sm:flex-none">
-                <label className="block text-sm font-medium text-green-400 mb-2">
-                  Filter by Phase
+                <label className="block text-sm font-medium text-green-400 mb-2 font-mono">
+                  ► Filter by Phase
                 </label>
                 <select
                   value={selectedPhase}
                   onChange={(e) => setSelectedPhase(e.target.value)}
-                  className="w-full sm:w-auto px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                  className="w-full sm:w-auto px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400 font-mono"
                 >
-                  <option value="">All Phases</option>
+                  <option value="">◆ All Phases</option>
                   {phases.map((phase) => (
                     <option key={phase.id} value={phase.id}>
-                      {phase.title}
+                      ▸ {phase.title}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* View Mode Toggle */}
-            <div>
-              <label className="block text-sm font-medium text-green-400 mb-2">
-                View Mode
-              </label>
-              <div className="flex bg-gray-700 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
-                    viewMode === "grid"
-                      ? "bg-cyan-600 text-white"
-                      : "text-gray-300 hover:text-white"
-                  }`}
-                >
-                  <Squares2X2Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">Grid</span>
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
-                    viewMode === "list"
-                      ? "bg-cyan-600 text-white"
-                      : "text-gray-300 hover:text-white"
-                  }`}
-                >
-                  <ListBulletIcon className="w-4 h-4" />
-                  <span className="hidden sm:inline">List</span>
-                </button>
-                <button
-                  onClick={() => setViewMode("grouped")}
-                  className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
-                    viewMode === "grouped"
-                      ? "bg-cyan-600 text-white"
-                      : "text-gray-300 hover:text-white"
-                  }`}
-                >
-                  <ChartBarIcon className="w-4 h-4" />
-                  <span className="hidden sm:inline">Grouped</span>
-                </button>
-              </div>
+            {/* Selection Controls */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleSelectAll}
+                className="px-4 py-2 bg-gray-700 text-cyan-400 rounded-md hover:bg-gray-600 border border-cyan-500/30 font-mono text-sm"
+              >
+                {selectedModules.size === modules.length ? "◄ Deselect All" : "► Select All"}
+              </button>
             </div>
           </div>
         </div>
@@ -1334,24 +1484,22 @@ const ModulesManagerEnhanced = () => {
       </div>
 
       {/* Content Display */}
-      <div className="terminal-window">
+      <div className="terminal-window retro-border">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="text-cyber-green text-lg">Loading modules...</div>
+            <div className="text-cyber-green text-lg font-mono">
+              ◄ ◊ ◊ ◊ LOADING MODULES ◊ ◊ ◊ ►
+            </div>
           </div>
         ) : modules.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              No modules found. Create your first module to get started.
+            <div className="text-gray-400 mb-4 font-mono">
+              ▲ No modules found. Create your first module to get started. ▲
             </div>
             <button onClick={() => openModal()} className="btn-primary">
               Create First Module
             </button>
           </div>
-        ) : viewMode === "grid" ? (
-          renderGridView()
-        ) : viewMode === "list" ? (
-          renderListView()
         ) : (
           renderGroupedView()
         )}
@@ -1732,6 +1880,149 @@ const ModulesManagerEnhanced = () => {
                       Confirm Enrollment
                     </>
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Operations Modal */}
+      {showBulkModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-lg max-w-lg w-full border border-purple-600">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-purple-400 font-mono">
+                  ► BULK OPERATIONS
+                </h2>
+                <button
+                  onClick={closeBulkModal}
+                  className="text-gray-400 hover:text-red-400"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="mb-4 p-3 bg-purple-900/20 border border-purple-500/30 rounded">
+                <p className="text-purple-300 text-sm font-mono">
+                  ▲ Operating on {selectedModules.size} selected modules
+                </p>
+              </div>
+
+              {bulkOperation === "updatePhase" && (
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-green-400 font-mono">
+                    ► Select New Phase
+                  </label>
+                  <select
+                    value={bulkFormData.phaseId}
+                    onChange={(e) => setBulkFormData(prev => ({...prev, phaseId: e.target.value}))}
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 bg-gray-700 text-green-400 font-mono"
+                    required
+                  >
+                    <option value="">Select Phase</option>
+                    {phases.map((phase) => (
+                      <option key={phase.id} value={phase.id}>
+                        ▸ {phase.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {bulkOperation === "updateDifficulty" && (
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-green-400 font-mono">
+                    ► Select Difficulty Level
+                  </label>
+                  <select
+                    value={bulkFormData.difficulty}
+                    onChange={(e) => setBulkFormData(prev => ({...prev, difficulty: e.target.value}))}
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 bg-gray-700 text-green-400 font-mono"
+                    required
+                  >
+                    <option value="">Select Difficulty</option>
+                    {difficultyLevels.map((level) => (
+                      <option key={level} value={level}>
+                        ▸ {level}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {bulkOperation === "updateStatus" && (
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-green-400 font-mono">
+                    ► Module Status
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="status"
+                        checked={bulkFormData.isActive === true}
+                        onChange={() => setBulkFormData(prev => ({...prev, isActive: true}))}
+                        className="mr-2"
+                      />
+                      <span className="text-green-400 font-mono">◆ Active</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="status"
+                        checked={bulkFormData.isActive === false}
+                        onChange={() => setBulkFormData(prev => ({...prev, isActive: false}))}
+                        className="mr-2"
+                      />
+                      <span className="text-red-400 font-mono">◇ Inactive</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {bulkOperation === "updateColor" && (
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-green-400 font-mono">
+                    ► Select Color Scheme
+                  </label>
+                  <select
+                    value={bulkFormData.color}
+                    onChange={(e) => setBulkFormData(prev => ({...prev, color: e.target.value}))}
+                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 bg-gray-700 text-green-400 font-mono"
+                    required
+                  >
+                    <option value="">Select Color</option>
+                    {colorOptions.map((color) => (
+                      <option key={color} value={color}>
+                        ▸ {color.charAt(0).toUpperCase() + color.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {error && (
+                <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded mb-4">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-4 mt-6">
+                <button
+                  onClick={closeBulkModal}
+                  className="px-4 py-2 text-green-400 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600 font-mono"
+                  disabled={saving}
+                >
+                  ◄ Cancel
+                </button>
+                <button
+                  onClick={handleBulkSubmit}
+                  disabled={saving}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-500 disabled:opacity-50 font-mono"
+                >
+                  {saving ? "◊ Processing..." : "► Apply Changes"}
                 </button>
               </div>
             </div>

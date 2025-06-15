@@ -2,8 +2,6 @@ import {
   ArrowLeftIcon,
   BeakerIcon,
   BookOpenIcon,
-  ChartBarIcon,
-  CheckCircleIcon,
   ChevronRightIcon,
   ClockIcon,
   CubeIcon,
@@ -13,9 +11,7 @@ import {
   LinkIcon,
   PencilIcon,
   PlayIcon,
-  //   GamepadIcon,
   PuzzlePieceIcon,
-  UserGroupIcon,
   VideoCameraIcon,
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
@@ -29,13 +25,6 @@ const ContentDetailView = () => {
   const [module, setModule] = useState(null);
   const [phase, setPhase] = useState(null);
   const [relatedContent, setRelatedContent] = useState([]);
-  const [statistics, setStatistics] = useState({
-    viewCount: 0,
-    completionRate: 0,
-    avgTimeSpent: 0,
-    enrolledUsers: 0,
-    lastAccessed: null,
-  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -89,8 +78,6 @@ const ContentDetailView = () => {
         }
       }
 
-      // Calculate statistics (mock data for now - would come from usage tracking APIs)
-      calculateStatistics(contentData);
     } catch (error) {
       console.error("Error fetching content data:", error);
       setError(
@@ -101,21 +88,6 @@ const ContentDetailView = () => {
     }
   };
 
-  const calculateStatistics = (contentData) => {
-    // Mock statistics - in real app these would come from user progress tracking APIs
-    const stats = {
-      viewCount: Math.floor(Math.random() * 500) + 50,
-      completionRate: Math.floor(Math.random() * 40) + 60, // 60-100%
-      avgTimeSpent:
-        Math.floor(Math.random() * 20) + (contentData.duration || 10),
-      enrolledUsers: Math.floor(Math.random() * 100) + 20,
-      lastAccessed: new Date(
-        Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
-      ),
-    };
-
-    setStatistics(stats);
-  };
 
   const formatDuration = (minutes) => {
     if (minutes < 60) {
@@ -313,56 +285,6 @@ const ContentDetailView = () => {
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Total Views</p>
-              <p className="text-2xl font-bold text-blue-400">
-                {statistics.viewCount}
-              </p>
-            </div>
-            <EyeIcon className="w-8 h-8 text-blue-400" />
-          </div>
-        </div>
-
-        <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Completion Rate</p>
-              <p className="text-2xl font-bold text-green-400">
-                {statistics.completionRate}%
-              </p>
-            </div>
-            <CheckCircleIcon className="w-8 h-8 text-green-400" />
-          </div>
-        </div>
-
-        <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Avg. Time Spent</p>
-              <p className="text-2xl font-bold text-yellow-400">
-                {formatDuration(statistics.avgTimeSpent)}
-              </p>
-            </div>
-            <ClockIcon className="w-8 h-8 text-yellow-400" />
-          </div>
-        </div>
-
-        <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Enrolled Users</p>
-              <p className="text-2xl font-bold text-purple-400">
-                {statistics.enrolledUsers}
-              </p>
-            </div>
-            <UserGroupIcon className="w-8 h-8 text-purple-400" />
-          </div>
-        </div>
-      </div>
 
       {/* Content Details Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -511,22 +433,13 @@ const ContentDetailView = () => {
             </div>
           )}
 
-          {/* Content Metadata */}
+          {/* Basic Info */}
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <DocumentIcon className="w-5 h-5 mr-2 text-cyan-400" />
-              Metadata
-            </h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Basic Info</h3>
             <div className="space-y-3">
               <div>
-                <span className="text-gray-400 text-sm">Content ID</span>
-                <div className="text-white font-mono text-sm">{content.id}</div>
-              </div>
-              <div>
                 <span className="text-gray-400 text-sm">Type</span>
-                <div className="text-white font-medium capitalize">
-                  {content.type}
-                </div>
+                <div className="text-white font-medium capitalize">{content.type}</div>
               </div>
               <div>
                 <span className="text-gray-400 text-sm">Duration</span>
@@ -537,41 +450,22 @@ const ContentDetailView = () => {
               {content.section && (
                 <div>
                   <span className="text-gray-400 text-sm">Section</span>
-                  <div className="text-white font-medium">
-                    {content.section}
-                  </div>
-                </div>
-              )}
-              {statistics.lastAccessed && (
-                <div>
-                  <span className="text-gray-400 text-sm">Last Accessed</span>
-                  <div className="text-white font-medium">
-                    {statistics.lastAccessed.toLocaleDateString()}
-                  </div>
+                  <div className="text-white font-medium">{content.section}</div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Actions */}
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Quick Actions
-            </h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Actions</h3>
             <div className="space-y-3">
               <Link
                 to={`/content`}
-                className="block w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-center"
+                className="block w-full bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg transition-colors text-center"
               >
                 <PencilIcon className="w-4 h-4 inline mr-2" />
                 Edit Content
-              </Link>
-              <Link
-                to={`/content/${contentId}/progress`}
-                className="block w-full bg-gray-700 hover:bg-gray-600 text-cyan-400 px-4 py-2 rounded-lg transition-colors text-center"
-              >
-                <ChartBarIcon className="w-4 h-4 inline mr-2" />
-                View Progress Details
               </Link>
               {module && (
                 <Link
@@ -580,15 +474,6 @@ const ContentDetailView = () => {
                 >
                   <EyeIcon className="w-4 h-4 inline mr-2" />
                   View Module
-                </Link>
-              )}
-              {phase && (
-                <Link
-                  to={`/phases/${phase.id}`}
-                  className="block w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-center"
-                >
-                  <EyeIcon className="w-4 h-4 inline mr-2" />
-                  View Phase
                 </Link>
               )}
             </div>

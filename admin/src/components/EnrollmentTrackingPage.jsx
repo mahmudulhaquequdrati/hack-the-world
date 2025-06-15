@@ -24,10 +24,17 @@ const EnrollmentTrackingPage = () => {
   const [modules, setModules] = useState([]);
   const [pagination, setPagination] = useState({});
   const [totalStats, setTotalStats] = useState({});
+  
+  // User-based view state
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userEnrollments, setUserEnrollments] = useState([]);
+  const [enrollmentLoading, setEnrollmentLoading] = useState(false);
+  const [detailView, setDetailView] = useState(false);
 
   // UI state
   const [selectedEnrollments, setSelectedEnrollments] = useState([]);
-  const [viewMode, setViewMode] = useState("grid"); // Default to grid view - list, grid, stats, modules, analytics
+  const [viewMode, setViewMode] = useState("users"); // Default to user-based view - users, list, grid, modules, analytics
   const [refreshing, setRefreshing] = useState(false);
   const [progressModalOpen, setProgressModalOpen] = useState(false);
   const [selectedEnrollmentForProgress, setSelectedEnrollmentForProgress] =
@@ -76,6 +83,9 @@ const EnrollmentTrackingPage = () => {
 
         // Process enrolled modules data
         processEnrolledModules(response.data || []);
+        
+        // Process users data
+        processUsers(response.data || []);
       } else {
         setError("Failed to fetch enrollments");
       }
@@ -127,6 +137,77 @@ const EnrollmentTrackingPage = () => {
           : 0,
     };
     setTotalStats(stats);
+  };
+
+  // Process enrollments into users with aggregated stats
+  const processUsers = (enrollmentData) => {
+    // Group enrollments by userId
+    const usersMap = new Map();
+
+    enrollmentData.forEach((enrollment) => {
+      const userId = enrollment.userId?.id;
+      if (!userId) return;
+
+      if (!usersMap.has(userId)) {
+        usersMap.set(userId, {
+          user: enrollment.userId,
+          enrollments: [],
+          stats: {
+            totalEnrollments: 0,
+            activeEnrollments: 0,
+            completedEnrollments: 0,
+            pausedEnrollments: 0,
+            droppedEnrollments: 0,
+            averageProgress: 0,
+            lastActivity: null,
+          },
+        });
+      }
+
+      const userData = usersMap.get(userId);
+      userData.enrollments.push(enrollment);
+    });
+
+    // Calculate statistics for each user
+    const processedUsers = Array.from(usersMap.values()).map((userData) => {
+      const { enrollments, user } = userData;
+      const totalEnrollments = enrollments.length;
+      const activeEnrollments = enrollments.filter((e) => e.status === "active").length;
+      const completedEnrollments = enrollments.filter((e) => e.status === "completed").length;
+      const pausedEnrollments = enrollments.filter((e) => e.status === "paused").length;
+      const droppedEnrollments = enrollments.filter((e) => e.status === "dropped").length;
+
+      const averageProgress =
+        totalEnrollments > 0
+          ? Math.round(
+              enrollments.reduce((sum, e) => sum + (e.progressPercentage || 0), 0) / totalEnrollments
+            )
+          : 0;
+
+      // Find most recent activity
+      const lastActivity = enrollments.reduce((latest, enrollment) => {
+        const lastAccessed = new Date(enrollment.lastAccessedAt || enrollment.enrolledAt);
+        return !latest || lastAccessed > latest ? lastAccessed : latest;
+      }, null);
+
+      return {
+        ...user,
+        enrollmentStats: {
+          totalEnrollments,
+          activeEnrollments,
+          completedEnrollments,
+          pausedEnrollments,
+          droppedEnrollments,
+          averageProgress,
+          lastActivity,
+        },
+      };
+    });
+
+    // Sort users by total enrollments (most active first)
+    processedUsers.sort((a, b) => b.enrollmentStats.totalEnrollments - a.enrollmentStats.totalEnrollments);
+
+    setUsers(processedUsers);
   };
 
   // Process enrollments into enrolled modules with aggregated stats
@@ -299,6 +380,39 @@ const EnrollmentTrackingPage = () => {
     }
   };
 
+  // Handle user selection for detailed view
+  const handleUserSelect = async (user) => {
+    setSelectedUser(user);
+    setDetailView(true);
+    await fetchUserEnrollments(user.id);
+  };
+
+  // Fetch detailed enrollments for a specific user
+  const fetchUserEnrollments = async (userId) => {
+    try {
+      setEnrollmentLoading(true);
+      
+      // Filter current enrollments by user ID
+      const userSpecificEnrollments = enrollments.filter(
+        (enrollment) => enrollment.userId?.id === userId
+      );
+      
+      setUserEnrollments(userSpecificEnrollments);
+    } catch (error) {
+      console.error("Error fetching user enrollments:", error);
+      setError("Failed to fetch user enrollments");
+    } finally {
+      setEnrollmentLoading(false);
+    }
+  };
+
+  // Close user detail view
+  const closeDetailView = () => {
+    setDetailView(false);
+    setSelectedUser(null);
+    setUserEnrollments([]);
+  };
+
   // Handle module filter changes
   const handleModuleFilterChange = (key, value) => {
     setModuleFilters((prev) => ({
@@ -410,6 +524,34 @@ const EnrollmentTrackingPage = () => {
     if (percentage >= 40) return "Fair";
     if (percentage >= 20) return "Poor";
     return "Critical";
+  };
+
+  // Get user role badge color
+  const getRoleBadgeColor = (role) => {
+    switch (role) {
+      case "admin":
+        return "bg-red-600 text-white";
+      case "student":
+        return "bg-blue-600 text-white";
+      default:
+        return "bg-gray-600 text-white";
+    }
+  };
+
+  // Get status badge color
+  const getStatusBadgeColor = (status) => {
+    switch (status) {
+      case "active":
+        return "bg-green-600 text-white";
+      case "completed":
+        return "bg-blue-600 text-white";
+      case "paused":
+        return "bg-yellow-600 text-white";
+      case "dropped":
+        return "bg-red-600 text-white";
+      default:
+        return "bg-gray-600 text-white";
+    }
   };
 
   // Get progress icon
@@ -990,6 +1132,17 @@ const EnrollmentTrackingPage = () => {
       {/* View Mode Tabs */}
       <div className="flex flex-wrap items-center gap-2 p-1 bg-gray-800 rounded-lg w-full sm:w-fit">
         <button
+          onClick={() => setViewMode("users")}
+          className={`px-3 sm:px-4 py-2 rounded-md transition-colors duration-200 text-sm sm:text-base flex-1 sm:flex-none ${
+            viewMode === "users"
+              ? "bg-cyan-600 text-white"
+              : "text-gray-400 hover:text-white hover:bg-gray-700"
+          }`}
+        >
+          <span className="hidden sm:inline">👥 Users Overview</span>
+          <span className="sm:hidden">👥 Users</span>
+        </button>
+        <button
           onClick={() => setViewMode("list")}
           className={`px-3 sm:px-4 py-2 rounded-md transition-colors duration-200 text-sm sm:text-base flex-1 sm:flex-none ${
             viewMode === "list"
@@ -1218,6 +1371,117 @@ const EnrollmentTrackingPage = () => {
       )}
     </div>
   );
+
+  // Render users overview view
+  const renderUsersView = () => {
+    // Filter users based on search
+    const filteredUsers = users.filter((user) => {
+      if (!filters.search) return true;
+      const searchLower = filters.search.toLowerCase();
+      return (
+        user.username?.toLowerCase().includes(searchLower) ||
+        user.email?.toLowerCase().includes(searchLower) ||
+        user.firstName?.toLowerCase().includes(searchLower) ||
+        user.lastName?.toLowerCase().includes(searchLower)
+      );
+    });
+
+    if (filteredUsers.length === 0) {
+      return (
+        <div className="text-center py-12 bg-gray-800 rounded-lg border border-gray-700">
+          <div className="text-6xl text-gray-600 mb-4">👥</div>
+          <h3 className="text-xl font-semibold text-white mb-2">No Users Found</h3>
+          <p className="text-gray-400">
+            {filters.search ? "No users match your search criteria." : "No users with enrollments found."}
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredUsers.map((user) => (
+          <div
+            key={user.id}
+            onClick={() => handleUserSelect(user)}
+            className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-cyan-500 transition-all duration-200 cursor-pointer transform hover:scale-105"
+          >
+            {/* User Header */}
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-green-500 rounded-full flex items-center justify-center text-lg font-bold text-white">
+                {user.username?.charAt(0).toUpperCase() || "U"}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white">{user.username}</h3>
+                <p className="text-sm text-gray-400 truncate">{user.email}</p>
+                <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${getRoleBadgeColor(user.role)}`}>
+                  {user.role}
+                </span>
+              </div>
+            </div>
+
+            {/* Enrollment Stats */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="text-center">
+                <div className="text-xl font-bold text-blue-400">{user.enrollmentStats.totalEnrollments}</div>
+                <div className="text-xs text-gray-400">Enrollments</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-green-400">{user.enrollmentStats.activeEnrollments}</div>
+                <div className="text-xs text-gray-400">Active</div>
+              </div>
+            </div>
+
+            {/* Progress Indicator */}
+            {user.enrollmentStats.totalEnrollments > 0 && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-sm text-gray-300 mb-2">
+                  <span>Average Progress</span>
+                  <span className="font-bold">{user.enrollmentStats.averageProgress}%</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all duration-500 bg-gradient-to-r ${getProgressGradient(
+                      user.enrollmentStats.averageProgress
+                    )}`}
+                    style={{ width: `${user.enrollmentStats.averageProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Status Summary */}
+            <div className="flex flex-wrap gap-1 mb-4">
+              {user.enrollmentStats.completedEnrollments > 0 && (
+                <span className="px-2 py-1 text-xs bg-blue-600 text-white rounded-full">
+                  {user.enrollmentStats.completedEnrollments} Completed
+                </span>
+              )}
+              {user.enrollmentStats.pausedEnrollments > 0 && (
+                <span className="px-2 py-1 text-xs bg-yellow-600 text-white rounded-full">
+                  {user.enrollmentStats.pausedEnrollments} Paused
+                </span>
+              )}
+              {user.enrollmentStats.droppedEnrollments > 0 && (
+                <span className="px-2 py-1 text-xs bg-red-600 text-white rounded-full">
+                  {user.enrollmentStats.droppedEnrollments} Dropped
+                </span>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between text-sm text-gray-400 pt-4 border-t border-gray-700">
+              <div>
+                Last activity:{" "}
+                {user.enrollmentStats.lastActivity ? formatDate(user.enrollmentStats.lastActivity) : "No activity"}
+              </div>
+              <div className="text-cyan-400">→</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   // Render enrollment list view
   const renderListView = () => (
@@ -2049,6 +2313,174 @@ const EnrollmentTrackingPage = () => {
     );
   };
 
+  // User enrollment detail modal
+  const UserEnrollmentModal = () => {
+    if (!detailView || !selectedUser) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-700">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-green-500 rounded-full flex items-center justify-center text-2xl font-bold text-white">
+                {selectedUser.username?.charAt(0).toUpperCase() || "U"}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">{selectedUser.username}</h2>
+                <p className="text-cyan-400">{selectedUser.email}</p>
+                <div className="flex items-center space-x-2 mt-1">
+                  <span className={`px-2 py-1 text-xs rounded-full ${getRoleBadgeColor(selectedUser.role)}`}>
+                    {selectedUser.role}
+                  </span>
+                  <span className="text-gray-400 text-sm">
+                    Joined {formatDate(selectedUser.createdAt)}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button onClick={closeDetailView} className="text-gray-400 hover:text-white transition-colors">
+              ✕
+            </button>
+          </div>
+
+          {/* User Statistics */}
+          <div className="p-6 border-b border-gray-700">
+            <h3 className="text-lg font-semibold text-cyan-400 mb-4">📊 Enrollment Statistics</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-700 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-blue-400">
+                  {selectedUser.enrollmentStats.totalEnrollments}
+                </div>
+                <div className="text-xs text-gray-400">Total Enrollments</div>
+              </div>
+              <div className="bg-gray-700 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-green-400">
+                  {selectedUser.enrollmentStats.activeEnrollments}
+                </div>
+                <div className="text-xs text-gray-400">Active</div>
+              </div>
+              <div className="bg-gray-700 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-cyan-400">
+                  {selectedUser.enrollmentStats.completedEnrollments}
+                </div>
+                <div className="text-xs text-gray-400">Completed</div>
+              </div>
+              <div className="bg-gray-700 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-purple-400">
+                  {selectedUser.enrollmentStats.averageProgress}%
+                </div>
+                <div className="text-xs text-gray-400">Avg Progress</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Enrollments List */}
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-cyan-400">📚 Enrollments ({userEnrollments.length})</h3>
+              {enrollmentLoading && (
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-400"></div>
+              )}
+            </div>
+
+            {enrollmentLoading ? (
+              <div className="text-center py-8 text-gray-400">Loading enrollments...</div>
+            ) : userEnrollments.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <p>No enrollments found for this user.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {userEnrollments.map((enrollment) => (
+                  <div key={enrollment.id} className="bg-gray-700 rounded-lg p-4 border border-gray-600 hover:border-cyan-500 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <Link
+                            to={`/modules/${enrollment.moduleId?.id}`}
+                            className="text-lg font-semibold text-green-400 hover:text-cyan-400 transition-colors"
+                          >
+                            {enrollment.moduleId?.title || "Unknown Module"}
+                          </Link>
+                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeColor(enrollment.status)}`}>
+                            {enrollment.status}
+                          </span>
+                          {enrollment.moduleId?.difficulty && (
+                            <span className="px-2 py-1 text-xs bg-gray-600 text-gray-300 rounded-full">
+                              {enrollment.moduleId.difficulty}
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-sm text-gray-400 mb-3">
+                          {enrollment.moduleId?.description || "No description available"}
+                        </p>
+
+                        {/* Progress Bar */}
+                        <div className="mb-3">
+                          <div className="flex items-center justify-between text-sm text-gray-300 mb-1">
+                            <span>Progress</span>
+                            <span className="font-bold">{enrollment.progressPercentage || 0}%</span>
+                          </div>
+                          <div className="w-full bg-gray-600 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-500 bg-gradient-to-r ${getProgressGradient(
+                                enrollment.progressPercentage || 0
+                              )}`}
+                              style={{ width: `${enrollment.progressPercentage || 0}%` }}
+                            />
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {enrollment.completedSections || 0} of {enrollment.totalSections || 0} sections completed
+                          </div>
+                        </div>
+
+                        {/* Enrollment Details */}
+                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
+                          <div>
+                            <span className="text-gray-500">Enrolled:</span> {formatDate(enrollment.enrolledAt)}
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Last Access:</span>{" "}
+                            {enrollment.lastAccessedAt ? formatDate(enrollment.lastAccessedAt) : "Never"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2 ml-4">
+                        <Link
+                          to={`/modules/${enrollment.moduleId?.id}`}
+                          className="p-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+                          title="View Module"
+                        >
+                          <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end p-6 border-t border-gray-700">
+            <button
+              onClick={closeDetailView}
+              className="px-6 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Render analytics view
   const renderAnalyticsView = () => {
     const analytics = getProgressAnalytics(enrollments);
@@ -2217,6 +2649,12 @@ const EnrollmentTrackingPage = () => {
             </div>
             <div className="flex items-center gap-4">
               <Link
+                to="/enrollments/users"
+                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors duration-200 w-full sm:w-auto text-center flex items-center gap-2"
+              >
+                👥 User-Based View
+              </Link>
+              <Link
                 to="/dashboard"
                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 w-full sm:w-auto text-center"
               >
@@ -2245,7 +2683,9 @@ const EnrollmentTrackingPage = () => {
         {renderFilters()}
 
         {/* Enrollments List/Grid/Analytics */}
-        {viewMode === "list"
+        {viewMode === "users"
+          ? renderUsersView()
+          : viewMode === "list"
           ? renderListView()
           : viewMode === "grid"
           ? renderGridView()
@@ -2265,6 +2705,9 @@ const EnrollmentTrackingPage = () => {
             setSelectedEnrollmentForProgress(null);
           }}
         />
+
+        {/* User Enrollment Detail Modal */}
+        <UserEnrollmentModal />
       </div>
     </div>
   );

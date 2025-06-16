@@ -548,4 +548,101 @@ API_ENDPOINTS.ts
 GAME_TYPES.ts
 ```
 
+---
+
+## 🚀 NEXT.JS 15+ MIGRATION PROJECT (2025-06-16)
+
+### Migration Status: PLANNING COMPLETE - AWAITING APPROVAL
+
+**Current Phase**: Pre-Development Planning  
+**Timeline**: 6-8 weeks across 4 phases  
+**Architecture**: Monorepo with shared packages  
+
+### 🏗️ Planned Architecture
+
+```
+hack-the-world-nextjs/
+├── apps/
+│   ├── web/                    # Student portal (Next.js 15+)
+│   ├── admin/                  # Admin panel (Next.js 15+)
+│   └── server/                 # Existing Express.js (unchanged)
+├── packages/                   # Shared packages
+│   ├── ui/                    # Shared UI components
+│   ├── types/                 # Shared TypeScript types
+│   ├── api-client/            # Shared API client
+│   └── config/                # Shared configurations
+└── tools/                     # Development tools
+```
+
+### 📅 Migration Phases
+
+#### Phase 1: Infrastructure Setup (Week 1-2)
+- Setup pnpm monorepo workspace
+- Initialize Next.js 15+ apps (web + admin)
+- Create shared packages (ui, types, api-client, config)
+- Configure TypeScript project references
+- Setup TailwindCSS shared configuration
+
+#### Phase 2: Core System Migration (Week 2-4)
+- Implement Next.js middleware for JWT validation
+- Migrate localStorage token handling to server-side
+- Map React Router routes to Next.js App Router
+- Create shared API client package
+- Migrate RTK Query for SSR compatibility
+
+#### Phase 3: Component Migration (Week 4-6)
+- Migrate Shadcn/ui components to shared package
+- Migrate all 100+ frontend components
+- Migrate all 20+ admin components
+- Preserve all interactive features
+
+#### Phase 4: Testing & Optimization (Week 6-8)
+- Migrate test suites to Next.js environment
+- Implement SSR/SSG optimizations
+- Performance optimization and benchmarking
+- Complete feature parity validation
+
+### 🔧 Migration Commands (Post-Approval)
+
+```bash
+# Phase 1: Setup monorepo
+pnpm create next-app@latest apps/web --typescript --tailwind --app
+pnpm create next-app@latest apps/admin --typescript --tailwind --app
+
+# Setup workspace
+echo '{"name": "hack-the-world-nextjs", "private": true, "workspaces": ["apps/*", "packages/*"]}' > package.json
+
+# Install shared dependencies
+pnpm add -w typescript @types/node tailwindcss
+
+# Phase 2: Authentication setup
+# Create middleware.ts in apps/web and apps/admin
+# Setup JWT validation with Next.js middleware
+
+# Phase 3: Component migration
+# Copy components with minimal changes
+# Update imports to use shared packages
+
+# Phase 4: Testing
+pnpm test
+pnpm build
+```
+
+### 🎯 Success Criteria
+- ✅ 100% feature parity with current implementation
+- ✅ Performance improvements from SSR/SSG
+- ✅ Shared component library between apps
+- ✅ Modern Next.js App Router architecture
+- ✅ Zero breaking changes to user experience
+
+### ⚠️ Critical Notes
+- **Backend Unchanged**: Express.js server remains exactly the same
+- **Design Preservation**: No UI/UX changes during migration
+- **Component Strategy**: 1:1 migration with minimal modifications
+- **Gradual Approach**: Phase-by-phase validation reduces risk
+
+**Next Action**: User approval required to begin Phase 1
+
+---
+
 This quick reference provides instant access to the most commonly needed development patterns, commands, and conventions for the Hack The World platform.

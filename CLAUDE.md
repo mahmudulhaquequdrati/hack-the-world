@@ -396,3 +396,226 @@ hack-the-world/
 3. **Update component usage examples** and best practices
 
 This platform provides a solid foundation for cybersecurity education with professional-grade architecture, comprehensive feature set, and security-first design principles.
+
+---
+
+## 🚀 NEXT.JS 15+ MIGRATION PROJECT (2025-06-16)
+
+### Migration Status: PLANNING COMPLETE - AWAITING APPROVAL
+
+**Last Updated**: 2025-06-16
+**Current Phase**: Pre-Development Planning
+**Next Action**: User approval required to proceed with development
+
+### 📋 Current Task Status
+
+#### Completed Tasks ✅
+- **nextjs-migration-research**: Research and plan complete migration from React+Vite to Next.js 15+ ✅
+- **document-current-architecture**: Document current frontend and admin panel architecture for migration reference ✅  
+- **create-migration-plan**: Create detailed migration plan with phases and timelines ✅
+- **setup-project-tracking**: Setup project tracking system for development and project management ✅
+- **update-memory-documentation**: Update memory and documentation system for automatic task list updates ✅
+
+#### Pending Tasks 🔄
+- **present-migration-plan**: Present complete migration plan to user for approval before starting development (HIGH PRIORITY)
+
+### 🎯 Migration Overview
+
+**Objective**: Migrate entire Hack The World platform from React+Vite to Next.js 15+ while preserving 100% of design, functionality, and user experience.
+
+**Migration Scope**:
+- **Frontend** (Student Portal): React 18 + TypeScript + Vite + RTK Query → Next.js 15+ App Router
+- **Admin Panel**: React 19 + JavaScript + Vite + Axios → Next.js 15+ App Router  
+- **Backend**: Keep existing Express.js server unchanged
+- **Shared Components**: Create monorepo with shared UI library
+
+**Timeline**: 6-8 weeks across 4 main phases
+**Architecture**: Monorepo structure with pnpm workspaces
+
+### 🏗️ Planned Architecture
+
+```
+hack-the-world-nextjs/
+├── apps/
+│   ├── web/                    # Main student portal (Next.js 15+)
+│   │   ├── app/               # App Router (Next.js 13+ routing)
+│   │   ├── components/        # Migrated components
+│   │   ├── lib/              # Utilities and types
+│   │   └── public/           # Static assets
+│   ├── admin/                 # Admin panel (Next.js 15+)
+│   │   ├── app/              # Admin-specific App Router
+│   │   ├── components/       # Admin components
+│   │   └── lib/              # Admin utilities
+│   └── server/               # Existing Express.js (unchanged)
+├── packages/                  # Shared packages
+│   ├── ui/                   # Shared UI components
+│   ├── types/                # Shared TypeScript types
+│   ├── api-client/           # Shared API client
+│   └── config/               # Shared configurations
+├── docs/                     # Updated documentation
+└── tools/                    # Development tools and scripts
+```
+
+### 📅 Migration Phases
+
+#### Phase 1: Infrastructure Setup (Week 1-2)
+**Goal**: Establish Next.js 15+ monorepo with shared packages
+- ✅ Create pnpm workspace configuration
+- ✅ Initialize Next.js 15+ apps (web + admin)
+- ✅ Setup shared packages (ui, types, api-client, config)
+- ✅ Configure TypeScript project references
+- ✅ Migrate build system from Vite to Next.js
+
+#### Phase 2: Core System Migration (Week 2-4)
+**Goal**: Migrate authentication, routing, and core infrastructure
+- ✅ Implement Next.js middleware for JWT validation
+- ✅ Migrate localStorage token handling to cookies/server-side
+- ✅ Map React Router routes to Next.js App Router
+- ✅ Create shared API client package
+- ✅ Migrate RTK Query to work with SSR
+
+#### Phase 3: Component Migration (Week 4-6)
+**Goal**: Migrate all components maintaining exact functionality and design
+- ✅ Migrate Shadcn/ui components to shared package
+- ✅ Migrate all 100+ frontend components
+- ✅ Migrate all 20+ admin components
+- ✅ Preserve all interactive features (games, terminal, progress tracking)
+
+#### Phase 4: Testing & Optimization (Week 6-8)
+**Goal**: Ensure quality, performance, and complete feature parity
+- ✅ Migrate test suites to Next.js environment
+- ✅ Implement SSR/SSG optimizations
+- ✅ Performance optimization and benchmarking
+- ✅ Complete feature parity validation
+
+### 🔧 Technical Migration Strategy
+
+#### Current Tech Stack Analysis
+**Frontend (Student Portal)**:
+- React 18 + TypeScript + Vite + RTK Query + TailwindCSS 4.1.4
+- 100+ components across 8 feature areas
+- RTK Query with sophisticated caching
+- localStorage JWT authentication
+- React Router DOM with protected routes
+
+**Admin Panel**:
+- React 19 + JavaScript + Vite + Axios + TailwindCSS 4.1.8  
+- 20+ admin-specific components
+- Context API state management
+- Axios interceptors with token handling
+
+#### Migration Approach
+1. **Monorepo Structure**: Use pnpm workspaces for better code sharing
+2. **App Router Migration**: Leverage Next.js App Router for better SSR/SSG
+3. **State Management**: Adapt RTK Query for SSR compatibility
+4. **Authentication**: Implement Next.js middleware for JWT handling
+5. **Component Strategy**: 1:1 migration with minimal changes
+6. **API Strategy**: Keep existing Express backend unchanged
+
+### 📊 Project Tracking System
+
+#### Epic-Based Development Board
+- **Epic 1**: Infrastructure Setup (7 tasks)
+- **Epic 2**: Authentication & Routing (8 tasks)  
+- **Epic 3**: Component Migration - Student Portal (7 tasks)
+- **Epic 4**: Component Migration - Admin Panel (5 tasks)
+- **Epic 5**: Feature Integration (6 tasks)
+- **Epic 6**: Testing & Quality Assurance (8 tasks)
+
+#### Milestone Gates
+- **Week 2**: Infrastructure complete, development environment ready
+- **Week 4**: Authentication and routing working, API clients functional
+- **Week 6**: All components migrated, features working  
+- **Week 8**: Testing complete, production ready
+
+### 🔄 Automatic Documentation System
+
+#### Auto-Update Triggers
+1. **Task Completion**: Update progress and create completion logs
+2. **Component Migration**: Update component reference docs
+3. **API Changes**: Update API usage documentation
+4. **Architecture Changes**: Update technical specifications
+5. **Feature Implementation**: Update feature documentation
+
+#### Documentation Files to Update
+- **CLAUDE.md**: Main project memory and context
+- **FRONTEND_COMPLETE_REFERENCE.md**: Component architecture
+- **SERVER_COMPLETE_REFERENCE.md**: Backend API reference
+- **docs/tasks/**: Detailed task logs with decisions and rationale
+
+### ⚠️ Critical Success Factors
+
+1. **Zero Functional Changes**: Maintain 100% feature parity
+2. **Design Preservation**: Keep exact UI/UX during migration
+3. **Backend Stability**: No changes to existing Express.js APIs
+4. **Gradual Migration**: Phase-by-phase reduces risk
+5. **Comprehensive Testing**: Validate each migration phase
+6. **Performance Improvement**: Leverage Next.js for better performance
+
+### 💡 Expected Benefits
+
+1. **Performance**: SSR/SSG capabilities, better SEO, faster initial loads
+2. **Developer Experience**: Shared components, unified build system
+3. **Modern Architecture**: Latest Next.js features, App Router benefits
+4. **Code Reusability**: Monorepo enables sharing between apps
+5. **Future-Proof**: Built on latest React and Next.js patterns
+
+### 🚨 Risk Mitigation
+
+**High Risk Areas**:
+- RTK Query SSR migration complexity
+- Authentication state management in SSR  
+- Component migration testing
+
+**Mitigation Strategies**:
+- Phase-by-phase migration approach
+- Comprehensive testing at each phase
+- Backup and rollback procedures
+- Feature parity validation gates
+
+### 📋 Pre-Development Checklist
+
+- ✅ Complete migration plan documented
+- ✅ Current architecture fully analyzed
+- ✅ Project tracking system established
+- ✅ Automatic documentation system designed
+- ✅ Risk assessment completed
+- ⏳ **PENDING**: User approval for development start
+- ⏳ **PENDING**: Development environment setup
+- ⏳ **PENDING**: Backup current codebase
+
+### 🎯 Next Steps
+
+1. **Immediate**: Present migration plan for user approval
+2. **Upon Approval**: Begin Phase 1 infrastructure setup
+3. **Continuous**: Update CLAUDE.md with progress and decisions
+4. **Weekly**: Review milestone progress and adjust timeline
+
+---
+
+### 🔄 Development Session Protocol (Updated 2025-06-16)
+
+**Before Starting Any Work**:
+
+1. **Read Current CLAUDE.md**: Check project status, migration progress, pending tasks
+2. **Review TodoList**: Understand current task priorities and status  
+3. **Check Migration Phase**: Confirm current phase and deliverables
+4. **Update Documentation**: Add decisions, changes, and progress to CLAUDE.md
+5. **Log Task Progress**: Use TodoWrite to track completion status
+
+**During Development**:
+
+1. **Follow Migration Plan**: Stick to defined phases and milestones
+2. **Preserve Functionality**: Maintain 100% feature parity
+3. **Document Decisions**: Record technical choices and alternatives
+4. **Test Incrementally**: Validate each component/feature migration
+5. **Update References**: Keep all documentation files synchronized
+
+**After Each Session**:
+
+1. **Update CLAUDE.md**: Record progress, issues, and next steps
+2. **Complete TodoWrite**: Mark tasks as completed or update status
+3. **Create Task Logs**: Document detailed implementation notes
+4. **Update Reference Docs**: Reflect any architectural changes
+
+This ensures continuous project memory and seamless development handoffs.

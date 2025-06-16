@@ -15,6 +15,7 @@
 ----**MENDATORY STARTS** ----
 
 **for every new feature, or change, or bug fix, or refactor, or any other change, update the CLAUDE.md**
+**we will be doing all the things in next-hack in nextjs and we will be using the same architecture and same patterns and same codebase**
 
 ### 🔄 Documentation Update Protocol
 
@@ -312,11 +313,13 @@ hack-the-world/
 **Comprehensive frontend API analysis completed** - detailed in [FRONTEND_API_USAGE_COMPLETE_ANALYSIS.md](./docs/FRONTEND_API_USAGE_COMPLETE_ANALYSIS.md)
 
 **Key Metrics:**
+
 - **Total APIs Available**: 42 endpoints (33 apiSlice + 9 authApi)
 - **APIs Actually Used**: 18 endpoints (43% utilization rate)
 - **High-Traffic Components**: Dashboard (4 calls), CyberSecOverview (3 calls), CourseDetailPage (3-4 calls)
 
 **Architecture Strengths Identified:**
+
 - ✅ **Smart Authentication-Aware API Calls** - Uses `{ skip: !user }` pattern to prevent unnecessary calls
 - ✅ **Optimized Endpoint Usage** - Prefers consolidated endpoints like `useGetPhasesWithModulesQuery`
 - ✅ **Conditional Loading** - Only loads data when UI needs it (e.g., tab-based loading)
@@ -324,6 +327,7 @@ hack-the-world/
 - ✅ **Centralized Authentication** - Clean separation via `useAuthRTK` hook
 
 **Major Optimization Opportunities:**
+
 1. **Dashboard Consolidation** - Reduce 4 API calls to 1 consolidated endpoint (75% reduction)
 2. **Profile Features** - Implement avatar upload and statistics (using existing backend APIs)
 3. **Enrollment Management** - Add unenrollment functionality (backend ready)
@@ -331,6 +335,7 @@ hack-the-world/
 5. **Achievement Statistics** - Implement detailed achievement tracking UI
 
 **Performance Impact:**
+
 - Current average: 2.2 API calls per page (down from 2.8)
 - **COMPLETED**: 62% API endpoint reduction (42 → 16 endpoints)
 - **COMPLETED**: CyberSecOverview efficient pattern applied to Dashboard
@@ -342,23 +347,27 @@ hack-the-world/
 **Major Performance Optimization Completed** - detailed in [FRONTEND_API_OPTIMIZATION_SENIOR_ANALYSIS.md](./docs/FRONTEND_API_OPTIMIZATION_SENIOR_ANALYSIS.md)
 
 **Optimization Results:**
+
 - **API Endpoint Reduction**: 42 → 16 endpoints (62% reduction)
 - **Dashboard Optimization**: Applied CyberSecOverview efficient pattern with enrollment mapping
 - **CourseDetailPage Enhancement**: Smart conditional loading based on UI state
 - **EnrolledCoursePage Validation**: Confirmed already optimal with 2-call pattern
 
 **CyberSecOverview Gold Standard Pattern:**
+
 - ✅ **Comprehensive Backend Queries**: Single call returns all related data
 - ✅ **O(1) Lookup Maps**: Efficient client-side enrollment mapping
 - ✅ **Authentication-Aware Loading**: Skip unnecessary calls for unauthenticated users
 - ✅ **Smart Data Processing**: Client-side transformations for instant UI updates
 
 **Removed Inefficient Endpoints:**
+
 - Basic endpoints replaced by optimized versions (phases, modules, content)
 - Unused feature endpoints (unenroll, avatar upload, streak leaderboard)
 - Alternative implementations replaced by comprehensive endpoints
 
 **Future Consolidation Opportunities:**
+
 - Dashboard consolidation endpoint: 4 → 1 API calls (75% reduction potential)
 - Course detail complete endpoint: 3 → 1 API calls (67% reduction potential)
 - Ready for backend consolidation implementation
@@ -410,13 +419,15 @@ This platform provides a solid foundation for cybersecurity education with profe
 ### 📋 Current Task Status
 
 #### Completed Tasks ✅
+
 - **nextjs-migration-research**: Research and plan complete migration from React+Vite to Next.js 15+ ✅
-- **document-current-architecture**: Document current frontend and admin panel architecture for migration reference ✅  
+- **document-current-architecture**: Document current frontend and admin panel architecture for migration reference ✅
 - **create-migration-plan**: Create detailed migration plan with phases and timelines ✅
 - **setup-project-tracking**: Setup project tracking system for development and project management ✅
 - **update-memory-documentation**: Update memory and documentation system for automatic task list updates ✅
 
 #### Pending Tasks 🔄
+
 - **present-migration-plan**: Present complete migration plan to user for approval before starting development (HIGH PRIORITY)
 
 ### 🎯 Migration Overview
@@ -424,8 +435,9 @@ This platform provides a solid foundation for cybersecurity education with profe
 **Objective**: Migrate entire Hack The World platform from React+Vite to Next.js 15+ while preserving 100% of design, functionality, and user experience.
 
 **Migration Scope**:
+
 - **Frontend** (Student Portal): React 18 + TypeScript + Vite + RTK Query → Next.js 15+ App Router
-- **Admin Panel**: React 19 + JavaScript + Vite + Axios → Next.js 15+ App Router  
+- **Admin Panel**: React 19 + JavaScript + Vite + Axios → Next.js 15+ App Router
 - **Backend**: Keep existing Express.js server unchanged
 - **Shared Components**: Create monorepo with shared UI library
 
@@ -459,7 +471,9 @@ hack-the-world-nextjs/
 ### 📅 Migration Phases
 
 #### Phase 1: Infrastructure Setup (Week 1-2)
+
 **Goal**: Establish Next.js 15+ monorepo with shared packages
+
 - ✅ Create pnpm workspace configuration
 - ✅ Initialize Next.js 15+ apps (web + admin)
 - ✅ Setup shared packages (ui, types, api-client, config)
@@ -467,7 +481,9 @@ hack-the-world-nextjs/
 - ✅ Migrate build system from Vite to Next.js
 
 #### Phase 2: Core System Migration (Week 2-4)
+
 **Goal**: Migrate authentication, routing, and core infrastructure
+
 - ✅ Implement Next.js middleware for JWT validation
 - ✅ Migrate localStorage token handling to cookies/server-side
 - ✅ Map React Router routes to Next.js App Router
@@ -475,14 +491,18 @@ hack-the-world-nextjs/
 - ✅ Migrate RTK Query to work with SSR
 
 #### Phase 3: Component Migration (Week 4-6)
+
 **Goal**: Migrate all components maintaining exact functionality and design
+
 - ✅ Migrate Shadcn/ui components to shared package
 - ✅ Migrate all 100+ frontend components
 - ✅ Migrate all 20+ admin components
 - ✅ Preserve all interactive features (games, terminal, progress tracking)
 
 #### Phase 4: Testing & Optimization (Week 6-8)
+
 **Goal**: Ensure quality, performance, and complete feature parity
+
 - ✅ Migrate test suites to Next.js environment
 - ✅ Implement SSR/SSG optimizations
 - ✅ Performance optimization and benchmarking
@@ -491,7 +511,9 @@ hack-the-world-nextjs/
 ### 🔧 Technical Migration Strategy
 
 #### Current Tech Stack Analysis
+
 **Frontend (Student Portal)**:
+
 - React 18 + TypeScript + Vite + RTK Query + TailwindCSS 4.1.4
 - 100+ components across 8 feature areas
 - RTK Query with sophisticated caching
@@ -499,12 +521,14 @@ hack-the-world-nextjs/
 - React Router DOM with protected routes
 
 **Admin Panel**:
-- React 19 + JavaScript + Vite + Axios + TailwindCSS 4.1.8  
+
+- React 19 + JavaScript + Vite + Axios + TailwindCSS 4.1.8
 - 20+ admin-specific components
 - Context API state management
 - Axios interceptors with token handling
 
 #### Migration Approach
+
 1. **Monorepo Structure**: Use pnpm workspaces for better code sharing
 2. **App Router Migration**: Leverage Next.js App Router for better SSR/SSG
 3. **State Management**: Adapt RTK Query for SSR compatibility
@@ -515,22 +539,25 @@ hack-the-world-nextjs/
 ### 📊 Project Tracking System
 
 #### Epic-Based Development Board
+
 - **Epic 1**: Infrastructure Setup (7 tasks)
-- **Epic 2**: Authentication & Routing (8 tasks)  
+- **Epic 2**: Authentication & Routing (8 tasks)
 - **Epic 3**: Component Migration - Student Portal (7 tasks)
 - **Epic 4**: Component Migration - Admin Panel (5 tasks)
 - **Epic 5**: Feature Integration (6 tasks)
 - **Epic 6**: Testing & Quality Assurance (8 tasks)
 
 #### Milestone Gates
+
 - **Week 2**: Infrastructure complete, development environment ready
 - **Week 4**: Authentication and routing working, API clients functional
-- **Week 6**: All components migrated, features working  
+- **Week 6**: All components migrated, features working
 - **Week 8**: Testing complete, production ready
 
 ### 🔄 Automatic Documentation System
 
 #### Auto-Update Triggers
+
 1. **Task Completion**: Update progress and create completion logs
 2. **Component Migration**: Update component reference docs
 3. **API Changes**: Update API usage documentation
@@ -538,6 +565,7 @@ hack-the-world-nextjs/
 5. **Feature Implementation**: Update feature documentation
 
 #### Documentation Files to Update
+
 - **CLAUDE.md**: Main project memory and context
 - **FRONTEND_COMPLETE_REFERENCE.md**: Component architecture
 - **SERVER_COMPLETE_REFERENCE.md**: Backend API reference
@@ -563,11 +591,13 @@ hack-the-world-nextjs/
 ### 🚨 Risk Mitigation
 
 **High Risk Areas**:
+
 - RTK Query SSR migration complexity
-- Authentication state management in SSR  
+- Authentication state management in SSR
 - Component migration testing
 
 **Mitigation Strategies**:
+
 - Phase-by-phase migration approach
 - Comprehensive testing at each phase
 - Backup and rollback procedures
@@ -598,7 +628,7 @@ hack-the-world-nextjs/
 **Before Starting Any Work**:
 
 1. **Read Current CLAUDE.md**: Check project status, migration progress, pending tasks
-2. **Review TodoList**: Understand current task priorities and status  
+2. **Review TodoList**: Understand current task priorities and status
 3. **Check Migration Phase**: Confirm current phase and deliverables
 4. **Update Documentation**: Add decisions, changes, and progress to CLAUDE.md
 5. **Log Task Progress**: Use TodoWrite to track completion status

@@ -51,7 +51,6 @@ const phaseSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Phase order is required"],
       min: [1, "Order must be at least 1"],
-      unique: true,
     },
     isActive: {
       type: Boolean,

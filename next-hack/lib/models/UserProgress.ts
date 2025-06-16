@@ -20,6 +20,10 @@ export interface IUserProgress extends mongoose.Document {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  start(): Promise<IUserProgress>;
+  updateProgress(progressPercentage: number, timeSpent?: number, lastPosition?: number): Promise<IUserProgress>;
+  complete(score?: number, notes?: string): Promise<IUserProgress>;
+  retry(): Promise<IUserProgress>;
 }
 
 export interface IUserProgressModel extends mongoose.Model<IUserProgress> {

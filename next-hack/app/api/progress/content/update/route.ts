@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
         userId: user._id,
         contentId,
         moduleId: content.moduleId,
+        contentType: content.type,
         status,
         progressPercentage: content.type === 'video' && progressPercentage >= 90 ? 100 : progressPercentage,
         timeSpent: 0,

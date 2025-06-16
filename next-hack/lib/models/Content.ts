@@ -26,9 +26,6 @@ export interface IContent extends mongoose.Document {
     previous: IContent | null;
     next: IContent | null;
   }>;
-  toPublicJSON(): Record<string, unknown>;
-  toJSON(): Record<string, unknown>;
-  toObject(): Record<string, unknown>;
 }
 
 export interface IContentModel extends mongoose.Model<IContent> {

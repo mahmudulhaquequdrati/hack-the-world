@@ -23,9 +23,6 @@ export interface IModule extends mongoose.Document {
   };
   createdAt: Date;
   updatedAt: Date;
-  toPublicJSON(): Record<string, unknown>;
-  toJSON(): Record<string, unknown>;
-  toObject(): Record<string, unknown>;
 }
 
 export interface IModuleModel extends mongoose.Model<IModule> {

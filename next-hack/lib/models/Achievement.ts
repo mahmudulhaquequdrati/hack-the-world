@@ -21,13 +21,6 @@ export interface IAchievement extends mongoose.Document {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
-  toPublicJSON(): Record<string, unknown>;
-  toJSON(): Record<string, unknown>;
-  toObject(): Record<string, unknown>;
-  getByCategory(category: string): Promise<IAchievement[]>;
-  getByDifficulty(difficulty: string): Promise<IAchievement[]>;
-  getActive(): Promise<IAchievement[]>;
-  createDefaultAchievements(): Promise<IAchievement[]>;
 }
 
 export interface IAchievementModel extends mongoose.Model<IAchievement> {
@@ -42,7 +35,6 @@ const achievementSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: [true, "Achievement slug is required"],
-      unique: true,
       trim: true,
       lowercase: true,
       maxlength: [100, "Slug cannot exceed 100 characters"],

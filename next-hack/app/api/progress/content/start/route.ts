@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
         userId: user._id,
         contentId,
         moduleId: content.moduleId,
+        contentType: content.type,
         status: 'in_progress',
         progressPercentage: 1,
         timeSpent: 0,

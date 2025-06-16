@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 export interface IAchievement extends mongoose.Document {
   _id: mongoose.Types.ObjectId;
@@ -17,10 +17,24 @@ export interface IAchievement extends mongoose.Document {
     title?: string;
   };
   icon: string;
-  difficulty: 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
+  difficulty: "Bronze" | "Silver" | "Gold" | "Platinum";
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  toPublicJSON(): Record<string, unknown>;
+  toJSON(): Record<string, unknown>;
+  toObject(): Record<string, unknown>;
+  getByCategory(category: string): Promise<IAchievement[]>;
+  getByDifficulty(difficulty: string): Promise<IAchievement[]>;
+  getActive(): Promise<IAchievement[]>;
+  createDefaultAchievements(): Promise<IAchievement[]>;
+}
+
+export interface IAchievementModel extends mongoose.Model<IAchievement> {
+  getByCategory(category: string): Promise<IAchievement[]>;
+  getByDifficulty(difficulty: string): Promise<IAchievement[]>;
+  getActive(): Promise<IAchievement[]>;
+  createDefaultAchievements(): Promise<IAchievement[]>;
 }
 
 const achievementSchema = new mongoose.Schema(
@@ -32,7 +46,10 @@ const achievementSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       maxlength: [100, "Slug cannot exceed 100 characters"],
-      match: [/^[a-z0-9-_]+$/, "Slug can only contain lowercase letters, numbers, hyphens, and underscores"]
+      match: [
+        /^[a-z0-9-_]+$/,
+        "Slug can only contain lowercase letters, numbers, hyphens, and underscores",
+      ],
     },
     title: {
       type: String,
@@ -57,38 +74,49 @@ const achievementSchema = new mongoose.Schema(
         type: String,
         required: [true, "Requirement type is required"],
         enum: {
-          values: ["content_completion", "streak", "score", "time_spent", "module_completion", "special"],
-          message: "Requirement type must be one of: content_completion, streak, score, time_spent, module_completion, special"
-        }
+          values: [
+            "content_completion",
+            "streak",
+            "score",
+            "time_spent",
+            "module_completion",
+            "special",
+          ],
+          message:
+            "Requirement type must be one of: content_completion, streak, score, time_spent, module_completion, special",
+        },
       },
       target: {
         type: Number,
         required: [true, "Requirement target is required"],
-        min: [1, "Target must be at least 1"]
+        min: [1, "Target must be at least 1"],
       },
       description: {
         type: String,
         required: [true, "Requirement description is required"],
         trim: true,
-        maxlength: [200, "Requirement description cannot exceed 200 characters"]
-      }
+        maxlength: [
+          200,
+          "Requirement description cannot exceed 200 characters",
+        ],
+      },
     },
     rewards: {
       points: {
         type: Number,
         required: [true, "Reward points are required"],
-        min: [0, "Points cannot be negative"]
+        min: [0, "Points cannot be negative"],
       },
       badge: {
         type: String,
         trim: true,
-        maxlength: [100, "Badge name cannot exceed 100 characters"]
+        maxlength: [100, "Badge name cannot exceed 100 characters"],
       },
       title: {
         type: String,
         trim: true,
-        maxlength: [100, "Title reward cannot exceed 100 characters"]
-      }
+        maxlength: [100, "Title reward cannot exceed 100 characters"],
+      },
     },
     icon: {
       type: String,
@@ -101,8 +129,8 @@ const achievementSchema = new mongoose.Schema(
       required: [true, "Achievement difficulty is required"],
       enum: {
         values: ["Bronze", "Silver", "Gold", "Platinum"],
-        message: "Difficulty must be one of: Bronze, Silver, Gold, Platinum"
-      }
+        message: "Difficulty must be one of: Bronze, Silver, Gold, Platinum",
+      },
     },
     isActive: {
       type: Boolean,
@@ -137,7 +165,7 @@ achievementSchema.index({ slug: 1 }, { unique: true });
 achievementSchema.index({ category: 1 });
 achievementSchema.index({ difficulty: 1 });
 achievementSchema.index({ isActive: 1 });
-achievementSchema.index({ 'requirements.type': 1 });
+achievementSchema.index({ "requirements.type": 1 });
 
 // Static methods
 achievementSchema.statics.getByCategory = function (category: string) {
@@ -162,15 +190,15 @@ achievementSchema.statics.createDefaultAchievements = async function () {
       requirements: {
         type: "content_completion",
         target: 1,
-        description: "Complete 1 piece of content"
+        description: "Complete 1 piece of content",
       },
       rewards: {
         points: 10,
         badge: "🎯",
-        title: "Beginner"
+        title: "Beginner",
       },
       icon: "target",
-      difficulty: "Bronze"
+      difficulty: "Bronze",
     },
     {
       slug: "streak-starter",
@@ -180,14 +208,14 @@ achievementSchema.statics.createDefaultAchievements = async function () {
       requirements: {
         type: "streak",
         target: 3,
-        description: "Learn for 3 consecutive days"
+        description: "Learn for 3 consecutive days",
       },
       rewards: {
         points: 25,
-        badge: "🔥"
+        badge: "🔥",
       },
       icon: "fire",
-      difficulty: "Bronze"
+      difficulty: "Bronze",
     },
     {
       slug: "module-master",
@@ -197,15 +225,15 @@ achievementSchema.statics.createDefaultAchievements = async function () {
       requirements: {
         type: "module_completion",
         target: 1,
-        description: "Complete 1 full module"
+        description: "Complete 1 full module",
       },
       rewards: {
         points: 50,
         badge: "📚",
-        title: "Scholar"
+        title: "Scholar",
       },
       icon: "book",
-      difficulty: "Silver"
+      difficulty: "Silver",
     },
     {
       slug: "dedicated-learner",
@@ -215,14 +243,14 @@ achievementSchema.statics.createDefaultAchievements = async function () {
       requirements: {
         type: "streak",
         target: 7,
-        description: "Learn for 7 consecutive days"
+        description: "Learn for 7 consecutive days",
       },
       rewards: {
         points: 100,
-        badge: "⭐"
+        badge: "⭐",
       },
       icon: "star",
-      difficulty: "Silver"
+      difficulty: "Silver",
     },
     {
       slug: "content-crusher",
@@ -232,14 +260,14 @@ achievementSchema.statics.createDefaultAchievements = async function () {
       requirements: {
         type: "content_completion",
         target: 50,
-        description: "Complete 50 pieces of content"
+        description: "Complete 50 pieces of content",
       },
       rewards: {
         points: 200,
-        badge: "💪"
+        badge: "💪",
       },
       icon: "muscle",
-      difficulty: "Gold"
+      difficulty: "Gold",
     },
     {
       slug: "marathon-learner",
@@ -249,16 +277,16 @@ achievementSchema.statics.createDefaultAchievements = async function () {
       requirements: {
         type: "streak",
         target: 30,
-        description: "Learn for 30 consecutive days"
+        description: "Learn for 30 consecutive days",
       },
       rewards: {
         points: 500,
         badge: "🏆",
-        title: "Marathon Master"
+        title: "Marathon Master",
       },
       icon: "trophy",
-      difficulty: "Platinum"
-    }
+      difficulty: "Platinum",
+    },
   ];
 
   const existingCount = await this.countDocuments();
@@ -268,6 +296,11 @@ achievementSchema.statics.createDefaultAchievements = async function () {
   return [];
 };
 
-const Achievement = mongoose.models.Achievement || mongoose.model<IAchievement>("Achievement", achievementSchema);
+const Achievement =
+  (mongoose.models.Achievement as IAchievementModel) ||
+  mongoose.model<IAchievement, IAchievementModel>(
+    "Achievement",
+    achievementSchema
+  );
 
 export default Achievement;

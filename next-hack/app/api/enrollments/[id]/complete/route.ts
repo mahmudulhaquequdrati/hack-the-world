@@ -5,12 +5,7 @@ import User from '@/lib/models/User';
 import { authenticate, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { objectIdSchema } from '@/lib/validators/content';
 import { z } from 'zod';
-
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+import { RouteContext, RouteParams } from '@/types/route-params';
 
 const completeEnrollmentSchema = z.object({
   grade: z.number().min(0).max(100).optional(),
@@ -18,7 +13,8 @@ const completeEnrollmentSchema = z.object({
 });
 
 // PUT /api/enrollments/[id]/complete - Complete enrollment
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, context: RouteContext<RouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);
@@ -85,7 +81,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Update user stats
     const userDoc = await User.findById(user._id);
     if (userDoc) {
-      userDoc.stats.totalCompletedModules = (userDoc.stats.totalCompletedModules || 0) + 1;
+      userDoc.stats.coursesCompleted = (userDoc.stats.coursesCompleted || 0) + 1;
       
       // Update streak if this completion happened today
       const today = new Date();

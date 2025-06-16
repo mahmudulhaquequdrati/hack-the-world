@@ -3,15 +3,11 @@ import { ensureDBConnection } from '@/lib/mongodb/connection';
 import UserEnrollment from '@/lib/models/UserEnrollment';
 import { authenticate, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { objectIdSchema } from '@/lib/validators/content';
-
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+import { RouteContext, RouteParams } from '@/types/route-params';
 
 // PUT /api/enrollments/[id]/resume - Resume enrollment
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, context: RouteContext<RouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);

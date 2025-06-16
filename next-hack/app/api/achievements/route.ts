@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     let userAchievements = null;
     if (includeUserProgress) {
       try {
-        const user = await authenticate(request, false); // Don't throw if no auth
+        const user = await authenticate(request);
         if (user) {
           userAchievements = await UserAchievement.getByUser(user._id.toString());
         }
@@ -47,7 +47,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Map achievements with user progress if available
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const achievementsWithProgress = achievements.map((achievement: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const userAchievement = userAchievements?.find((ua: any) => 
         ua.achievementId.toString() === achievement._id.toString()
       );

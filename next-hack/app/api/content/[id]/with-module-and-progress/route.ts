@@ -5,15 +5,11 @@ import UserProgress from '@/lib/models/UserProgress';
 import UserEnrollment from '@/lib/models/UserEnrollment';
 import { authenticate, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { objectIdSchema } from '@/lib/validators/content';
-
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+import { RouteContext, RouteParams } from '@/types/route-params';
 
 // GET /api/content/[id]/with-module-and-progress - Get content with module and progress info
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext<RouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);
@@ -96,7 +92,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const response = {
       content: {
         ...content.toObject(),
-        module: content.module,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        module: (content as any).module,
       },
       progress: {
         id: progress._id,

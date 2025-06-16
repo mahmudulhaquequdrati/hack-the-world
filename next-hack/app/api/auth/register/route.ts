@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     
     // Handle duplicate key errors
     if (error instanceof Error && 'code' in error && error.code === 11000) {
-      const duplicateField = (error as any).keyPattern?.email ? 'email' : 'username';
+      const duplicateField = (error as { keyPattern?: { email?: unknown; username?: unknown } }).keyPattern?.email ? 'email' : 'username';
       return createErrorResponse(
         `User with this ${duplicateField} already exists`,
         400

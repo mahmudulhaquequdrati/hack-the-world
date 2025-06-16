@@ -3,15 +3,11 @@ import { ensureDBConnection } from '@/lib/mongodb/connection';
 import UserEnrollment from '@/lib/models/UserEnrollment';
 import { authenticate, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { progressUpdateSchema, objectIdSchema } from '@/lib/validators/content';
-
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+import { RouteContext, RouteParams } from '@/types/route-params';
 
 // PUT /api/enrollments/[id]/progress - Update enrollment progress
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, context: RouteContext<RouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);
@@ -63,17 +59,32 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Update progress using the instance method
     await enrollment.updateProgress(progressPercentage);
 
-    // Update status if provided
-    if (status && status !== enrollment.status) {
-      enrollment.status = status;
-      if (status === 'completed') {
-        enrollment.completedAt = new Date();
-        
-        // Update user stats
-        user.stats.totalCompletedModules = (user.stats.totalCompletedModules || 0) + 1;
-        await user.save();
+    // Update status if provided - map progress status to enrollment status
+    if (status) {
+      let enrollmentStatus: 'active' | 'completed' | 'paused' | 'dropped';
+      switch (status) {
+        case 'not_started':
+        case 'in_progress':
+          enrollmentStatus = 'active';
+          break;
+        case 'completed':
+          enrollmentStatus = 'completed';
+          break;
+        default:
+          enrollmentStatus = 'active';
       }
-      await enrollment.save();
+      
+      if (enrollmentStatus !== enrollment.status) {
+        enrollment.status = enrollmentStatus;
+        if (enrollmentStatus === 'completed') {
+          enrollment.completedAt = new Date();
+          
+          // Update user stats
+          user.stats.coursesCompleted = (user.stats.coursesCompleted || 0) + 1;
+          await user.save();
+        }
+        await enrollment.save();
+      }
     }
 
     await enrollment.populate('module');

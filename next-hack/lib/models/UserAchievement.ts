@@ -16,6 +16,16 @@ export interface IUserAchievement extends mongoose.Document {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  updateProgress(newProgress: number): Promise<IUserAchievement>;
+  complete(rewards?: { points: number; badge?: string; title?: string }): Promise<IUserAchievement>;
+  markNotificationSent(): Promise<IUserAchievement>;
+}
+
+export interface IUserAchievementModel extends mongoose.Model<IUserAchievement> {
+  getByUser(userId: string, completed?: boolean): Promise<IUserAchievement[]>;
+  getCompletedByUser(userId: string): Promise<IUserAchievement[]>;
+  getInProgressByUser(userId: string): Promise<IUserAchievement[]>;
+  getUserStats(userId: string): Promise<unknown[]>;
 }
 
 const userAchievementSchema = new mongoose.Schema(
@@ -226,6 +236,8 @@ userAchievementSchema.methods.markNotificationSent = function () {
   return this.save();
 };
 
-const UserAchievement = mongoose.models.UserAchievement || mongoose.model<IUserAchievement>("UserAchievement", userAchievementSchema);
+const UserAchievement = 
+  (mongoose.models.UserAchievement as IUserAchievementModel) ||
+  mongoose.model<IUserAchievement, IUserAchievementModel>("UserAchievement", userAchievementSchema);
 
 export default UserAchievement;

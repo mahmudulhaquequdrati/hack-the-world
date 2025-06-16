@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 export interface IModule extends mongoose.Document {
   _id: mongoose.Types.ObjectId;
@@ -7,7 +7,7 @@ export interface IModule extends mongoose.Document {
   description: string;
   icon: string;
   duration: string;
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
+  difficulty: "Beginner" | "Intermediate" | "Advanced" | "Expert";
   color: string;
   order: number;
   topics: string[];
@@ -23,6 +23,14 @@ export interface IModule extends mongoose.Document {
   };
   createdAt: Date;
   updatedAt: Date;
+  toPublicJSON(): Record<string, unknown>;
+  toJSON(): Record<string, unknown>;
+  toObject(): Record<string, unknown>;
+}
+
+export interface IModuleModel extends mongoose.Model<IModule> {
+  getByPhase(phaseId: string): Promise<IModule[]>;
+  getAllWithPhases(): Promise<IModule[]>;
 }
 
 const moduleSchema = new mongoose.Schema(
@@ -61,7 +69,8 @@ const moduleSchema = new mongoose.Schema(
       required: [true, "Module difficulty is required"],
       enum: {
         values: ["Beginner", "Intermediate", "Advanced", "Expert"],
-        message: "Difficulty must be one of: Beginner, Intermediate, Advanced, Expert",
+        message:
+          "Difficulty must be one of: Beginner, Intermediate, Advanced, Expert",
       },
     },
     color: {
@@ -87,7 +96,8 @@ const moduleSchema = new mongoose.Schema(
               topic.length <= 100
           );
         },
-        message: "Each topic must be a non-empty string with max 100 characters",
+        message:
+          "Each topic must be a non-empty string with max 100 characters",
       },
     },
     isActive: {
@@ -172,6 +182,8 @@ moduleSchema.statics.getAllWithPhases = function () {
     .sort({ "phase.order": 1, order: 1 });
 };
 
-const Module = mongoose.models.Module || mongoose.model<IModule>("Module", moduleSchema);
+const Module =
+  (mongoose.models.Module as IModuleModel) ||
+  mongoose.model<IModule, IModuleModel>("Module", moduleSchema);
 
 export default Module;

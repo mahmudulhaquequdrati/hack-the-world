@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
           longestStreak: 1,
           lastActiveAt: 1,
           'stats.totalCompletedContent': 1,
-          'stats.totalCompletedModules': 1
+          'stats.coursesCompleted': 1
         }
       },
       {

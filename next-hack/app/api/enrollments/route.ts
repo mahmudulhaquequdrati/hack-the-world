@@ -132,7 +132,8 @@ export async function POST(request: NextRequest) {
     await enrollment.populate('module');
 
     // Update user stats (enrollment count)
-    user.stats.totalEnrollments = (user.stats.totalEnrollments || 0) + 1;
+    // Note: We don't track totalEnrollments in the User stats schema
+    // This could be tracked separately if needed
     await user.save();
 
     return createSuccessResponse(

@@ -16,6 +16,11 @@ export interface IPhase extends mongoose.Document {
   updatedAt: Date;
 }
 
+export interface IPhaseModel extends mongoose.Model<IPhase> {
+  getActive(): Promise<IPhase[]>;
+  getWithModules(): Promise<IPhase[]>;
+}
+
 const phaseSchema = new mongoose.Schema(
   {
     title: {
@@ -136,6 +141,8 @@ phaseSchema.statics.getWithModules = function () {
     .sort({ order: 1 });
 };
 
-const Phase = mongoose.models.Phase || mongoose.model<IPhase>("Phase", phaseSchema);
+const Phase = 
+  (mongoose.models.Phase as IPhaseModel) ||
+  mongoose.model<IPhase, IPhaseModel>("Phase", phaseSchema);
 
 export default Phase;

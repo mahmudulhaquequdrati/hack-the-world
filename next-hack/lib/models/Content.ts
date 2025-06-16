@@ -1,9 +1,9 @@
-import mongoose from 'mongoose';
+import mongoose, { Model } from "mongoose";
 
 export interface IContent extends mongoose.Document {
   _id: mongoose.Types.ObjectId;
   moduleId: mongoose.Types.ObjectId;
-  type: 'video' | 'lab' | 'game' | 'document';
+  type: "video" | "lab" | "game" | "document";
   title: string;
   description: string;
   url?: string;
@@ -13,7 +13,7 @@ export interface IContent extends mongoose.Document {
   duration: number;
   isActive: boolean;
   metadata?: {
-    difficulty?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
+    difficulty?: "Beginner" | "Intermediate" | "Advanced" | "Expert";
     tags: string[];
     prerequisites: string[];
     estimatedTime?: string;
@@ -22,6 +22,26 @@ export interface IContent extends mongoose.Document {
   };
   createdAt: Date;
   updatedAt: Date;
+  getNavigation(): Promise<{
+    previous: IContent | null;
+    next: IContent | null;
+  }>;
+  toPublicJSON(): Record<string, unknown>;
+  toJSON(): Record<string, unknown>;
+  toObject(): Record<string, unknown>;
+}
+
+export interface IContentModel extends mongoose.Model<IContent> {
+  getByModule(moduleId: string): Promise<IContent[]>;
+  getByModuleGrouped(
+    moduleId: string
+  ): Promise<{ _id: string; items: IContent[]; count: number }[]>;
+  getByModuleGroupedOptimized(
+    moduleId: string
+  ): Promise<{ _id: string; content: IContent[] }[]>;
+  getByType(type: string): Promise<IContent[]>;
+  getFirstByModule(moduleId: string): Promise<IContent | null>;
+  getSectionsByModule(moduleId: string): Promise<string[]>;
 }
 
 const contentSchema = new mongoose.Schema(
@@ -96,7 +116,8 @@ const contentSchema = new mongoose.Schema(
         type: String,
         enum: {
           values: ["Beginner", "Intermediate", "Advanced", "Expert"],
-          message: "Difficulty must be one of: Beginner, Intermediate, Advanced, Expert",
+          message:
+            "Difficulty must be one of: Beginner, Intermediate, Advanced, Expert",
         },
       },
       tags: {
@@ -176,22 +197,34 @@ contentSchema.statics.getByModule = function (moduleId: string) {
 
 contentSchema.statics.getByModuleGrouped = function (moduleId: string) {
   return this.aggregate([
-    { $match: { moduleId: new mongoose.Types.ObjectId(moduleId), isActive: true } },
+    {
+      $match: {
+        moduleId: new mongoose.Types.ObjectId(moduleId),
+        isActive: true,
+      },
+    },
     { $sort: { order: 1 } },
     {
       $group: {
         _id: "$type",
         items: { $push: "$$ROOT" },
-        count: { $sum: 1 }
-      }
+        count: { $sum: 1 },
+      },
     },
-    { $sort: { _id: 1 } }
+    { $sort: { _id: 1 } },
   ]);
 };
 
-contentSchema.statics.getByModuleGroupedOptimized = function (moduleId: string) {
+contentSchema.statics.getByModuleGroupedOptimized = function (
+  moduleId: string
+) {
   return this.aggregate([
-    { $match: { moduleId: new mongoose.Types.ObjectId(moduleId), isActive: true } },
+    {
+      $match: {
+        moduleId: new mongoose.Types.ObjectId(moduleId),
+        isActive: true,
+      },
+    },
     { $sort: { order: 1 } },
     {
       $group: {
@@ -205,12 +238,12 @@ contentSchema.statics.getByModuleGroupedOptimized = function (moduleId: string) 
             url: "$url",
             order: "$order",
             duration: "$duration",
-            metadata: "$metadata"
-          }
-        }
-      }
+            metadata: "$metadata",
+          },
+        },
+      },
     },
-    { $sort: { _id: 1 } }
+    { $sort: { _id: 1 } },
   ]);
 };
 
@@ -228,25 +261,27 @@ contentSchema.statics.getSectionsByModule = function (moduleId: string) {
 
 // Instance methods
 contentSchema.methods.getNavigation = async function () {
-  const Content = this.constructor;
-  
+  const Content = this.constructor as Model<IContent>;
+
   // Get previous content (same module, lower order)
   const previous = await Content.findOne({
     moduleId: this.moduleId,
     order: { $lt: this.order },
-    isActive: true
+    isActive: true,
   }).sort({ order: -1 });
 
   // Get next content (same module, higher order)
   const next = await Content.findOne({
     moduleId: this.moduleId,
     order: { $gt: this.order },
-    isActive: true
+    isActive: true,
   }).sort({ order: 1 });
 
   return { previous, next };
 };
 
-const Content = mongoose.models.Content || mongoose.model<IContent>("Content", contentSchema);
+const Content =
+  (mongoose.models.Content as IContentModel) ||
+  mongoose.model<IContent, IContentModel>("Content", contentSchema);
 
 export default Content;

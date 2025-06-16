@@ -3,15 +3,11 @@ import { ensureDBConnection } from '@/lib/mongodb/connection';
 import Content from '@/lib/models/Content';
 import { createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { objectIdSchema } from '@/lib/validators/content';
-
-interface RouteParams {
-  params: {
-    moduleId: string;
-  };
-}
+import { RouteContext, ModuleRouteParams } from '@/types/route-params';
 
 // GET /api/content/module/[moduleId]/first - Get first content in module
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext<ModuleRouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);

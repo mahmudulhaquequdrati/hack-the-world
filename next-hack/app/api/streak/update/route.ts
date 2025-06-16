@@ -146,8 +146,8 @@ function getNextMilestone(streak: number): { target: number; description: string
   return { target: Math.ceil((streak + 1) / 100) * 100, description: 'Next century mark' };
 }
 
-function getStreakMessage(action: string, streak: number, milestone: any): string {
-  if (milestone.reached) {
+function getStreakMessage(action: string, streak: number, milestone: { reached: boolean; description?: string }): string {
+  if (milestone.reached && milestone.description) {
     return `🎉 ${milestone.description} You're now at ${streak} days!`;
   }
   

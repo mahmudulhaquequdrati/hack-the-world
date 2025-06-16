@@ -10,6 +10,7 @@ export interface IUserProgress extends mongoose.Document {
   progressPercentage: number;
   timeSpent: number; // in seconds
   score?: number;
+  maxScore?: number;
   attempts: number;
   lastPosition?: number; // for videos: timestamp, for documents: page/scroll position
   startedAt?: Date;
@@ -19,6 +20,16 @@ export interface IUserProgress extends mongoose.Document {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IUserProgressModel extends mongoose.Model<IUserProgress> {
+  getByUser(userId: string, status?: string): Promise<IUserProgress[]>;
+  getByContent(contentId: string): Promise<IUserProgress[]>;
+  getByModule(userId: string, moduleId: string): Promise<IUserProgress[]>;
+  getByContentType(userId: string, contentType: string): Promise<IUserProgress[]>;
+  getUserOverallProgress(userId: string): Promise<unknown[]>;
+  getModuleProgressSummary(userId: string, moduleId: string): Promise<unknown[]>;
+  findByUserAndContent(userId: string, contentId: string): Promise<IUserProgress | null>;
 }
 
 const userProgressSchema = new mongoose.Schema(
@@ -70,6 +81,10 @@ const userProgressSchema = new mongoose.Schema(
       type: Number,
       min: [0, "Score cannot be negative"],
       max: [100, "Score cannot exceed 100"],
+    },
+    maxScore: {
+      type: Number,
+      min: [0, "Max score cannot be negative"],
     },
     attempts: {
       type: Number,
@@ -202,6 +217,10 @@ userProgressSchema.statics.getByContentType = function (userId: string, contentT
     .sort({ lastAccessedAt: -1 });
 };
 
+userProgressSchema.statics.findByUserAndContent = function (userId: string, contentId: string) {
+  return this.findOne({ userId, contentId, isActive: true });
+};
+
 userProgressSchema.statics.getUserOverallProgress = function (userId: string) {
   return this.aggregate([
     { $match: { userId: new mongoose.Types.ObjectId(userId), isActive: true } },
@@ -318,6 +337,8 @@ userProgressSchema.methods.retry = function () {
   return this.save();
 };
 
-const UserProgress = mongoose.models.UserProgress || mongoose.model<IUserProgress>("UserProgress", userProgressSchema);
+const UserProgress = 
+  (mongoose.models.UserProgress as IUserProgressModel) ||
+  mongoose.model<IUserProgress, IUserProgressModel>("UserProgress", userProgressSchema);
 
 export default UserProgress;

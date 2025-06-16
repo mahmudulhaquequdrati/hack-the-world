@@ -3,15 +3,11 @@ import { ensureDBConnection } from '@/lib/mongodb/connection';
 import Phase from '@/lib/models/Phase';
 import { authenticate, requireAdmin, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { phaseUpdateSchema, objectIdSchema } from '@/lib/validators/content';
-
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+import { RouteContext, RouteParams } from '@/types/route-params';
 
 // GET /api/phases/[id] - Get specific phase
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext<RouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);
@@ -61,7 +57,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 // PUT /api/phases/[id] - Update specific phase (Admin only)
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, context: RouteContext<RouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);
@@ -137,7 +134,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE /api/phases/[id] - Soft delete specific phase (Admin only)
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, context: RouteContext<RouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);

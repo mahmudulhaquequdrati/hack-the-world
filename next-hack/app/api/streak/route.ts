@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server';
 import { ensureDBConnection } from '@/lib/mongodb/connection';
-import User from '@/lib/models/User';
 import { authenticate, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 
 // GET /api/streak - Get user's current streak status
@@ -19,9 +18,9 @@ export async function GET(request: NextRequest) {
     await ensureDBConnection();
 
     // Get current streak information
-    const currentStreak = user.currentStreak || 0;
-    const longestStreak = user.longestStreak || 0;
-    const lastActiveAt = user.lastActiveAt;
+    const currentStreak = user.stats.currentStreak || 0;
+    const longestStreak = user.stats.longestStreak || 0;
+    const lastActiveAt = user.stats.lastActivityDate;
 
     // Calculate streak status
     const today = new Date();

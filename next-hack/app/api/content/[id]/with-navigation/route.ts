@@ -3,15 +3,11 @@ import { ensureDBConnection } from '@/lib/mongodb/connection';
 import Content from '@/lib/models/Content';
 import { createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { objectIdSchema } from '@/lib/validators/content';
-
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+import { RouteContext, RouteParams } from '@/types/route-params';
 
 // GET /api/content/[id]/with-navigation - Get content with navigation
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext<RouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);

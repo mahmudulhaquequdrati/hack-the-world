@@ -2,15 +2,11 @@ import { NextRequest } from 'next/server';
 import { ensureDBConnection } from '@/lib/mongodb/connection';
 import Content from '@/lib/models/Content';
 import { createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
-
-interface RouteParams {
-  params: {
-    type: string;
-  };
-}
+import { RouteContext, TypeRouteParams } from '@/types/route-params';
 
 // GET /api/content/type/[type] - Get content by type
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext<TypeRouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);

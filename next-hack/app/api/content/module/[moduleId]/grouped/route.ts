@@ -3,15 +3,12 @@ import { ensureDBConnection } from '@/lib/mongodb/connection';
 import Content from '@/lib/models/Content';
 import { createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { objectIdSchema } from '@/lib/validators/content';
+import { RouteContext, ModuleRouteParams } from '@/types/route-params';
 
-interface RouteParams {
-  params: {
-    moduleId: string;
-  };
-}
 
 // GET /api/content/module/[moduleId]/grouped - Get content grouped by type
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext<ModuleRouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);
@@ -32,7 +29,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const groupedContent = await Content.getByModuleGrouped(params.moduleId);
 
     // Transform the result to a more convenient format
-    const contentByType = groupedContent.reduce((acc: any, group: any) => {
+    const contentByType = groupedContent.reduce((acc: Record<string, unknown>, group: { _id: string; items: unknown[]; count: number }) => {
       acc[group._id] = {
         type: group._id,
         items: group.items,

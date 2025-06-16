@@ -3,15 +3,11 @@ import { ensureDBConnection } from '@/lib/mongodb/connection';
 import UserProgress from '@/lib/models/UserProgress';
 import { authenticate, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { objectIdSchema } from '@/lib/validators/content';
-
-interface RouteParams {
-  params: {
-    contentId: string;
-  };
-}
+import { RouteContext, ContentRouteParams } from '@/types/route-params';
 
 // GET /api/progress/content/[contentId] - Get user's progress for specific content
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext<ContentRouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);

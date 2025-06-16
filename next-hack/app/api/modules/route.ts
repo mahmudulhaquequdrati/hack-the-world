@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
     const includePhases = searchParams.get('includePhases') === 'true';
     const phaseId = searchParams.get('phaseId');
 
-    let query = { isActive: true };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query: any = { isActive: true };
     if (phaseId) {
       query = { ...query, phaseId };
     }

@@ -3,16 +3,11 @@ import { ensureDBConnection } from '@/lib/mongodb/connection';
 import UserProgress from '@/lib/models/UserProgress';
 import { authenticate, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { objectIdSchema } from '@/lib/validators/content';
-
-interface RouteParams {
-  params: {
-    userId: string;
-    moduleId: string;
-  };
-}
+import { RouteContext, UserModuleParams } from '@/types/route-params';
 
 // GET /api/progress/module/[userId]/[moduleId] - Get user's progress for specific module
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext<UserModuleParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);
@@ -61,7 +56,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       : 0;
 
     // Group progress by content type
-    const progressByType = moduleProgress.reduce((acc: any, progress) => {
+    const progressByType = moduleProgress.reduce((acc: Record<string, unknown[]>, progress: { contentType: string }) => {
       if (!acc[progress.contentType]) {
         acc[progress.contentType] = [];
       }

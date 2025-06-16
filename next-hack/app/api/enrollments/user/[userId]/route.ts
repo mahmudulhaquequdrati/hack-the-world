@@ -3,15 +3,11 @@ import { ensureDBConnection } from '@/lib/mongodb/connection';
 import UserEnrollment from '@/lib/models/UserEnrollment';
 import { authenticate, requireAdmin, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { objectIdSchema } from '@/lib/validators/content';
-
-interface RouteParams {
-  params: {
-    userId: string;
-  };
-}
+import { RouteContext, UserRouteParams } from '@/types/route-params';
 
 // GET /api/enrollments/user/[userId] - Get enrollments for specific user (Admin only)
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext<UserRouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);

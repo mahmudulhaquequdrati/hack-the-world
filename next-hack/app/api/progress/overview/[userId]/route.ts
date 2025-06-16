@@ -4,15 +4,11 @@ import UserProgress from '@/lib/models/UserProgress';
 import UserEnrollment from '@/lib/models/UserEnrollment';
 import { authenticate, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { objectIdSchema } from '@/lib/validators/content';
-
-interface RouteParams {
-  params: {
-    userId: string;
-  };
-}
+import { RouteContext, UserRouteParams } from '@/types/route-params';
 
 // GET /api/progress/overview/[userId] - Get user's overall progress overview
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext<UserRouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);
@@ -66,7 +62,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Calculate content type breakdown
     const contentTypeProgress = await UserProgress.aggregate([
-      { $match: { userId: new (UserProgress as any).base.Types.ObjectId(params.userId), isActive: true } },
+      { $match: { userId: new (UserProgress as { base: { Types: { ObjectId: new (value: string) => unknown } } }).base.Types.ObjectId(params.userId), isActive: true } },
       {
         $group: {
           _id: "$contentType",
@@ -87,10 +83,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         contentTypeProgress,
         recentProgress,
         summary: {
-          totalContent: overallProgress.reduce((sum: number, item: any) => sum + item.count, 0),
-          completedContent: overallProgress.find((item: any) => item._id === 'completed')?.count || 0,
-          totalTimeSpent: overallProgress.reduce((sum: number, item: any) => sum + (item.totalTimeSpent || 0), 0),
-          avgScore: overallProgress.reduce((sum: number, item: any) => sum + (item.avgScore || 0), 0) / overallProgress.length || 0
+          totalContent: (overallProgress as { count: number }[]).reduce((sum: number, item: { count: number }) => sum + item.count, 0),
+          completedContent: (overallProgress as { _id: string; count?: number }[]).find((item: { _id: string; count?: number }) => item._id === 'completed')?.count || 0,
+          totalTimeSpent: (overallProgress as { totalTimeSpent?: number }[]).reduce((sum: number, item: { totalTimeSpent?: number }) => sum + (item.totalTimeSpent || 0), 0),
+          avgScore: (overallProgress as { avgScore?: number }[]).reduce((sum: number, item: { avgScore?: number }) => sum + (item.avgScore || 0), 0) / overallProgress.length || 0
         }
       },
       'User progress overview retrieved successfully'

@@ -3,15 +3,11 @@ import { ensureDBConnection } from '@/lib/mongodb/connection';
 import UserEnrollment from '@/lib/models/UserEnrollment';
 import { authenticate, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
 import { enrollmentUpdateSchema, objectIdSchema } from '@/lib/validators/content';
-
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+import { RouteContext, RouteParams } from '@/types/route-params';
 
 // GET /api/enrollments/[id] - Get specific enrollment
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext<RouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);
@@ -59,7 +55,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 // PUT /api/enrollments/[id] - Update enrollment
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, context: RouteContext<RouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);
@@ -116,7 +113,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       enrollment.progressPercentage = 100;
       
       // Update user stats
-      user.stats.totalCompletedModules = (user.stats.totalCompletedModules || 0) + 1;
+      user.stats.coursesCompleted = (user.stats.coursesCompleted || 0) + 1;
       await user.save();
     }
 
@@ -140,7 +137,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE /api/enrollments/[id] - Unenroll from module
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, context: RouteContext<RouteParams>) {
+  const params = await context.params;
   try {
     // Rate limiting
     const clientIP = getClientIP(request);

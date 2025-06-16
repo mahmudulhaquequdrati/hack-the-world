@@ -3,6 +3,7 @@ import { ensureDBConnection } from '@/lib/mongodb/connection';
 import UserAchievement from '@/lib/models/UserAchievement';
 import Achievement from '@/lib/models/Achievement';
 import { authenticate, createErrorResponse, createSuccessResponse, getClientIP, rateLimit } from '@/lib/middleware/auth';
+import { AchievementStatsRaw, DifficultyItem, DifficultyStats, UserRankInfo } from '@/types/route-params';
 
 // GET /api/achievements/user/stats - Get user's achievement statistics
 export async function GET(request: NextRequest) {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     // Get user achievement statistics
     const userStats = await UserAchievement.getUserStats(user._id.toString());
-    const stats = userStats[0] || {
+    const stats: AchievementStatsRaw = (userStats[0] as AchievementStatsRaw) || {
       totalAchievements: 0,
       completedAchievements: 0,
       inProgressAchievements: 0,
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Process achievements by difficulty
-    const difficultyStats = stats.achievementsByDifficulty.reduce((acc: any, item: any) => {
+    const difficultyStats: DifficultyStats = stats.achievementsByDifficulty.reduce((acc: DifficultyStats, item: DifficultyItem) => {
       if (!acc[item.difficulty]) {
         acc[item.difficulty] = { total: 0, completed: 0 };
       }
@@ -103,7 +104,7 @@ export async function GET(request: NextRequest) {
       }
     ]);
 
-    const rankInfo = userRank[0] || { rank: 1, totalUsers: 1 };
+    const rankInfo: UserRankInfo = userRank[0] || { rank: 1, totalUsers: 1 };
 
     return createSuccessResponse(
       { 

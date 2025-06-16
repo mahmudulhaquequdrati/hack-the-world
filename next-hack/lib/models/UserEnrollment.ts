@@ -18,6 +18,21 @@ export interface IUserEnrollment extends mongoose.Document {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  updateProgress(progressPercentage: number, completedSections?: number): Promise<IUserEnrollment>;
+  pause(): Promise<IUserEnrollment>;
+  resume(): Promise<IUserEnrollment>;
+  complete(grade?: number, feedback?: string): Promise<IUserEnrollment>;
+  addTimeSpent(minutes: number): Promise<IUserEnrollment>;
+}
+
+export interface IUserEnrollmentModel extends mongoose.Model<IUserEnrollment> {
+  getByUser(userId: string, status?: string): Promise<IUserEnrollment[]>;
+  getByModule(moduleId: string, status?: string): Promise<IUserEnrollment[]>;
+  getActiveEnrollments(userId: string): Promise<IUserEnrollment[]>;
+  getCompletedEnrollments(userId: string): Promise<IUserEnrollment[]>;
+  getEnrollmentStats(moduleId: string): Promise<unknown[]>;
+  findByUserAndModule(userId: string, moduleId: string): Promise<IUserEnrollment | null>;
+  updateProgressForUser(userId: string, moduleId: string, progressData: { progressPercentage: number; completedSections?: number }): Promise<IUserEnrollment | null>;
 }
 
 const userEnrollmentSchema = new mongoose.Schema(
@@ -205,6 +220,21 @@ userEnrollmentSchema.statics.getEnrollmentStats = function (moduleId: string) {
   ]);
 };
 
+userEnrollmentSchema.statics.findByUserAndModule = function (userId: string, moduleId: string) {
+  return this.findOne({ userId, moduleId, isActive: true });
+};
+
+userEnrollmentSchema.statics.updateProgressForUser = function (userId: string, moduleId: string, progressData: { progressPercentage: number; completedSections?: number }) {
+  return this.findOneAndUpdate(
+    { userId, moduleId, isActive: true },
+    {
+      ...progressData,
+      lastAccessedAt: new Date()
+    },
+    { new: true }
+  );
+};
+
 // Instance methods
 userEnrollmentSchema.methods.updateProgress = function (progressPercentage: number, completedSections?: number) {
   this.progressPercentage = Math.max(0, Math.min(100, progressPercentage));
@@ -262,6 +292,8 @@ userEnrollmentSchema.methods.addTimeSpent = function (minutes: number) {
   return this.save();
 };
 
-const UserEnrollment = mongoose.models.UserEnrollment || mongoose.model<IUserEnrollment>("UserEnrollment", userEnrollmentSchema);
+const UserEnrollment = 
+  (mongoose.models.UserEnrollment as IUserEnrollmentModel) ||
+  mongoose.model<IUserEnrollment, IUserEnrollmentModel>("UserEnrollment", userEnrollmentSchema);
 
 export default UserEnrollment;

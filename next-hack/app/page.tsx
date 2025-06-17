@@ -6,10 +6,13 @@ import {
   HeroSection,
   InteractiveDemoSection,
 } from "@/components/landing";
+import Layout from "@/components/layout/Layout";
 import { Eye, Shield, Terminal, Users } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [gameScore, setGameScore] = useState(0);
 
   const stats = [
@@ -79,49 +82,51 @@ export default function Home() {
   };
 
   const handleStartJourney = () => {
-    console.log("Navigate to overview");
+    router.push("/overview");
   };
 
   const handleViewDemo = () => {
-    console.log("Navigate to how it works");
+    router.push("/how-it-works");
   };
 
   const handleViewPricing = () => {
-    console.log("Navigate to pricing");
+    router.push("/pricing");
   };
 
   const handleEnterCyberRange = () => {
-    console.log("Navigate to cyber range");
+    router.push("/overview");
   };
 
   return (
-    <div className="min-h-screen bg-background text-green-400 relative overflow-hidden">
-      {/* Hero Section */}
-      <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Hero Content */}
-        <HeroSection
+    <Layout>
+      <div className="min-h-screen bg-background text-green-400 relative overflow-hidden">
+        {/* Hero Section */}
+        <div className="relative z-10 min-h-screen flex flex-col">
+          {/* Hero Content */}
+          <HeroSection
+            onStartJourney={handleStartJourney}
+            onViewDemo={handleViewDemo}
+            stats={stats}
+          />
+        </div>
+
+        {/* Features Section */}
+        <FeaturesSection features={features} />
+
+        {/* Interactive Demo Section */}
+        <InteractiveDemoSection
+          liveStats={liveStats}
+          gameScore={gameScore}
+          onScoreUpdate={handleScoreUpdate}
+          onEnterCyberRange={handleEnterCyberRange}
+        />
+
+        {/* CTA Section */}
+        <CTASection
           onStartJourney={handleStartJourney}
-          onViewDemo={handleViewDemo}
-          stats={stats}
+          onViewPricing={handleViewPricing}
         />
       </div>
-
-      {/* Features Section */}
-      <FeaturesSection features={features} />
-
-      {/* Interactive Demo Section */}
-      <InteractiveDemoSection
-        liveStats={liveStats}
-        gameScore={gameScore}
-        onScoreUpdate={handleScoreUpdate}
-        onEnterCyberRange={handleEnterCyberRange}
-      />
-
-      {/* CTA Section */}
-      <CTASection
-        onStartJourney={handleStartJourney}
-        onViewPricing={handleViewPricing}
-      />
-    </div>
+    </Layout>
   );
 }

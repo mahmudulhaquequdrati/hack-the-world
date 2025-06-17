@@ -22,6 +22,8 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { authAPI, enrollmentAPI, modulesAPI, phasesAPI } from "../services/api";
+import { getIconFromName, getIconOptions } from "../lib/iconUtils";
+import { BookOpen } from "lucide-react";
 
 const ModulesManagerEnhanced = () => {
   const { user } = useAuth(); // Get current user from auth context
@@ -69,16 +71,8 @@ const ModulesManagerEnhanced = () => {
     isActive: true,
   });
 
-  // Available icon options
-  const iconOptions = [
-    { value: "Lightbulb", label: "💡 Lightbulb" },
-    { value: "Target", label: "🎯 Target" },
-    { value: "Brain", label: "🧠 Brain" },
-    { value: "Shield", label: "🛡️ Shield" },
-    { value: "Terminal", label: "💻 Terminal" },
-    { value: "Network", label: "🌐 Network" },
-    { value: "Code", label: "💻 Code" },
-  ];
+  // Available icon options from utility
+  const iconOptions = getIconOptions();
 
   // Available Tailwind color options
   const colorOptions = [
@@ -1112,120 +1106,124 @@ const ModulesManagerEnhanced = () => {
       : modules;
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  gap-4 lg:gap-6 p-4 ">
-        {filteredModules.map((module) => (
-          <div
-            key={module.id}
-            className="terminal-window bg-gray-800 hover:bg-gray-750 transition-colors"
-          >
-            <div className="p-4 ">
-              {/* Module Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-black font-bold text-sm"
-                    style={{ backgroundColor: module.color }}
-                  >
-                    {module.order}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredModules.map((module, index) => {
+          const enrollStats = enrollmentStats[module.id] || {};
+          const userStatus = getCurrentUserEnrollmentStatus(module.id);
+          const phaseTitle = phases.find((p) => p.id === module.phaseId)?.title || "Unknown";
+          
+          const getDifficultyColor = (difficulty) => {
+            switch (difficulty.toLowerCase()) {
+              case "beginner": return "text-green-400 border-green-400/50 bg-green-400/10";
+              case "intermediate": return "text-yellow-400 border-yellow-400/50 bg-yellow-400/10";
+              case "advanced": return "text-red-400 border-red-400/50 bg-red-400/10";
+              case "expert": return "text-purple-400 border-purple-400/50 bg-purple-400/10";
+              default: return "text-gray-400 border-gray-400/50 bg-gray-400/10";
+            }
+          };
+
+          return (
+            <div
+              key={module.id}
+              className="relative overflow-hidden rounded-xl border-2 border-green-400/30 bg-gradient-to-br from-gray-900/80 to-black/80 p-6 group hover:border-green-400/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-400/20"
+            >
+              {/* Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/10 to-green-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              {/* Status Indicators */}
+              <div className="absolute top-2 left-2 flex space-x-1">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
+                {userStatus.enrolled && (
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse shadow-lg shadow-blue-400/50"></div>
+                )}
+              </div>
+
+              {/* Module Order Badge */}
+              <div className="absolute top-3 right-3 z-10">
+                <div className="w-8 h-8 rounded-full bg-green-400/20 border-2 border-green-400 text-green-400 shadow-lg shadow-green-400/30 flex items-center justify-center font-mono font-bold text-sm">
+                  {module.order}
+                </div>
+              </div>
+
+              <div className="relative z-10">
+                {/* Module Header */}
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-800/50 to-black/50 border-2 border-green-400/30 shadow-lg shadow-green-400/30 flex items-center justify-center group-hover:animate-pulse">
+                    {(() => {
+                      const IconComponent = getIconFromName(module.icon);
+                      return <IconComponent className="w-6 h-6 text-green-400" />;
+                    })()}
                   </div>
-                  <div
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      module.difficulty === "Beginner"
-                        ? "bg-green-500 text-black"
-                        : module.difficulty === "Intermediate"
-                        ? "bg-yellow-500 text-black"
-                        : module.difficulty === "Advanced"
-                        ? "bg-orange-500 text-black"
-                        : "bg-red-500 text-white"
-                    }`}
-                  >
-                    {module.difficulty}
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-green-400 font-mono uppercase tracking-wider group-hover:text-green-300 transition-colors line-clamp-1">
+                      {module.title}
+                    </h3>
+                    <div className={`px-2 py-1 rounded-full text-xs font-mono font-bold uppercase border ${getDifficultyColor(module.difficulty)} inline-block mt-1`}>
+                      {module.difficulty}
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-1">
+
+                {/* Description */}
+                <p className="text-gray-300 text-sm font-mono line-clamp-3 mb-4 leading-relaxed">
+                  {module.description}
+                </p>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="relative p-3 rounded-lg border bg-gradient-to-br from-gray-900/80 to-black/80 border-gray-700/50 hover:border-green-400/50 transition-all duration-300">
+                    <div className="text-center">
+                      <div className="text-green-400 font-mono text-sm font-bold">{phaseTitle}</div>
+                      <div className="text-green-400/60 text-xs font-mono uppercase">PHASE</div>
+                    </div>
+                  </div>
+                  <div className="relative p-3 rounded-lg border bg-gradient-to-br from-gray-900/80 to-black/80 border-gray-700/50 hover:border-blue-400/50 transition-all duration-300">
+                    <div className="text-center">
+                      <div className="text-blue-400 font-mono text-sm font-bold">{enrollStats.totalEnrollments || 0}</div>
+                      <div className="text-blue-400/60 text-xs font-mono uppercase">ENROLLED</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* User Status */}
+                {userStatus.enrolled && (
+                  <div className="mb-4 p-3 rounded-lg border bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-400/30">
+                    <div className="flex items-center justify-center space-x-2">
+                      <BookmarkIcon className="w-4 h-4 text-blue-400" />
+                      <span className="text-blue-400 font-mono text-sm font-bold uppercase">ENROLLED</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex space-x-2">
                   <Link
                     to={`/modules/${module.id}`}
-                    className="p-2 text-green-400 hover:text-cyber-green transition-colors"
+                    className="flex-1 h-10 bg-green-400/10 border border-green-400/30 hover:bg-green-400/20 hover:border-green-400/50 transition-all duration-300 rounded-lg flex items-center justify-center font-mono text-green-400 text-sm font-bold uppercase tracking-wider"
                     title="View Details"
                   >
-                    <EyeIcon className="w-4 h-4" />
+                    <EyeIcon className="w-4 h-4 mr-1" />
+                    VIEW
                   </Link>
                   <button
                     onClick={() => openModal(module)}
-                    className="p-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+                    className="h-10 px-3 bg-cyan-400/10 border border-cyan-400/30 hover:bg-cyan-400/20 hover:border-cyan-400/50 transition-all duration-300 rounded-lg flex items-center justify-center text-cyan-400"
                     title="Edit Module"
                   >
                     <PencilIcon className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(module)}
-                    className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                    className="h-10 px-3 bg-red-400/10 border border-red-400/30 hover:bg-red-400/20 hover:border-red-400/50 transition-all duration-300 rounded-lg flex items-center justify-center text-red-400"
                     title="Delete Module"
                   >
                     <TrashIcon className="w-4 h-4" />
                   </button>
                 </div>
               </div>
-
-              {/* Module Content */}
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-cyber-green line-clamp-2">
-                  {module.title}
-                </h3>
-                <p className="text-gray-300 text-sm line-clamp-3">
-                  {module.description}
-                </p>
-
-                {/* Phase Info */}
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-gray-500">Phase:</span>
-                  <span className="text-green-400">
-                    {phases.find((p) => p.id === module.phaseId)?.title ||
-                      "Unknown"}
-                  </span>
-                </div>
-
-                {/* Module Stats */}
-                {renderModuleStats(module)}
-
-                {/* Current User Enrollment Status */}
-                <div className="mt-2 pt-2 border-t border-gray-700">
-                  {getCurrentUserEnrollmentBadge(module.id)}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="mt-4 pt-4 border-t border-gray-700 flex gap-2">
-                {getCurrentUserEnrollmentStatus(module.id).enrolled ? (
-                  <button
-                    disabled
-                    className="flex-1 btn-secondary text-xs py-2 opacity-75 cursor-not-allowed"
-                    title="Already Enrolled"
-                  >
-                    <BookmarkIcon className="w-4 h-4 mr-1" />
-                    <span className="hidden sm:inline">Enrolled</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleEnrollClick(module)}
-                    className="flex-1 btn-secondary text-xs py-2"
-                    title="Enroll User"
-                  >
-                    <UserPlusIcon className="w-4 h-4 mr-1" />
-                    <span className="hidden sm:inline">Enroll</span>
-                  </button>
-                )}
-                <Link
-                  to={`/modules/${module.id}`}
-                  className="flex-1 btn-primary text-xs py-2 text-center"
-                >
-                  <span className="hidden sm:inline">View Details</span>
-                  <span className="sm:hidden">View</span>
-                </Link>
-              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -1324,29 +1322,39 @@ const ModulesManagerEnhanced = () => {
   const difficultyLevels = ["Beginner", "Intermediate", "Advanced", "Expert"];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-cyber-green retro-glow">
-            [◄█ MODULES MANAGEMENT █►]
-          </h1>
-          <p className="text-green-400 mt-2 font-mono">
-            ▲ Advanced module management with bulk operations ▲
-          </p>
+    <div className="min-h-screen bg-black text-green-400">
+      <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
+        {/* Terminal Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <BookOpen className="w-6 h-6 text-green-400" />
+            <h2 className="text-3xl font-bold text-green-400 font-mono uppercase tracking-wider">
+              MODULES_MANAGEMENT
+            </h2>
+          </div>
+          <div className="bg-black/60 border border-green-400/30 rounded-lg p-3 max-w-2xl mx-auto">
+            <p className="text-green-400 font-mono text-sm">
+              ~/admin/modules$ manage --advanced-operations --bulk-actions
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => openModal()}
-            disabled={loading}
-            className="btn-primary flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <PlusIcon className="w-5 h-5 mr-2" />
-            <span className="hidden sm:inline">Add Module</span>
-            <span className="sm:hidden">Add</span>
-          </button>
+
+        {/* Action Header */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+          <div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => openModal()}
+                disabled={loading}
+                className="btn-primary flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <PlusIcon className="w-5 h-5 mr-2" />
+                <span className="hidden sm:inline">Add Module</span>
+                <span className="sm:hidden">Add</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
 
       {/* Bulk Operations Toolbar */}
       {selectedModules.size > 0 && (
@@ -2029,6 +2037,7 @@ const ModulesManagerEnhanced = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

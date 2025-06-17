@@ -85,7 +85,7 @@ const Layout = () => {
   const breadcrumbs = generateBreadcrumbs();
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-black flex">
       {/* Mobile sidebar */}
       <div className={`lg:hidden ${sidebarOpen ? "block" : "hidden"}`}>
         <div className="fixed inset-0 flex z-40">
@@ -104,9 +104,9 @@ const Layout = () => {
             </div>
             <div className="flex flex-col h-full">
               {/* Logo/Header */}
-              <div className="flex items-center justify-center h-16 px-6 border-b border-border/50">
-                <h1 className="text-primary text-xl font-bold tracking-wider">
-                  [ADMIN PANEL]
+              <div className="flex items-center justify-center h-16 px-6 border-b border-green-400/30">
+                <h1 className="text-green-400 text-xl font-bold tracking-wider font-mono">
+                  [HACK_ADMIN]
                 </h1>
               </div>
 
@@ -133,7 +133,7 @@ const Layout = () => {
               </nav>
 
               {/* User info and logout */}
-              <div className="border-t border-border/50 p-4">
+              <div className="border-t border-green-400/30 p-4">
                 <div className="flex items-center p-3 mb-3 bg-muted/50 rounded-lg">
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
                     <UserIcon className="w-4 h-4 text-primary" />
@@ -160,12 +160,12 @@ const Layout = () => {
 
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <div className="w-64 bg-card border-r border-border/50 fixed h-full backdrop-blur-sm">
+        <div className="w-64 bg-black/90 border-r border-green-400/30 fixed h-full backdrop-blur-sm">
           <div className="flex flex-col h-full">
             {/* Logo/Header */}
-            <div className="flex items-center justify-center h-16 px-6 border-b border-border/50">
-              <h1 className="text-primary text-xl font-bold tracking-wider">
-                [ADMIN PANEL]
+            <div className="flex items-center justify-center h-16 px-6 border-b border-green-400/30">
+              <h1 className="text-green-400 text-xl font-bold tracking-wider font-mono">
+                [HACK_ADMIN]
               </h1>
             </div>
 
@@ -191,7 +191,7 @@ const Layout = () => {
             </nav>
 
             {/* User info and logout */}
-            <div className="border-t border-border/50 p-4">
+            <div className="border-t border-green-400/30 p-4">
               <div className="flex items-center p-3 mb-3 bg-muted/50 rounded-lg">
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
                   <UserIcon className="w-4 h-4 text-primary" />

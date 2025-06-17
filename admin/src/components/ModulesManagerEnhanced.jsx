@@ -915,185 +915,200 @@ const ModulesManagerEnhanced = () => {
   };
 
   const renderGroupedView = () => (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {modulesWithPhases.map((phase) => (
         <div
           key={phase.id}
-          className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-lg shadow-xl border border-cyan-500/30 retro-border"
+          className="bg-gradient-to-br from-blue-900/30 to-black/80 border-2 border-blue-400/30 rounded-xl p-6 shadow-2xl shadow-blue-400/10 relative overflow-hidden group hover:border-blue-400/50 transition-all duration-300"
         >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-green-400 font-mono retro-glow">
-              ▼ {phase.title} ({phase.modules?.length || 0} modules) ▼
-            </h3>
-            {phase.modules?.length > 0 && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    const phaseModuleIds = phase.modules.map(m => m.id);
-                    const allSelected = phaseModuleIds.every(id => selectedModules.has(id));
-                    const newSelected = new Set(selectedModules);
-                    
-                    if (allSelected) {
-                      phaseModuleIds.forEach(id => newSelected.delete(id));
-                    } else {
-                      phaseModuleIds.forEach(id => newSelected.add(id));
-                    }
-                    setSelectedModules(newSelected);
-                  }}
-                  className="text-xs px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-500 font-mono"
-                >
-                  {phase.modules.every(m => selectedModules.has(m.id)) ? "◄ Deselect Phase" : "► Select Phase"}
-                </button>
+          {/* Phase container glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/5 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-blue-400/20">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400/20 to-blue-600/20 border border-blue-400/50 flex items-center justify-center animate-pulse">
+                  <Layers className="w-5 h-5 text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold text-blue-400 font-mono uppercase tracking-wider">
+                  ▼ {phase.title} ▼
+                </h3>
+                <div className="px-3 py-1 bg-blue-400/20 border border-blue-400/50 rounded-full text-blue-400 text-xs font-mono font-bold">
+                  {phase.modules?.length || 0} MODULES
+                </div>
               </div>
-            )}
-          </div>
-          {phase.modules && phase.modules.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {phase.modules.map((module) => {
-                const enrollStats = enrollmentStats[module.id] || {};
-                const isSelected = selectedModules.has(module.id);
-                return (
-                  <div
-                    key={module.id}
-                    className={`border rounded-lg p-4 bg-gradient-to-br transition-all duration-200 ${
-                      isSelected 
-                        ? "border-purple-500 from-purple-900/30 to-pink-900/30 shadow-lg shadow-purple-500/20" 
-                        : "border-gray-600 from-gray-700 to-gray-800 hover:border-cyan-500/50"
-                    }`}
+              {phase.modules?.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const phaseModuleIds = phase.modules.map(m => m.id);
+                      const allSelected = phaseModuleIds.every(id => selectedModules.has(id));
+                      const newSelected = new Set(selectedModules);
+                      
+                      if (allSelected) {
+                        phaseModuleIds.forEach(id => newSelected.delete(id));
+                      } else {
+                        phaseModuleIds.forEach(id => newSelected.add(id));
+                      }
+                      setSelectedModules(newSelected);
+                    }}
+                    className="text-xs px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-500 hover:to-purple-600 font-mono font-bold transition-all duration-300 shadow-lg hover:shadow-purple-400/20"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleModuleSelect(module.id)}
-                          className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
-                        />
-                        <h4 className="font-medium text-green-400 font-mono">
-                          ◆ {module.title}
-                        </h4>
-                        {getEnrollmentStatusIcon(enrollStats)}
-                      </div>
-                      <span className="text-xs text-gray-400 font-mono">
-                        #{module.order}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-400 mt-1 mb-2">
-                      {module.description}
-                    </p>
-
-                    {/* Difficulty Badge */}
-                    <div className="mb-3">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          module.difficulty === "Beginner"
-                            ? "bg-green-100 text-green-800"
-                            : module.difficulty === "Intermediate"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : module.difficulty === "Advanced"
-                            ? "bg-orange-100 text-orange-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {module.difficulty}
-                      </span>
-                    </div>
-
-                    {/* Content Stats */}
-                    {renderModuleStats(module)}
-
-                    {/* Enrollment Status Section */}
-                    <div className="mt-3 mb-3 p-2 bg-gray-800 rounded-md">
-                      <div className="text-xs font-medium text-gray-400 mb-1">
-                        Enrollment Status
-                      </div>
-                      {getEnrollmentStatusBadge(enrollStats)}
-
-                      {/* Enhanced enrollment information */}
-                      {enrollStats.totalEnrollments > 0 && (
-                        <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
-                          <span>{enrollStats.totalEnrollments} enrolled</span>
-                          <span>
-                            {enrollStats.completionRate || 0}% completion
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Current User Enrollment Status */}
-                    <div className="mt-2 mb-3 p-2 bg-gray-900 rounded-md border border-gray-600">
-                      <div className="text-xs font-medium text-cyan-400 mb-1">
-                        My Enrollment
-                      </div>
-                      {getCurrentUserEnrollmentBadge(module.id)}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex justify-between items-center mt-3">
-                      <div className="flex space-x-1">
-                        <button
-                          onClick={() =>
-                            handleReorder(phase.id, module.id, "up")
-                          }
-                          disabled={saving}
-                          className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
-                        >
-                          <ArrowUpIcon className="h-3 w-3" />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleReorder(phase.id, module.id, "down")
-                          }
-                          disabled={saving}
-                          className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
-                        >
-                          <ArrowDownIcon className="h-3 w-3" />
-                        </button>
-                      </div>
-                      <div className="space-x-2">
-                        <Link
-                          to={`/modules/${module.id}`}
-                          className="text-xs text-blue-400 hover:text-blue-300"
-                          title="View Details"
-                        >
-                          View
-                        </Link>
-                        {getCurrentUserEnrollmentStatus(module.id).enrolled ? (
-                          <span className="text-xs text-gray-400 cursor-not-allowed">
-                            Enrolled
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => handleEnrollClick(module)}
-                            className="text-xs text-purple-400 hover:text-purple-300"
-                            disabled={saving}
-                            title="Enroll User"
-                          >
-                            Enroll
-                          </button>
+                    {phase.modules.every(m => selectedModules.has(m.id)) ? "◄ DESELECT PHASE" : "► SELECT PHASE"}
+                  </button>
+                </div>
+              )}
+            </div>
+            {phase.modules && phase.modules.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {phase.modules.map((module) => {
+                  const enrollStats = enrollmentStats[module.id] || {};
+                  const isSelected = selectedModules.has(module.id);
+                  const getDifficultyColor = (difficulty) => {
+                    switch (difficulty?.toLowerCase()) {
+                      case 'beginner': return { text: 'text-green-400', border: 'border-green-400/50', bg: 'bg-green-400/10' };
+                      case 'intermediate': return { text: 'text-yellow-400', border: 'border-yellow-400/50', bg: 'bg-yellow-400/10' };
+                      case 'advanced': return { text: 'text-red-400', border: 'border-red-400/50', bg: 'bg-red-400/10' };
+                      case 'expert': return { text: 'text-purple-400', border: 'border-purple-400/50', bg: 'bg-purple-400/10' };
+                      default: return { text: 'text-gray-400', border: 'border-gray-400/50', bg: 'bg-gray-400/10' };
+                    }
+                  };
+                  const difficultyColors = getDifficultyColor(module.difficulty);
+                  
+                  return (
+                    <div
+                      key={module.id}
+                      className={`relative overflow-hidden rounded-xl border-2 p-6 group transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                        isSelected 
+                          ? "border-purple-500/50 bg-gradient-to-br from-purple-900/30 to-pink-900/30 shadow-lg shadow-purple-500/20" 
+                          : "border-blue-400/30 bg-gradient-to-br from-gray-900/80 to-black/80 hover:border-blue-400/50 hover:shadow-blue-400/20"
+                      }`}
+                    >
+                      {/* Module card glow effect */}
+                      <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                        isSelected 
+                          ? "bg-gradient-to-r from-purple-400/0 via-purple-400/10 to-purple-400/0"
+                          : "bg-gradient-to-r from-blue-400/0 via-blue-400/10 to-blue-400/0"
+                      }`}></div>
+                      
+                      {/* Status Indicators */}
+                      <div className="absolute top-2 left-2 flex space-x-1">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse shadow-lg shadow-blue-400/50"></div>
+                        {isSelected && (
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse shadow-lg shadow-purple-400/50"></div>
                         )}
-                        <button
-                          onClick={() => openModal(module)}
-                          className="text-xs text-cyber-green hover:text-green-300"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(module)}
-                          className="text-xs text-red-400 hover:text-red-300"
-                          disabled={saving}
-                        >
-                          Delete
-                        </button>
                       </div>
-                    </div>
+
+                      {/* Module Order Badge */}
+                      <div className="absolute top-3 right-3 z-10">
+                        <div className="w-8 h-8 rounded-full bg-blue-400/20 border-2 border-blue-400 text-blue-400 shadow-lg shadow-blue-400/30 flex items-center justify-center font-mono font-bold text-sm">
+                          {module.order}
+                        </div>
+                      </div>
+
+                      <div className="relative z-10">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleModuleSelect(module.id)}
+                              className="w-5 h-5 text-purple-600 bg-gray-800 border-purple-400/50 rounded focus:ring-purple-500 focus:ring-2 transition-all duration-300"
+                            />
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-800/50 to-black/50 border-2 border-blue-400/30 shadow-lg shadow-blue-400/30 flex items-center justify-center group-hover:animate-pulse">
+                              {(() => {
+                                const IconComponent = getIconFromName(module.icon);
+                                return <IconComponent className="w-5 h-5 text-blue-400" />;
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="mb-3">
+                          <h4 className="font-bold text-blue-400 font-mono uppercase tracking-wider mb-2 group-hover:text-blue-300 transition-colors line-clamp-1">
+                            ◆ {module.title}
+                          </h4>
+                          <div className={`px-3 py-1 rounded-full text-xs font-mono font-bold uppercase border inline-block ${difficultyColors.text} ${difficultyColors.bg} ${difficultyColors.border}`}>
+                            {module.difficulty}
+                          </div>
+                        </div>
+                        {/* Description */}
+                        <p className="text-gray-300 text-sm font-mono line-clamp-2 mb-4 leading-relaxed">
+                          {module.description}
+                        </p>
+
+                        {/* Enhanced Stats Grid */}
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div className="relative p-3 rounded-lg border bg-gradient-to-br from-gray-900/80 to-black/80 border-gray-700/50 hover:border-blue-400/50 transition-all duration-300">
+                            <div className="text-center">
+                              <div className="text-blue-400 font-mono text-sm font-bold">{enrollStats.totalEnrollments || 0}</div>
+                              <div className="text-blue-400/60 text-xs font-mono uppercase">ENROLLED</div>
+                            </div>
+                          </div>
+                          <div className="relative p-3 rounded-lg border bg-gradient-to-br from-gray-900/80 to-black/80 border-gray-700/50 hover:border-green-400/50 transition-all duration-300">
+                            <div className="text-center">
+                              <div className="text-green-400 font-mono text-sm font-bold">{module.content?.videos?.length || 0}</div>
+                              <div className="text-green-400/60 text-xs font-mono uppercase">VIDEOS</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* User Enrollment Status */}
+                        <div className="mb-4">
+                          {getCurrentUserEnrollmentStatus(module.id).enrolled ? (
+                            <div className="p-3 rounded-lg border bg-gradient-to-r from-cyan-900/20 to-cyan-800/20 border-cyan-400/30">
+                              <div className="flex items-center justify-center space-x-2">
+                                <BookmarkIcon className="w-4 h-4 text-cyan-400" />
+                                <span className="text-cyan-400 font-mono text-sm font-bold uppercase">ENROLLED</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-3 rounded-lg border bg-gradient-to-r from-gray-900/20 to-gray-800/20 border-gray-600/30">
+                              <div className="flex items-center justify-center space-x-2">
+                                <BookmarkSlashIcon className="w-4 h-4 text-gray-400" />
+                                <span className="text-gray-400 font-mono text-sm uppercase">NOT ENROLLED</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Enhanced Action Buttons */}
+                        <div className="flex space-x-2">
+                          <Link
+                            to={`/modules/${module.id}`}
+                            className="flex-1 h-10 bg-blue-400/10 border border-blue-400/30 hover:bg-blue-400/20 hover:border-blue-400/50 transition-all duration-300 rounded-lg flex items-center justify-center font-mono text-blue-400 text-xs font-bold uppercase tracking-wider"
+                            title="View Details"
+                          >
+                            <EyeIcon className="w-3 h-3 mr-1" />
+                            VIEW
+                          </Link>
+                          <button
+                            onClick={() => openModal(module)}
+                            className="h-10 px-3 bg-cyan-400/10 border border-cyan-400/30 hover:bg-cyan-400/20 hover:border-cyan-400/50 transition-all duration-300 rounded-lg flex items-center justify-center text-cyan-400"
+                            title="Edit Module"
+                          >
+                            <PencilIcon className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(module)}
+                            className="h-10 px-3 bg-red-400/10 border border-red-400/30 hover:bg-red-400/20 hover:border-red-400/50 transition-all duration-300 rounded-lg flex items-center justify-center text-red-400"
+                            title="Delete Module"
+                            disabled={saving}
+                          >
+                            <TrashIcon className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
                   </div>
                 );
               })}
             </div>
-          ) : (
-            <p className="text-gray-400">No modules found in this phase</p>
-          )}
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-blue-400 text-2xl font-mono mb-2">◆</div>
+                <p className="text-gray-400 font-mono">No modules found in this phase</p>
+              </div>
+            )}
         </div>
       ))}
     </div>
@@ -1324,18 +1339,32 @@ const ModulesManagerEnhanced = () => {
   return (
     <div className="min-h-screen bg-black text-green-400">
       <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
-        {/* Terminal Header */}
+        {/* Enhanced Terminal Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <BookOpen className="w-6 h-6 text-green-400" />
-            <h2 className="text-3xl font-bold text-green-400 font-mono uppercase tracking-wider">
-              MODULES_MANAGEMENT
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400/20 to-blue-600/20 border-2 border-blue-400/50 flex items-center justify-center animate-pulse">
+              <BookOpen className="w-6 h-6 text-blue-400" />
+            </div>
+            <h2 className="text-4xl font-bold text-blue-400 font-mono uppercase tracking-wider relative">
+              <span className="relative z-10">MODULES_MANAGEMENT</span>
+              <div className="absolute inset-0 bg-blue-400/20 blur-lg rounded"></div>
             </h2>
           </div>
-          <div className="bg-black/60 border border-green-400/30 rounded-lg p-3 max-w-2xl mx-auto">
-            <p className="text-green-400 font-mono text-sm">
-              ~/admin/modules$ manage --advanced-operations --bulk-actions
-            </p>
+          <div className="bg-gradient-to-r from-black/80 via-blue-900/20 to-black/80 border border-blue-400/30 rounded-xl p-4 max-w-3xl mx-auto relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/5 to-blue-400/0 animate-pulse"></div>
+            <div className="relative z-10 flex items-center space-x-2">
+              <div className="flex space-x-1">
+                <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
+                <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+              </div>
+              <p className="text-blue-400 font-mono text-sm ml-4">
+                <span className="text-green-300">admin@hacktheworld:</span>
+                <span className="text-blue-400">~/modules</span>
+                <span className="text-blue-400">$ ./manage --advanced-operations --bulk-actions --enhanced</span>
+                <span className="animate-ping text-blue-400">█</span>
+              </p>
+            </div>
           </div>
         </div>
 
@@ -1346,55 +1375,60 @@ const ModulesManagerEnhanced = () => {
               <button
                 onClick={() => openModal()}
                 disabled={loading}
-                className="btn-primary flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-gradient-to-r from-blue-400/10 to-blue-500/10 border-2 border-blue-400/30 hover:bg-gradient-to-r hover:from-blue-400/20 hover:to-blue-500/20 hover:border-blue-400/50 transition-all duration-300 text-blue-400 font-mono font-bold uppercase tracking-wider px-6 py-3 rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-blue-400/20 relative overflow-hidden group"
               >
-                <PlusIcon className="w-5 h-5 mr-2" />
-                <span className="hidden sm:inline">Add Module</span>
-                <span className="sm:hidden">Add</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/20 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <PlusIcon className="w-5 h-5 mr-2 relative z-10" />
+                <span className="hidden sm:inline relative z-10">▶ ADD MODULE</span>
+                <span className="sm:hidden relative z-10">+ ADD</span>
               </button>
             </div>
           </div>
         </div>
 
-      {/* Bulk Operations Toolbar */}
+      {/* Enhanced Bulk Operations Toolbar */}
       {selectedModules.size > 0 && (
-        <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-500/50 rounded-lg p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/50 rounded-xl p-4 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/0 via-purple-400/5 to-purple-400/0 animate-pulse"></div>
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-purple-400 font-mono">
-                ► {selectedModules.size} module{selectedModules.size !== 1 ? 's' : ''} selected
-              </span>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse"></div>
+                <span className="text-purple-400 font-mono font-bold">
+                  ► {selectedModules.size} MODULE{selectedModules.size !== 1 ? 'S' : ''} SELECTED
+                </span>
+              </div>
               <button
                 onClick={() => setSelectedModules(new Set())}
-                className="text-red-400 hover:text-red-300 text-sm"
+                className="text-red-400 hover:text-red-300 text-sm font-mono transition-colors duration-300 hover:bg-red-400/10 px-2 py-1 rounded"
               >
-                Clear Selection
+                ◄ CLEAR
               </button>
             </div>
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => handleBulkOperation("updatePhase")}
-                className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-500"
+                className="px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-xs font-mono font-bold hover:from-blue-500 hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-blue-400/20"
               >
-                Change Phase
+                ◆ PHASE
               </button>
               <button
                 onClick={() => handleBulkOperation("updateDifficulty")}
-                className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-500"
+                className="px-3 py-2 bg-gradient-to-r from-yellow-600 to-yellow-700 text-white rounded-lg text-xs font-mono font-bold hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 shadow-lg hover:shadow-yellow-400/20"
               >
-                Set Difficulty
+                ◆ DIFFICULTY
               </button>
               <button
                 onClick={() => handleBulkOperation("updateStatus")}
-                className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-500"
+                className="px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg text-xs font-mono font-bold hover:from-green-500 hover:to-green-600 transition-all duration-300 shadow-lg hover:shadow-green-400/20"
               >
-                Toggle Status
+                ◆ STATUS
               </button>
               <button
                 onClick={() => handleBulkOperation("updateColor")}
-                className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-500"
+                className="px-3 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg text-xs font-mono font-bold hover:from-purple-500 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-purple-400/20"
               >
-                Change Color
+                ◆ COLOR
               </button>
             </div>
           </div>
@@ -1446,47 +1480,60 @@ const ModulesManagerEnhanced = () => {
             <div className="flex gap-3">
               <button
                 onClick={handleSelectAll}
-                className="px-4 py-2 bg-gray-700 text-cyan-400 rounded-md hover:bg-gray-600 border border-cyan-500/30 font-mono text-sm"
+                className="px-4 py-2 bg-gradient-to-r from-cyan-400/10 to-cyan-500/10 text-cyan-400 rounded-xl hover:bg-gradient-to-r hover:from-cyan-400/20 hover:to-cyan-500/20 border border-cyan-500/30 font-mono text-sm font-bold transition-all duration-300 shadow-lg hover:shadow-cyan-400/20 relative overflow-hidden group"
               >
-                {selectedModules.size === modules.length ? "◄ Deselect All" : "► Select All"}
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/20 to-cyan-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <span className="relative z-10">{selectedModules.size === modules.length ? "◄ DESELECT ALL" : "► SELECT ALL"}</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Statistics */}
+      {/* Enhanced Statistics Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="terminal-window">
-          <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">
+        <div className="bg-gradient-to-br from-green-900/30 to-black/80 border border-green-400/30 rounded-xl p-4 relative overflow-hidden group hover:border-green-400/50 transition-all duration-300">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/10 to-green-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10 text-center">
+            <div className="text-3xl font-bold text-green-400 font-mono mb-1">
               {modules.length}
             </div>
-            <div className="text-sm text-gray-400">Total Modules</div>
+            <div className="text-xs text-green-400/60 font-mono uppercase tracking-wider">◆ TOTAL MODULES
+            </div>
+            <div className="w-full bg-green-400/20 h-1 rounded-full mt-2"></div>
           </div>
         </div>
-        <div className="terminal-window">
-          <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-cyber-green">
+        <div className="bg-gradient-to-br from-cyan-900/30 to-black/80 border border-cyan-400/30 rounded-xl p-4 relative overflow-hidden group hover:border-cyan-400/50 transition-all duration-300">
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/10 to-cyan-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10 text-center">
+            <div className="text-3xl font-bold text-cyan-400 font-mono mb-1">
               {modules.filter((m) => m.isActive).length}
             </div>
-            <div className="text-sm text-gray-400">Active Modules</div>
+            <div className="text-xs text-cyan-400/60 font-mono uppercase tracking-wider">◆ ACTIVE MODULES
+            </div>
+            <div className="w-full bg-cyan-400/20 h-1 rounded-full mt-2"></div>
           </div>
         </div>
-        <div className="terminal-window">
-          <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-400">
+        <div className="bg-gradient-to-br from-blue-900/30 to-black/80 border border-blue-400/30 rounded-xl p-4 relative overflow-hidden group hover:border-blue-400/50 transition-all duration-300">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/10 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10 text-center">
+            <div className="text-3xl font-bold text-blue-400 font-mono mb-1">
               {phases.length}
             </div>
-            <div className="text-sm text-gray-400">Total Phases</div>
+            <div className="text-xs text-blue-400/60 font-mono uppercase tracking-wider">◆ TOTAL PHASES
+            </div>
+            <div className="w-full bg-blue-400/20 h-1 rounded-full mt-2"></div>
           </div>
         </div>
-        <div className="terminal-window">
-          <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-400">
+        <div className="bg-gradient-to-br from-yellow-900/30 to-black/80 border border-yellow-400/30 rounded-xl p-4 relative overflow-hidden group hover:border-yellow-400/50 transition-all duration-300">
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/0 via-yellow-400/10 to-yellow-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10 text-center">
+            <div className="text-3xl font-bold text-yellow-400 font-mono mb-1">
               {modules.filter((m) => m.difficulty === "Beginner").length}
             </div>
-            <div className="text-sm text-gray-400">Beginner Modules</div>
+            <div className="text-xs text-yellow-400/60 font-mono uppercase tracking-wider">◆ BEGINNER
+            </div>
+            <div className="w-full bg-yellow-400/20 h-1 rounded-full mt-2"></div>
           </div>
         </div>
       </div>
@@ -1513,145 +1560,158 @@ const ModulesManagerEnhanced = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Enhanced Module Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-600">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-green-400">
-                  {editingModule ? "Edit Module" : "Create Module"}
-                </h2>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gradient-to-br from-gray-900/95 to-black/95 border-2 border-blue-400/30 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-blue-400/20 relative overflow-hidden">
+            {/* Modal glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/5 to-blue-400/0 animate-pulse"></div>
+            
+            <div className="relative z-10 p-6">
+              {/* Enhanced Modal Header */}
+              <div className="flex justify-between items-center mb-6 pb-4 border-b border-blue-400/20">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400/20 to-blue-600/20 border border-blue-400/50 flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <h2 className="text-xl font-bold text-blue-400 font-mono uppercase tracking-wider">
+                    {editingModule ? "◆ EDIT MODULE" : "◆ CREATE MODULE"}
+                  </h2>
+                </div>
                 <button
                   onClick={closeModal}
-                  className="text-gray-400 hover:text-green-400"
+                  className="text-gray-400 hover:text-red-400 transition-colors duration-300 p-2 rounded-lg hover:bg-red-400/10"
                 >
-                  <XMarkIcon className="h-6 w-6" />
+                  <XMarkIcon className="w-6 h-6" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Enhanced Module Form */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-green-400 mb-1">
-                      Phase*
+                    <label className="block text-sm font-medium text-blue-400 mb-2 font-mono uppercase tracking-wider">
+                      ▶ Phase *
                     </label>
                     <select
                       name="phaseId"
                       value={formData.phaseId}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-blue-400/30 rounded-xl text-blue-400 font-mono focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300"
                       required
                     >
-                      <option value="">Select Phase</option>
+                      <option value="" className="bg-gray-900 text-blue-400">◆ Select Phase</option>
                       {phases.map((phase) => (
-                        <option key={phase.id} value={phase.id}>
-                          {phase.title}
+                        <option key={phase.id} value={phase.id} className="bg-gray-900 text-blue-400">
+                          ▸ {phase.title}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-green-400 mb-1">
-                      Order*
+                    <label className="block text-sm font-medium text-blue-400 mb-2 font-mono uppercase tracking-wider">
+                      ▶ Order *
                     </label>
                     <input
                       type="number"
                       name="order"
                       value={formData.order}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-blue-400/30 rounded-xl text-blue-400 font-mono focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300 placeholder-blue-400/50"
                       required
                       min="1"
+                      placeholder="1"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-green-400 mb-1">
-                    Title*
+                  <label className="block text-sm font-medium text-blue-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ Module Title *
                   </label>
                   <input
                     type="text"
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-blue-400/30 rounded-xl text-blue-400 font-mono focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300 placeholder-blue-400/50"
                     required
                     maxLength="100"
+                    placeholder="Enter module title..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-green-400 mb-1">
-                    Description*
+                  <label className="block text-sm font-medium text-blue-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ Description *
                   </label>
                   <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-blue-400/30 rounded-xl text-blue-400 font-mono focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300 placeholder-blue-400/50 resize-none"
                     required
                     maxLength="500"
                     rows="3"
+                    placeholder="Enter module description..."
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-green-400 mb-1">
-                      Icon
+                    <label className="block text-sm font-medium text-blue-400 mb-2 font-mono uppercase tracking-wider">
+                      ▶ Icon
                     </label>
                     <select
                       name="icon"
                       value={formData.icon}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-blue-400/30 rounded-xl text-blue-400 font-mono focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300"
                     >
-                      <option value="">Select an icon</option>
+                      <option value="" className="bg-gray-900 text-blue-400">◆ Select icon</option>
                       {iconOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
+                        <option key={option.value} value={option.value} className="bg-gray-900 text-blue-400">
+                          ▸ {option.label}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-green-400 mb-1">
-                      Difficulty*
+                    <label className="block text-sm font-medium text-blue-400 mb-2 font-mono uppercase tracking-wider">
+                      ▶ Difficulty *
                     </label>
                     <select
                       name="difficulty"
                       value={formData.difficulty}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-blue-400/30 rounded-xl text-blue-400 font-mono focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300"
                       required
                     >
-                      <option value="">Select Difficulty</option>
+                      <option value="" className="bg-gray-900 text-blue-400">◆ Select difficulty</option>
                       {difficultyLevels.map((level) => (
-                        <option key={level} value={level}>
-                          {level}
+                        <option key={level} value={level} className="bg-gray-900 text-blue-400">
+                          ▸ {level}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-green-400 mb-1">
-                      Color
+                    <label className="block text-sm font-medium text-blue-400 mb-2 font-mono uppercase tracking-wider">
+                      ▶ Color
                     </label>
                     <select
                       name="color"
                       value={formData.color}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-blue-400/30 rounded-xl text-blue-400 font-mono focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300"
                     >
-                      <option value="">Select a color</option>
+                      <option value="" className="bg-gray-900 text-blue-400">◆ Select color</option>
                       {colorOptions.map((color) => (
-                        <option key={color} value={color}>
-                          {color.charAt(0).toUpperCase() + color.slice(1)}
+                        <option key={color} value={color} className="bg-gray-900 text-blue-400">
+                          ▸ {color.charAt(0).toUpperCase() + color.slice(1)}
                         </option>
                       ))}
                     </select>
@@ -1659,16 +1719,16 @@ const ModulesManagerEnhanced = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-green-400 mb-1">
-                    Topics (comma-separated)
+                  <label className="block text-sm font-medium text-blue-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ Topics (comma-separated)
                   </label>
                   <input
                     type="text"
                     name="topics"
                     value={formData.topics}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
-                    placeholder="Security Basics, Threat Models, Risk Assessment"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-blue-400/30 rounded-xl text-blue-400 font-mono focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300 placeholder-blue-400/50"
+                    placeholder="Security Basics, Threat Models, Risk Assessment..."
                   />
                 </div>
 
@@ -1695,46 +1755,57 @@ const ModulesManagerEnhanced = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-green-400 mb-1">
-                    Learning Outcomes (comma-separated)
+                  <label className="block text-sm font-medium text-blue-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ Learning Outcomes (comma-separated)
                   </label>
                   <textarea
                     name="learningOutcomes"
                     value={formData.learningOutcomes}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyber-green bg-gray-700 text-green-400"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-blue-400/30 rounded-xl text-blue-400 font-mono focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300 placeholder-blue-400/50 resize-none"
                     rows="2"
-                    placeholder="Understand security principles, Identify common threats"
+                    placeholder="Understand security principles, Identify common threats..."
                   />
                 </div>
 
-                <div className="flex items-center">
+                <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-blue-900/20 to-blue-800/20 border border-blue-400/30 rounded-xl">
                   <input
                     type="checkbox"
                     name="isActive"
                     checked={formData.isActive}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-cyber-green focus:ring-cyber-green border-gray-600 rounded bg-gray-700"
+                    className="h-5 w-5 text-blue-400 focus:ring-blue-400/50 border-blue-400/50 rounded bg-gray-800 transition-all duration-300"
                   />
-                  <label className="ml-2 block text-sm text-green-400">
-                    Active
+                  <label className="block text-sm text-blue-400 font-mono font-bold uppercase tracking-wider">
+                    ◆ MODULE ACTIVE
                   </label>
                 </div>
 
-                <div className="flex justify-end space-x-4 pt-4">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="px-4 py-2 text-green-400 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600"
-                  >
-                    Cancel
-                  </button>
+                {/* Enhanced Module Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-blue-400/20">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-4 py-2 bg-cyber-green text-black rounded-md hover:bg-green-400 disabled:opacity-50"
+                    className="flex-1 bg-gradient-to-r from-blue-400/20 to-blue-500/20 border-2 border-blue-400/50 hover:from-blue-400/30 hover:to-blue-500/30 hover:border-blue-400/70 transition-all duration-300 text-blue-400 font-mono font-bold uppercase tracking-wider px-6 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-blue-400/20 relative overflow-hidden group"
                   >
-                    {saving ? "Saving..." : editingModule ? "Update" : "Create"}
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/20 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <span className="relative z-10 flex items-center justify-center">
+                      {saving ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mr-2"></div>
+                          ◊ SAVING...
+                        </>
+                      ) : (
+                        editingModule ? "◆ UPDATE MODULE" : "◆ CREATE MODULE"
+                      )}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="flex-1 bg-gradient-to-r from-gray-700/50 to-gray-800/50 border-2 border-gray-600/50 hover:from-gray-600/50 hover:to-gray-700/50 hover:border-gray-500/50 transition-all duration-300 text-gray-400 font-mono font-bold uppercase tracking-wider px-6 py-3 rounded-xl shadow-lg hover:shadow-gray-400/10"
+                  >
+                    ◄ CANCEL
                   </button>
                 </div>
               </form>

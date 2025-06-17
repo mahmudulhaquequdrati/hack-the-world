@@ -41,10 +41,8 @@ const createPhaseValidation = [
   body("color")
     .notEmpty()
     .withMessage("Phase color is required")
-    .matches(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
-    .withMessage(
-      "Please provide a valid hex color code (e.g., #FF0000 or #F00)"
-    )
+    .isLength({ min: 3, max: 50 })
+    .withMessage("Color must be between 3 and 50 characters")
     .trim(),
 
   body("order")
@@ -79,10 +77,8 @@ const updatePhaseValidation = [
 
   body("color")
     .optional()
-    .matches(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
-    .withMessage(
-      "Please provide a valid hex color code (e.g., #FF0000 or #F00)"
-    )
+    .isLength({ min: 3, max: 50 })
+    .withMessage("Color must be between 3 and 50 characters")
     .trim(),
 
   body("order")

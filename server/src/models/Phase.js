@@ -35,15 +35,12 @@ const phaseSchema = new mongoose.Schema(
       maxlength: [50, "Icon name cannot exceed 50 characters"],
     },
 
-    // Color scheme for frontend
+    // Color scheme for frontend (supports Tailwind color classes and hex codes)
     color: {
       type: String,
       required: [true, "Phase color is required"],
       trim: true,
-      match: [
-        /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-        "Please provide a valid hex color code",
-      ],
+      maxlength: [50, "Color class cannot exceed 50 characters"],
     },
 
     // Display order

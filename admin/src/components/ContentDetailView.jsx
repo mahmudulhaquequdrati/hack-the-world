@@ -7,16 +7,24 @@ import {
   CubeIcon,
   DocumentIcon,
   EyeIcon,
-  FolderIcon,
   LinkIcon,
   PencilIcon,
   PlayIcon,
   PuzzlePieceIcon,
   VideoCameraIcon,
+  StarIcon,
+  ChartBarIcon,
+  InformationCircleIcon,
+  Cog6ToothIcon,
+  ShareIcon,
+  TrashIcon,
+  DocumentDuplicateIcon,
+  ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { contentAPI, modulesAPI, phasesAPI } from "../services/api";
+import { Gauge } from "lucide-react";
 
 const ContentDetailView = () => {
   const { contentId } = useParams();
@@ -77,7 +85,6 @@ const ContentDetailView = () => {
           console.warn("Could not fetch module details:", moduleError);
         }
       }
-
     } catch (error) {
       console.error("Error fetching content data:", error);
       setError(
@@ -87,7 +94,6 @@ const ContentDetailView = () => {
       setLoading(false);
     }
   };
-
 
   const formatDuration = (minutes) => {
     if (minutes < 60) {
@@ -100,18 +106,18 @@ const ContentDetailView = () => {
       : `${hours}h`;
   };
 
-  const getContentTypeIcon = (type) => {
+  const getContentTypeIcon = (type, size = "w-6 h-6") => {
     switch (type) {
       case "video":
-        return <VideoCameraIcon className="w-6 h-6" />;
+        return <VideoCameraIcon className={size} />;
       case "lab":
-        return <BeakerIcon className="w-6 h-6" />;
+        return <BeakerIcon className={size} />;
       case "game":
-        return <PuzzlePieceIcon className="w-6 h-6" />;
+        return <PuzzlePieceIcon className={size} />;
       case "document":
-        return <DocumentIcon className="w-6 h-6" />;
+        return <DocumentIcon className={size} />;
       default:
-        return <BookOpenIcon className="w-6 h-6" />;
+        return <BookOpenIcon className={size} />;
     }
   };
 
@@ -123,16 +129,6 @@ const ContentDetailView = () => {
       document: "bg-green-900/30 text-green-400 border-green-500/30",
     };
     return colors[type] || "bg-gray-900/30 text-gray-400 border-gray-500/30";
-  };
-
-  const getContentTypeBadgeColor = (type) => {
-    const colors = {
-      video: "bg-red-500",
-      lab: "bg-blue-500",
-      game: "bg-purple-500",
-      document: "bg-green-500",
-    };
-    return colors[type] || "bg-gray-500";
   };
 
   if (loading) {
@@ -184,298 +180,312 @@ const ContentDetailView = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Breadcrumb Navigation */}
-      <div className="flex items-center space-x-2 text-sm">
-        <Link
-          to="/content"
-          className="text-green-400 hover:text-cyber-green transition-colors"
-        >
-          Content Management
-        </Link>
-        <ChevronRightIcon className="w-4 h-4 text-gray-500" />
-        {phase && (
-          <>
-            <Link
-              to={`/phases/${phase.id}`}
-              className="text-green-400 hover:text-cyber-green transition-colors"
-            >
-              {phase.title}
-            </Link>
-            <ChevronRightIcon className="w-4 h-4 text-gray-500" />
-          </>
-        )}
-        {module && (
-          <>
-            <Link
-              to={`/modules/${module.id}`}
-              className="text-green-400 hover:text-cyber-green transition-colors"
-            >
-              {module.title}
-            </Link>
-            <ChevronRightIcon className="w-4 h-4 text-gray-500" />
-          </>
-        )}
-        <span className="text-gray-400">{content.title}</span>
-      </div>
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate("/content")}
-            className="text-green-400 hover:text-cyber-green transition-colors"
-          >
-            <ArrowLeftIcon className="w-6 h-6" />
-          </button>
-          <h1 className="text-3xl font-bold text-cyber-green">
-            Content Details
-          </h1>
-        </div>
-        <div className="flex items-center space-x-3">
-          <Link
-            to={`/content`}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
-          >
-            <PencilIcon className="w-4 h-4" />
-            <span>Edit Content</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Content Info Card */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-700 p-6 rounded-lg border border-cyan-500/30 shadow-lg">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-4">
-            <div
-              className={`p-3 rounded-lg border ${getContentTypeColor(
-                content.type
-              )}`}
-            >
-              {getContentTypeIcon(content.type)}
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white">{content.title}</h2>
-              <p className="text-gray-400 mt-2 max-w-2xl">
-                {content.description}
-              </p>
-              <div className="flex items-center space-x-4 mt-4">
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white ${getContentTypeBadgeColor(
-                    content.type
-                  )}`}
-                >
-                  {content.type.charAt(0).toUpperCase() + content.type.slice(1)}
-                </span>
-                {content.section && (
-                  <div className="flex items-center text-cyan-400">
-                    <FolderIcon className="w-4 h-4 mr-1" />
-                    <span className="text-sm">{content.section}</span>
-                  </div>
-                )}
-                <div className="flex items-center text-gray-400">
-                  <ClockIcon className="w-4 h-4 mr-1" />
-                  <span className="text-sm">
-                    {formatDuration(content.duration || 0)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      {/* Content Details Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Content Information */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Instructions/Details */}
-          {content.instructions && (
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                <BookOpenIcon className="w-5 h-5 mr-2 text-cyan-400" />
-                Instructions
-              </h3>
-              <div className="text-gray-300 whitespace-pre-wrap">
-                {content.instructions}
-              </div>
-            </div>
-          )}
-
-          {/* Resources */}
-          {content.resources && content.resources.length > 0 && (
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                <LinkIcon className="w-5 h-5 mr-2 text-cyan-400" />
-                Resources
-              </h3>
-              <div className="space-y-3">
-                {content.resources.map((resource, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center p-3 bg-gray-700 rounded-lg"
-                  >
-                    <LinkIcon className="w-4 h-4 text-cyan-400 mr-3" />
-                    <span className="text-gray-300">{resource}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Related Content */}
-          {relatedContent.length > 0 && (
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                <CubeIcon className="w-5 h-5 mr-2 text-cyan-400" />
-                Related Content ({relatedContent.length})
-              </h3>
-              <div className="space-y-3">
-                {relatedContent.slice(0, 5).map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`p-2 rounded ${getContentTypeBadgeColor(
-                          item.type
-                        )}`}
-                      >
-                        {getContentTypeIcon(item.type)}
-                      </div>
-                      <div>
-                        <div className="text-green-400 font-medium">
-                          {item.title}
-                        </div>
-                        <div className="text-gray-400 text-sm">
-                          {item.type} • {formatDuration(item.duration || 0)}
-                        </div>
-                      </div>
-                    </div>
-                    <Link
-                      to={`/content/${item.id}`}
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors"
-                    >
-                      <EyeIcon className="w-5 h-5" />
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Content URL/Link */}
-          {content.url && (
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                <PlayIcon className="w-5 h-5 mr-2 text-cyan-400" />
-                Access Content
-              </h3>
-              <a
-                href={content.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg transition-colors text-center"
+    <div className="min-h-screen bg-gray-900">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-green-500/10 to-purple-500/10"></div>
+        <div className="relative px-6 py-8">
+          {/* Navigation */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3 text-sm">
+              <button
+                onClick={() => navigate("/content")}
+                className="flex items-center text-green-400 hover:text-green-300 transition-colors"
               >
-                {content.type === "video"
-                  ? "Watch Video"
-                  : content.type === "lab"
-                  ? "Start Lab"
-                  : content.type === "game"
-                  ? "Play Game"
-                  : "View Document"}
-              </a>
-            </div>
-          )}
-
-          {/* Module Information */}
-          {module && (
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                <CubeIcon className="w-5 h-5 mr-2 text-cyan-400" />
-                Module Information
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <span className="text-gray-400 text-sm">Module</span>
+                <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                Content
+              </button>
+              <ChevronRightIcon className="w-4 h-4 text-gray-500" />
+              {phase && (
+                <>
+                  <Link
+                    to={`/phases/${phase.id}`}
+                    className="text-green-400 hover:text-green-300 transition-colors"
+                  >
+                    {phase.title}
+                  </Link>
+                  <ChevronRightIcon className="w-4 h-4 text-gray-500" />
+                </>
+              )}
+              {module && (
+                <>
                   <Link
                     to={`/modules/${module.id}`}
-                    className="block text-green-400 hover:text-cyber-green transition-colors font-medium"
+                    className="text-green-400 hover:text-green-300 transition-colors"
                   >
                     {module.title}
                   </Link>
+                  <ChevronRightIcon className="w-4 h-4 text-gray-500" />
+                </>
+              )}
+              <span className="text-gray-400">{content.title}</span>
+            </div>
+
+            {/* Quick Actions Floating Bar */}
+            <div className="flex items-center space-x-2 bg-gray-800/80 backdrop-blur-md border border-gray-700/50 rounded-full px-4 py-2 shadow-lg">
+              <Link
+                to={`/content`}
+                className="flex items-center justify-center p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-600/20 rounded-lg transition-all duration-200 group"
+                title="Edit Content"
+              >
+                <PencilIcon className="w-5 h-5" />
+                <span className="ml-2 text-sm font-medium hidden lg:inline group-hover:text-cyan-300">
+                  Edit
+                </span>
+              </Link>
+
+              <div className="w-px h-6 bg-gray-600"></div>
+
+              <button
+                onClick={() => {
+                  /* Add delete functionality */
+                }}
+                className="flex items-center justify-center p-2 text-red-400 hover:text-red-300 hover:bg-red-600/20 rounded-lg transition-all duration-200 group"
+                title="Delete Content"
+              >
+                <TrashIcon className="w-5 h-5" />
+                <span className="ml-2 text-sm font-medium hidden lg:inline group-hover:text-red-300">
+                  Delete
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Hero Content */}
+          <div className="flex items-start space-x-6">
+            {/* Large Content Type Icon */}
+            <div
+              className={`p-4 rounded-2xl border-2 ${getContentTypeColor(
+                content.type
+              )} backdrop-blur-sm`}
+            >
+              {getContentTypeIcon(content.type, "w-12 h-12")}
+            </div>
+
+            {/* Title and Meta */}
+            <div className="flex-1">
+              <div className="flex items-center space-x-3 mb-3">
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${getContentTypeColor(
+                    content.type
+                  )}`}
+                >
+                  {content.type}
+                </span>
+                {content.section && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-700 text-gray-300 border border-gray-600">
+                    {content.section}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-4xl font-bold text-white mb-3 leading-tight">
+                {content.title}
+              </h1>
+              <p className="text-xl text-gray-300 leading-relaxed max-w-4xl">
+                {content.description}
+              </p>
+
+              {/* Key Metrics */}
+              <div className="flex items-center space-x-6 mt-6">
+                <div className="flex items-center text-gray-400">
+                  <ClockIcon className="w-5 h-5 mr-2" />
+                  <span className="font-medium">
+                    {formatDuration(content.duration || 0)}
+                  </span>
                 </div>
+                {module && (
+                  <div className="flex items-center text-gray-400">
+                    <CubeIcon className="w-5 h-5 mr-2" />
+                    <span className="font-medium">{module.title}</span>
+                  </div>
+                )}
                 {phase && (
-                  <div>
-                    <span className="text-gray-400 text-sm">Phase</span>
-                    <Link
-                      to={`/phases/${phase.id}`}
-                      className="block text-green-400 hover:text-cyber-green transition-colors font-medium"
-                    >
-                      {phase.title}
-                    </Link>
+                  <div className="flex items-center text-gray-400">
+                    <StarIcon className="w-5 h-5 mr-2" />
+                    <span className="font-medium">{phase.title}</span>
                   </div>
                 )}
                 {module.difficulty && (
-                  <div>
-                    <span className="text-gray-400 text-sm">Difficulty</span>
-                    <div className="text-white font-medium capitalize">
-                      {module.difficulty}
-                    </div>
+                  <div className="flex items-center text-gray-400">
+                    {/* Difficulty */}
+                    <Gauge className="w-5 h-5 mr-2" />
+                    <span className={`font-medium`}>{module.difficulty}</span>
                   </div>
                 )}
               </div>
-            </div>
-          )}
 
-          {/* Basic Info */}
-          <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-4">Basic Info</h3>
-            <div className="space-y-3">
-              <div>
-                <span className="text-gray-400 text-sm">Type</span>
-                <div className="text-white font-medium capitalize">{content.type}</div>
-              </div>
-              <div>
-                <span className="text-gray-400 text-sm">Duration</span>
-                <div className="text-white font-medium">
-                  {formatDuration(content.duration || 0)}
-                </div>
-              </div>
-              {content.section && (
-                <div>
-                  <span className="text-gray-400 text-sm">Section</span>
-                  <div className="text-white font-medium">{content.section}</div>
+              {/* Primary Action Button */}
+              {content.url && (
+                <div className="mt-8">
+                  <a
+                    href={content.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-cyan-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <PlayIcon className="w-6 h-6 mr-3" />
+                    {content.type === "video"
+                      ? "Watch Video"
+                      : content.type === "lab"
+                      ? "Start Lab"
+                      : content.type === "game"
+                      ? "Play Game"
+                      : "View Document"}
+                  </a>
                 </div>
               )}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Actions */}
-          <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-4">Actions</h3>
-            <div className="space-y-3">
-              <Link
-                to={`/content`}
-                className="block w-full bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg transition-colors text-center"
-              >
-                <PencilIcon className="w-4 h-4 inline mr-2" />
-                Edit Content
-              </Link>
-              {module && (
-                <Link
-                  to={`/modules/${module.id}`}
-                  className="block w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-center"
-                >
-                  <EyeIcon className="w-4 h-4 inline mr-2" />
-                  View Module
-                </Link>
+      {/* Main Content Area */}
+      <div className="px-6 py-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Content Sections - Card Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            {/* Main Content Column */}
+            <div className="lg:col-span-3 space-y-8">
+              {/* Instructions Section */}
+              {content.instructions && (
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700 shadow-xl">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-blue-600/20 rounded-lg">
+                      <BookOpenIcon className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">
+                      Instructions
+                    </h2>
+                  </div>
+                  <div className="prose prose-invert max-w-none">
+                    <div className="text-gray-300 leading-relaxed whitespace-pre-wrap text-lg">
+                      {content.instructions}
+                    </div>
+                  </div>
+                </div>
               )}
+
+              {/* Resources Section */}
+              {content.resources && content.resources.length > 0 && (
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700 shadow-xl">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-purple-600/20 rounded-lg">
+                      <LinkIcon className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">
+                      Resources{" "}
+                      <span className="text-gray-400 text-lg">
+                        ({content.resources.length})
+                      </span>
+                    </h2>
+                  </div>
+                  <div className="grid gap-4">
+                    {content.resources.map((resource, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center p-4 bg-gray-700/50 rounded-xl border border-gray-600/50 hover:bg-gray-700 transition-colors"
+                      >
+                        <div className="p-2 bg-purple-600/20 rounded-lg mr-4">
+                          <LinkIcon className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <span className="text-gray-300 font-medium">
+                          {resource}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Related Content Section */}
+              {relatedContent.length > 0 && (
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700 shadow-xl">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-green-600/20 rounded-lg">
+                      <CubeIcon className="w-6 h-6 text-green-400" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">
+                      Related Content{" "}
+                      <span className="text-gray-400 text-lg">
+                        ({relatedContent.length})
+                      </span>
+                    </h2>
+                  </div>
+                  <div className="grid gap-4">
+                    {relatedContent.slice(0, 5).map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-4 bg-gray-700/50 rounded-xl border border-gray-600/50 hover:bg-gray-700 transition-colors group"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div
+                            className={`p-2 rounded-lg border ${getContentTypeColor(
+                              item.type
+                            )}`}
+                          >
+                            {getContentTypeIcon(item.type)}
+                          </div>
+                          <div>
+                            <div className="text-white font-medium group-hover:text-green-400 transition-colors">
+                              {item.title}
+                            </div>
+                            <div className="text-gray-400 text-sm">
+                              {item.type} • {formatDuration(item.duration || 0)}
+                            </div>
+                          </div>
+                        </div>
+                        <Link
+                          to={`/content/${item.id}`}
+                          className="p-2 bg-green-600/20 rounded-lg text-green-400 hover:text-green-300 hover:bg-green-600/30 transition-colors"
+                        >
+                          <EyeIcon className="w-5 h-5" />
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Content Info Card */}
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 shadow-xl">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-2 bg-cyan-600/20 rounded-lg">
+                    <InformationCircleIcon className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Content Info</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                    <span className="text-gray-400 text-sm">Type</span>
+                    <span className="text-white font-medium capitalize">
+                      {content.type}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                    <span className="text-gray-400 text-sm">Duration</span>
+                    <span className="text-white font-medium">
+                      {formatDuration(content.duration || 0)}
+                    </span>
+                  </div>
+                  {content.section && (
+                    <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                      <span className="text-gray-400 text-sm">Section</span>
+                      <span className="text-white font-medium">
+                        {content.section}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-400 text-sm">Content ID</span>
+                    <span className="text-white font-mono text-xs">
+                      {content.id}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

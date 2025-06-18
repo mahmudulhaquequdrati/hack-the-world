@@ -1,19 +1,9 @@
 import {
-  ArrowLeftIcon,
-  BeakerIcon,
   BookOpenIcon,
-  ChartBarIcon,
-  ChevronRightIcon,
   ClockIcon,
-  CubeIcon,
-  DocumentIcon,
   EyeIcon,
   InformationCircleIcon,
-  PencilIcon,
-  PuzzlePieceIcon,
   StarIcon,
-  TrashIcon,
-  VideoCameraIcon,
 } from "@heroicons/react/24/outline";
 import { Gauge } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -21,10 +11,21 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { getIconFromName } from "../lib/iconUtils";
 import {
   contentAPI,
-  enrollmentAPI,
   modulesAPI,
   phasesAPI,
 } from "../services/api";
+import {
+  formatDuration,
+  getContentTypeIcon,
+  getContentTypeColor,
+  getDifficultyColor,
+  calculateContentStatistics,
+} from "../utils/contentHelpers.jsx";
+import LoadingState from "./shared/LoadingState";
+import ErrorState from "./shared/ErrorState";
+import NotFoundState from "./shared/NotFoundState";
+import Breadcrumb from "./shared/Breadcrumb";
+import QuickActionsBar from "./shared/QuickActionsBar";
 
 const ModuleDetailView = () => {
   const { moduleId } = useParams();
@@ -32,8 +33,6 @@ const ModuleDetailView = () => {
   const [module, setModule] = useState(null);
   const [phase, setPhase] = useState(null);
   const [content, setContent] = useState([]);
-  const [contentGrouped, setContentGrouped] = useState({});
-  const [enrollmentStats, setEnrollmentStats] = useState(null);
   const [statistics, setStatistics] = useState({
     totalContent: 0,
     totalDuration: 0,
@@ -72,26 +71,9 @@ const ModuleDetailView = () => {
       const contentList = contentResponse.data || [];
       setContent(contentList);
 
-      // Fetch grouped content for better organization
-      try {
-        const groupedResponse = await contentAPI.getByModuleGrouped(moduleId);
-        setContentGrouped(groupedResponse.data || {});
-      } catch (groupedError) {
-        console.warn("Could not fetch grouped content:", groupedError);
-      }
-
-      // Fetch enrollment statistics
-      try {
-        const enrollmentStatsResponse = await enrollmentAPI.getModuleStats(
-          moduleId
-        );
-        setEnrollmentStats(enrollmentStatsResponse.data);
-      } catch (enrollmentError) {
-        console.warn("Could not fetch enrollment stats:", enrollmentError);
-      }
 
       // Calculate statistics
-      calculateStatistics(contentList);
+      setStatistics(calculateContentStatistics(contentList));
     } catch (error) {
       console.error("Error fetching module data:", error);
       setError(
@@ -102,111 +84,32 @@ const ModuleDetailView = () => {
     }
   };
 
-  const calculateStatistics = (contentList) => {
-    const stats = {
-      totalContent: contentList.length,
-      totalDuration: contentList.reduce(
-        (sum, item) => sum + (item.duration || 0),
-        0
-      ),
-    };
 
-    setStatistics(stats);
-  };
 
-  const formatDuration = (minutes) => {
-    if (minutes < 60) {
-      return `${minutes} min`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0
-      ? `${hours}h ${remainingMinutes}m`
-      : `${hours}h`;
-  };
 
-  const getDifficultyColor = (difficulty) => {
-    const colors = {
-      beginner: "bg-green-900/30 text-green-400 border-green-500/30",
-      intermediate: "bg-yellow-900/30 text-yellow-400 border-yellow-500/30",
-      advanced: "bg-red-900/30 text-red-400 border-red-500/30",
-      expert: "bg-purple-900/30 text-purple-400 border-purple-500/30",
-    };
-    return (
-      colors[difficulty] || "bg-gray-900/30 text-gray-400 border-gray-500/30"
-    );
-  };
 
-  const getContentTypeIcon = (type) => {
-    switch (type) {
-      case "video":
-        return <VideoCameraIcon className="w-5 h-5" />;
-      case "lab":
-        return <BeakerIcon className="w-5 h-5" />;
-      case "game":
-        return <PuzzlePieceIcon className="w-5 h-5" />;
-      case "document":
-        return <DocumentIcon className="w-5 h-5" />;
-      default:
-        return <BookOpenIcon className="w-5 h-5" />;
-    }
-  };
-
-  const getContentTypeColor = (type) => {
-    const colors = {
-      video: "bg-red-900/30 text-red-400 border-red-500/30",
-      lab: "bg-blue-900/30 text-blue-400 border-blue-500/30",
-      game: "bg-purple-900/30 text-purple-400 border-purple-500/30",
-      document: "bg-green-900/30 text-green-400 border-green-500/30",
-    };
-    return colors[type] || "bg-gray-900/30 text-gray-400 border-gray-500/30";
-  };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-cyber-green">Loading module details...</div>
-      </div>
-    );
+    return <LoadingState message="Loading module details..." />;
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate("/modules")}
-            className="text-green-400 hover:text-cyber-green transition-colors"
-          >
-            <ArrowLeftIcon className="w-6 h-6" />
-          </button>
-          <h1 className="text-3xl font-bold text-cyber-green">
-            Module Details
-          </h1>
-        </div>
-        <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded">
-          {error}
-        </div>
-      </div>
+      <ErrorState
+        error={error}
+        title="Module Details"
+        onBack={() => navigate("/modules")}
+      />
     );
   }
 
   if (!module) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate("/modules")}
-            className="text-green-400 hover:text-cyber-green transition-colors"
-          >
-            <ArrowLeftIcon className="w-6 h-6" />
-          </button>
-          <h1 className="text-3xl font-bold text-cyber-green">
-            Module Details
-          </h1>
-        </div>
-        <div className="text-gray-400">Module not found.</div>
-      </div>
+      <NotFoundState
+        title="Module Details"
+        message="Module not found."
+        onBack={() => navigate("/modules")}
+      />
     );
   }
 
@@ -220,57 +123,22 @@ const ModuleDetailView = () => {
         <div className="relative px-6 py-8">
           {/* Navigation */}
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3 text-sm">
-              <button
-                onClick={() => navigate("/modules")}
-                className="flex items-center text-green-400 hover:text-green-300 transition-colors"
-              >
-                <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                Modules
-              </button>
-              {phase && (
-                <>
-                  <ChevronRightIcon className="w-4 h-4 text-gray-500" />
-                  <Link
-                    to={`/phases/${phase.id}`}
-                    className="text-green-400 hover:text-green-300 transition-colors"
-                  >
-                    {phase.title}
-                  </Link>
-                </>
-              )}
-              <ChevronRightIcon className="w-4 h-4 text-gray-500" />
-              <span className="text-gray-400">{module.title}</span>
-            </div>
+            <Breadcrumb
+              onBack={() => navigate("/modules")}
+              backLabel="Modules"
+              items={[
+                ...(phase
+                  ? [{ label: phase.title, href: `/phases/${phase.id}` }]
+                  : []),
+                { label: module.title },
+              ]}
+            />
 
-            {/* Quick Actions Floating Bar */}
-            <div className="flex items-center space-x-2 bg-gray-800/80 backdrop-blur-md border border-gray-700/50 rounded-full px-4 py-2 shadow-lg">
-              <Link
-                to={`/modules`}
-                className="flex items-center justify-center p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-600/20 rounded-lg transition-all duration-200 group"
-                title="Edit Module"
-              >
-                <PencilIcon className="w-5 h-5" />
-                <span className="ml-2 text-sm font-medium hidden lg:inline group-hover:text-cyan-300">
-                  Edit
-                </span>
-              </Link>
-
-              <div className="w-px h-6 bg-gray-600"></div>
-
-              <button
-                onClick={() => {
-                  /* Add delete functionality */
-                }}
-                className="flex items-center justify-center p-2 text-red-400 hover:text-red-300 hover:bg-red-600/20 rounded-lg transition-all duration-200 group"
-                title="Delete Module"
-              >
-                <TrashIcon className="w-5 h-5" />
-                <span className="ml-2 text-sm font-medium hidden lg:inline group-hover:text-red-300">
-                  Delete
-                </span>
-              </button>
-            </div>
+            <QuickActionsBar
+              editPath="/modules"
+              editLabel="Edit"
+              showDelete={false}
+            />
           </div>
 
           {/* Hero Content */}
@@ -394,7 +262,7 @@ const ModuleDetailView = () => {
                               item.type
                             )}`}
                           >
-                            {getContentTypeIcon(item.type)}
+                            {getContentTypeIcon(item.type, "w-5 h-5")}
                           </div>
                           <div>
                             <div className="text-white font-medium group-hover:text-green-400 transition-colors">

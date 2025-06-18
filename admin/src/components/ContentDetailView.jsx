@@ -1,30 +1,27 @@
 import {
-  ArrowLeftIcon,
-  BeakerIcon,
   BookOpenIcon,
-  ChevronRightIcon,
   ClockIcon,
   CubeIcon,
-  DocumentIcon,
   EyeIcon,
   LinkIcon,
-  PencilIcon,
   PlayIcon,
-  PuzzlePieceIcon,
-  VideoCameraIcon,
   StarIcon,
-  ChartBarIcon,
   InformationCircleIcon,
-  Cog6ToothIcon,
-  ShareIcon,
-  TrashIcon,
-  DocumentDuplicateIcon,
-  ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { contentAPI, modulesAPI, phasesAPI } from "../services/api";
 import { Gauge } from "lucide-react";
+import {
+  formatDuration,
+  getContentTypeIcon,
+  getContentTypeColor,
+} from "../utils/contentHelpers.jsx";
+import LoadingState from "./shared/LoadingState";
+import ErrorState from "./shared/ErrorState";
+import NotFoundState from "./shared/NotFoundState";
+import Breadcrumb from "./shared/Breadcrumb";
+import QuickActionsBar from "./shared/QuickActionsBar";
 
 const ContentDetailView = () => {
   const { contentId } = useParams();
@@ -95,87 +92,30 @@ const ContentDetailView = () => {
     }
   };
 
-  const formatDuration = (minutes) => {
-    if (minutes < 60) {
-      return `${minutes} min`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0
-      ? `${hours}h ${remainingMinutes}m`
-      : `${hours}h`;
-  };
 
-  const getContentTypeIcon = (type, size = "w-6 h-6") => {
-    switch (type) {
-      case "video":
-        return <VideoCameraIcon className={size} />;
-      case "lab":
-        return <BeakerIcon className={size} />;
-      case "game":
-        return <PuzzlePieceIcon className={size} />;
-      case "document":
-        return <DocumentIcon className={size} />;
-      default:
-        return <BookOpenIcon className={size} />;
-    }
-  };
 
-  const getContentTypeColor = (type) => {
-    const colors = {
-      video: "bg-red-900/30 text-red-400 border-red-500/30",
-      lab: "bg-blue-900/30 text-blue-400 border-blue-500/30",
-      game: "bg-purple-900/30 text-purple-400 border-purple-500/30",
-      document: "bg-green-900/30 text-green-400 border-green-500/30",
-    };
-    return colors[type] || "bg-gray-900/30 text-gray-400 border-gray-500/30";
-  };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-cyber-green">Loading content details...</div>
-      </div>
-    );
+    return <LoadingState message="Loading content details..." />;
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate("/content")}
-            className="text-green-400 hover:text-cyber-green transition-colors"
-          >
-            <ArrowLeftIcon className="w-6 h-6" />
-          </button>
-          <h1 className="text-3xl font-bold text-cyber-green">
-            Content Details
-          </h1>
-        </div>
-        <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded">
-          {error}
-        </div>
-      </div>
+      <ErrorState
+        error={error}
+        title="Content Details"
+        onBack={() => navigate("/content")}
+      />
     );
   }
 
   if (!content) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate("/content")}
-            className="text-green-400 hover:text-cyber-green transition-colors"
-          >
-            <ArrowLeftIcon className="w-6 h-6" />
-          </button>
-          <h1 className="text-3xl font-bold text-cyber-green">
-            Content Details
-          </h1>
-        </div>
-        <div className="text-gray-400">Content not found.</div>
-      </div>
+      <NotFoundState
+        title="Content Details"
+        message="Content not found."
+        onBack={() => navigate("/content")}
+      />
     );
   }
 
@@ -187,68 +127,25 @@ const ContentDetailView = () => {
         <div className="relative px-6 py-8">
           {/* Navigation */}
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3 text-sm">
-              <button
-                onClick={() => navigate("/content")}
-                className="flex items-center text-green-400 hover:text-green-300 transition-colors"
-              >
-                <ArrowLeftIcon className="w-4 h-4 mr-1" />
-                Content
-              </button>
-              <ChevronRightIcon className="w-4 h-4 text-gray-500" />
-              {phase && (
-                <>
-                  <Link
-                    to={`/phases/${phase.id}`}
-                    className="text-green-400 hover:text-green-300 transition-colors"
-                  >
-                    {phase.title}
-                  </Link>
-                  <ChevronRightIcon className="w-4 h-4 text-gray-500" />
-                </>
-              )}
-              {module && (
-                <>
-                  <Link
-                    to={`/modules/${module.id}`}
-                    className="text-green-400 hover:text-green-300 transition-colors"
-                  >
-                    {module.title}
-                  </Link>
-                  <ChevronRightIcon className="w-4 h-4 text-gray-500" />
-                </>
-              )}
-              <span className="text-gray-400">{content.title}</span>
-            </div>
+            <Breadcrumb
+              onBack={() => navigate("/content")}
+              backLabel="Content"
+              items={[
+                ...(phase
+                  ? [{ label: phase.title, href: `/phases/${phase.id}` }]
+                  : []),
+                ...(module
+                  ? [{ label: module.title, href: `/modules/${module.id}` }]
+                  : []),
+                { label: content.title },
+              ]}
+            />
 
-            {/* Quick Actions Floating Bar */}
-            <div className="flex items-center space-x-2 bg-gray-800/80 backdrop-blur-md border border-gray-700/50 rounded-full px-4 py-2 shadow-lg">
-              <Link
-                to={`/content`}
-                className="flex items-center justify-center p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-600/20 rounded-lg transition-all duration-200 group"
-                title="Edit Content"
-              >
-                <PencilIcon className="w-5 h-5" />
-                <span className="ml-2 text-sm font-medium hidden lg:inline group-hover:text-cyan-300">
-                  Edit
-                </span>
-              </Link>
-
-              <div className="w-px h-6 bg-gray-600"></div>
-
-              <button
-                onClick={() => {
-                  /* Add delete functionality */
-                }}
-                className="flex items-center justify-center p-2 text-red-400 hover:text-red-300 hover:bg-red-600/20 rounded-lg transition-all duration-200 group"
-                title="Delete Content"
-              >
-                <TrashIcon className="w-5 h-5" />
-                <span className="ml-2 text-sm font-medium hidden lg:inline group-hover:text-red-300">
-                  Delete
-                </span>
-              </button>
-            </div>
+            <QuickActionsBar
+              editPath="/content"
+              editLabel="Edit"
+              showDelete={false}
+            />
           </div>
 
           {/* Hero Content */}
@@ -305,11 +202,10 @@ const ContentDetailView = () => {
                     <span className="font-medium">{phase.title}</span>
                   </div>
                 )}
-                {module.difficulty && (
+                {module?.difficulty && (
                   <div className="flex items-center text-gray-400">
-                    {/* Difficulty */}
                     <Gauge className="w-5 h-5 mr-2" />
-                    <span className={`font-medium`}>{module.difficulty}</span>
+                    <span className="font-medium">{module.difficulty}</span>
                   </div>
                 )}
               </div>
@@ -423,7 +319,7 @@ const ContentDetailView = () => {
                               item.type
                             )}`}
                           >
-                            {getContentTypeIcon(item.type)}
+                            {getContentTypeIcon(item.type, "w-5 h-5")}
                           </div>
                           <div>
                             <div className="text-white font-medium group-hover:text-green-400 transition-colors">

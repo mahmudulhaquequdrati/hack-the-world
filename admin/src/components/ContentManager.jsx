@@ -113,6 +113,7 @@ const ContentManager = () => {
     fetchModules();
     fetchPhases();
     fetchContent();
+    fetchHierarchicalData();
   }, []);
 
   // Data fetching functions

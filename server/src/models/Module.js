@@ -78,7 +78,6 @@ const moduleSchema = new mongoose.Schema(
     order: {
       type: Number,
       required: [true, "Module order is required"],
-      min: [1, "Order must be at least 1"],
     },
 
     // Learning topics covered

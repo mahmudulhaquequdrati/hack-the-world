@@ -77,7 +77,7 @@ const ContentManager = () => {
   // View modes (removed list view)
   const [viewMode, setViewMode] = useState("hierarchical"); // Default to hierarchical view
   const [groupedContent, setGroupedContent] = useState({});
-  
+
   // Hierarchical navigation state
   const [selectedPhaseId, setSelectedPhaseId] = useState("");
   const [selectedModuleId, setSelectedModuleId] = useState("");
@@ -94,7 +94,6 @@ const ContentManager = () => {
       color: "bg-yellow-500",
     },
   ];
-
 
   useEffect(() => {
     fetchModules();
@@ -178,7 +177,6 @@ const ContentManager = () => {
     }
   };
 
-
   const fetchSectionsByModule = async (moduleId) => {
     try {
       setSectionLoading(true);
@@ -233,34 +231,45 @@ const ContentManager = () => {
       const allContent = contentResponse.data || [];
 
       // Create hierarchical structure: Phases -> Modules -> Content
-      const hierarchical = phases.map(phase => {
-        const phaseModules = modules.filter(module => module.phaseId === phase.id);
-        
-        return {
-          ...phase,
-          modules: phaseModules.map(module => {
-            const moduleContent = allContent.filter(content => content.moduleId === module.id);
-            
-            // Group content by sections within each module
-            const contentBySections = {};
-            moduleContent.forEach(content => {
-              const section = content.section || "Uncategorized";
-              if (!contentBySections[section]) {
-                contentBySections[section] = [];
-              }
-              contentBySections[section].push(content);
-            });
+      const hierarchical = phases
+        .map((phase) => {
+          const phaseModules = modules.filter(
+            (module) => module.phaseId === phase.id
+          );
 
-            return {
-              ...module,
-              content: moduleContent,
-              contentBySections,
-              contentCount: moduleContent.length,
-              totalDuration: moduleContent.reduce((sum, item) => sum + (item.duration || 0), 0)
-            };
-          }).filter(module => module.content.length > 0) // Only show modules with content
-        };
-      }).filter(phase => phase.modules.length > 0); // Only show phases with modules that have content
+          return {
+            ...phase,
+            modules: phaseModules
+              .map((module) => {
+                const moduleContent = allContent.filter(
+                  (content) => content.moduleId === module.id
+                );
+
+                // Group content by sections within each module
+                const contentBySections = {};
+                moduleContent.forEach((content) => {
+                  const section = content.section || "Uncategorized";
+                  if (!contentBySections[section]) {
+                    contentBySections[section] = [];
+                  }
+                  contentBySections[section].push(content);
+                });
+
+                return {
+                  ...module,
+                  content: moduleContent,
+                  contentBySections,
+                  contentCount: moduleContent.length,
+                  totalDuration: moduleContent.reduce(
+                    (sum, item) => sum + (item.duration || 0),
+                    0
+                  ),
+                };
+              })
+              .filter((module) => module.content.length > 0), // Only show modules with content
+          };
+        })
+        .filter((phase) => phase.modules.length > 0); // Only show phases with modules that have content
 
       setHierarchicalData(hierarchical);
     } catch (err) {
@@ -450,7 +459,8 @@ const ContentManager = () => {
       accessibility: {
         hasSubtitles: contentItem.accessibility?.hasSubtitles || false,
         hasTranscript: contentItem.accessibility?.hasTranscript || false,
-        hasAudioDescription: contentItem.accessibility?.hasAudioDescription || false,
+        hasAudioDescription:
+          contentItem.accessibility?.hasAudioDescription || false,
       },
       technicalRequirements: contentItem.technicalRequirements || [],
       author: contentItem.author || "",
@@ -538,43 +548,48 @@ const ContentManager = () => {
   // Multiple upload handlers
   const handleMultipleUploadStart = () => {
     setShowMultipleUpload(true);
-    setMultipleUploads([{
-      id: Date.now(),
-      type: "video",
-      title: "",
-      description: "",
-      section: "",
-      url: "",
-      instructions: "",
-      duration: 1,
-      resources: [],
-    }]);
+    setMultipleUploads([
+      {
+        id: Date.now(),
+        type: "video",
+        title: "",
+        description: "",
+        section: "",
+        url: "",
+        instructions: "",
+        duration: 1,
+        resources: [],
+      },
+    ]);
     setSelectedPhaseForUpload("");
     setSelectedModuleForUpload("");
   };
 
   const addNewUploadItem = () => {
-    setMultipleUploads(prev => [...prev, {
-      id: Date.now(),
-      type: "video",
-      title: "",
-      description: "",
-      section: "",
-      url: "",
-      instructions: "",
-      duration: 1,
-      resources: [],
-    }]);
+    setMultipleUploads((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        type: "video",
+        title: "",
+        description: "",
+        section: "",
+        url: "",
+        instructions: "",
+        duration: 1,
+        resources: [],
+      },
+    ]);
   };
 
   const removeUploadItem = (id) => {
-    setMultipleUploads(prev => prev.filter(item => item.id !== id));
+    setMultipleUploads((prev) => prev.filter((item) => item.id !== id));
   };
 
   const updateUploadItem = (id, field, value) => {
-    setMultipleUploads(prev => prev.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    ));
+    setMultipleUploads((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
   };
 
   const handleMultipleUploadSubmit = async () => {
@@ -597,14 +612,17 @@ const ContentManager = () => {
           setError("URL is required for video content");
           return;
         }
-        if ((item.type === "lab" || item.type === "game") && !item.instructions) {
+        if (
+          (item.type === "lab" || item.type === "game") &&
+          !item.instructions
+        ) {
           setError("Instructions are required for lab and game content");
           return;
         }
       }
 
       // Create all content items
-      const createPromises = multipleUploads.map(item => {
+      const createPromises = multipleUploads.map((item) => {
         const contentData = {
           ...item,
           moduleId: selectedModuleForUpload,
@@ -615,7 +633,9 @@ const ContentManager = () => {
 
       await Promise.all(createPromises);
 
-      setSuccess(`Successfully created ${multipleUploads.length} content items`);
+      setSuccess(
+        `Successfully created ${multipleUploads.length} content items`
+      );
       setShowMultipleUpload(false);
       setMultipleUploads([]);
       fetchContent();
@@ -646,57 +666,81 @@ const ContentManager = () => {
     return (
       <div className="space-y-8">
         {hierarchicalData.map((phase) => (
-          <div key={phase.id} className="retro-card p-6">
+          <div
+            key={phase.id}
+            className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-green-400/30 rounded-xl p-6 relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 animate-pulse"></div>
             {/* Phase Header */}
-            <div 
-              className="flex items-center justify-between mb-6 cursor-pointer p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-lg border border-purple-500/30 hover:border-purple-400/50 transition-all"
-              onClick={() => setSelectedPhaseId(selectedPhaseId === phase.id ? "" : phase.id)}
+            <div
+              className="relative z-10 flex items-center justify-between mb-6 cursor-pointer p-4 bg-gradient-to-r from-green-900/30 to-cyan-900/30 rounded-xl border border-green-400/30 hover:border-green-400/50 transition-all duration-300"
+              onClick={() =>
+                setSelectedPhaseId(selectedPhaseId === phase.id ? "" : phase.id)
+              }
             >
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center mr-4">
-                  <span className="text-2xl font-bold text-white font-mono">P</span>
+                <div className="w-12 h-12 bg-gradient-to-br from-green-400/20 to-green-600/20 border-2 border-green-400/50 rounded-xl flex items-center justify-center mr-4 shadow-lg shadow-green-400/20">
+                  <span className="text-2xl font-bold text-green-400 font-mono">
+                    P
+                  </span>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-purple-400 font-mono retro-glow">
+                  <h2 className="text-xl font-bold text-green-400 font-mono uppercase tracking-wider">
                     📚 {phase.title}
                   </h2>
                   <p className="text-sm text-gray-400 font-mono">
-                    {phase.modules.length} modules • {phase.modules.reduce((sum, m) => sum + m.contentCount, 0)} content items
+                    ◆ {phase.modules.length} modules •{" "}
+                    {phase.modules.reduce((sum, m) => sum + m.contentCount, 0)}{" "}
+                    content items
                   </p>
                 </div>
               </div>
-              <div className="text-purple-400 text-2xl font-mono">
+              <div className="text-green-400 text-2xl font-mono">
                 {selectedPhaseId === phase.id ? "▲" : "▼"}
               </div>
             </div>
 
             {/* Modules (shown when phase is expanded) */}
             {selectedPhaseId === phase.id && (
-              <div className="space-y-4 ml-8">
+              <div className="relative z-10 space-y-4 ml-8">
                 {phase.modules.map((module) => (
-                  <div key={module.id} className="border border-cyan-500/30 rounded-lg">
+                  <div
+                    key={module.id}
+                    className="border border-cyan-400/30 rounded-xl bg-gradient-to-br from-gray-800/50 to-black/50"
+                  >
                     {/* Module Header */}
-                    <div 
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-900/30 to-green-900/30 rounded-t-lg cursor-pointer hover:bg-gradient-to-r hover:from-cyan-800/40 hover:to-green-800/40 transition-all"
-                      onClick={() => setSelectedModuleId(selectedModuleId === module.id ? "" : module.id)}
+                    <div
+                      className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-900/30 to-blue-900/30 rounded-t-xl cursor-pointer hover:bg-gradient-to-r hover:from-cyan-800/40 hover:to-blue-800/40 transition-all duration-300 border-b border-cyan-400/20"
+                      onClick={() =>
+                        setSelectedModuleId(
+                          selectedModuleId === module.id ? "" : module.id
+                        )
+                      }
                     >
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-green-500 rounded-lg flex items-center justify-center mr-3">
-                          <span className="text-lg font-bold text-white font-mono">M</span>
+                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 border-2 border-cyan-400/50 rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-cyan-400/20">
+                          <span className="text-lg font-bold text-cyan-400 font-mono">
+                            M
+                          </span>
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-cyan-400 font-mono">
+                          <h3 className="text-lg font-semibold text-cyan-400 font-mono uppercase tracking-wider">
                             📖 {module.title}
                           </h3>
                           <div className="flex items-center space-x-4 text-xs text-gray-400 font-mono">
-                            <span>{module.contentCount} items</span>
-                            <span>{module.totalDuration} min</span>
-                            <span className={`px-2 py-1 rounded ${
-                              module.difficulty === "Beginner" ? "bg-green-900 text-green-400" :
-                              module.difficulty === "Intermediate" ? "bg-yellow-900 text-yellow-400" :
-                              module.difficulty === "Advanced" ? "bg-orange-900 text-orange-400" :
-                              "bg-red-900 text-red-400"
-                            }`}>
+                            <span>◇ {module.contentCount} items</span>
+                            <span>◇ {module.totalDuration} min</span>
+                            <span
+                              className={`px-2 py-1 rounded-lg border font-mono uppercase ${
+                                module.difficulty === "Beginner"
+                                  ? "bg-green-900/20 text-green-400 border-green-400/30"
+                                  : module.difficulty === "Intermediate"
+                                  ? "bg-yellow-900/20 text-yellow-400 border-yellow-400/30"
+                                  : module.difficulty === "Advanced"
+                                  ? "bg-orange-900/20 text-orange-400 border-orange-400/30"
+                                  : "bg-red-900/20 text-red-400 border-red-400/30"
+                              }`}
+                            >
                               {module.difficulty}
                             </span>
                           </div>
@@ -709,59 +753,87 @@ const ContentManager = () => {
 
                     {/* Content (shown when module is expanded) */}
                     {selectedModuleId === module.id && (
-                      <div className="p-4 bg-gray-900/50 rounded-b-lg">
-                        {Object.entries(module.contentBySections).map(([sectionName, sectionContent]) => (
-                          <div key={sectionName} className="mb-6 last:mb-0">
-                            <h4 className="text-md font-medium text-green-400 font-mono mb-3 border-b border-green-500/30 pb-2">
-                              📁 {sectionName} ({sectionContent.length} items)
-                            </h4>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                              {sectionContent.map((contentItem) => {
-                                const contentType = contentTypes.find(t => t.value === contentItem.type);
-                                return (
-                                  <div key={contentItem.id} className="bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-600 rounded-lg p-4 hover:border-green-500/50 transition-all group">
-                                    <div className="flex items-start justify-between mb-2">
-                                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${contentType?.color} text-white`}>
-                                        {contentType?.icon} {contentType?.label}
-                                      </span>
-                                      <span className="text-xs text-gray-400 font-mono">{contentItem.duration}m</span>
+                      <div className="p-4 bg-gradient-to-br from-gray-900/60 to-black/60 rounded-b-xl">
+                        {Object.entries(module.contentBySections).map(
+                          ([sectionName, sectionContent]) => (
+                            <div key={sectionName} className="mb-6 last:mb-0">
+                              <h4 className="text-md font-medium text-green-400 font-mono mb-3 border-b border-green-400/30 pb-2 uppercase tracking-wider">
+                                📁 {sectionName} ({sectionContent.length} items)
+                              </h4>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {sectionContent.map((contentItem) => {
+                                  const contentType = contentTypes.find(
+                                    (t) => t.value === contentItem.type
+                                  );
+                                  return (
+                                    <div
+                                      key={contentItem.id}
+                                      className="bg-gradient-to-br from-gray-800/80 to-black/80 border border-gray-600/50 rounded-xl p-4 hover:border-green-400/50 hover:shadow-lg hover:shadow-green-400/10 transition-all duration-300 group relative overflow-hidden"
+                                    >
+                                      <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                                      <div className="relative z-10">
+                                        <div className="flex items-start justify-between mb-2">
+                                          <span
+                                            className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold font-mono uppercase tracking-wider border ${
+                                              contentType?.value === "video"
+                                                ? "bg-blue-900/20 text-blue-400 border-blue-400/30"
+                                                : contentType?.value === "lab"
+                                                ? "bg-purple-900/20 text-purple-400 border-purple-400/30"
+                                                : contentType?.value === "game"
+                                                ? "bg-green-900/20 text-green-400 border-green-400/30"
+                                                : "bg-yellow-900/20 text-yellow-400 border-yellow-400/30"
+                                            }`}
+                                          >
+                                            {contentType?.icon}{" "}
+                                            {contentType?.label}
+                                          </span>
+                                          <span className="text-xs text-gray-400 font-mono">
+                                            {contentItem.duration}m
+                                          </span>
+                                        </div>
+
+                                        <h5 className="font-medium text-green-400 mb-1 line-clamp-2 group-hover:text-green-300 transition-colors font-mono">
+                                          ◆ {contentItem.title}
+                                        </h5>
+
+                                        <p className="text-xs text-gray-400 line-clamp-2 mb-3 font-mono">
+                                          {contentItem.description}
+                                        </p>
+
+                                        <div className="flex gap-2">
+                                          <Link
+                                            to={`/content/${contentItem.id}`}
+                                            className="text-xs text-green-400 hover:text-green-300 transition-colors font-mono uppercase tracking-wider hover:bg-green-400/10 px-2 py-1 rounded border border-green-400/30 hover:border-green-400/50"
+                                          >
+                                            VIEW
+                                          </Link>
+                                          <button
+                                            onClick={() =>
+                                              handleEdit(contentItem)
+                                            }
+                                            className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors font-mono uppercase tracking-wider hover:bg-cyan-400/10 px-2 py-1 rounded border border-cyan-400/30 hover:border-cyan-400/50"
+                                          >
+                                            EDIT
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              handleDelete(contentItem)
+                                            }
+                                            className="text-xs text-red-400 hover:text-red-300 transition-colors font-mono uppercase tracking-wider hover:bg-red-400/10 px-2 py-1 rounded border border-red-400/30 hover:border-red-400/50"
+                                          >
+                                            DEL
+                                          </button>
+                                        </div>
+                                      </div>
                                     </div>
-                                    
-                                    <h5 className="font-medium text-green-400 mb-1 line-clamp-2 group-hover:text-green-300 transition-colors">
-                                      {contentItem.title}
-                                    </h5>
-                                    
-                                    <p className="text-xs text-gray-400 line-clamp-2 mb-3">
-                                      {contentItem.description}
-                                    </p>
-                                    
-                                    <div className="flex gap-2">
-                                      <Link
-                                        to={`/content/${contentItem.id}`}
-                                        className="text-xs text-green-400 hover:text-green-300 transition-colors font-mono"
-                                      >
-                                        [VIEW]
-                                      </Link>
-                                      <button
-                                        onClick={() => handleEdit(contentItem)}
-                                        className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors font-mono"
-                                      >
-                                        [EDIT]
-                                      </button>
-                                      <button
-                                        onClick={() => handleDelete(contentItem)}
-                                        className="text-xs text-red-400 hover:text-red-300 transition-colors font-mono"
-                                      >
-                                        [DELETE]
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        )}
                       </div>
                     )}
                   </div>
@@ -772,13 +844,16 @@ const ContentManager = () => {
         ))}
 
         {hierarchicalData.length === 0 && (
-          <div className="text-center py-12 retro-card">
-            <div className="text-gray-400 mb-4 font-mono retro-text-cyan">
-              ◆ No content hierarchy found ◆
+          <div className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-green-400/30 rounded-xl p-12 text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 animate-pulse"></div>
+            <div className="relative z-10">
+              <div className="text-green-400 mb-4 font-mono font-bold text-xl uppercase tracking-wider">
+                ◆ NO CONTENT HIERARCHY FOUND ◆
+              </div>
+              <p className="text-gray-400 text-sm font-mono">
+                Create some content to see the hierarchical structure
+              </p>
             </div>
-            <p className="text-gray-600 text-sm font-mono">
-              Create some content to see the hierarchical structure
-            </p>
           </div>
         )}
       </div>
@@ -1403,7 +1478,7 @@ const ContentManager = () => {
             <h3 className="text-lg font-semibold text-cyan-400 mb-4 font-mono retro-glow">
               📊 Advanced Metadata
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Tags */}
               <div className="space-y-2">
@@ -1416,7 +1491,10 @@ const ContentManager = () => {
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      tags: e.target.value.split(",").map(tag => tag.trim()).filter(Boolean),
+                      tags: e.target.value
+                        .split(",")
+                        .map((tag) => tag.trim())
+                        .filter(Boolean),
                     }))
                   }
                   className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
@@ -1432,7 +1510,10 @@ const ContentManager = () => {
                 <select
                   value={formData.difficulty}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, difficulty: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      difficulty: e.target.value,
+                    }))
                   }
                   className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
                 >
@@ -1453,7 +1534,9 @@ const ContentManager = () => {
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      learningObjectives: e.target.value.split("\n").filter(Boolean),
+                      learningObjectives: e.target.value
+                        .split("\n")
+                        .filter(Boolean),
                     }))
                   }
                   className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
@@ -1472,7 +1555,9 @@ const ContentManager = () => {
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      technicalRequirements: e.target.value.split("\n").filter(Boolean),
+                      technicalRequirements: e.target.value
+                        .split("\n")
+                        .filter(Boolean),
                     }))
                   }
                   className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
@@ -1505,7 +1590,10 @@ const ContentManager = () => {
                   type="text"
                   value={formData.version}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, version: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      version: e.target.value,
+                    }))
                   }
                   className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
                   placeholder="1.0"
@@ -1520,7 +1608,10 @@ const ContentManager = () => {
                 <select
                   value={formData.language}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, language: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      language: e.target.value,
+                    }))
                   }
                   className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
                 >
@@ -1542,7 +1633,10 @@ const ContentManager = () => {
                   type="url"
                   value={formData.thumbnailUrl}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, thumbnailUrl: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      thumbnailUrl: e.target.value,
+                    }))
                   }
                   className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
                   placeholder="https://example.com/thumbnail.jpg"
@@ -1571,9 +1665,11 @@ const ContentManager = () => {
                     }
                     className="rounded bg-gray-700 border-gray-600 text-cyan-400 focus:ring-cyan-400"
                   />
-                  <span className="text-green-400 text-sm">📝 Has Subtitles</span>
+                  <span className="text-green-400 text-sm">
+                    📝 Has Subtitles
+                  </span>
                 </label>
-                
+
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -1589,9 +1685,11 @@ const ContentManager = () => {
                     }
                     className="rounded bg-gray-700 border-gray-600 text-cyan-400 focus:ring-cyan-400"
                   />
-                  <span className="text-green-400 text-sm">📄 Has Transcript</span>
+                  <span className="text-green-400 text-sm">
+                    📄 Has Transcript
+                  </span>
                 </label>
-                
+
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -1607,7 +1705,9 @@ const ContentManager = () => {
                     }
                     className="rounded bg-gray-700 border-gray-600 text-cyan-400 focus:ring-cyan-400"
                   />
-                  <span className="text-green-400 text-sm">🔊 Audio Description</span>
+                  <span className="text-green-400 text-sm">
+                    🔊 Audio Description
+                  </span>
                 </label>
               </div>
             </div>
@@ -1619,11 +1719,16 @@ const ContentManager = () => {
                   type="checkbox"
                   checked={formData.isPublished}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, isPublished: e.target.checked }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      isPublished: e.target.checked,
+                    }))
                   }
                   className="rounded bg-gray-700 border-gray-600 text-green-400 focus:ring-green-400"
                 />
-                <span className="text-green-400 font-semibold">🚀 Publish Immediately</span>
+                <span className="text-green-400 font-semibold">
+                  🚀 Publish Immediately
+                </span>
               </label>
             </div>
           </div>
@@ -1654,93 +1759,101 @@ const ContentManager = () => {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Enhanced Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div className="flex items-center space-x-4">
-          <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-cyan-500 to-green-500 rounded-lg flex items-center justify-center shadow-lg">
-            <FolderIcon className="h-6 w-6 text-white" />
+    <div className="min-h-screen bg-black text-green-400">
+      <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
+        {/* Enhanced Terminal Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400/20 to-green-600/20 border-2 border-green-400/50 flex items-center justify-center animate-pulse">
+              <FolderIcon className="w-6 h-6 text-green-400" />
+            </div>
+            <h2 className="text-4xl font-bold text-green-400 font-mono uppercase tracking-wider relative">
+              <span className="relative z-10">CONTENT_MANAGEMENT</span>
+              <div className="absolute inset-0 bg-green-400/20 blur-lg rounded"></div>
+            </h2>
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-green-400 bg-clip-text text-transparent">
-              [CONTENT MANAGEMENT]
-            </h1>
-            <p className="text-green-400 mt-1 flex items-center text-sm sm:text-base">
-              <SparklesIcon className="h-4 w-4 mr-2" />
-              Manage learning content including videos, labs, games, and
-              documents
-            </p>
+          <div className="bg-gradient-to-r from-black/80 via-green-900/20 to-black/80 border border-green-400/30 rounded-xl p-4 max-w-3xl mx-auto relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 animate-pulse"></div>
+            <div className="relative z-10 flex items-center space-x-2">
+              <div className="flex space-x-1">
+                <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
+                <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+              </div>
+              <p className="text-green-400 font-mono text-sm ml-4">
+                <span className="text-green-300">admin@hacktheworld:</span>
+                <span className="text-blue-400">~/content</span>
+                <span className="text-green-400">
+                  $ ./manage --learning-content --cybersec-platform --enhanced
+                </span>
+                <span className="animate-ping text-green-400">█</span>
+              </p>
+            </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowForm(true)}
-            disabled={loading}
-            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200"
-          >
-            <PlusIcon className="w-5 h-5 mr-2" />
-            Add Content
-          </button>
-          <button
-            onClick={handleMultipleUploadStart}
-            disabled={loading}
-            className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200"
-          >
-            <SparklesIcon className="w-5 h-5 mr-2" />
-            <span className="hidden sm:inline">Multiple Upload</span>
-            <span className="sm:hidden">Multi</span>
-          </button>
+
+        {/* Action Header */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => setShowForm(true)}
+              disabled={loading}
+              className="bg-gradient-to-r from-green-400/10 to-green-500/10 border-2 border-green-400/30 hover:bg-gradient-to-r hover:from-green-400/20 hover:to-green-500/20 hover:border-green-400/50 transition-all duration-300 text-green-400 font-mono font-bold uppercase tracking-wider px-6 py-3 rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-green-400/20 relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/20 to-green-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <PlusIcon className="w-5 h-5 mr-2 relative z-10" />
+              <span className="hidden sm:inline relative z-10">
+                ▶ ADD CONTENT
+              </span>
+              <span className="sm:hidden relative z-10">+ ADD</span>
+            </button>
+
+            <button
+              onClick={handleMultipleUploadStart}
+              disabled={loading}
+              className="bg-gradient-to-r from-cyan-400/10 to-cyan-500/10 border-2 border-cyan-400/30 hover:bg-gradient-to-r hover:from-cyan-400/20 hover:to-cyan-500/20 hover:border-cyan-400/50 transition-all duration-300 text-cyan-400 font-mono font-bold uppercase tracking-wider px-6 py-3 rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-cyan-400/20 relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/20 to-cyan-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <SparklesIcon className="w-5 h-5 mr-2 relative z-10" />
+              <span className="hidden sm:inline relative z-10">
+                ◇ BULK UPLOAD
+              </span>
+              <span className="sm:hidden relative z-10">BULK</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Success Message */}
       {success && (
-        <div className="bg-gradient-to-r from-green-900/20 to-cyan-900/20 border border-green-500/50 text-green-400 px-4 sm:px-6 py-4 rounded-lg flex items-center shadow-lg animate-slideUp">
-          <CheckCircleIcon className="w-6 h-6 mr-3 text-green-500 flex-shrink-0" />
-          <div>
-            <div className="font-semibold">Success!</div>
-            <div className="text-sm">{success}</div>
-          </div>
+        <div className="bg-green-900/20 border border-green-500 text-green-400 px-4 py-3 rounded flex items-center">
+          <CheckCircleIcon className="w-5 h-5 mr-2" />
+          <span className="font-mono">{success}</span>
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="bg-gradient-to-r from-red-900/20 to-orange-900/20 border border-red-500/50 text-red-400 px-4 sm:px-6 py-4 rounded-lg flex items-center shadow-lg animate-slideUp">
-          <ExclamationCircleIcon className="w-6 h-6 mr-3 text-red-500 flex-shrink-0" />
-          <div>
-            <div className="font-semibold">Error!</div>
-            <div className="text-sm">{error}</div>
-          </div>
+        <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded flex items-center">
+          <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+          <span className="font-mono">{error}</span>
         </div>
       )}
 
       {/* Enhanced Controls */}
-      <div className="bg-gradient-to-br from-gray-800 to-gray-700 p-4 sm:p-6 rounded-xl shadow-xl border border-cyan-500/30">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <div className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-green-400/30 rounded-xl p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 animate-pulse"></div>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap xl:items-center gap-4 lg:gap-6">
             {/* Content Type Filter */}
             <div className="space-y-2">
-              <label className="flex items-center text-sm font-semibold text-cyan-400">
-                <svg
-                  className="h-4 w-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10M6 4v16a2 2 0 002 2h8a2 2 0 002-2V4M6 4H4a2 2 0 00-2 2v14a2 2 0 002 2h2"
-                  />
-                </svg>
-                Filter by Type
+              <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                ▶ Filter by Type
               </label>
               <select
                 value={filters.type}
                 onChange={(e) => handleFilterChange("type", e.target.value)}
-                className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
+                className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300"
               >
                 <option value="">All Types</option>
                 {contentTypes.map((type) => (
@@ -1753,26 +1866,13 @@ const ContentManager = () => {
 
             {/* Module Filter */}
             <div className="space-y-2">
-              <label className="flex items-center text-sm font-semibold text-cyan-400">
-                <svg
-                  className="h-4 w-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a1 1 0 011-1h2a1 1 0 011 1v2M7 7h10"
-                  />
-                </svg>
-                Filter by Module
+              <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                ▶ Filter by Module
               </label>
               <select
                 value={filters.moduleId}
                 onChange={(e) => handleFilterChange("moduleId", e.target.value)}
-                className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
+                className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300"
               >
                 <option value="">All Modules</option>
                 {modules.map((module) => (
@@ -1785,61 +1885,80 @@ const ContentManager = () => {
 
             {/* View Mode */}
             <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-              <label className="flex items-center text-sm font-semibold text-cyan-400">
-                <EyeIcon className="h-4 w-4 mr-2" />
-                View Mode
+              <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                ▶ View Mode
               </label>
-              <div className="flex rounded-lg shadow-sm border border-gray-600 overflow-hidden">
+              <div className="flex bg-gradient-to-r from-black/80 to-gray-900/80 border border-green-400/30 rounded-xl p-1 shadow-lg shadow-green-400/10">
                 <button
                   onClick={() => handleViewModeChange("hierarchical")}
-                  className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium transition-all duration-200 ${
+                  className={`px-3 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider relative overflow-hidden ${
                     viewMode === "hierarchical"
-                      ? "bg-gradient-to-r from-cyan-500 to-green-500 text-white shadow-lg"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
+                      ? "bg-gradient-to-r from-green-400/20 to-green-500/20 text-green-400 border border-green-400/50 shadow-lg shadow-green-400/20"
+                      : "text-green-400/60 hover:text-green-400 hover:bg-green-400/10 hover:shadow-md"
                   }`}
                 >
-                  🔗 Hierarchical
+                  {viewMode === "hierarchical" && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/20 to-green-400/0 animate-pulse"></div>
+                  )}
+                  <span className="relative z-10">🔗 TREE</span>
                 </button>
                 <button
                   onClick={() => handleViewModeChange("groupedByModule")}
-                  className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium border-l border-gray-600 transition-all duration-200 ${
+                  className={`px-3 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider relative overflow-hidden ${
                     viewMode === "groupedByModule"
-                      ? "bg-gradient-to-r from-cyan-500 to-green-500 text-white shadow-lg"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
+                      ? "bg-gradient-to-r from-green-400/20 to-green-500/20 text-green-400 border border-green-400/50 shadow-lg shadow-green-400/20"
+                      : "text-green-400/60 hover:text-green-400 hover:bg-green-400/10 hover:shadow-md"
                   }`}
                 >
-                  📚 Phase/Module
+                  {viewMode === "groupedByModule" && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/20 to-green-400/0 animate-pulse"></div>
+                  )}
+                  <span className="relative z-10">📚 MODULE</span>
                 </button>
                 <button
                   onClick={() => handleViewModeChange("groupedByType")}
-                  className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium border-l border-gray-600 transition-all duration-200 ${
+                  className={`px-3 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider relative overflow-hidden ${
                     viewMode === "groupedByType"
-                      ? "bg-gradient-to-r from-cyan-500 to-green-500 text-white shadow-lg"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
+                      ? "bg-gradient-to-r from-green-400/20 to-green-500/20 text-green-400 border border-green-400/50 shadow-lg shadow-green-400/20"
+                      : "text-green-400/60 hover:text-green-400 hover:bg-green-400/10 hover:shadow-md"
                   }`}
                 >
-                  🎯 Type/Section
+                  {viewMode === "groupedByType" && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/20 to-green-400/0 animate-pulse"></div>
+                  )}
+                  <span className="relative z-10">🎯 TYPE</span>
                 </button>
               </div>
             </div>
           </div>
 
           {/* Statistics */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 text-sm">
-            <div className="flex items-center space-x-2 px-3 py-2 bg-gray-900/50 rounded-lg border border-gray-600">
-              <span className="text-gray-400">Total Items:</span>
-              <span className="font-bold text-cyan-400">{content.length}</span>
-            </div>
-            <div className="flex items-center space-x-2 px-3 py-2 bg-gray-900/50 rounded-lg border border-gray-600">
-              <ClockIcon className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-400">Total Time:</span>
-              <span className="font-bold text-green-400">
-                {content.reduce(
-                  (total, item) => total + (item.duration || 0),
-                  0
-                )}{" "}
-                min
-              </span>
+          <div className="">
+            <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+              ▶ STATISTICS
+            </label>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 text-sm">
+              <div className="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-green-900/20 to-green-800/20 border border-green-400/30 rounded-xl shadow-lg shadow-green-400/10">
+                <span className="text-green-400 font-mono uppercase tracking-wider">
+                  ITEMS:
+                </span>
+                <span className="font-bold text-green-400 font-mono">
+                  {content.length}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-cyan-900/20 to-cyan-800/20 border border-cyan-400/30 rounded-xl shadow-lg shadow-cyan-400/10">
+                <ClockIcon className="h-4 w-4 text-cyan-400" />
+                <span className="text-cyan-400 font-mono uppercase tracking-wider">
+                  TIME:
+                </span>
+                <span className="font-bold text-cyan-400 font-mono">
+                  {content.reduce(
+                    (total, item) => total + (item.duration || 0),
+                    0
+                  )}{" "}
+                  MIN
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -1847,9 +1966,24 @@ const ContentManager = () => {
 
       {/* Content Display */}
       {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-cyan-400 border-t-transparent shadow-lg"></div>
-          <p className="mt-4 text-cyan-400 font-medium">Loading content...</p>
+        <div className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-green-400/30 rounded-xl p-8 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/10 to-green-400/0 animate-pulse"></div>
+          <div className="flex items-center justify-center py-12 relative z-10">
+            <div className="text-center">
+              <div className="text-green-400 text-xl font-mono font-bold mb-4 animate-pulse">
+                ◆ ◇ ◆ LOADING CONTENT ◆ ◇ ◆
+              </div>
+              <div className="flex justify-center space-x-1">
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-2 h-2 bg-green-400 rounded-full animate-pulse"
+                    style={{ animationDelay: `${i * 0.2}s` }}
+                  ></div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <>
@@ -1929,7 +2063,9 @@ const ContentManager = () => {
                   >
                     <option value="">Select Module</option>
                     {modules
-                      .filter(module => module.phaseId === selectedPhaseForUpload)
+                      .filter(
+                        (module) => module.phaseId === selectedPhaseForUpload
+                      )
                       .map((module) => (
                         <option key={module.id} value={module.id}>
                           {module.title}
@@ -1957,7 +2093,10 @@ const ContentManager = () => {
 
                   <div className="space-y-4 max-h-96 overflow-y-auto">
                     {multipleUploads.map((item, itemIndex) => (
-                      <div key={item.id} className="p-4 bg-gray-800 border border-gray-600 rounded-lg">
+                      <div
+                        key={item.id}
+                        className="p-4 bg-gray-800 border border-gray-600 rounded-lg"
+                      >
                         <div className="flex items-center justify-between mb-4">
                           <h4 className="text-md font-medium text-green-400">
                             Item #{itemIndex + 1}
@@ -1974,10 +2113,18 @@ const ContentManager = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           <div>
-                            <label className="block text-sm text-cyan-400 mb-1">Type</label>
+                            <label className="block text-sm text-cyan-400 mb-1">
+                              Type
+                            </label>
                             <select
                               value={item.type}
-                              onChange={(e) => updateUploadItem(item.id, "type", e.target.value)}
+                              onChange={(e) =>
+                                updateUploadItem(
+                                  item.id,
+                                  "type",
+                                  e.target.value
+                                )
+                              }
                               className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
                             >
                               {contentTypes.map((type) => (
@@ -1989,32 +2136,56 @@ const ContentManager = () => {
                           </div>
 
                           <div>
-                            <label className="block text-sm text-cyan-400 mb-1">Title*</label>
+                            <label className="block text-sm text-cyan-400 mb-1">
+                              Title*
+                            </label>
                             <input
                               type="text"
                               value={item.title}
-                              onChange={(e) => updateUploadItem(item.id, "title", e.target.value)}
+                              onChange={(e) =>
+                                updateUploadItem(
+                                  item.id,
+                                  "title",
+                                  e.target.value
+                                )
+                              }
                               className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
                               placeholder="Content title"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-sm text-cyan-400 mb-1">Section</label>
+                            <label className="block text-sm text-cyan-400 mb-1">
+                              Section
+                            </label>
                             <input
                               type="text"
                               value={item.section}
-                              onChange={(e) => updateUploadItem(item.id, "section", e.target.value)}
+                              onChange={(e) =>
+                                updateUploadItem(
+                                  item.id,
+                                  "section",
+                                  e.target.value
+                                )
+                              }
                               className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
                               placeholder="Content section"
                             />
                           </div>
 
                           <div className="md:col-span-2">
-                            <label className="block text-sm text-cyan-400 mb-1">Description*</label>
+                            <label className="block text-sm text-cyan-400 mb-1">
+                              Description*
+                            </label>
                             <textarea
                               value={item.description}
-                              onChange={(e) => updateUploadItem(item.id, "description", e.target.value)}
+                              onChange={(e) =>
+                                updateUploadItem(
+                                  item.id,
+                                  "description",
+                                  e.target.value
+                                )
+                              }
                               className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
                               rows="2"
                               placeholder="Content description"
@@ -2022,11 +2193,19 @@ const ContentManager = () => {
                           </div>
 
                           <div>
-                            <label className="block text-sm text-cyan-400 mb-1">Duration (min)</label>
+                            <label className="block text-sm text-cyan-400 mb-1">
+                              Duration (min)
+                            </label>
                             <input
                               type="number"
                               value={item.duration}
-                              onChange={(e) => updateUploadItem(item.id, "duration", parseInt(e.target.value))}
+                              onChange={(e) =>
+                                updateUploadItem(
+                                  item.id,
+                                  "duration",
+                                  parseInt(e.target.value)
+                                )
+                              }
                               className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
                               min="1"
                             />
@@ -2034,11 +2213,19 @@ const ContentManager = () => {
 
                           {item.type === "video" && (
                             <div className="md:col-span-2">
-                              <label className="block text-sm text-cyan-400 mb-1">Video URL*</label>
+                              <label className="block text-sm text-cyan-400 mb-1">
+                                Video URL*
+                              </label>
                               <input
                                 type="url"
                                 value={item.url}
-                                onChange={(e) => updateUploadItem(item.id, "url", e.target.value)}
+                                onChange={(e) =>
+                                  updateUploadItem(
+                                    item.id,
+                                    "url",
+                                    e.target.value
+                                  )
+                                }
                                 className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
                                 placeholder="https://example.com/video.mp4"
                               />
@@ -2047,10 +2234,18 @@ const ContentManager = () => {
 
                           {(item.type === "lab" || item.type === "game") && (
                             <div className="md:col-span-3">
-                              <label className="block text-sm text-cyan-400 mb-1">Instructions*</label>
+                              <label className="block text-sm text-cyan-400 mb-1">
+                                Instructions*
+                              </label>
                               <textarea
                                 value={item.instructions}
-                                onChange={(e) => updateUploadItem(item.id, "instructions", e.target.value)}
+                                onChange={(e) =>
+                                  updateUploadItem(
+                                    item.id,
+                                    "instructions",
+                                    e.target.value
+                                  )
+                                }
                                 className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
                                 rows="3"
                                 placeholder="Detailed instructions..."
@@ -2080,7 +2275,11 @@ const ContentManager = () => {
                 </button>
                 <button
                   onClick={handleMultipleUploadSubmit}
-                  disabled={loading || !selectedModuleForUpload || multipleUploads.length === 0}
+                  disabled={
+                    loading ||
+                    !selectedModuleForUpload ||
+                    multipleUploads.length === 0
+                  }
                   className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-500 disabled:opacity-50 flex items-center"
                 >
                   {loading ? (

@@ -5,6 +5,7 @@ const {
   createPhase,
   updatePhase,
   deletePhase,
+  batchUpdatePhaseOrder,
 } = require("../controllers/phaseController");
 
 const {
@@ -146,6 +147,9 @@ const router = express.Router();
 router.get("/", getPhases);
 
 router.post("/", protect, requireAdmin, createPhaseValidation, createPhase);
+
+// Batch update phase orders
+router.put("/batch-order", protect, requireAdmin, batchUpdatePhaseOrder);
 
 /**
  * @swagger

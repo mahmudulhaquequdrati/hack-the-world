@@ -143,10 +143,82 @@ const deletePhase = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    Batch update phase orders
+// @route   PUT /api/phases/batch-order
+// @access  Private/Admin
+const batchUpdatePhaseOrder = asyncHandler(async (req, res, next) => {
+  const { phaseOrders } = req.body; // Array of { id, order }
+
+  if (!Array.isArray(phaseOrders) || phaseOrders.length === 0) {
+    return next(new ErrorResponse("Phase orders array is required", 400));
+  }
+
+  // Validate all phase IDs and orders
+  for (const { id, order } of phaseOrders) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return next(new ErrorResponse(`Invalid phase ID format: ${id}`, 400));
+    }
+    if (typeof order !== "number" || order < 1) {
+      return next(new ErrorResponse(`Invalid order value: ${order}`, 400));
+    }
+  }
+
+  // Get all phase IDs and verify they exist
+  const phaseIds = phaseOrders.map(item => item.id);
+  const existingPhases = await Phase.find({ _id: { $in: phaseIds } });
+  
+  if (existingPhases.length !== phaseIds.length) {
+    return next(new ErrorResponse("Some phases not found", 404));
+  }
+
+  // Use transaction to ensure atomicity and handle unique constraint conflicts
+  const session = await mongoose.startSession();
+  
+  try {
+    await session.withTransaction(async () => {
+      // First, set all phases to temporary negative orders to avoid conflicts
+      const tempUpdatePromises = phaseOrders.map(({ id }, index) =>
+        Phase.findByIdAndUpdate(
+          id,
+          { order: -(index + 1) }, // Use negative numbers temporarily
+          { session }
+        )
+      );
+      await Promise.all(tempUpdatePromises);
+
+      // Then update with the actual orders
+      const finalUpdatePromises = phaseOrders.map(({ id, order }) =>
+        Phase.findByIdAndUpdate(
+          id,
+          { order },
+          { new: true, runValidators: true, session }
+        )
+      );
+      await Promise.all(finalUpdatePromises);
+    });
+
+    await session.endSession();
+
+    // Fetch updated phases
+    const updatedPhases = await Phase.find({}).sort({ order: 1 });
+
+    res.status(200).json({
+      success: true,
+      message: "Phase orders updated successfully",
+      data: updatedPhases,
+    });
+  } catch (error) {
+    await session.endSession();
+    console.error("Phase batch update error:", error);
+    return next(new ErrorResponse(`Failed to update phase orders: ${error.message}`, 500));
+  }
+});
+
 module.exports = {
   getPhases,
   getPhase,
   createPhase,
   updatePhase,
   deletePhase,
+  batchUpdatePhaseOrder,
 };

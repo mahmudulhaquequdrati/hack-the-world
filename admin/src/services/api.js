@@ -83,6 +83,12 @@ export const phasesAPI = {
     const response = await axios.delete(`/phases/${phaseId}`);
     return response.data;
   },
+
+  // Batch update phase orders
+  batchUpdateOrder: async (data) => {
+    const response = await axios.put("/phases/batch-order", data);
+    return response.data;
+  },
 };
 
 // Modules API

@@ -359,22 +359,47 @@ const reorderModules = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Update module orders
-  const updatePromises = moduleOrders.map(({ moduleId, order }) =>
-    Module.findOneAndUpdate(
-      { _id: moduleId, phaseId },
-      { order },
-      { new: true }
-    )
-  );
+  // Use transaction to ensure atomicity and handle unique constraint conflicts
+  const session = await mongoose.startSession();
+  
+  try {
+    await session.withTransaction(async () => {
+      // First, set all modules to temporary negative orders to avoid conflicts
+      const tempUpdatePromises = moduleOrders.map(({ moduleId }, index) =>
+        Module.findOneAndUpdate(
+          { _id: moduleId, phaseId },
+          { order: -(index + 1) }, // Use negative numbers temporarily
+          { session }
+        )
+      );
+      await Promise.all(tempUpdatePromises);
 
-  const updatedModules = await Promise.all(updatePromises);
+      // Then update with the actual orders
+      const finalUpdatePromises = moduleOrders.map(({ moduleId, order }) =>
+        Module.findOneAndUpdate(
+          { _id: moduleId, phaseId },
+          { order },
+          { new: true, runValidators: true, session }
+        )
+      );
+      await Promise.all(finalUpdatePromises);
+    });
 
-  res.status(200).json({
-    success: true,
-    message: "Module order updated successfully",
-    data: updatedModules,
-  });
+    await session.endSession();
+
+    // Fetch updated modules for this phase
+    const updatedModules = await Module.find({ phaseId }).sort({ order: 1 });
+
+    res.status(200).json({
+      success: true,
+      message: "Module order updated successfully",
+      data: updatedModules,
+    });
+  } catch (error) {
+    await session.endSession();
+    console.error("Module batch reorder error:", error);
+    return next(new ErrorResponse(`Failed to update module orders: ${error.message}`, 500));
+  }
 });
 
 module.exports = {

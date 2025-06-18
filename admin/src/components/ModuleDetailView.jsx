@@ -2,19 +2,20 @@ import {
   ArrowLeftIcon,
   BeakerIcon,
   BookOpenIcon,
+  ChartBarIcon,
+  ChevronRightIcon,
   ClockIcon,
   CubeIcon,
   DocumentIcon,
-  ExclamationCircleIcon,
   EyeIcon,
-  FolderIcon,
+  InformationCircleIcon,
   PencilIcon,
   PuzzlePieceIcon,
+  StarIcon,
+  TrashIcon,
   VideoCameraIcon,
-  ChartBarIcon,
-  UserPlusIcon,
-  UsersIcon,
 } from "@heroicons/react/24/outline";
+import { Gauge } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getIconFromName } from "../lib/iconUtils";
@@ -104,7 +105,10 @@ const ModuleDetailView = () => {
   const calculateStatistics = (contentList) => {
     const stats = {
       totalContent: contentList.length,
-      totalDuration: contentList.reduce((sum, item) => sum + (item.duration || 0), 0),
+      totalDuration: contentList.reduce(
+        (sum, item) => sum + (item.duration || 0),
+        0
+      ),
     };
 
     setStatistics(stats);
@@ -150,12 +154,12 @@ const ModuleDetailView = () => {
 
   const getContentTypeColor = (type) => {
     const colors = {
-      video: "text-red-400",
-      lab: "text-blue-400",
-      game: "text-purple-400",
-      document: "text-green-400",
+      video: "bg-red-900/30 text-red-400 border-red-500/30",
+      lab: "bg-blue-900/30 text-blue-400 border-blue-500/30",
+      game: "bg-purple-900/30 text-purple-400 border-purple-500/30",
+      document: "bg-green-900/30 text-green-400 border-green-500/30",
     };
-    return colors[type] || "text-gray-400";
+    return colors[type] || "bg-gray-900/30 text-gray-400 border-gray-500/30";
   };
 
   if (loading) {
@@ -209,309 +213,267 @@ const ModuleDetailView = () => {
   const ModuleIcon = getIconFromName(module.icon);
 
   return (
-    <div className="space-y-6">
-      {/* Header with breadcrumb */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate("/modules")}
-            className="text-green-400 hover:text-cyber-green transition-colors"
-          >
-            <ArrowLeftIcon className="w-6 h-6" />
-          </button>
-          <div>
-            <nav className="text-sm text-gray-400 mb-1">
-              <Link to="/modules" className="hover:text-green-400">
+    <div className="min-h-screen bg-gray-900">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-green-500/10 to-purple-500/10"></div>
+        <div className="relative px-6 py-8">
+          {/* Navigation */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3 text-sm">
+              <button
+                onClick={() => navigate("/modules")}
+                className="flex items-center text-green-400 hover:text-green-300 transition-colors"
+              >
+                <ArrowLeftIcon className="w-4 h-4 mr-1" />
                 Modules
-              </Link>
+              </button>
               {phase && (
                 <>
-                  <span className="mx-2">/</span>
+                  <ChevronRightIcon className="w-4 h-4 text-gray-500" />
                   <Link
                     to={`/phases/${phase.id}`}
-                    className="hover:text-green-400"
+                    className="text-green-400 hover:text-green-300 transition-colors"
                   >
                     {phase.title}
                   </Link>
                 </>
               )}
-              <span className="mx-2">/</span>
-              <span className="text-cyber-green">{module.title}</span>
-            </nav>
-            <h1 className="text-3xl font-bold text-cyber-green">
-              [{module.title.toUpperCase()}]
-            </h1>
-          </div>
-        </div>
-        <Link to={`/modules`} className="btn-secondary flex items-center">
-          <PencilIcon className="w-4 h-4 mr-2" />
-          Edit Module
-        </Link>
-      </div>
-
-      {/* Module Info Card */}
-      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-        <div className="flex items-start space-x-4">
-          <div
-            className="w-16 h-16 rounded-lg flex items-center justify-center text-2xl"
-            style={{ backgroundColor: module.color || "#00ff00" }}
-          >
-            <ModuleIcon className="w-8 h-8 text-black" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-2">
-              <h2 className="text-xl font-bold text-cyber-green">
-                {module.title}
-              </h2>
-              {module.difficulty && (
-                <span
-                  className={`px-3 py-1 text-xs rounded-full border ${getDifficultyColor(
-                    module.difficulty
-                  )}`}
-                >
-                  {module.difficulty.toUpperCase()}
-                </span>
-              )}
+              <ChevronRightIcon className="w-4 h-4 text-gray-500" />
+              <span className="text-gray-400">{module.title}</span>
             </div>
-            <p className="text-gray-300 mb-4">{module.description}</p>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-              <div className="flex items-center text-gray-400">
-                <span className="font-medium">Order:</span>
-                <span className="ml-1 text-cyber-green">#{module.order}</span>
+
+            {/* Quick Actions Floating Bar */}
+            <div className="flex items-center space-x-2 bg-gray-800/80 backdrop-blur-md border border-gray-700/50 rounded-full px-4 py-2 shadow-lg">
+              <Link
+                to={`/modules`}
+                className="flex items-center justify-center p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-600/20 rounded-lg transition-all duration-200 group"
+                title="Edit Module"
+              >
+                <PencilIcon className="w-5 h-5" />
+                <span className="ml-2 text-sm font-medium hidden lg:inline group-hover:text-cyan-300">
+                  Edit
+                </span>
+              </Link>
+
+              <div className="w-px h-6 bg-gray-600"></div>
+
+              <button
+                onClick={() => {
+                  /* Add delete functionality */
+                }}
+                className="flex items-center justify-center p-2 text-red-400 hover:text-red-300 hover:bg-red-600/20 rounded-lg transition-all duration-200 group"
+                title="Delete Module"
+              >
+                <TrashIcon className="w-5 h-5" />
+                <span className="ml-2 text-sm font-medium hidden lg:inline group-hover:text-red-300">
+                  Delete
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Hero Content */}
+          <div className="flex items-start space-x-6">
+            {/* Large Module Icon */}
+            <div
+              className="p-4 rounded-2xl border-2 backdrop-blur-sm flex items-center justify-center"
+              style={{
+                backgroundColor: `${module.color || "#00ff00"}30`,
+                borderColor: `${module.color || "#00ff00"}50`,
+              }}
+            >
+              <ModuleIcon
+                className="w-12 h-12"
+                style={{ color: module.color || "#00ff00" }}
+              />
+            </div>
+
+            {/* Title and Meta */}
+            <div className="flex-1">
+              <div className="flex items-center space-x-3 mb-3">
+                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-900/30 text-blue-400 border border-blue-500/30">
+                  Module
+                </span>
+                {module.difficulty && (
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${getDifficultyColor(
+                      module.difficulty
+                    )}`}
+                  >
+                    {module.difficulty}
+                  </span>
+                )}
               </div>
-              <div className="flex items-center text-gray-400">
-                <span className="font-medium">Color:</span>
-                <div
-                  className="ml-2 w-4 h-4 rounded border border-gray-600"
-                  style={{ backgroundColor: module.color }}
-                ></div>
-                <span className="ml-1 text-gray-300">{module.color}</span>
-              </div>
-              {module.estimatedHours && (
+              <h1 className="text-4xl font-bold text-white mb-3 leading-tight">
+                {module.title}
+              </h1>
+              <p className="text-xl text-gray-300 leading-relaxed max-w-4xl">
+                {module.description}
+              </p>
+
+              {/* Key Metrics */}
+              <div className="flex items-center space-x-6 mt-6">
                 <div className="flex items-center text-gray-400">
-                  <span className="font-medium">Est. Hours:</span>
-                  <span className="ml-1 text-cyber-green">
-                    {module.estimatedHours}h
+                  <BookOpenIcon className="w-5 h-5 mr-2" />
+                  <span className="font-medium">
+                    {statistics.totalContent} Content
                   </span>
                 </div>
-              )}
-              {phase && (
                 <div className="flex items-center text-gray-400">
-                  <span className="font-medium">Phase:</span>
-                  <Link
-                    to={`/phases/${phase.id}`}
-                    className="ml-1 text-cyan-400 hover:text-cyan-300 transition-colors"
-                  >
-                    {phase.title}
-                  </Link>
+                  <ClockIcon className="w-5 h-5 mr-2" />
+                  <span className="font-medium">
+                    {formatDuration(statistics.totalDuration)}
+                  </span>
                 </div>
-              )}
+                {phase && (
+                  <div className="flex items-center text-gray-400">
+                    <StarIcon className="w-5 h-5 mr-2" />
+                    <span className="font-medium">{phase.title}</span>
+                  </div>
+                )}
+                {module.estimatedHours && (
+                  <div className="flex items-center text-gray-400">
+                    <Gauge className="w-5 h-5 mr-2" />
+                    <span className="font-medium">
+                      {module.estimatedHours}h est.
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-          <div className="flex items-center">
-            <BookOpenIcon className="w-8 h-8 text-cyan-400 mr-3" />
-            <div>
-              <p className="text-sm text-gray-400">Total Content</p>
-              <p className="text-2xl font-bold text-cyber-green">
-                {statistics.totalContent}
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Main Content Area */}
+      <div className="px-6 py-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Content Sections - Card Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            {/* Main Content Column */}
+            <div className="lg:col-span-3 space-y-8">
+              {/* Content List */}
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700 shadow-xl">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="p-2 bg-purple-600/20 rounded-lg">
+                    <BookOpenIcon className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white">
+                    Content{" "}
+                    <span className="text-gray-400 text-lg">
+                      ({content.length})
+                    </span>
+                  </h2>
+                </div>
 
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-          <div className="flex items-center">
-            <ClockIcon className="w-8 h-8 text-green-400 mr-3" />
-            <div>
-              <p className="text-sm text-gray-400">Total Duration</p>
-              <p className="text-2xl font-bold text-cyber-green">
-                {formatDuration(statistics.totalDuration)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {phase && (
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-            <div className="flex items-center">
-              <CubeIcon className="w-8 h-8 text-purple-400 mr-3" />
-              <div>
-                <p className="text-sm text-gray-400">Phase</p>
-                <p className="text-lg font-bold text-cyber-green">
-                  {phase.title}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {module.difficulty && (
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-            <div className="flex items-center">
-              <ExclamationCircleIcon className="w-8 h-8 text-amber-400 mr-3" />
-              <div>
-                <p className="text-sm text-gray-400">Difficulty</p>
-                <p className="text-lg font-bold text-cyber-green capitalize">
-                  {module.difficulty}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Enrollment Summary */}
-      {enrollmentStats && (
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-cyber-green mb-4 flex items-center">
-            <ChartBarIcon className="w-5 h-5 mr-2" />
-            Enrollment Summary
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-700 border border-gray-600 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-blue-400">
-                {enrollmentStats.stats?.totalEnrollments || 0}
-              </div>
-              <div className="text-sm text-gray-400">Total</div>
-            </div>
-            <div className="bg-gray-700 border border-gray-600 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-green-400">
-                {enrollmentStats.stats?.activeEnrollments || 0}
-              </div>
-              <div className="text-sm text-gray-400">Active</div>
-            </div>
-            <div className="bg-gray-700 border border-gray-600 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-cyan-400">
-                {enrollmentStats.stats?.completedEnrollments || 0}
-              </div>
-              <div className="text-sm text-gray-400">Completed</div>
-            </div>
-            <div className="bg-gray-700 border border-gray-600 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-400">
-                {enrollmentStats.stats?.completionRate || 0}%
-              </div>
-              <div className="text-sm text-gray-400">Success Rate</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Content List */}
-      <div className="bg-gray-800 border border-gray-700 rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-700">
-          <h3 className="text-lg font-bold text-cyber-green flex items-center">
-            <BookOpenIcon className="w-5 h-5 mr-2" />
-            Content in this Module ({content.length})
-          </h3>
-        </div>
-
-        {content.length === 0 ? (
-          <div className="px-6 py-8 text-center text-gray-400">
-            <BookOpenIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No content found in this module.</p>
-            <p className="text-sm mt-2">
-              <Link to="/content" className="text-cyber-green hover:underline">
-                Create new content
-              </Link>{" "}
-              to get started.
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-700">
-            {content.map((item, index) => (
-              <div
-                key={item.id}
-                className="px-6 py-4 hover:bg-gray-700/30 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className={`${getContentTypeColor(item.type)}`}>
-                      {getContentTypeIcon(item.type)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-1">
-                        <h4 className="font-medium text-green-400">
-                          {item.title}
-                        </h4>
-                        <span
-                          className={`px-2 py-1 text-xs rounded-full ${
-                            item.type === "video"
-                              ? "bg-red-900/30 text-red-400"
-                              : item.type === "lab"
-                              ? "bg-blue-900/30 text-blue-400"
-                              : item.type === "game"
-                              ? "bg-purple-900/30 text-purple-400"
-                              : "bg-green-900/30 text-green-400"
-                          }`}
+                {content.length === 0 ? (
+                  <div className="text-center text-gray-400 py-8">
+                    <BookOpenIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No content found in this module.</p>
+                    <p className="text-sm mt-2">
+                      <Link
+                        to="/content"
+                        className="text-green-400 hover:text-green-300 transition-colors"
+                      >
+                        Create new content
+                      </Link>{" "}
+                      to get started.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {content.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-4 bg-gray-700/50 rounded-xl border border-gray-600/50 hover:bg-gray-700 transition-colors group"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div
+                            className={`p-2 rounded-lg border ${getContentTypeColor(
+                              item.type
+                            )}`}
+                          >
+                            {getContentTypeIcon(item.type)}
+                          </div>
+                          <div>
+                            <div className="text-white font-medium group-hover:text-green-400 transition-colors">
+                              {item.title}
+                            </div>
+                            <div className="text-gray-400 text-sm">
+                              {item.type} • {formatDuration(item.duration || 0)}
+                              {item.section && ` • ${item.section}`}
+                            </div>
+                          </div>
+                        </div>
+                        <Link
+                          to={`/content/${item.id}`}
+                          className="p-2 bg-green-600/20 rounded-lg text-green-400 hover:text-green-300 hover:bg-green-600/30 transition-colors"
                         >
-                          {item.type}
-                        </span>
+                          <EyeIcon className="w-5 h-5" />
+                        </Link>
                       </div>
-                      <p className="text-sm text-gray-400 line-clamp-1">
-                        {item.description}
-                      </p>
-                      {item.section && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Section: {item.section}
-                        </p>
-                      )}
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Module Info Card */}
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 shadow-xl">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-2 bg-cyan-600/20 rounded-lg">
+                    <InformationCircleIcon className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Module Info</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                    <span className="text-gray-400 text-sm">Order</span>
+                    <span className="text-white font-medium">
+                      #{module.order}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                    <span className="text-gray-400 text-sm">Difficulty</span>
+                    <span className="text-white font-medium capitalize">
+                      {module.difficulty || "Not set"}
+                    </span>
+                  </div>
+                  {module.estimatedHours && (
+                    <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                      <span className="text-gray-400 text-sm">
+                        Estimated Hours
+                      </span>
+                      <span className="text-white font-medium">
+                        {module.estimatedHours}h
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                    <span className="text-gray-400 text-sm">Color</span>
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className="w-4 h-4 rounded border border-gray-600"
+                        style={{ backgroundColor: module.color }}
+                      ></div>
+                      <span className="text-white font-mono text-xs">
+                        {module.color}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    {item.duration && (
-                      <div className="flex items-center text-sm text-gray-400">
-                        <ClockIcon className="w-4 h-4 mr-1" />
-                        {formatDuration(item.duration)}
-                      </div>
-                    )}
-                    <Link
-                      to={`/content/${item.id}`}
-                      className="text-gray-400 hover:text-cyber-green transition-colors"
-                      title="View content details"
-                    >
-                      <EyeIcon className="w-5 h-5" />
-                    </Link>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-400 text-sm">Module ID</span>
+                    <span className="text-white font-mono text-xs">
+                      {module.id}
+                    </span>
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-        <h3 className="text-lg font-bold text-cyber-green mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link
-            to={`/modules`}
-            className="flex items-center w-full px-4 py-2 text-left text-cyan-400 hover:bg-gray-700 rounded transition-colors"
-          >
-            <PencilIcon className="w-5 h-5 mr-3" />
-            Edit Module
-          </Link>
-          <Link
-            to={`/content?moduleId=${moduleId}`}
-            className="flex items-center w-full px-4 py-2 text-left text-green-400 hover:bg-gray-700 rounded transition-colors"
-          >
-            <BookOpenIcon className="w-5 h-5 mr-3" />
-            View Content
-          </Link>
-          {phase && (
-            <Link
-              to={`/phases/${phase.id}`}
-              className="flex items-center w-full px-4 py-2 text-left text-purple-400 hover:bg-gray-700 rounded transition-colors"
-            >
-              <CubeIcon className="w-5 h-5 mr-3" />
-              View Phase
-            </Link>
-          )}
         </div>
       </div>
     </div>

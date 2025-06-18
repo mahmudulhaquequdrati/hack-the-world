@@ -39,9 +39,6 @@ const PhasesManager = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Selection state
-  const [selectedPhases, setSelectedPhases] = useState(new Set());
-  const [isAllSelected, setIsAllSelected] = useState(false);
 
   // Available icon options from utility
   const iconOptions = getIconOptions();
@@ -338,32 +335,6 @@ const PhasesManager = () => {
     setError("");
   };
 
-  // Selection handlers
-  const handleSelectPhase = (phaseId) => {
-    const newSelected = new Set(selectedPhases);
-    if (newSelected.has(phaseId)) {
-      newSelected.delete(phaseId);
-    } else {
-      newSelected.add(phaseId);
-    }
-    setSelectedPhases(newSelected);
-    setIsAllSelected(newSelected.size === phases.length);
-  };
-
-  const handleSelectAll = () => {
-    if (isAllSelected) {
-      setSelectedPhases(new Set());
-      setIsAllSelected(false);
-    } else {
-      setSelectedPhases(new Set(phases.map(phase => phase.id)));
-      setIsAllSelected(true);
-    }
-  };
-
-  // Update isAllSelected when phases change
-  useEffect(() => {
-    setIsAllSelected(selectedPhases.size === phases.length && phases.length > 0);
-  }, [selectedPhases, phases]);
 
   return (
     <div className="min-h-screen bg-black text-green-400">
@@ -446,34 +417,6 @@ const PhasesManager = () => {
               <span className="sm:hidden relative z-10">+ ADD</span>
             </button>
 
-            {/* Select All Button */}
-            <button
-              onClick={handleSelectAll}
-              disabled={loading || phases.length === 0}
-              className={`transition-all duration-300 font-mono font-bold uppercase tracking-wider px-6 py-3 rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg relative overflow-hidden group ${
-                isAllSelected
-                  ? "bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 border-2 border-yellow-400/50 text-yellow-400 hover:from-yellow-400/30 hover:to-yellow-500/30 hover:border-yellow-400/70 hover:shadow-yellow-400/20"
-                  : "bg-gradient-to-r from-blue-400/10 to-blue-500/10 border-2 border-blue-400/30 text-blue-400 hover:from-blue-400/20 hover:to-blue-500/20 hover:border-blue-400/50 hover:shadow-blue-400/20"
-              }`}
-            >
-              <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                isAllSelected
-                  ? "bg-gradient-to-r from-yellow-400/0 via-yellow-400/20 to-yellow-400/0"
-                  : "bg-gradient-to-r from-blue-400/0 via-blue-400/20 to-blue-400/0"
-              }`}></div>
-              <BoxSelectIcon className="w-5 h-5 mr-2 relative z-10" />
-              <span className="hidden sm:inline relative z-10">
-                {isAllSelected ? "◄ UNSELECT ALL" : "▶ SELECT ALL"}
-              </span>
-              <span className="sm:hidden relative z-10">
-                {isAllSelected ? "UNSELECT" : "SELECT"}
-              </span>
-              {selectedPhases.size > 0 && (
-                <span className="ml-2 px-2 py-1 bg-gray-900/50 rounded-full text-xs relative z-10">
-                  {selectedPhases.size}
-                </span>
-              )}
-            </button>
           </div>
 
           {/* Drag-and-Drop Order Controls */}
@@ -590,13 +533,8 @@ const PhasesManager = () => {
                           ? "opacity-50 scale-95 rotate-2"
                           : dragOverPhase?.id === phase.id
                           ? "scale-110 shadow-2xl border-yellow-400 ring-4 ring-yellow-400/30"
-                          : selectedPhases.has(phase.id)
-                          ? "scale-105 shadow-2xl ring-4 ring-yellow-400/50"
                           : "hover:scale-105 hover:shadow-lg"
                       } ${
-                        selectedPhases.has(phase.id)
-                          ? "border-yellow-400/70 bg-gradient-to-br from-yellow-900/40 to-yellow-800/60 shadow-yellow-400/30"
-                          :
                         phase.color === "green"
                           ? `border-green-400/30 bg-gradient-to-br from-green-900/60 to-black/80 hover:border-green-400/50 hover:shadow-green-400/30`
                           : phase.color === "blue"
@@ -647,14 +585,8 @@ const PhasesManager = () => {
                     >
                       {/* Glow Effect */}
                       <div
-                        className={`absolute inset-0 transition-opacity duration-300 ${
-                          selectedPhases.has(phase.id)
-                            ? "bg-gradient-to-r from-yellow-400/0 via-yellow-400/20 to-yellow-400/0 opacity-100"
-                            : "opacity-0 group-hover:opacity-100"
-                        } ${
-                          selectedPhases.has(phase.id)
-                            ? "bg-gradient-to-r from-yellow-400/0 via-yellow-400/20 to-yellow-400/0"
-                            : phase.color === "green"
+                        className={`absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100 ${
+                          phase.color === "green"
                             ? "bg-gradient-to-r from-green-400/0 via-green-400/10 to-green-400/0"
                             : phase.color === "blue"
                             ? "bg-gradient-to-r from-blue-400/0 via-blue-400/10 to-blue-400/0"
@@ -760,18 +692,6 @@ const PhasesManager = () => {
                         )}
                       </div>
 
-                      {/* Selection Checkbox */}
-                      <div className="absolute top-3 left-3 z-20">
-                        <input
-                          type="checkbox"
-                          checked={selectedPhases.has(phase.id)}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            handleSelectPhase(phase.id);
-                          }}
-                          className="w-5 h-5 rounded border-2 border-yellow-400/50 bg-gray-900/80 text-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all duration-300 hover:border-yellow-400 cursor-pointer"
-                        />
-                      </div>
 
                       {/* Drag Handle Indicator */}
                       <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-20">

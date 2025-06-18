@@ -1,27 +1,19 @@
 import {
-  BookmarkIcon,
-  BookmarkSlashIcon,
   CheckCircleIcon,
-  CheckIcon,
   ExclamationCircleIcon,
   EyeIcon,
   PencilIcon,
   PlusIcon,
   TrashIcon,
-  UserGroupIcon,
-  UserPlusIcon,
-  UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { BookOpen, BoxSelectIcon, Layers } from "lucide-react";
+import { BookOpen, Layers } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import { getIconFromName, getIconOptions } from "../lib/iconUtils";
-import { authAPI, enrollmentAPI, modulesAPI, phasesAPI } from "../services/api";
+import { modulesAPI, phasesAPI } from "../services/api";
 
 const ModulesManagerEnhanced = () => {
-  const { user } = useAuth(); // Get current user from auth context
   const [modules, setModules] = useState([]);
   const [phases, setPhases] = useState([]);
   const [modulesWithPhases, setModulesWithPhases] = useState([]);
@@ -32,14 +24,6 @@ const ModulesManagerEnhanced = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingModule, setEditingModule] = useState(null);
   const [selectedPhase, setSelectedPhase] = useState("");
-  const [enrolling, setEnrolling] = useState(false);
-  const [showEnrollModal, setShowEnrollModal] = useState(false);
-  const [selectedModuleForEnroll, setSelectedModuleForEnroll] = useState(null);
-  const [enrollmentStats, setEnrollmentStats] = useState({});
-  const [userEnrollments, setUserEnrollments] = useState({}); // Current user's enrollments
-  const [users, setUsers] = useState([]);
-  const [selectedUserId, setSelectedUserId] = useState("");
-  const [loadingUsers, setLoadingUsers] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [moduleToDelete, setModuleToDelete] = useState(null);
 
@@ -152,24 +136,6 @@ const ModulesManagerEnhanced = () => {
           "Failed to load data. Please check your connection and authentication."
         );
       }
-
-      // Fetch enrollment stats for all modules (non-blocking)
-      if (
-        modulesRes.status === "fulfilled" &&
-        modulesRes.value.data?.length > 0
-      ) {
-        // Don't await this to avoid blocking the main UI
-        fetchAllEnrollmentStats().catch((err) =>
-          console.warn("Failed to fetch enrollment stats:", err)
-        );
-      }
-
-      // Fetch current user's enrollments (non-blocking)
-      if (user?.id) {
-        fetchCurrentUserEnrollments().catch((err) =>
-          console.warn("Failed to fetch user enrollments:", err)
-        );
-      }
     } catch (error) {
       console.error("Error fetching data:", error);
       setError(
@@ -243,49 +209,6 @@ const ModulesManagerEnhanced = () => {
     setEditingModule(null);
     setError("");
     setSuccess("");
-  };
-
-  const handleReorder = async (phaseId, moduleId, direction) => {
-    try {
-      setSaving(true);
-
-      // Get modules for this phase
-      const phaseModules = modules.filter((m) => m.phaseId === phaseId);
-      const sortedModules = phaseModules.sort((a, b) => a.order - b.order);
-
-      // Find current module index
-      const currentIndex = sortedModules.findIndex((m) => m.id === moduleId);
-      if (currentIndex === -1) return;
-
-      // Calculate new position
-      const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      if (newIndex < 0 || newIndex >= sortedModules.length) return;
-
-      // Create new order array
-      const moduleOrders = sortedModules.map((module, index) => {
-        let newOrder = index + 1;
-
-        if (index === currentIndex) {
-          newOrder = newIndex + 1;
-        } else if (index === newIndex) {
-          newOrder = currentIndex + 1;
-        }
-
-        return {
-          moduleId: module.id,
-          order: newOrder,
-        };
-      });
-
-      await modulesAPI.reorder(phaseId, moduleOrders);
-      setSuccess("Module order updated successfully!");
-      fetchData();
-    } catch (error) {
-      console.error("Error reordering modules:", error);
-      setError(error.response?.data?.message || "Failed to reorder modules");
-    } finally {
-      setSaving(false);
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -436,320 +359,6 @@ const ModulesManagerEnhanced = () => {
     setModuleToDelete(null);
   };
 
-  // Enrollment functions
-  const handleEnrollClick = (module) => {
-    setSelectedModuleForEnroll(module);
-    setShowEnrollModal(true);
-    setError("");
-    setSuccess("");
-    setSelectedUserId(""); // Reset user selection
-    fetchUsersForEnrollment(); // Load users when modal opens
-  };
-
-  const fetchUsersForEnrollment = async () => {
-    try {
-      setLoadingUsers(true);
-      // Note: This would typically be a /users endpoint, but for now we'll use current user
-      // In a real admin panel, you'd have a users management endpoint
-      const currentUser = await authAPI.getCurrentUser();
-      if (currentUser.success) {
-        setUsers([
-          {
-            id: currentUser.data.id,
-            username: currentUser.data.username,
-            email: currentUser.data.email,
-            role: currentUser.data.role,
-          },
-        ]);
-        setSelectedUserId(currentUser.data.id); // Auto-select current user for demo
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      setError("Failed to load users for enrollment");
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
-
-  const handleEnrollConfirm = async () => {
-    if (!selectedModuleForEnroll || !selectedUserId) {
-      setError("Please select a user for enrollment");
-      return;
-    }
-
-    try {
-      setEnrolling(true);
-      setError("");
-
-      // Create enrollment with improved error handling
-      const response = await enrollmentAPI.create(selectedModuleForEnroll.id);
-
-      if (response.success) {
-        setSuccess(
-          `Successfully enrolled user in ${selectedModuleForEnroll.title}`
-        );
-        setShowEnrollModal(false);
-        setSelectedModuleForEnroll(null);
-        setSelectedUserId("");
-
-        // Refresh enrollment stats and module data
-        await Promise.all([
-          fetchEnrollmentStats(selectedModuleForEnroll.id),
-          fetchData(), // Refresh all data to show updated enrollment counts
-        ]);
-      } else {
-        setError(response.message || "Failed to enroll user in module");
-      }
-    } catch (error) {
-      console.error("Error enrolling in module:", error);
-
-      // Enhanced error handling based on server response
-      if (error.response?.status === 400) {
-        const errorMsg =
-          error.response?.data?.message ||
-          "User already enrolled in this module";
-        setError(errorMsg);
-      } else if (error.response?.status === 404) {
-        setError("Module not found or has been deleted");
-      } else if (error.response?.status === 401) {
-        setError("Authentication required. Please log in again");
-      } else if (error.response?.status === 403) {
-        setError("You don't have permission to enroll users");
-      } else {
-        setError("Failed to enroll user in module. Please try again.");
-      }
-    } finally {
-      setEnrolling(false);
-    }
-  };
-
-  const closeEnrollModal = () => {
-    setShowEnrollModal(false);
-    setSelectedModuleForEnroll(null);
-    setSelectedUserId("");
-    setUsers([]);
-    setError("");
-    setSuccess("");
-  };
-
-  const fetchEnrollmentStats = async (moduleId) => {
-    try {
-      // Get module enrollment statistics for admin
-      const response = await enrollmentAPI.getModuleStats(moduleId);
-      if (response.success) {
-        setEnrollmentStats((prev) => ({
-          ...prev,
-          [moduleId]: response.data || {},
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching enrollment stats:", error);
-      // Don't show error for stats as it's not critical
-    }
-  };
-
-  // Enhanced function to fetch all enrollment stats for visible modules
-  const fetchAllEnrollmentStats = async () => {
-    try {
-      const moduleIds = modules.map((module) => module.id);
-      const statsPromises = moduleIds.map((moduleId) =>
-        fetchEnrollmentStats(moduleId).catch((err) => {
-          console.warn(`Failed to fetch stats for module ${moduleId}:`, err);
-          return null;
-        })
-      );
-      await Promise.all(statsPromises);
-    } catch (error) {
-      console.error("Error fetching enrollment stats for modules:", error);
-    }
-  };
-
-  // Fetch current user's enrollments
-  const fetchCurrentUserEnrollments = async () => {
-    if (!user?.id) return;
-
-    try {
-      const response = await enrollmentAPI.getUserEnrollments();
-      if (response.success && response.data) {
-        // Convert to object with moduleId as key for easy lookup
-        const enrollmentsMap = {};
-        response.data.forEach((enrollment) => {
-          enrollmentsMap[enrollment.moduleId] = enrollment;
-        });
-        setUserEnrollments(enrollmentsMap);
-      }
-    } catch (error) {
-      console.error("Error fetching user enrollments:", error);
-      // Don't show error for personal enrollments as it's not critical for admin
-    }
-  };
-
-  // Helper function to get current user's enrollment status for a module
-  const getCurrentUserEnrollmentStatus = (moduleId) => {
-    const enrollment = userEnrollments[moduleId];
-    if (!enrollment) {
-      return {
-        enrolled: false,
-        status: null,
-        enrollmentDate: null,
-        progress: 0,
-      };
-    }
-
-    return {
-      enrolled: true,
-      status: enrollment.status,
-      enrollmentDate: enrollment.enrollmentDate,
-      progress: enrollment.progress || 0,
-      completedSections: enrollment.completedSections || 0,
-      totalSections: enrollment.totalSections || 0,
-    };
-  };
-
-  // Helper function to render current user enrollment badge
-  const getCurrentUserEnrollmentBadge = (moduleId) => {
-    const userStatus = getCurrentUserEnrollmentStatus(moduleId);
-
-    if (!userStatus.enrolled) {
-      return (
-        <div className="flex items-center justify-center text-xs text-gray-500">
-          <BookmarkSlashIcon className="w-3 h-3 mr-1" />
-          <span>Not Enrolled</span>
-        </div>
-      );
-    }
-
-    const statusColors = {
-      active: "text-green-400 bg-green-900/20 border-green-500/30",
-      completed: "text-cyan-400 bg-cyan-900/20 border-cyan-500/30",
-      paused: "text-yellow-400 bg-yellow-900/20 border-yellow-500/30",
-      dropped: "text-red-400 bg-red-900/20 border-red-500/30",
-    };
-
-    const colorClass = statusColors[userStatus.status] || statusColors.active;
-
-    return (
-      <div
-        className={`flex items-center justify-center text-xs px-2 py-1 rounded-full border ${colorClass}`}
-      >
-        <BookmarkIcon className="w-3 h-3 mr-1" />
-        <span>Enrolled</span>
-      </div>
-    );
-  };
-
-  // Helper function to render enrollment status badge
-  const getEnrollmentStatusBadge = (stats) => {
-    if (!stats || stats.totalEnrollments === 0) {
-      return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-600 text-gray-300">
-          No Enrollments
-        </span>
-      );
-    }
-
-    const {
-      totalEnrollments,
-      activeEnrollments,
-      completedEnrollments,
-      pausedEnrollments,
-      droppedEnrollments,
-    } = stats;
-
-    return (
-      <div className="flex flex-wrap gap-1">
-        {/* Total Badge */}
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-600 text-white">
-          Total: {totalEnrollments}
-        </span>
-
-        {/* Active Badge */}
-        {activeEnrollments > 0 && (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-600 text-white">
-            Active: {activeEnrollments}
-          </span>
-        )}
-
-        {/* Completed Badge */}
-        {completedEnrollments > 0 && (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-cyan-600 text-white">
-            Completed: {completedEnrollments}
-          </span>
-        )}
-
-        {/* Paused Badge */}
-        {pausedEnrollments > 0 && (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-600 text-white">
-            Paused: {pausedEnrollments}
-          </span>
-        )}
-
-        {/* Dropped Badge */}
-        {droppedEnrollments > 0 && (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-600 text-white">
-            Dropped: {droppedEnrollments}
-          </span>
-        )}
-      </div>
-    );
-  };
-
-  // Helper function to get enrollment status icon
-  const getEnrollmentStatusIcon = (stats) => {
-    if (!stats || stats.totalEnrollments === 0) {
-      return <UserGroupIcon className="w-4 h-4 text-gray-400" />;
-    }
-
-    const { activeEnrollments, completedEnrollments } = stats;
-
-    if (completedEnrollments > activeEnrollments) {
-      return <CheckIcon className="w-4 h-4 text-cyan-400" />;
-    } else if (activeEnrollments > 0) {
-      return <UserGroupIcon className="w-4 h-4 text-green-400" />;
-    } else {
-      return <UserGroupIcon className="w-4 h-4 text-yellow-400" />;
-    }
-  };
-
-  const renderModuleStats = (module) => {
-    const content = module.content || {};
-    const contentStats = module.contentStats || {};
-    const enrollStats = enrollmentStats[module.id] || {};
-
-    return (
-      <div className="text-xs text-gray-400 mt-1">
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <div>Videos: {content.videos?.length || 0}</div>
-            <div>Labs: {content.labs?.length || 0}</div>
-            <div>Games: {content.games?.length || 0}</div>
-            <div>Duration: {contentStats.totalDuration || 0} min</div>
-          </div>
-          <div>
-            <div className="text-cyan-400">
-              Enrolled: {enrollStats.totalEnrollments || 0}
-            </div>
-            {enrollStats.activeEnrollments !== undefined && (
-              <div className="text-green-400">
-                Active: {enrollStats.activeEnrollments}
-              </div>
-            )}
-            {enrollStats.completedEnrollments !== undefined && (
-              <div className="text-blue-400">
-                Completed: {enrollStats.completedEnrollments}
-              </div>
-            )}
-            {enrollStats.averageProgress !== undefined && (
-              <div className="text-yellow-400">
-                Avg Progress: {Math.round(enrollStats.averageProgress)}%
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const renderGroupedView = () => (
     <div className="space-y-8">
       {modulesWithPhases.map((phase) => {
@@ -879,7 +488,15 @@ const ModulesManagerEnhanced = () => {
                   {phase.modules
                     .sort((a, b) => a.order - b.order)
                     .map((module) => {
-                      const enrollStats = enrollmentStats[module.id] || {};
+                      console.log(module);
+                      const contentCount =
+                        module.content?.videos?.length +
+                          module.content?.documents?.length +
+                          module.content?.labs?.length +
+                          module.content?.games?.length || 0;
+                      const contentCountText =
+                        contentCount > 0 ? `(${contentCount})` : "";
+
                       const getDifficultyColor = (difficulty) => {
                         switch (difficulty?.toLowerCase()) {
                           case "beginner":
@@ -1112,7 +729,7 @@ const ModulesManagerEnhanced = () => {
                                         : "text-green-400 group-hover:text-green-300"
                                     }`}
                                   >
-                                    ◆ {module.title}
+                                    {module.title}
                                   </h4>
                                   <div
                                     className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold uppercase border inline-block ${difficultyColors.text} ${difficultyColors.bg} ${difficultyColors.border}`}
@@ -1214,7 +831,7 @@ const ModulesManagerEnhanced = () => {
                                         : "text-green-400"
                                     }`}
                                   >
-                                    {enrollStats.totalEnrollments || 0}
+                                    {contentCount}
                                   </div>
                                   <div
                                     className={`text-xs font-mono uppercase ${
@@ -1241,7 +858,7 @@ const ModulesManagerEnhanced = () => {
                                         : "text-green-400/60"
                                     }`}
                                   >
-                                    ENROLLED
+                                    CONTENT
                                   </div>
                                 </div>
                               </div>
@@ -1969,7 +1586,6 @@ const ModulesManagerEnhanced = () => {
                         ))}
                       </select>
                     </div>
-
                   </div>
 
                   <div>
@@ -2180,158 +1796,6 @@ const ModulesManagerEnhanced = () => {
           </div>
         )}
 
-        {/* Enrollment Modal */}
-        {showEnrollModal && selectedModuleForEnroll && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-gray-800 rounded-lg max-w-lg w-full border border-gray-600">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-green-400 flex items-center">
-                    <UserPlusIcon className="h-6 w-6 mr-2" />
-                    Enroll User in Module
-                  </h2>
-                  <button
-                    onClick={closeEnrollModal}
-                    className="text-gray-400 hover:text-green-400"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
-                </div>
-
-                {/* Module Information */}
-                <div className="mb-6">
-                  <div className="bg-gray-700 p-4 rounded-lg mb-4">
-                    <h3 className="text-lg font-medium text-green-400 mb-2">
-                      {selectedModuleForEnroll.title}
-                    </h3>
-                    <p className="text-gray-300 text-sm mb-3">
-                      {selectedModuleForEnroll.description}
-                    </p>
-                    <div className="flex items-center space-x-4 text-sm">
-                      <span className="text-blue-400">
-                        Phase: {selectedModuleForEnroll.phase?.title || "N/A"}
-                      </span>
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          selectedModuleForEnroll.difficulty === "Beginner"
-                            ? "bg-green-100 text-green-800"
-                            : selectedModuleForEnroll.difficulty ===
-                              "Intermediate"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : selectedModuleForEnroll.difficulty === "Advanced"
-                            ? "bg-orange-100 text-orange-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {selectedModuleForEnroll.difficulty}
-                      </span>
-                    </div>
-
-                    {/* Enrollment Statistics */}
-                    {enrollmentStats[selectedModuleForEnroll.id] && (
-                      <div className="mt-3 pt-3 border-t border-gray-600">
-                        <div className="text-xs text-gray-400">
-                          <span className="text-cyan-400">
-                            Current Enrollments:{" "}
-                          </span>
-                          {enrollmentStats[selectedModuleForEnroll.id]
-                            .totalEnrollments || 0}
-                          {enrollmentStats[selectedModuleForEnroll.id]
-                            .activeEnrollments && (
-                            <span className="ml-2">
-                              (
-                              <span className="text-green-400">
-                                {
-                                  enrollmentStats[selectedModuleForEnroll.id]
-                                    .activeEnrollments
-                                }{" "}
-                                active
-                              </span>
-                              )
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* User Selection */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-green-400 mb-2">
-                      <UsersIcon className="h-4 w-4 inline mr-1" />
-                      Select User to Enroll
-                    </label>
-                    {loadingUsers ? (
-                      <div className="flex items-center text-gray-400 text-sm">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-400 mr-2"></div>
-                        Loading users...
-                      </div>
-                    ) : (
-                      <select
-                        value={selectedUserId}
-                        onChange={(e) => setSelectedUserId(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400 bg-gray-700 text-green-400"
-                        disabled={users.length === 0}
-                      >
-                        <option value="">Select a user...</option>
-                        {users.map((user) => (
-                          <option key={user.id} value={user.id}>
-                            {user.username} ({user.email}) - {user.role}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                    {users.length === 0 && !loadingUsers && (
-                      <p className="text-xs text-yellow-400 mt-1">
-                        Note: In a full admin panel, this would show all system
-                        users. Currently showing logged-in admin only.
-                      </p>
-                    )}
-                  </div>
-
-                  <p className="text-gray-400 text-sm">
-                    This will create a new enrollment record and allow the user
-                    to access the module content.
-                  </p>
-                </div>
-
-                {error && (
-                  <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded mb-4">
-                    {error}
-                  </div>
-                )}
-
-                <div className="flex justify-end space-x-4">
-                  <button
-                    onClick={closeEnrollModal}
-                    className="px-4 py-2 text-green-400 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600"
-                    disabled={enrolling}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleEnrollConfirm}
-                    disabled={enrolling || !selectedUserId || loadingUsers}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-500 disabled:opacity-50 flex items-center"
-                  >
-                    {enrolling ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Enrolling...
-                      </>
-                    ) : (
-                      <>
-                        <UserPlusIcon className="h-4 w-4 mr-2" />
-                        Confirm Enrollment
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Bulk Operations Modal */}
         {showBulkModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -2528,8 +1992,8 @@ const ModulesManagerEnhanced = () => {
                     "{moduleToDelete.title}"
                   </p>
                   <p className="text-red-400/80 font-mono text-xs mt-2">
-                    This action cannot be undone. All module data, content, and
-                    enrollments will be lost.
+                    This action cannot be undone. All module data and content
+                    will be lost.
                   </p>
                 </div>
 

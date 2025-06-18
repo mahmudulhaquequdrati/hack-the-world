@@ -1,22 +1,23 @@
 import {
   CheckCircleIcon,
-  ChevronRightIcon,
-  ClockIcon,
   ExclamationCircleIcon,
-  EyeIcon,
-  FolderIcon,
-  MagnifyingGlassIcon,
-  PlusIcon,
-  SparklesIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
 import { contentAPI, modulesAPI, phasesAPI } from "../services/api";
 
+// Import extracted components
+import ContentCard from "./content/views/ContentCard";
+import ContentFiltersAndControls from "./content/ContentFiltersAndControls";
+import ContentFormModal from "./content/ContentFormModal";
+import MultipleUploadModal from "./content/MultipleUploadModal";
+import ActionButtons from "./content/ui/ActionButtons";
+import TerminalHeader from "./content/ui/TerminalHeader";
+
 const ContentManager = () => {
+  // Core data state
   const [content, setContent] = useState([]);
   const [modules, setModules] = useState([]);
+  const [phases, setPhases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -27,7 +28,7 @@ const ContentManager = () => {
   const [showSectionDropdown, setShowSectionDropdown] = useState(false);
   const [sectionInputValue, setSectionInputValue] = useState("");
 
-  // Filters (removed pagination)
+  // Filters
   const [filters, setFilters] = useState({
     type: "",
     moduleId: "",
@@ -46,7 +47,6 @@ const ContentManager = () => {
     instructions: "",
     duration: 1,
     resources: [],
-    // Enhanced metadata fields
     tags: [],
     difficulty: "beginner",
     prerequisites: [],
@@ -72,13 +72,10 @@ const ContentManager = () => {
   const [multipleUploads, setMultipleUploads] = useState([]);
   const [selectedPhaseForUpload, setSelectedPhaseForUpload] = useState("");
   const [selectedModuleForUpload, setSelectedModuleForUpload] = useState("");
-  const [phases, setPhases] = useState([]);
 
-  // View modes (removed list view)
-  const [viewMode, setViewMode] = useState("hierarchical"); // Default to hierarchical view
+  // View modes
+  const [viewMode, setViewMode] = useState("hierarchical");
   const [groupedContent, setGroupedContent] = useState({});
-
-  // Hierarchical navigation state
   const [selectedPhaseId, setSelectedPhaseId] = useState("");
   const [selectedModuleId, setSelectedModuleId] = useState("");
   const [hierarchicalData, setHierarchicalData] = useState([]);
@@ -95,38 +92,44 @@ const ContentManager = () => {
     },
   ];
 
+  // Computed values
+  const filteredSections = useMemo(() => {
+    if (!sectionInputValue) return availableSections;
+    return availableSections.filter((section) =>
+      section.toLowerCase().includes(sectionInputValue.toLowerCase())
+    );
+  }, [availableSections, sectionInputValue]);
+
+  const filteredContent = useMemo(() => {
+    return content.filter((item) => {
+      if (filters.type && item.type !== filters.type) return false;
+      if (filters.moduleId && item.moduleId !== filters.moduleId) return false;
+      return true;
+    });
+  }, [content, filters]);
+
+  // Initialize data
   useEffect(() => {
     fetchModules();
     fetchPhases();
+    fetchContent();
   }, []);
 
-  // Separate useEffect for content loading based on view mode and dependencies
-  useEffect(() => {
-    if (viewMode === "hierarchical") {
-      if (phases.length > 0 && modules.length > 0) {
-        fetchHierarchicalData();
-      }
-    } else if (viewMode === "groupedByModule") {
-      if (modules.length > 0) {
-        fetchAllModulesGrouped();
-      }
-    } else if (viewMode === "groupedByType") {
-      if (filters.type) {
-        fetchContentByType(filters.type);
-      } else {
-        fetchAllContentGroupedByType();
-      }
+  // Data fetching functions
+  const fetchContent = async () => {
+    try {
+      setLoading(true);
+      const response = await contentAPI.getAll();
+      setContent(response.data || []);
+      setError("");
+    } catch (err) {
+      console.error("Error fetching content:", err);
+      setError("Failed to fetch content");
+      setContent([]);
+    } finally {
+      setLoading(false);
     }
-  }, [filters, viewMode, modules, phases]); // Added phases to dependency array
-
-  // Fetch available sections when module is selected
-  useEffect(() => {
-    if (formData.moduleId) {
-      fetchSectionsByModule(formData.moduleId);
-    } else {
-      setAvailableSections([]);
-    }
-  }, [formData.moduleId]);
+  };
 
   const fetchModules = async () => {
     try {
@@ -134,6 +137,7 @@ const ContentManager = () => {
       setModules(response.data || []);
     } catch (err) {
       console.error("Error fetching modules:", err);
+      setError("Failed to fetch modules");
     }
   };
 
@@ -143,133 +147,60 @@ const ContentManager = () => {
       setPhases(response.data || []);
     } catch (err) {
       console.error("Error fetching phases:", err);
+      setError("Failed to fetch phases");
     }
   };
 
-  const fetchContent = async () => {
-    try {
-      setLoading(true);
-      const params = {};
-      if (filters.type) params.type = filters.type;
-      if (filters.moduleId) params.moduleId = filters.moduleId;
-      // Remove pagination params
-
-      const response = await contentAPI.getAll(params);
-      setContent(response.data || []);
-    } catch (err) {
-      console.error("Error fetching content:", err);
-      setError("Failed to fetch content");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchContentByType = async (type, moduleId = null) => {
-    try {
-      setLoading(true);
-      const response = await contentAPI.getByType(type, moduleId);
-      setGroupedContent({ [type]: response.data || [] });
-    } catch (err) {
-      console.error("Error fetching content by type:", err);
-      setError("Failed to fetch content by type");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSectionsByModule = async (moduleId) => {
-    try {
-      setSectionLoading(true);
-      const response = await contentAPI.getSectionsByModule(moduleId);
-      setAvailableSections(response.data || []);
-    } catch (err) {
-      console.error("Failed to fetch sections:", err);
-      setAvailableSections([]);
-    } finally {
-      setSectionLoading(false);
-    }
-  };
-
-  const fetchAllContentGroupedByType = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch all content in a single API call
-      const response = await contentAPI.getAll({
-        moduleId: filters.moduleId || undefined,
-      });
-      const allContent = response.data || [];
-
-      // Group content by type on the frontend
-      const allGroupedContent = {};
-
-      allContent.forEach((item) => {
-        const type = item.type;
-        if (type) {
-          if (!allGroupedContent[type]) {
-            allGroupedContent[type] = [];
-          }
-          allGroupedContent[type].push(item);
-        }
-      });
-
-      setGroupedContent(allGroupedContent);
-    } catch (err) {
-      console.error("Error fetching content grouped by type:", err);
-      setError("Failed to fetch content grouped by type");
-    } finally {
-      setLoading(false);
+  // View mode handlers
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    switch (mode) {
+      case "hierarchical":
+        fetchHierarchicalData();
+        break;
+      case "groupedByModule":
+        fetchAllModulesGrouped();
+        break;
+      case "groupedByType":
+        fetchAllContentGroupedByType();
+        break;
     }
   };
 
   const fetchHierarchicalData = async () => {
     try {
       setLoading(true);
+      const [phasesResponse, modulesResponse, contentResponse] =
+        await Promise.all([
+          phasesAPI.getAll(),
+          modulesAPI.getAll(),
+          contentAPI.getAll(),
+        ]);
 
-      // Fetch all content
-      const contentResponse = await contentAPI.getAll();
-      const allContent = contentResponse.data || [];
+      const phasesData = phasesResponse.data || [];
+      const modulesData = modulesResponse.data || [];
+      const contentData = contentResponse.data || [];
 
-      // Create hierarchical structure: Phases -> Modules -> Content
-      const hierarchical = phases
-        .map((phase) => {
-          const phaseModules = modules.filter(
-            (module) => module.phaseId === phase.id
+      const hierarchical = phasesData.map((phase) => {
+        const phaseModules = modulesData.filter(
+          (module) => module.phaseId === phase.id
+        );
+        const modulesWithContent = phaseModules.map((module) => {
+          const moduleContent = contentData.filter(
+            (content) => content.moduleId === module.id
           );
-
           return {
-            ...phase,
-            modules: phaseModules
-              .map((module) => {
-                const moduleContent = allContent.filter(
-                  (content) => content.moduleId === module.id
-                );
-
-                // Group content by sections within each module
-                const contentBySections = {};
-                moduleContent.forEach((content) => {
-                  const section = content.section || "Uncategorized";
-                  if (!contentBySections[section]) {
-                    contentBySections[section] = [];
-                  }
-                  contentBySections[section].push(content);
-                });
-
-                return {
-                  ...module,
-                  content: moduleContent,
-                  contentBySections,
-                  contentCount: moduleContent.length,
-                  totalDuration: moduleContent.reduce(
-                    (sum, item) => sum + (item.duration || 0),
-                    0
-                  ),
-                };
-              })
-              .filter((module) => module.content.length > 0), // Only show modules with content
+            ...module,
+            content: moduleContent,
+            contentCount: moduleContent.length,
           };
-        })
-        .filter((phase) => phase.modules.length > 0); // Only show phases with modules that have content
+        });
+
+        return {
+          ...phase,
+          modules: modulesWithContent,
+        };
+      });
 
       setHierarchicalData(hierarchical);
     } catch (err) {
@@ -283,37 +214,25 @@ const ContentManager = () => {
   const fetchAllModulesGrouped = async () => {
     try {
       setLoading(true);
+      const [modulesResponse, contentResponse] = await Promise.all([
+        modulesAPI.getAll(),
+        contentAPI.getAll(),
+      ]);
 
-      // Fetch all content in a single API call
-      const response = await contentAPI.getAll();
-      const allContent = response.data || [];
+      const modulesData = modulesResponse.data || [];
+      const contentData = contentResponse.data || [];
 
-      // Group content by module and section on the frontend
-      const allGroupedContent = {};
-
-      // Initialize modules that have content
-      allContent.forEach((item) => {
-        const moduleId = item.moduleId || item.module?.id;
-        const module = modules.find((m) => m.id === moduleId);
-
-        if (module && moduleId) {
-          if (!allGroupedContent[moduleId]) {
-            allGroupedContent[moduleId] = {
-              module: module,
-              sections: {},
-            };
-          }
-
-          const section = item.section || "No Section";
-          if (!allGroupedContent[moduleId].sections[section]) {
-            allGroupedContent[moduleId].sections[section] = [];
-          }
-
-          allGroupedContent[moduleId].sections[section].push(item);
+      const grouped = {};
+      modulesData.forEach((module) => {
+        const moduleContent = contentData.filter(
+          (content) => content.moduleId === module.id
+        );
+        if (moduleContent.length > 0) {
+          grouped[module.title] = moduleContent;
         }
       });
 
-      setGroupedContent(allGroupedContent);
+      setGroupedContent(grouped);
     } catch (err) {
       console.error("Error fetching grouped content:", err);
       setError("Failed to fetch grouped content");
@@ -322,25 +241,32 @@ const ContentManager = () => {
     }
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
+  const fetchAllContentGroupedByType = async () => {
+    try {
+      setLoading(true);
+      const response = await contentAPI.getAll();
+      const contentData = response.data || [];
 
-  const handleViewModeChange = (mode) => {
-    setViewMode(mode);
-    if (mode === "hierarchical") {
-      fetchHierarchicalData();
-    } else if (mode === "groupedByModule") {
-      fetchAllModulesGrouped();
-    } else if (mode === "groupedByType") {
-      if (filters.type) {
-        fetchContentByType(filters.type);
-      } else {
-        fetchAllContentGroupedByType();
-      }
+      const grouped = {};
+      contentTypes.forEach((type) => {
+        const typeContent = contentData.filter(
+          (content) => content.type === type.value
+        );
+        if (typeContent.length > 0) {
+          grouped[type.label] = typeContent;
+        }
+      });
+
+      setGroupedContent(grouped);
+    } catch (err) {
+      console.error("Error fetching content grouped by type:", err);
+      setError("Failed to fetch content grouped by type");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Form handlers
   const resetForm = () => {
     setFormData({
       moduleId: "",
@@ -352,7 +278,6 @@ const ContentManager = () => {
       instructions: "",
       duration: 1,
       resources: [],
-      // Enhanced metadata fields
       tags: [],
       difficulty: "beginner",
       prerequisites: [],
@@ -373,153 +298,67 @@ const ContentManager = () => {
       thumbnailUrl: "",
     });
     setEditingContent(null);
-    // Reset section auto-complete state
     setSectionInputValue("");
-    setShowSectionDropdown(false);
     setAvailableSections([]);
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+
     try {
       setLoading(true);
       setError("");
 
-      // Validate required fields
-      if (!formData.title || !formData.description || !formData.moduleId) {
-        setError("Please fill in all required fields");
-        return;
-      }
-
-      // Type-specific validation
-      if (formData.type === "video" && !formData.url) {
-        setError("URL is required for video content");
-        return;
-      }
-      if (
-        (formData.type === "lab" || formData.type === "game") &&
-        !formData.instructions
-      ) {
-        setError("Instructions are required for lab and game content");
-        return;
-      }
-
-      const contentData = { ...formData };
+      const contentData = {
+        ...formData,
+        section: sectionInputValue || formData.section,
+      };
 
       if (editingContent) {
         await contentAPI.update(editingContent.id, contentData);
-        setSuccess("Content updated successfully");
+        setSuccess("Content updated successfully!");
       } else {
         await contentAPI.create(contentData);
-        setSuccess("Content created successfully");
+        setSuccess("Content created successfully!");
       }
 
       setShowForm(false);
       resetForm();
-      // Refresh grouped content based on current view mode
+      fetchContent();
+
+      // Refresh current view
       if (viewMode === "groupedByModule") {
         fetchAllModulesGrouped();
       } else if (viewMode === "groupedByType") {
-        if (filters.type) {
-          fetchContentByType(filters.type);
-        } else {
-          fetchAllContentGroupedByType();
-        }
+        fetchAllContentGroupedByType();
+      } else if (viewMode === "hierarchical") {
+        fetchHierarchicalData();
       }
     } catch (err) {
       console.error("Error saving content:", err);
-      setError(err.response?.data?.message || "Failed to save content");
+      setError("Failed to save content");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (contentItem) => {
-    console.log(contentItem);
-
-    setEditingContent(contentItem);
-    setFormData({
-      moduleId: contentItem.moduleId || "",
-      type: contentItem.type || "video",
-      title: contentItem.title || "",
-      description: contentItem.description || "",
-      section: contentItem.section || "",
-      url: contentItem.url || "",
-      instructions: contentItem.instructions || "",
-      duration: contentItem.duration || 1,
-      resources: contentItem.resources || [],
-      // Enhanced metadata fields
-      tags: contentItem.tags || [],
-      difficulty: contentItem.difficulty || "beginner",
-      prerequisites: contentItem.prerequisites || [],
-      learningObjectives: contentItem.learningObjectives || [],
-      estimatedTime: contentItem.estimatedTime || 1,
-      contentFormat: contentItem.contentFormat || "",
-      language: contentItem.language || "en",
-      accessibility: {
-        hasSubtitles: contentItem.accessibility?.hasSubtitles || false,
-        hasTranscript: contentItem.accessibility?.hasTranscript || false,
-        hasAudioDescription:
-          contentItem.accessibility?.hasAudioDescription || false,
-      },
-      technicalRequirements: contentItem.technicalRequirements || [],
-      author: contentItem.author || "",
-      version: contentItem.version || "1.0",
-      lastUpdated: contentItem.lastUpdated || "",
-      isPublished: contentItem.isPublished || false,
-      thumbnailUrl: contentItem.thumbnailUrl || "",
-    });
-    // Set section input value for auto-complete
-    setSectionInputValue(contentItem.section || "");
-    setShowForm(true);
-  };
-
-  const handleDelete = async (contentItem, permanent = false) => {
-    if (
-      !window.confirm(
-        permanent
-          ? `Are you sure you want to permanently delete "${contentItem.title}"? This action cannot be undone.`
-          : `Are you sure you want to delete "${contentItem.title}"? This can be undone later.`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      if (permanent) {
-        await contentAPI.permanentDelete(contentItem.id);
-        setSuccess("Content permanently deleted successfully");
-      } else {
-        await contentAPI.delete(contentItem.id);
-        setSuccess("Content deleted successfully");
-      }
-      // Refresh grouped content based on current view mode
-      if (viewMode === "groupedByModule") {
-        fetchAllModulesGrouped();
-      } else if (viewMode === "groupedByType") {
-        if (filters.type) {
-          fetchContentByType(filters.type);
-        } else {
-          fetchAllContentGroupedByType();
-        }
-      }
-    } catch (err) {
-      console.error("Error deleting content:", err);
-      setError(err.response?.data?.message || "Failed to delete content");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Section handlers
   const handleSectionInputChange = (e) => {
-    const value = e.target.value;
-    setSectionInputValue(value);
-    setFormData((prev) => ({ ...prev, section: value }));
-    // Show dropdown when typing (if module is selected)
+    setSectionInputValue(e.target.value);
+    setFormData((prev) => ({ ...prev, section: e.target.value }));
+  };
+
+  const handleSectionInputFocus = () => {
     if (formData.moduleId) {
       setShowSectionDropdown(true);
+      fetchSectionsByModule(formData.moduleId);
     }
+  };
+
+  const handleSectionInputBlur = () => {
+    setTimeout(() => {
+      setShowSectionDropdown(false);
+    }, 200);
   };
 
   const handleSectionSelect = (section) => {
@@ -528,22 +367,75 @@ const ContentManager = () => {
     setShowSectionDropdown(false);
   };
 
-  const handleSectionInputFocus = () => {
-    // Always show dropdown when focused (if module is selected)
-    // This allows creating new sections even when no existing sections
-    if (formData.moduleId) {
-      setShowSectionDropdown(true);
+  const fetchSectionsByModule = async (moduleId) => {
+    try {
+      setSectionLoading(true);
+      const response = await contentAPI.getSectionsByModule(moduleId);
+      setAvailableSections(response.data || []);
+    } catch (err) {
+      console.error("Error fetching sections:", err);
+      setAvailableSections([]);
+    } finally {
+      setSectionLoading(false);
     }
   };
 
-  const handleSectionInputBlur = () => {
-    // Delay hiding dropdown to allow for clicks
-    setTimeout(() => setShowSectionDropdown(false), 200);
+  // Content action handlers
+  const handleEdit = (contentItem) => {
+    setEditingContent(contentItem);
+    setFormData({
+      ...contentItem,
+      resources: contentItem.resources || [],
+      tags: contentItem.tags || [],
+      prerequisites: contentItem.prerequisites || [],
+      learningObjectives: contentItem.learningObjectives || [],
+      technicalRequirements: contentItem.technicalRequirements || [],
+      accessibility: contentItem.accessibility || {
+        hasSubtitles: false,
+        hasTranscript: false,
+        hasAudioDescription: false,
+      },
+    });
+    setSectionInputValue(contentItem.section || "");
+    setShowForm(true);
   };
 
-  const filteredSections = availableSections.filter((section) =>
-    section.toLowerCase().includes(sectionInputValue.toLowerCase())
-  );
+  const handleDelete = async (contentItem) => {
+    if (
+      !window.confirm(`Are you sure you want to delete "${contentItem.title}"?`)
+    ) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await contentAPI.delete(contentItem.id);
+      setSuccess("Content deleted successfully!");
+      fetchContent();
+
+      // Refresh current view
+      if (viewMode === "groupedByModule") {
+        fetchAllModulesGrouped();
+      } else if (viewMode === "groupedByType") {
+        fetchAllContentGroupedByType();
+      } else if (viewMode === "hierarchical") {
+        fetchHierarchicalData();
+      }
+    } catch (err) {
+      console.error("Error deleting content:", err);
+      setError("Failed to delete content");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter handlers
+  const handleFilterChange = (filterType, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [filterType]: value,
+    }));
+  };
 
   // Multiple upload handlers
   const handleMultipleUploadStart = () => {
@@ -561,8 +453,6 @@ const ContentManager = () => {
         resources: [],
       },
     ]);
-    setSelectedPhaseForUpload("");
-    setSelectedModuleForUpload("");
   };
 
   const addNewUploadItem = () => {
@@ -593,11 +483,6 @@ const ContentManager = () => {
   };
 
   const handleMultipleUploadSubmit = async () => {
-    if (!selectedModuleForUpload) {
-      setError("Please select a module for upload");
-      return;
-    }
-
     try {
       setLoading(true);
       setError("");
@@ -627,7 +512,7 @@ const ContentManager = () => {
           ...item,
           moduleId: selectedModuleForUpload,
         };
-        delete contentData.id; // Remove temporary ID
+        delete contentData.id;
         return contentAPI.create(contentData);
       });
 
@@ -638,12 +523,17 @@ const ContentManager = () => {
       );
       setShowMultipleUpload(false);
       setMultipleUploads([]);
+      setSelectedPhaseForUpload("");
+      setSelectedModuleForUpload("");
       fetchContent();
-      // Refresh grouped content
+
+      // Refresh current view
       if (viewMode === "groupedByModule") {
         fetchAllModulesGrouped();
       } else if (viewMode === "groupedByType") {
         fetchAllContentGroupedByType();
+      } else if (viewMode === "hierarchical") {
+        fetchHierarchicalData();
       }
     } catch (err) {
       console.error("Error creating multiple content:", err);
@@ -662,6 +552,7 @@ const ContentManager = () => {
     setSuccess("");
   };
 
+  // Render hierarchical view
   const renderHierarchicalView = () => {
     return (
       <div className="space-y-8">
@@ -700,17 +591,13 @@ const ContentManager = () => {
               </div>
             </div>
 
-            {/* Modules (shown when phase is expanded) */}
+            {/* Modules */}
             {selectedPhaseId === phase.id && (
-              <div className="relative z-10 space-y-4 ml-8">
+              <div className="relative z-10 space-y-4 mt-6">
                 {phase.modules.map((module) => (
-                  <div
-                    key={module.id}
-                    className="border border-cyan-400/30 rounded-xl bg-gradient-to-br from-gray-800/50 to-black/50"
-                  >
-                    {/* Module Header */}
+                  <div key={module.id} className="ml-6">
                     <div
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-900/30 to-blue-900/30 rounded-t-xl cursor-pointer hover:bg-gradient-to-r hover:from-cyan-800/40 hover:to-blue-800/40 transition-all duration-300 border-b border-cyan-400/20"
+                      className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border border-cyan-400/30 rounded-xl cursor-pointer hover:border-cyan-400/50 transition-all duration-300"
                       onClick={() =>
                         setSelectedModuleId(
                           selectedModuleId === module.id ? "" : module.id
@@ -718,32 +605,18 @@ const ContentManager = () => {
                       }
                     >
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 border-2 border-cyan-400/50 rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-cyan-400/20">
+                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-400/20 to-cyan-600/20 border-2 border-cyan-400/50 rounded-lg flex items-center justify-center mr-4 shadow-lg shadow-cyan-400/20">
                           <span className="text-lg font-bold text-cyan-400 font-mono">
                             M
                           </span>
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-cyan-400 font-mono uppercase tracking-wider">
+                          <h3 className="text-lg font-semibold text-cyan-400 font-mono">
                             📖 {module.title}
                           </h3>
-                          <div className="flex items-center space-x-4 text-xs text-gray-400 font-mono">
-                            <span>◇ {module.contentCount} items</span>
-                            <span>◇ {module.totalDuration} min</span>
-                            <span
-                              className={`px-2 py-1 rounded-lg border font-mono uppercase ${
-                                module.difficulty === "Beginner"
-                                  ? "bg-green-900/20 text-green-400 border-green-400/30"
-                                  : module.difficulty === "Intermediate"
-                                  ? "bg-yellow-900/20 text-yellow-400 border-yellow-400/30"
-                                  : module.difficulty === "Advanced"
-                                  ? "bg-orange-900/20 text-orange-400 border-orange-400/30"
-                                  : "bg-red-900/20 text-red-400 border-red-400/30"
-                              }`}
-                            >
-                              {module.difficulty}
-                            </span>
-                          </div>
+                          <p className="text-sm text-gray-400 font-mono">
+                            ◆ {module.contentCount} content items
+                          </p>
                         </div>
                       </div>
                       <div className="text-cyan-400 text-xl font-mono">
@@ -751,1554 +624,177 @@ const ContentManager = () => {
                       </div>
                     </div>
 
-                    {/* Content (shown when module is expanded) */}
-                    {selectedModuleId === module.id && (
-                      <div className="p-4 bg-gradient-to-br from-gray-900/60 to-black/60 rounded-b-xl">
-                        {Object.entries(module.contentBySections).map(
-                          ([sectionName, sectionContent]) => (
-                            <div key={sectionName} className="mb-6 last:mb-0">
-                              <h4 className="text-md font-medium text-green-400 font-mono mb-3 border-b border-green-400/30 pb-2 uppercase tracking-wider">
-                                📁 {sectionName} ({sectionContent.length} items)
-                              </h4>
+                    {/* Content Items */}
+                    {selectedModuleId === module.id &&
+                      module.content.length > 0 && (
+                        <div className="mt-4 ml-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {module.content.map((contentItem) => (
+                              <ContentCard
+                                key={contentItem.id}
+                                contentItem={contentItem}
+                                contentTypes={contentTypes}
+                                onEdit={handleEdit}
+                                onDelete={() => handleDelete(contentItem)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {sectionContent.map((contentItem) => {
-                                  const contentType = contentTypes.find(
-                                    (t) => t.value === contentItem.type
-                                  );
-                                  return (
-                                    <div
-                                      key={contentItem.id}
-                                      className="bg-gradient-to-br from-gray-800/80 to-black/80 border border-gray-600/50 rounded-xl p-4 hover:border-green-400/50 hover:shadow-lg hover:shadow-green-400/10 transition-all duration-300 group relative overflow-hidden"
-                                    >
-                                      <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                                      <div className="relative z-10">
-                                        <div className="flex items-start justify-between mb-2">
-                                          <span
-                                            className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold font-mono uppercase tracking-wider border ${
-                                              contentType?.value === "video"
-                                                ? "bg-blue-900/20 text-blue-400 border-blue-400/30"
-                                                : contentType?.value === "lab"
-                                                ? "bg-purple-900/20 text-purple-400 border-purple-400/30"
-                                                : contentType?.value === "game"
-                                                ? "bg-green-900/20 text-green-400 border-green-400/30"
-                                                : "bg-yellow-900/20 text-yellow-400 border-yellow-400/30"
-                                            }`}
-                                          >
-                                            {contentType?.icon}{" "}
-                                            {contentType?.label}
-                                          </span>
-                                          <span className="text-xs text-gray-400 font-mono">
-                                            {contentItem.duration}m
-                                          </span>
-                                        </div>
-
-                                        <h5 className="font-medium text-green-400 mb-1 line-clamp-2 group-hover:text-green-300 transition-colors font-mono">
-                                          ◆ {contentItem.title}
-                                        </h5>
-
-                                        <p className="text-xs text-gray-400 line-clamp-2 mb-3 font-mono">
-                                          {contentItem.description}
-                                        </p>
-
-                                        <div className="flex gap-2">
-                                          <Link
-                                            to={`/content/${contentItem.id}`}
-                                            className="text-xs text-green-400 hover:text-green-300 transition-colors font-mono uppercase tracking-wider hover:bg-green-400/10 px-2 py-1 rounded border border-green-400/30 hover:border-green-400/50"
-                                          >
-                                            VIEW
-                                          </Link>
-                                          <button
-                                            onClick={() =>
-                                              handleEdit(contentItem)
-                                            }
-                                            className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors font-mono uppercase tracking-wider hover:bg-cyan-400/10 px-2 py-1 rounded border border-cyan-400/30 hover:border-cyan-400/50"
-                                          >
-                                            EDIT
-                                          </button>
-                                          <button
-                                            onClick={() =>
-                                              handleDelete(contentItem)
-                                            }
-                                            className="text-xs text-red-400 hover:text-red-300 transition-colors font-mono uppercase tracking-wider hover:bg-red-400/10 px-2 py-1 rounded border border-red-400/30 hover:border-red-400/50"
-                                          >
-                                            DEL
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
+                    {selectedModuleId === module.id &&
+                      module.content.length === 0 && (
+                        <div className="mt-4 ml-6 text-center text-gray-500 py-8">
+                          <p className="font-mono">
+                            No content items found in this module
+                          </p>
+                        </div>
+                      )}
                   </div>
                 ))}
               </div>
             )}
           </div>
         ))}
+      </div>
+    );
+  };
 
-        {hierarchicalData.length === 0 && (
-          <div className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-green-400/30 rounded-xl p-12 text-center relative overflow-hidden">
+  // Render grouped view
+  const renderGroupedView = () => {
+    return (
+      <div className="space-y-6">
+        {Object.entries(groupedContent).map(([groupName, groupContent]) => (
+          <div
+            key={groupName}
+            className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-green-400/30 rounded-xl p-6 relative overflow-hidden"
+          >
             <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 animate-pulse"></div>
             <div className="relative z-10">
-              <div className="text-green-400 mb-4 font-mono font-bold text-xl uppercase tracking-wider">
-                ◆ NO CONTENT HIERARCHY FOUND ◆
+              <h2 className="text-xl font-bold text-green-400 font-mono uppercase tracking-wider mb-4">
+                📁 {groupName} ({groupContent.length})
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {groupContent.map((contentItem) => (
+                  <ContentCard
+                    key={contentItem.id}
+                    contentItem={contentItem}
+                    contentTypes={contentTypes}
+                    onEdit={handleEdit}
+                    onDelete={() => handleDelete(contentItem)}
+                  />
+                ))}
               </div>
-              <p className="text-gray-400 text-sm font-mono">
-                Create some content to see the hierarchical structure
-              </p>
             </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderGroupedByModule = () => {
-    return (
-      <div className="space-y-6">
-        {Object.entries(groupedContent).map(([moduleId, moduleData]) => (
-          <div
-            key={moduleId}
-            className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow border border-gray-600"
-          >
-            <h3 className="text-lg font-medium text-green-400 mb-4">
-              {moduleData.module?.title || "Unknown Module"}
-            </h3>
-
-            {/* Group content by sections within this module */}
-            {Object.entries(moduleData.sections || {}).map(
-              ([sectionName, sectionContent]) => (
-                <div key={sectionName} className="mb-6 last:mb-0">
-                  <h4 className="text-md font-medium text-cyan-400 mb-3 border-b border-gray-600 pb-2">
-                    📁 {sectionName} ({sectionContent.length} items)
-                  </h4>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {sectionContent.map((item) => {
-                      const contentType = contentTypes.find(
-                        (t) => t.value === item.type
-                      );
-                      return (
-                        <div
-                          key={item.id}
-                          className="border border-gray-600 rounded-lg p-4 bg-gray-700 hover:bg-gray-650 transition-colors duration-200"
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyber-green text-black">
-                              {contentType?.icon} {contentType?.label}
-                            </span>
-                          </div>
-                          <h5 className="font-medium text-green-400 mb-1 line-clamp-2">
-                            {item.title}
-                          </h5>
-                          <p className="text-sm text-gray-400 mt-1 mb-3 line-clamp-2">
-                            {item.description}
-                          </p>
-                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                            <span className="text-xs text-gray-500">
-                              {item.duration} min
-                            </span>
-                            <div className="flex gap-2">
-                              <Link
-                                to={`/content/${item.id}`}
-                                className="text-xs text-green-400 hover:text-green-300 transition-colors"
-                              >
-                                View
-                              </Link>
-                              <button
-                                onClick={() => handleEdit(item)}
-                                className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDelete(item)}
-                                className="text-xs text-red-400 hover:text-red-300 transition-colors"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )
-            )}
-
-            {Object.keys(moduleData.sections || {}).length === 0 && (
-              <p className="text-gray-500 text-center py-4">
-                No content found in this module
-              </p>
-            )}
           </div>
         ))}
-
-        {Object.keys(groupedContent).length === 0 && (
-          <div className="text-center py-8">
-            <FolderIcon className="mx-auto h-12 w-12 text-gray-400 opacity-50 mb-4" />
-            <p className="text-gray-500 text-lg">
-              No modules with content found
-            </p>
-            <p className="text-gray-600 text-sm mt-2">
-              Start by creating some content for your modules
-            </p>
-          </div>
-        )}
       </div>
     );
   };
 
-  const renderGroupedByType = () => {
-    return (
-      <div className="space-y-6">
-        {Object.entries(groupedContent).map(([typeName, items]) => {
-          const contentType = contentTypes.find((t) => t.value === typeName);
-          return (
-            <div
-              key={typeName}
-              className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow border border-gray-600"
-            >
-              <h3 className="text-lg font-medium text-green-400 mb-4 flex items-center">
-                <span className="mr-2">{contentType?.icon}</span>
-                {contentType?.label} ({items.length})
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {items.map((item) => {
-                  const module = modules.find((m) => m.id === item.moduleId);
-                  return (
-                    <div
-                      key={item.id}
-                      className="border border-gray-600 rounded-lg p-4 bg-gray-700 hover:bg-gray-650 transition-colors duration-200"
-                    >
-                      <h4 className="font-medium text-green-400 mb-1 line-clamp-2">
-                        {item.title}
-                      </h4>
-                      <p className="text-sm text-gray-400 mt-1 mb-3 line-clamp-2">
-                        {item.description}
-                      </p>
-                      <div className="space-y-2 mb-3">
-                        <div className="text-xs text-gray-500">
-                          📚 {module?.title || "Unknown Module"}
-                        </div>
-                        <div className="text-xs text-cyan-400">
-                          📁 {item.section || "No Section"}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          ⏱️ {item.duration} min
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Link
-                          to={`/content/${item.id}`}
-                          className="text-xs text-green-400 hover:text-green-300 transition-colors"
-                        >
-                          View
-                        </Link>
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item)}
-                          className="text-xs text-red-400 hover:text-red-300 transition-colors"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {items.length === 0 && (
-                <p className="text-gray-500 text-center py-4">
-                  No {typeName} content found
-                </p>
-              )}
-            </div>
-          );
-        })}
-
-        {Object.keys(groupedContent).length === 0 && (
-          <div className="text-center py-8">
-            <FolderIcon className="mx-auto h-12 w-12 text-gray-400 opacity-50 mb-4" />
-            <p className="text-gray-500 text-lg">No content found</p>
-            <p className="text-gray-600 text-sm mt-2">
-              Start by creating some content for your modules
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderForm = () => (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-cyan-500/30 shadow-2xl transform animate-slideUp">
-        {/* Enhanced Header */}
-        <div className="p-6 border-b border-cyan-500/30 bg-gradient-to-r from-gray-900 to-gray-800">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-cyan-500 to-green-500 rounded-lg flex items-center justify-center mr-3">
-                {editingContent ? "✏️" : "➕"}
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-cyan-400">
-                  {editingContent ? "Edit Content" : "Create New Content"}
-                </h2>
-                <p className="text-sm text-gray-400 mt-1">
-                  {editingContent
-                    ? "Update content information"
-                    : "Add new learning content to the database"}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setShowForm(false);
-                resetForm();
-              }}
-              className="text-gray-400 hover:text-red-400 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-700"
-            >
-              <XMarkIcon className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-
-        <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
-          {/* Module and Type Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="flex items-center text-sm font-semibold text-cyan-400">
-                <svg
-                  className="h-4 w-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a1 1 0 011-1h2a1 1 0 011 1v2M7 7h10"
-                  />
-                </svg>
-                Module*
-              </label>
-              <select
-                value={formData.moduleId}
-                onChange={(e) => {
-                  console.log("Module selected:", e.target.value);
-                  setFormData((prev) => ({
-                    ...prev,
-                    moduleId: e.target.value,
-                  }));
-                }}
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
-                required
-              >
-                <option value="">Select Module</option>
-                {modules.map((module) => (
-                  <option key={module.id} value={module.id}>
-                    {module.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center text-sm font-semibold text-cyan-400">
-                <svg
-                  className="h-4 w-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10M6 4v16a2 2 0 002 2h8a2 2 0 002-2V4M6 4H4a2 2 0 00-2 2v14a2 2 0 002 2h2"
-                  />
-                </svg>
-                Content Type*
-              </label>
-              <select
-                value={formData.type}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, type: e.target.value }))
-                }
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
-                required
-              >
-                {contentTypes.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.icon} {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Title Input */}
-          <div className="space-y-2">
-            <label className="flex items-center text-sm font-semibold text-cyan-400">
-              <svg
-                className="h-4 w-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-              Title*
-            </label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, title: e.target.value }))
-              }
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200"
-              required
-              maxLength="100"
-              placeholder="Enter a descriptive title for your content..."
-            />
-          </div>
-
-          {/* Enhanced Section Input */}
-          <div className="relative">
-            <label className="flex items-center text-sm font-semibold text-cyan-400">
-              <svg
-                className="h-4 w-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-              Section*
-            </label>
-
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                value={sectionInputValue}
-                onChange={handleSectionInputChange}
-                onFocus={() => {
-                  console.log(
-                    "Section input focused, moduleId:",
-                    formData.moduleId,
-                    "disabled:",
-                    !formData.moduleId
-                  );
-                  handleSectionInputFocus();
-                }}
-                onBlur={handleSectionInputBlur}
-                className="w-full pl-10 pr-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                required
-                maxLength="100"
-                placeholder={
-                  formData.moduleId
-                    ? "🔍 Search existing sections or create new one..."
-                    : "⚠️ Select a module first to manage sections"
-                }
-                disabled={!formData.moduleId}
-              />
-              {formData.moduleId && !sectionLoading && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  {sectionInputValue && (
-                    <SparklesIcon className="h-4 w-4 text-cyan-400 animate-pulse" />
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Enhanced Dropdown */}
-            {showSectionDropdown && (
-              <div className="absolute z-10 w-full mt-2 bg-gray-800 border border-cyan-500/50 rounded-lg shadow-2xl max-h-64 overflow-auto backdrop-blur-sm">
-                {/* Dropdown Header */}
-                <div className="px-4 py-2 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-cyan-500/30 rounded-t-lg">
-                  <div className="flex items-center text-xs text-cyan-400">
-                    <FolderIcon className="h-3 w-3 mr-1" />
-                    Section Management
-                  </div>
-                </div>
-
-                {filteredSections.length > 0 ? (
-                  <>
-                    <div className="px-4 py-2 text-xs text-gray-400 bg-gray-900/50 border-b border-gray-700 flex items-center">
-                      <EyeIcon className="h-3 w-3 mr-1" />
-                      Existing sections ({filteredSections.length}) - Click to
-                      select:
-                    </div>
-                    {filteredSections.map((section, index) => (
-                      <button
-                        key={section}
-                        type="button"
-                        onClick={() => handleSectionSelect(section)}
-                        className="w-full text-left px-4 py-3 text-green-400 hover:bg-gradient-to-r hover:from-gray-700 hover:to-gray-600 focus:bg-gradient-to-r focus:from-gray-700 focus:to-gray-600 focus:outline-none transition-all duration-150 border-l-2 border-transparent hover:border-cyan-400 flex items-center group"
-                      >
-                        <FolderIcon className="h-4 w-4 mr-3 text-cyan-400 group-hover:scale-110 transition-transform duration-150" />
-                        <span className="flex-1">{section}</span>
-                        <ChevronRightIcon className="h-3 w-3 text-gray-500 group-hover:text-cyan-400 transition-colors duration-150" />
-                      </button>
-                    ))}
-                  </>
-                ) : (
-                  <div className="px-4 py-4 text-sm">
-                    {sectionInputValue ? (
-                      <div className="text-center">
-                        <div className="flex items-center justify-center mb-2">
-                          <SparklesIcon className="h-5 w-5 text-cyan-400 animate-pulse mr-2" />
-                          <span className="text-cyan-400 font-medium">
-                            Create New Section
-                          </span>
-                        </div>
-                        <div className="bg-gradient-to-r from-cyan-900/20 to-green-900/20 border border-cyan-500/30 rounded-lg p-3 mb-2">
-                          <div className="font-medium text-white">
-                            "{sectionInputValue}"
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-400 flex items-center justify-center">
-                          <kbd className="px-2 py-1 bg-gray-700 rounded text-xs mr-1">
-                            Enter
-                          </kbd>
-                          <span>or click outside to create</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center text-gray-400">
-                        <FolderIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <div>No existing sections found</div>
-                        <div className="text-xs mt-1">
-                          Type to create a new section
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Description Input */}
-          <div className="space-y-2">
-            <label className="flex items-center text-sm font-semibold text-cyan-400">
-              <svg
-                className="h-4 w-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-              Description*
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-              required
-              maxLength="500"
-              rows="3"
-            />
-          </div>
-
-          {/* URL Input */}
-          {formData.type === "video" && (
-            <div className="space-y-2">
-              <label className="flex items-center text-sm font-semibold text-cyan-400">
-                <svg
-                  className="h-4 w-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-                Video URL*
-              </label>
-              <input
-                type="url"
-                value={formData.url}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, url: e.target.value }))
-                }
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-                required={formData.type === "video"}
-                placeholder="https://example.com/video.mp4"
-              />
-            </div>
-          )}
-
-          {/* Instructions Input */}
-          {(formData.type === "lab" || formData.type === "game") && (
-            <div className="space-y-2">
-              <label className="flex items-center text-sm font-semibold text-cyan-400">
-                <svg
-                  className="h-4 w-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-                Instructions*
-              </label>
-              <textarea
-                value={formData.instructions}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    instructions: e.target.value,
-                  }))
-                }
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-                required={formData.type === "lab" || formData.type === "game"}
-                maxLength="2000"
-                rows="4"
-                placeholder="Detailed instructions for the lab or game..."
-              />
-            </div>
-          )}
-
-          {/* Duration Input */}
-          <div className="space-y-2">
-            <label className="flex items-center text-sm font-semibold text-cyan-400">
-              <svg
-                className="h-4 w-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-              Duration (minutes)
-            </label>
-            <input
-              type="number"
-              value={formData.duration}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  duration: parseInt(e.target.value),
-                }))
-              }
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-              min="1"
-              max="300"
-            />
-          </div>
-
-          {/* Resources Input */}
-          <div className="space-y-2">
-            <label className="flex items-center text-sm font-semibold text-cyan-400">
-              <svg
-                className="h-4 w-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-              Resources (URLs or file paths)
-            </label>
-            <textarea
-              value={formData.resources.join("\n")}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  resources: e.target.value
-                    .split("\n")
-                    .filter((line) => line.trim() !== ""),
-                }))
-              }
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-              rows="3"
-              placeholder="Enter each resource URL or file path on a new line"
-            />
-          </div>
-
-          {/* Enhanced Metadata Section */}
-          <div className="border-t border-cyan-500/30 pt-6 mt-6">
-            <h3 className="text-lg font-semibold text-cyan-400 mb-4 font-mono retro-glow">
-              📊 Advanced Metadata
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Tags */}
-              <div className="space-y-2">
-                <label className="flex items-center text-sm font-semibold text-cyan-400">
-                  🏷️ Tags (comma-separated)
-                </label>
-                <input
-                  type="text"
-                  value={formData.tags.join(", ")}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      tags: e.target.value
-                        .split(",")
-                        .map((tag) => tag.trim())
-                        .filter(Boolean),
-                    }))
-                  }
-                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-                  placeholder="cybersecurity, network, basics"
-                />
-              </div>
-
-              {/* Difficulty */}
-              <div className="space-y-2">
-                <label className="flex items-center text-sm font-semibold text-cyan-400">
-                  📈 Difficulty Level
-                </label>
-                <select
-                  value={formData.difficulty}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      difficulty: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-                >
-                  <option value="beginner">🟢 Beginner</option>
-                  <option value="intermediate">🟡 Intermediate</option>
-                  <option value="advanced">🟠 Advanced</option>
-                  <option value="expert">🔴 Expert</option>
-                </select>
-              </div>
-
-              {/* Learning Objectives */}
-              <div className="space-y-2">
-                <label className="flex items-center text-sm font-semibold text-cyan-400">
-                  🎯 Learning Objectives
-                </label>
-                <textarea
-                  value={formData.learningObjectives.join("\n")}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      learningObjectives: e.target.value
-                        .split("\n")
-                        .filter(Boolean),
-                    }))
-                  }
-                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-                  rows="3"
-                  placeholder="Enter each learning objective on a new line"
-                />
-              </div>
-
-              {/* Technical Requirements */}
-              <div className="space-y-2">
-                <label className="flex items-center text-sm font-semibold text-cyan-400">
-                  💻 Technical Requirements
-                </label>
-                <textarea
-                  value={formData.technicalRequirements.join("\n")}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      technicalRequirements: e.target.value
-                        .split("\n")
-                        .filter(Boolean),
-                    }))
-                  }
-                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-                  rows="3"
-                  placeholder="Virtual machine, Kali Linux, etc."
-                />
-              </div>
-
-              {/* Author & Version */}
-              <div className="space-y-2">
-                <label className="flex items-center text-sm font-semibold text-cyan-400">
-                  👤 Author
-                </label>
-                <input
-                  type="text"
-                  value={formData.author}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, author: e.target.value }))
-                  }
-                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-                  placeholder="Content author name"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="flex items-center text-sm font-semibold text-cyan-400">
-                  🔢 Version
-                </label>
-                <input
-                  type="text"
-                  value={formData.version}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      version: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-                  placeholder="1.0"
-                />
-              </div>
-
-              {/* Language */}
-              <div className="space-y-2">
-                <label className="flex items-center text-sm font-semibold text-cyan-400">
-                  🌐 Language
-                </label>
-                <select
-                  value={formData.language}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      language: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-                >
-                  <option value="en">🇺🇸 English</option>
-                  <option value="es">🇪🇸 Spanish</option>
-                  <option value="fr">🇫🇷 French</option>
-                  <option value="de">🇩🇪 German</option>
-                  <option value="zh">🇨🇳 Chinese</option>
-                  <option value="ja">🇯🇵 Japanese</option>
-                </select>
-              </div>
-
-              {/* Thumbnail URL */}
-              <div className="space-y-2">
-                <label className="flex items-center text-sm font-semibold text-cyan-400">
-                  🖼️ Thumbnail URL
-                </label>
-                <input
-                  type="url"
-                  value={formData.thumbnailUrl}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      thumbnailUrl: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400"
-                  placeholder="https://example.com/thumbnail.jpg"
-                />
-              </div>
-            </div>
-
-            {/* Accessibility Features */}
-            <div className="mt-6">
-              <label className="flex items-center text-sm font-semibold text-cyan-400 mb-3">
-                ♿ Accessibility Features
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.accessibility.hasSubtitles}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        accessibility: {
-                          ...prev.accessibility,
-                          hasSubtitles: e.target.checked,
-                        },
-                      }))
-                    }
-                    className="rounded bg-gray-700 border-gray-600 text-cyan-400 focus:ring-cyan-400"
-                  />
-                  <span className="text-green-400 text-sm">
-                    📝 Has Subtitles
-                  </span>
-                </label>
-
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.accessibility.hasTranscript}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        accessibility: {
-                          ...prev.accessibility,
-                          hasTranscript: e.target.checked,
-                        },
-                      }))
-                    }
-                    className="rounded bg-gray-700 border-gray-600 text-cyan-400 focus:ring-cyan-400"
-                  />
-                  <span className="text-green-400 text-sm">
-                    📄 Has Transcript
-                  </span>
-                </label>
-
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.accessibility.hasAudioDescription}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        accessibility: {
-                          ...prev.accessibility,
-                          hasAudioDescription: e.target.checked,
-                        },
-                      }))
-                    }
-                    className="rounded bg-gray-700 border-gray-600 text-cyan-400 focus:ring-cyan-400"
-                  />
-                  <span className="text-green-400 text-sm">
-                    🔊 Audio Description
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {/* Publishing Status */}
-            <div className="mt-6 flex items-center space-x-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={formData.isPublished}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      isPublished: e.target.checked,
-                    }))
-                  }
-                  className="rounded bg-gray-700 border-gray-600 text-green-400 focus:ring-green-400"
-                />
-                <span className="text-green-400 font-semibold">
-                  🚀 Publish Immediately
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Form Submission */}
-          <div className="flex justify-end space-x-4 pt-4">
-            <button
-              type="button"
-              onClick={() => {
-                setShowForm(false);
-                resetForm();
-              }}
-              className="px-4 py-2 text-green-400 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-cyber-green text-black rounded-md hover:bg-green-400 disabled:opacity-50"
-            >
-              {loading ? "Saving..." : editingContent ? "Update" : "Create"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-
+  // Main render
   return (
     <div className="min-h-screen bg-black text-green-400">
       <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
-        {/* Enhanced Terminal Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400/20 to-green-600/20 border-2 border-green-400/50 flex items-center justify-center animate-pulse">
-              <FolderIcon className="w-6 h-6 text-green-400" />
-            </div>
-            <h2 className="text-4xl font-bold text-green-400 font-mono uppercase tracking-wider relative">
-              <span className="relative z-10">CONTENT_MANAGEMENT</span>
-              <div className="absolute inset-0 bg-green-400/20 blur-lg rounded"></div>
-            </h2>
-          </div>
-          <div className="bg-gradient-to-r from-black/80 via-green-900/20 to-black/80 border border-green-400/30 rounded-xl p-4 max-w-3xl mx-auto relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 animate-pulse"></div>
-            <div className="relative z-10 flex items-center space-x-2">
-              <div className="flex space-x-1">
-                <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
-                <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-              </div>
-              <p className="text-green-400 font-mono text-sm ml-4">
-                <span className="text-green-300">admin@hacktheworld:</span>
-                <span className="text-blue-400">~/content</span>
-                <span className="text-green-400">
-                  $ ./manage --learning-content --cybersec-platform --enhanced
-                </span>
-                <span className="animate-ping text-green-400">█</span>
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Terminal Header */}
+        <TerminalHeader
+          title="CONTENT_MANAGEMENT"
+          subtitle="./manage --learning-content --cybersec-platform --enhanced"
+        />
 
-        {/* Action Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={() => setShowForm(true)}
-              disabled={loading}
-              className="bg-gradient-to-r from-green-400/10 to-green-500/10 border-2 border-green-400/30 hover:bg-gradient-to-r hover:from-green-400/20 hover:to-green-500/20 hover:border-green-400/50 transition-all duration-300 text-green-400 font-mono font-bold uppercase tracking-wider px-6 py-3 rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-green-400/20 relative overflow-hidden group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/20 to-green-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <PlusIcon className="w-5 h-5 mr-2 relative z-10" />
-              <span className="hidden sm:inline relative z-10">
-                ▶ ADD CONTENT
-              </span>
-              <span className="sm:hidden relative z-10">+ ADD</span>
-            </button>
+        {/* Action Buttons */}
+        <ActionButtons
+          onAddContent={() => setShowForm(true)}
+          onBulkUpload={handleMultipleUploadStart}
+          loading={loading}
+        />
 
-            <button
-              onClick={handleMultipleUploadStart}
-              disabled={loading}
-              className="bg-gradient-to-r from-cyan-400/10 to-cyan-500/10 border-2 border-cyan-400/30 hover:bg-gradient-to-r hover:from-cyan-400/20 hover:to-cyan-500/20 hover:border-cyan-400/50 transition-all duration-300 text-cyan-400 font-mono font-bold uppercase tracking-wider px-6 py-3 rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-cyan-400/20 relative overflow-hidden group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/20 to-cyan-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <SparklesIcon className="w-5 h-5 mr-2 relative z-10" />
-              <span className="hidden sm:inline relative z-10">
-                ◇ BULK UPLOAD
-              </span>
-              <span className="sm:hidden relative z-10">BULK</span>
-            </button>
+        {/* Success Message */}
+        {success && (
+          <div className="bg-green-900/20 border border-green-500 text-green-400 px-4 py-3 rounded flex items-center">
+            <CheckCircleIcon className="w-5 h-5 mr-2" />
+            <span className="font-mono">{success}</span>
           </div>
-        </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded flex items-center">
+            <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+            <span className="font-mono">{error}</span>
+          </div>
+        )}
+
+        {/* Filters and Controls */}
+        <ContentFiltersAndControls
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          contentTypes={contentTypes}
+          modules={modules}
+          content={filteredContent}
+        />
+
+        {/* Content Display */}
+        {loading ? (
+          <div className="text-center text-green-400 py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-400"></div>
+            <p className="mt-2 font-mono">Loading content...</p>
+          </div>
+        ) : (
+          <div>
+            {viewMode === "hierarchical" && renderHierarchicalView()}
+            {(viewMode === "groupedByModule" || viewMode === "groupedByType") &&
+              renderGroupedView()}
+          </div>
+        )}
+
+        {/* Form Modal */}
+        <ContentFormModal
+          isOpen={showForm}
+          onClose={() => setShowForm(false)}
+          editingContent={editingContent}
+          formData={formData}
+          setFormData={setFormData}
+          modules={modules}
+          availableSections={availableSections}
+          sectionInputValue={sectionInputValue}
+          setSectionInputValue={setSectionInputValue}
+          showSectionDropdown={showSectionDropdown}
+          setShowSectionDropdown={setShowSectionDropdown}
+          sectionLoading={sectionLoading}
+          filteredSections={filteredSections}
+          onSubmit={handleFormSubmit}
+          loading={loading}
+          onSectionInputChange={handleSectionInputChange}
+          onSectionInputFocus={handleSectionInputFocus}
+          onSectionInputBlur={handleSectionInputBlur}
+          onSectionSelect={handleSectionSelect}
+          onResetForm={resetForm}
+          contentTypes={contentTypes}
+        />
+
+        {/* Multiple Upload Modal */}
+        <MultipleUploadModal
+          isOpen={showMultipleUpload}
+          onClose={closeMultipleUpload}
+          phases={phases}
+          modules={modules}
+          selectedPhaseForUpload={selectedPhaseForUpload}
+          setSelectedPhaseForUpload={setSelectedPhaseForUpload}
+          selectedModuleForUpload={selectedModuleForUpload}
+          setSelectedModuleForUpload={setSelectedModuleForUpload}
+          multipleUploads={multipleUploads}
+          onAddNewUploadItem={addNewUploadItem}
+          onRemoveUploadItem={removeUploadItem}
+          onUpdateUploadItem={updateUploadItem}
+          onSubmit={handleMultipleUploadSubmit}
+          contentTypes={contentTypes}
+          loading={loading}
+          error={error}
+        />
       </div>
-
-      {/* Success Message */}
-      {success && (
-        <div className="bg-green-900/20 border border-green-500 text-green-400 px-4 py-3 rounded flex items-center">
-          <CheckCircleIcon className="w-5 h-5 mr-2" />
-          <span className="font-mono">{success}</span>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded flex items-center">
-          <ExclamationCircleIcon className="w-5 h-5 mr-2" />
-          <span className="font-mono">{error}</span>
-        </div>
-      )}
-
-      {/* Enhanced Controls */}
-      <div className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-green-400/30 rounded-xl p-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 animate-pulse"></div>
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap xl:items-center gap-4 lg:gap-6">
-            {/* Content Type Filter */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                ▶ Filter by Type
-              </label>
-              <select
-                value={filters.type}
-                onChange={(e) => handleFilterChange("type", e.target.value)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300"
-              >
-                <option value="">All Types</option>
-                {contentTypes.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.icon} {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Module Filter */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                ▶ Filter by Module
-              </label>
-              <select
-                value={filters.moduleId}
-                onChange={(e) => handleFilterChange("moduleId", e.target.value)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300"
-              >
-                <option value="">All Modules</option>
-                {modules.map((module) => (
-                  <option key={module.id} value={module.id}>
-                    {module.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* View Mode */}
-            <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-              <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                ▶ View Mode
-              </label>
-              <div className="flex bg-gradient-to-r from-black/80 to-gray-900/80 border border-green-400/30 rounded-xl p-1 shadow-lg shadow-green-400/10">
-                <button
-                  onClick={() => handleViewModeChange("hierarchical")}
-                  className={`px-3 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider relative overflow-hidden ${
-                    viewMode === "hierarchical"
-                      ? "bg-gradient-to-r from-green-400/20 to-green-500/20 text-green-400 border border-green-400/50 shadow-lg shadow-green-400/20"
-                      : "text-green-400/60 hover:text-green-400 hover:bg-green-400/10 hover:shadow-md"
-                  }`}
-                >
-                  {viewMode === "hierarchical" && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/20 to-green-400/0 animate-pulse"></div>
-                  )}
-                  <span className="relative z-10">🔗 TREE</span>
-                </button>
-                <button
-                  onClick={() => handleViewModeChange("groupedByModule")}
-                  className={`px-3 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider relative overflow-hidden ${
-                    viewMode === "groupedByModule"
-                      ? "bg-gradient-to-r from-green-400/20 to-green-500/20 text-green-400 border border-green-400/50 shadow-lg shadow-green-400/20"
-                      : "text-green-400/60 hover:text-green-400 hover:bg-green-400/10 hover:shadow-md"
-                  }`}
-                >
-                  {viewMode === "groupedByModule" && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/20 to-green-400/0 animate-pulse"></div>
-                  )}
-                  <span className="relative z-10">📚 MODULE</span>
-                </button>
-                <button
-                  onClick={() => handleViewModeChange("groupedByType")}
-                  className={`px-3 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider relative overflow-hidden ${
-                    viewMode === "groupedByType"
-                      ? "bg-gradient-to-r from-green-400/20 to-green-500/20 text-green-400 border border-green-400/50 shadow-lg shadow-green-400/20"
-                      : "text-green-400/60 hover:text-green-400 hover:bg-green-400/10 hover:shadow-md"
-                  }`}
-                >
-                  {viewMode === "groupedByType" && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/20 to-green-400/0 animate-pulse"></div>
-                  )}
-                  <span className="relative z-10">🎯 TYPE</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Statistics */}
-          <div className="">
-            <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-              ▶ STATISTICS
-            </label>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 text-sm">
-              <div className="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-green-900/20 to-green-800/20 border border-green-400/30 rounded-xl shadow-lg shadow-green-400/10">
-                <span className="text-green-400 font-mono uppercase tracking-wider">
-                  ITEMS:
-                </span>
-                <span className="font-bold text-green-400 font-mono">
-                  {content.length}
-                </span>
-              </div>
-              <div className="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-cyan-900/20 to-cyan-800/20 border border-cyan-400/30 rounded-xl shadow-lg shadow-cyan-400/10">
-                <ClockIcon className="h-4 w-4 text-cyan-400" />
-                <span className="text-cyan-400 font-mono uppercase tracking-wider">
-                  TIME:
-                </span>
-                <span className="font-bold text-cyan-400 font-mono">
-                  {content.reduce(
-                    (total, item) => total + (item.duration || 0),
-                    0
-                  )}{" "}
-                  MIN
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content Display */}
-      {loading ? (
-        <div className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-green-400/30 rounded-xl p-8 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/10 to-green-400/0 animate-pulse"></div>
-          <div className="flex items-center justify-center py-12 relative z-10">
-            <div className="text-center">
-              <div className="text-green-400 text-xl font-mono font-bold mb-4 animate-pulse">
-                ◆ ◇ ◆ LOADING CONTENT ◆ ◇ ◆
-              </div>
-              <div className="flex justify-center space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-2 h-2 bg-green-400 rounded-full animate-pulse"
-                    style={{ animationDelay: `${i * 0.2}s` }}
-                  ></div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          {viewMode === "hierarchical"
-            ? renderHierarchicalView()
-            : viewMode === "groupedByModule"
-            ? renderGroupedByModule()
-            : renderGroupedByType()}
-        </>
-      )}
-
-      {/* Form Modal */}
-      {showForm && renderForm()}
-
-      {/* Multiple Upload Modal */}
-      {showMultipleUpload && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto border border-cyan-500/30 shadow-2xl">
-            {/* Header */}
-            <div className="p-6 border-b border-cyan-500/30 bg-gradient-to-r from-gray-900 to-gray-800">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
-                    <SparklesIcon className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-purple-400">
-                      Multiple Content Upload
-                    </h2>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Upload multiple content items to a module at once
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={closeMultipleUpload}
-                  className="text-gray-400 hover:text-red-400 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-700"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Phase and Module Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
-                <div>
-                  <label className="block text-sm font-semibold text-purple-400 mb-2">
-                    📚 Select Phase
-                  </label>
-                  <select
-                    value={selectedPhaseForUpload}
-                    onChange={(e) => {
-                      setSelectedPhaseForUpload(e.target.value);
-                      setSelectedModuleForUpload(""); // Reset module selection
-                    }}
-                    className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-gray-700 text-green-400"
-                  >
-                    <option value="">Select Phase</option>
-                    {phases.map((phase) => (
-                      <option key={phase.id} value={phase.id}>
-                        {phase.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-purple-400 mb-2">
-                    📖 Select Module
-                  </label>
-                  <select
-                    value={selectedModuleForUpload}
-                    onChange={(e) => setSelectedModuleForUpload(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-gray-700 text-green-400"
-                    disabled={!selectedPhaseForUpload}
-                  >
-                    <option value="">Select Module</option>
-                    {modules
-                      .filter(
-                        (module) => module.phaseId === selectedPhaseForUpload
-                      )
-                      .map((module) => (
-                        <option key={module.id} value={module.id}>
-                          {module.title}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Content Items */}
-              {selectedModuleForUpload && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-cyan-400">
-                      Content Items ({multipleUploads.length})
-                    </h3>
-                    <button
-                      onClick={addNewUploadItem}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors flex items-center"
-                    >
-                      <PlusIcon className="h-4 w-4 mr-2" />
-                      Add Item
-                    </button>
-                  </div>
-
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {multipleUploads.map((item, itemIndex) => (
-                      <div
-                        key={item.id}
-                        className="p-4 bg-gray-800 border border-gray-600 rounded-lg"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-md font-medium text-green-400">
-                            Item #{itemIndex + 1}
-                          </h4>
-                          {multipleUploads.length > 1 && (
-                            <button
-                              onClick={() => removeUploadItem(item.id)}
-                              className="text-red-400 hover:text-red-300 p-1"
-                            >
-                              <XMarkIcon className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-sm text-cyan-400 mb-1">
-                              Type
-                            </label>
-                            <select
-                              value={item.type}
-                              onChange={(e) =>
-                                updateUploadItem(
-                                  item.id,
-                                  "type",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
-                            >
-                              {contentTypes.map((type) => (
-                                <option key={type.value} value={type.value}>
-                                  {type.icon} {type.label}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm text-cyan-400 mb-1">
-                              Title*
-                            </label>
-                            <input
-                              type="text"
-                              value={item.title}
-                              onChange={(e) =>
-                                updateUploadItem(
-                                  item.id,
-                                  "title",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
-                              placeholder="Content title"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm text-cyan-400 mb-1">
-                              Section
-                            </label>
-                            <input
-                              type="text"
-                              value={item.section}
-                              onChange={(e) =>
-                                updateUploadItem(
-                                  item.id,
-                                  "section",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
-                              placeholder="Content section"
-                            />
-                          </div>
-
-                          <div className="md:col-span-2">
-                            <label className="block text-sm text-cyan-400 mb-1">
-                              Description*
-                            </label>
-                            <textarea
-                              value={item.description}
-                              onChange={(e) =>
-                                updateUploadItem(
-                                  item.id,
-                                  "description",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
-                              rows="2"
-                              placeholder="Content description"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm text-cyan-400 mb-1">
-                              Duration (min)
-                            </label>
-                            <input
-                              type="number"
-                              value={item.duration}
-                              onChange={(e) =>
-                                updateUploadItem(
-                                  item.id,
-                                  "duration",
-                                  parseInt(e.target.value)
-                                )
-                              }
-                              className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
-                              min="1"
-                            />
-                          </div>
-
-                          {item.type === "video" && (
-                            <div className="md:col-span-2">
-                              <label className="block text-sm text-cyan-400 mb-1">
-                                Video URL*
-                              </label>
-                              <input
-                                type="url"
-                                value={item.url}
-                                onChange={(e) =>
-                                  updateUploadItem(
-                                    item.id,
-                                    "url",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
-                                placeholder="https://example.com/video.mp4"
-                              />
-                            </div>
-                          )}
-
-                          {(item.type === "lab" || item.type === "game") && (
-                            <div className="md:col-span-3">
-                              <label className="block text-sm text-cyan-400 mb-1">
-                                Instructions*
-                              </label>
-                              <textarea
-                                value={item.instructions}
-                                onChange={(e) =>
-                                  updateUploadItem(
-                                    item.id,
-                                    "instructions",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-green-400"
-                                rows="3"
-                                placeholder="Detailed instructions..."
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {error && (
-                <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded">
-                  {error}
-                </div>
-              )}
-
-              <div className="flex justify-end space-x-4 pt-4 border-t border-gray-600">
-                <button
-                  onClick={closeMultipleUpload}
-                  className="px-6 py-2 text-green-400 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600"
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleMultipleUploadSubmit}
-                  disabled={
-                    loading ||
-                    !selectedModuleForUpload ||
-                    multipleUploads.length === 0
-                  }
-                  className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-500 disabled:opacity-50 flex items-center"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <SparklesIcon className="h-4 w-4 mr-2" />
-                      Create {multipleUploads.length} Items
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

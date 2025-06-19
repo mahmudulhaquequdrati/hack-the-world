@@ -2,45 +2,47 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
-import { Layers } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { TERMINAL_CHARS } from "../lib/colorUtils";
-import { phasesAPI } from "../services/api";
 
 // Import extracted components
-import { colorOptions } from "../components/phases/constants/phaseConstants";
 import DeleteConfirmationModal from "../components/phases/DeleteConfirmationModal";
-import usePhaseDragAndDrop from "../components/phases/hooks/usePhaseDragAndDrop";
+import usePhasesManager from "../components/phases/hooks/usePhasesManager";
 import PhasesFormModal from "../components/phases/PhasesFormModal";
 import ActionButtons from "../components/phases/ui/ActionButtons";
+import TerminalHeader from "../components/phases/ui/TerminalHeader";
 import PhaseCard, {
   PhaseCardMobile,
 } from "../components/phases/views/PhaseCard";
+import { sortPhasesByOrder } from "../components/phases/utils/phaseUtils";
 
 const PhasesManager = () => {
-  const [phases, setPhases] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [editingPhase, setEditingPhase] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [phaseToDelete, setPhaseToDelete] = useState(null);
-  const [viewMode, setViewMode] = useState("grid"); // Default to grid view
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    icon: "",
-    color: "green",
-    order: "",
-  });
-
-  // Drag-and-drop state
-  const [hasChanges, setHasChanges] = useState(false);
-
-  // Custom hook for drag and drop
   const {
+    // Data & Loading States
+    phases,
+    loading,
+    saving,
+    error,
+    success,
+    // View Management
+    viewMode,
+    setViewMode,
+    hasChanges,
+    // Form Management
+    formData,
+    handleInputChange,
+    openModal,
+    closeModal,
+    handleSubmit,
+    // Modal Management
+    showModal,
+    showDeleteModal,
+    editingPhase,
+    phaseToDelete,
+    handleDelete,
+    confirmDelete,
+    cancelDelete,
+    // Drag & Drop
     draggedPhase,
     dragOverPhase,
     isDragging,
@@ -50,298 +52,18 @@ const PhasesManager = () => {
     handleDragEnter,
     handleDragLeave,
     handleDrop,
-  } = usePhaseDragAndDrop(phases, setPhases, setHasChanges, setSuccess);
+    // Order Management
+    savePhaseOrder,
+    resetPhaseOrder,
+  } = usePhasesManager();
 
-  useEffect(() => {
-    fetchPhases();
-  }, []);
-
-  const fetchPhases = async (showLoader = true) => {
-    try {
-      if (showLoader) setLoading(true);
-      setError("");
-      console.log("🔄 Fetching phases...");
-      const response = await phasesAPI.getAll();
-      console.log("✅ Phases fetched:", response.data);
-
-      // Ensure we have a valid array
-      const phasesData = Array.isArray(response.data) ? response.data : [];
-
-      // Force state update using functional update to ensure React detects the change
-      setPhases((prevPhases) => {
-        console.log(
-          "🔄 Updating phases state from",
-          prevPhases.length,
-          "to",
-          phasesData.length,
-          "phases"
-        );
-        return [...phasesData];
-      });
-    } catch (error) {
-      console.error("❌ Error fetching phases:", error);
-      setError(error.response?.data?.message || "Failed to load phases");
-      setPhases([]);
-    } finally {
-      if (showLoader) setLoading(false);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const openModal = (phase = null) => {
-    setError("");
-    setSuccess("");
-    if (phase) {
-      setEditingPhase(phase);
-      setFormData({
-        title: phase.title || "",
-        description: phase.description || "",
-        icon: phase.icon || "",
-        color: phase.color || "green",
-        order: phase.order?.toString() || "",
-      });
-    } else {
-      setEditingPhase(null);
-      setFormData({
-        title: "",
-        description: "",
-        icon: "",
-        color: "green",
-        order: "",
-      });
-    }
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingPhase(null);
-    setError("");
-    setSuccess("");
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSaving(true);
-
-    try {
-      const phaseData = {
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        icon: formData.icon.trim(),
-        color: formData.color,
-      };
-
-      // Auto-calculate order for new phases
-      if (!editingPhase) {
-        // For new phases, set order to be the next available number
-        const maxOrder =
-          phases.length > 0 ? Math.max(...phases.map((p) => p.order || 0)) : 0;
-        phaseData.order = maxOrder + 1;
-      } else {
-        // For editing, keep the existing order or use form data if provided
-        phaseData.order = formData.order.trim()
-          ? parseInt(formData.order)
-          : editingPhase.order;
-      }
-
-      // Validate required fields
-      if (!phaseData.title || !phaseData.description || !phaseData.icon) {
-        throw new Error("Title, description, and icon are required");
-      }
-
-      // Validate color format
-      if (!colorOptions.includes(phaseData.color)) {
-        throw new Error("Please enter a valid Tailwind color name");
-      }
-
-      let responseData;
-
-      if (editingPhase) {
-        console.log("🔄 Updating phase:", editingPhase.id, phaseData);
-
-        // Optimistic update for editing
-        setPhases((prevPhases) =>
-          prevPhases.map((phase) =>
-            phase.id === editingPhase.id ? { ...phase, ...phaseData } : phase
-          )
-        );
-
-        const response = await phasesAPI.update(editingPhase.id, phaseData);
-        responseData = response.data;
-        console.log("✅ Phase updated:", responseData);
-        setSuccess("Phase updated successfully!");
-
-        // Update with server response data
-        setPhases((prevPhases) =>
-          prevPhases.map((phase) =>
-            phase.id === editingPhase.id ? responseData : phase
-          )
-        );
-      } else {
-        console.log("🔄 Creating new phase:", phaseData);
-        const response = await phasesAPI.create(phaseData);
-        responseData = response.data;
-        console.log("✅ Phase created:", responseData);
-        setSuccess("Phase created successfully!");
-
-        // Optimistic add for new phase
-        setPhases((prevPhases) => [...prevPhases, responseData]);
-      }
-
-      // Auto-close modal after 1.5 seconds on success
-      setTimeout(() => {
-        closeModal();
-      }, 1500);
-    } catch (error) {
-      console.error("Error saving phase:", error);
-      setError(
-        error.response?.data?.message || error.message || "Failed to save phase"
-      );
-
-      // Rollback optimistic updates on error by refetching
-      await fetchPhases(false);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = (phase) => {
-    setPhaseToDelete(phase);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!phaseToDelete) return;
-
-    try {
-      setSaving(true);
-      setError("");
-
-      console.log("🔄 Deleting phase:", phaseToDelete.id);
-
-      // Optimistic removal - remove from UI immediately
-      const phaseToDeleteId = phaseToDelete.id;
-      setPhases((prevPhases) =>
-        prevPhases.filter((phase) => phase.id !== phaseToDeleteId)
-      );
-
-      // Close modal immediately for better UX
-      setShowDeleteModal(false);
-      setPhaseToDelete(null);
-
-      const response = await phasesAPI.delete(phaseToDeleteId);
-      console.log("✅ Phase deleted:", response);
-
-      setSuccess("Phase deleted successfully!");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(""), 3000);
-    } catch (error) {
-      console.error("❌ Error deleting phase:", error);
-      setError(error.response?.data?.message || "Failed to delete phase");
-
-      // Rollback optimistic deletion on error by refetching
-      await fetchPhases(false);
-
-      // Clear error message after 5 seconds
-      setTimeout(() => setError(""), 5000);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const cancelDelete = () => {
-    setShowDeleteModal(false);
-    setPhaseToDelete(null);
-  };
-
-  // Save reordered phases to backend
-  const savePhaseOrder = async () => {
-    try {
-      setSaving(true);
-      setError("");
-
-      // Prepare order updates for batch API
-      const phaseOrders = phases.map((phase) => ({
-        id: phase.id,
-        order: phase.order,
-      }));
-
-      // Send batch update to backend using new batch endpoint
-      await phasesAPI.batchUpdateOrder({ phaseOrders });
-
-      setSuccess("Phase order saved successfully!");
-      setHasChanges(false);
-
-      // Refresh data to ensure consistency
-      await fetchPhases(false);
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(""), 3000);
-    } catch (error) {
-      console.error("Error saving phase order:", error);
-      setError("Failed to save phase order. Please try again.");
-
-      // Refresh to restore original order on error
-      await fetchPhases(false);
-      setHasChanges(false);
-
-      // Clear error message after 5 seconds
-      setTimeout(() => setError(""), 5000);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Reset order changes
-  const resetPhaseOrder = () => {
-    fetchPhases(false); // Reload original order without loader
-    setHasChanges(false);
-    setSuccess("");
-    setError("");
-  };
+  // All business logic is now handled by the usePhasesManager hook
 
   return (
     <div className="min-h-screen bg-black text-green-400">
       <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
         {/* Enhanced Terminal Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400/20 to-green-600/20 border-2 border-green-400/50 flex items-center justify-center animate-pulse">
-              <Layers className="w-6 h-6 text-green-400" />
-            </div>
-            <h2 className="text-4xl font-bold text-green-400 font-mono uppercase tracking-wider relative">
-              <span className="relative z-10">PHASES_MANAGEMENT</span>
-              <div className="absolute inset-0 bg-green-400/20 blur-lg rounded"></div>
-            </h2>
-          </div>
-          <div className="bg-gradient-to-r from-black/80 via-green-900/20 to-black/80 border border-green-400/30 rounded-xl p-4 max-w-3xl mx-auto relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 animate-pulse"></div>
-            <div className="relative z-10 flex items-center space-x-2">
-              <div className="flex space-x-1">
-                <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
-                <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-              </div>
-              <p className="text-green-400 font-mono text-sm ml-4">
-                <span className="text-green-300">admin@hacktheworld:</span>
-                <span className="text-blue-400">~/phases</span>
-                <span className="text-green-400">
-                  $ ./manage --learning-phases --cybersec-platform --enhanced
-                </span>
-                <span className="animate-ping text-green-400">█</span>
-              </p>
-            </div>
-          </div>
-        </div>
+        <TerminalHeader />
 
         {/* Action Buttons */}
         <ActionButtons
@@ -420,8 +142,7 @@ const PhasesManager = () => {
             {/* Terminal Grid View */}
             {viewMode === "grid" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  gap-6">
-                {phases
-                  .sort((a, b) => a.order - b.order)
+                {sortPhasesByOrder(phases)
                   .map((phase) => (
                     <PhaseCard
                       key={phase.id}

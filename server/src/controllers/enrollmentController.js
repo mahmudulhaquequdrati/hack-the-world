@@ -427,6 +427,103 @@ const getModuleEnrollmentStats = asyncHandler(async (req, res, next) => {
   });
 });
 
+/**
+ * @desc    Get batch module enrollment statistics (Admin only)
+ * @route   POST /api/enrollments/admin/stats/batch
+ * @access  Private/Admin
+ */
+const getBatchModuleEnrollmentStats = asyncHandler(async (req, res, next) => {
+  const { moduleIds } = req.body;
+
+  // Validate input
+  if (!moduleIds || !Array.isArray(moduleIds) || moduleIds.length === 0) {
+    return next(new ErrorResponse("Module IDs array is required", 400));
+  }
+
+  // Validate that all moduleIds are valid MongoDB ObjectIds
+  const invalidIds = moduleIds.filter(id => !id.match(/^[0-9a-fA-F]{24}$/));
+  if (invalidIds.length > 0) {
+    return next(new ErrorResponse(`Invalid module IDs: ${invalidIds.join(', ')}`, 400));
+  }
+
+  try {
+    // Get all modules in one query
+    const modules = await Module.find({ _id: { $in: moduleIds } }).select('_id title');
+    const foundModuleIds = modules.map(m => m._id.toString());
+    
+    // Check for missing modules
+    const missingModuleIds = moduleIds.filter(id => !foundModuleIds.includes(id));
+    if (missingModuleIds.length > 0) {
+      return next(new ErrorResponse(`Modules not found: ${missingModuleIds.join(', ')}`, 404));
+    }
+
+    // Get all enrollments for all modules in one aggregation query
+    const enrollmentData = await UserEnrollment.aggregate([
+      { $match: { moduleId: { $in: moduleIds.map(id => id) } } },
+      {
+        $group: {
+          _id: '$moduleId',
+          enrollments: { $push: '$$ROOT' }
+        }
+      }
+    ]);
+
+    // Create a map for quick lookup
+    const enrollmentMap = new Map();
+    enrollmentData.forEach(item => {
+      enrollmentMap.set(item._id.toString(), item.enrollments);
+    });
+
+    // Build response data
+    const batchStats = {};
+    
+    modules.forEach(module => {
+      const moduleId = module._id.toString();
+      const enrollments = enrollmentMap.get(moduleId) || [];
+      
+      const stats = {
+        totalEnrollments: enrollments.length,
+        activeEnrollments: enrollments.filter((e) => e.status === "active").length,
+        completedEnrollments: enrollments.filter((e) => e.status === "completed").length,
+        pausedEnrollments: enrollments.filter((e) => e.status === "paused").length,
+        droppedEnrollments: enrollments.filter((e) => e.status === "dropped").length,
+        averageProgress:
+          enrollments.length > 0
+            ? Math.round(
+                enrollments.reduce((sum, e) => sum + e.progressPercentage, 0) /
+                  enrollments.length
+              )
+            : 0,
+        completionRate:
+          enrollments.length > 0
+            ? Math.round(
+                (enrollments.filter((e) => e.status === "completed").length /
+                  enrollments.length) *
+                  100
+              )
+            : 0,
+      };
+
+      batchStats[moduleId] = {
+        module: {
+          id: module._id,
+          title: module.title,
+        },
+        stats,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Batch module enrollment statistics retrieved successfully",
+      data: batchStats,
+    });
+  } catch (error) {
+    console.error('Error in getBatchModuleEnrollmentStats:', error);
+    return next(new ErrorResponse("Error retrieving batch enrollment statistics", 500));
+  }
+});
+
 module.exports = {
   enrollUser,
   getUserEnrollments,
@@ -438,6 +535,7 @@ module.exports = {
   unenrollUser,
   getAllEnrollments,
   getModuleEnrollmentStats,
+  getBatchModuleEnrollmentStats,
   getUserEnrollmentsByUserId,
   getCurrentUserEnrollments,
 };

@@ -11,6 +11,7 @@ const {
   unenrollUser,
   getAllEnrollments,
   getModuleEnrollmentStats,
+  getBatchModuleEnrollmentStats,
   getUserEnrollmentsByUserId,
   getCurrentUserEnrollments,
 } = require("../controllers/enrollmentController");
@@ -673,6 +674,81 @@ router.get(
   [param("moduleId").isMongoId().withMessage("Valid module ID is required")],
   authorize("admin"),
   getModuleEnrollmentStats
+);
+
+/**
+ * @swagger
+ * /api/enrollments/admin/stats/batch:
+ *   post:
+ *     summary: Get batch module enrollment statistics (Admin only)
+ *     tags: [Enrollments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - moduleIds
+ *             properties:
+ *               moduleIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of module IDs
+ *     responses:
+ *       200:
+ *         description: Batch module enrollment statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   additionalProperties:
+ *                     type: object
+ *                     properties:
+ *                       module:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                       stats:
+ *                         type: object
+ *                         properties:
+ *                           totalEnrollments:
+ *                             type: number
+ *                           activeEnrollments:
+ *                             type: number
+ *                           completedEnrollments:
+ *                             type: number
+ *                           pausedEnrollments:
+ *                             type: number
+ *                           droppedEnrollments:
+ *                             type: number
+ *                           averageProgress:
+ *                             type: number
+ *                           completionRate:
+ *                             type: number
+ *       400:
+ *         description: Invalid input or module IDs
+ *       404:
+ *         description: One or more modules not found
+ */
+router.post(
+  "/admin/stats/batch",
+  [body("moduleIds").isArray({ min: 1 }).withMessage("Module IDs array is required")],
+  authorize("admin"),
+  getBatchModuleEnrollmentStats
 );
 
 module.exports = router;

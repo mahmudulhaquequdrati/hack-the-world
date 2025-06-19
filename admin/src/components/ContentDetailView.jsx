@@ -43,43 +43,73 @@ const ContentDetailView = () => {
     try {
       setLoading(true);
       setError("");
+      console.log("🔄 ContentDetailView: Starting optimized content fetch");
 
-      // Fetch content details
-      const contentResponse = await contentAPI.getById(contentId);
-      const contentData = contentResponse.data;
-      setContent(contentData);
+      // OPTIMIZED: Use admin-specific endpoint for content + module (no progress tracking)
+      // This replaces the original 4 separate API calls with simple admin-focused data
+      const [contentWithModuleRes] = await Promise.allSettled([
+        contentAPI.getByIdWithModule(contentId)  // Simple endpoint for admin details
+      ]);
 
-      // Fetch module details if content has a moduleId
-      if (contentData.module?.id || contentData.moduleId) {
-        try {
-          const moduleId = contentData.module?.id || contentData.moduleId;
-          const moduleResponse = await modulesAPI.getById(moduleId);
-          const moduleData = moduleResponse.data;
-          setModule(moduleData);
-
-          // Fetch phase details if module has a phaseId
-          if (moduleData.phaseId) {
+      if (contentWithModuleRes.status === "fulfilled") {
+        const response = contentWithModuleRes.value;
+        const contentData = response.data || response;
+        
+        // Set content data (includes module information)
+        setContent(contentData);
+        
+        // Extract module data from the response
+        if (contentData.module) {
+          setModule(contentData.module);
+          
+          // Get phase info from module if available, or fetch it
+          if (contentData.module.phase) {
+            setPhase(contentData.module.phase);
+          } else if (contentData.module.phaseId) {
+            // Fetch phase if not populated in module
             try {
-              const phaseResponse = await phasesAPI.getById(moduleData.phaseId);
+              const phaseResponse = await phasesAPI.getById(contentData.module.phaseId);
               setPhase(phaseResponse.data);
             } catch (phaseError) {
               console.warn("Could not fetch phase details:", phaseError);
             }
           }
 
-          // Fetch related content from the same module
+          // REMOVED: Unnecessary related content API call
+          // For admin content details, we don't need to show related content
+          // This eliminates one API call and focuses on the content itself
+        }
+      } else {
+        // Fallback to basic content fetch if optimized endpoint fails
+        console.warn("Admin content endpoint failed, falling back to basic calls");
+        const contentResponse = await contentAPI.getById(contentId);
+        const contentData = contentResponse.data;
+        setContent(contentData);
+
+        // If content has module ID, fetch module and related content
+        if (contentData.module?.id || contentData.moduleId) {
+          const moduleId = contentData.module?.id || contentData.moduleId;
+          
           try {
-            const relatedResponse = await contentAPI.getByModule(moduleId);
-            const relatedList = relatedResponse.data || [];
-            // Filter out current content
-            setRelatedContent(
-              relatedList.filter((item) => item.id !== contentId)
-            );
-          } catch (relatedError) {
-            console.warn("Could not fetch related content:", relatedError);
+            // Fetch module details
+            const moduleResponse = await modulesAPI.getById(moduleId);
+            const moduleData = moduleResponse.data;
+            setModule(moduleData);
+
+            // Fetch phase if module has phaseId
+            if (moduleData.phaseId) {
+              try {
+                const phaseResponse = await phasesAPI.getById(moduleData.phaseId);
+                setPhase(phaseResponse.data);
+              } catch (phaseError) {
+                console.warn("Could not fetch phase details:", phaseError);
+              }
+            }
+
+            // REMOVED: Related content fetch - not needed for admin content details
+          } catch (moduleError) {
+            console.warn("Could not fetch module details:", moduleError);
           }
-        } catch (moduleError) {
-          console.warn("Could not fetch module details:", moduleError);
         }
       }
     } catch (error) {
@@ -89,6 +119,7 @@ const ContentDetailView = () => {
       );
     } finally {
       setLoading(false);
+      console.log("✅ ContentDetailView: Content fetch completed");
     }
   };
 
@@ -293,54 +324,7 @@ const ContentDetailView = () => {
                 </div>
               )}
 
-              {/* Related Content Section */}
-              {relatedContent.length > 0 && (
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700 shadow-xl">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="p-2 bg-green-600/20 rounded-lg">
-                      <CubeIcon className="w-6 h-6 text-green-400" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white">
-                      Related Content{" "}
-                      <span className="text-gray-400 text-lg">
-                        ({relatedContent.length})
-                      </span>
-                    </h2>
-                  </div>
-                  <div className="grid gap-4">
-                    {relatedContent.slice(0, 5).map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between p-4 bg-gray-700/50 rounded-xl border border-gray-600/50 hover:bg-gray-700 transition-colors group"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div
-                            className={`p-2 rounded-lg border ${getContentTypeColor(
-                              item.type
-                            )}`}
-                          >
-                            {getContentTypeIcon(item.type, "w-5 h-5")}
-                          </div>
-                          <div>
-                            <div className="text-white font-medium group-hover:text-green-400 transition-colors">
-                              {item.title}
-                            </div>
-                            <div className="text-gray-400 text-sm">
-                              {item.type} • {formatDuration(item.duration || 0)}
-                            </div>
-                          </div>
-                        </div>
-                        <Link
-                          to={`/content/${item.id}`}
-                          className="p-2 bg-green-600/20 rounded-lg text-green-400 hover:text-green-300 hover:bg-green-600/30 transition-colors"
-                        >
-                          <EyeIcon className="w-5 h-5" />
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* REMOVED: Related Content Section - not needed for admin details */}
             </div>
 
             {/* Sidebar */}
@@ -374,14 +358,130 @@ const ContentDetailView = () => {
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center py-2">
+                  {content.order && (
+                    <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                      <span className="text-gray-400 text-sm">Order</span>
+                      <span className="text-white font-medium">
+                        #{content.order}
+                      </span>
+                    </div>
+                  )}
+                  {content.isActive !== undefined && (
+                    <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                      <span className="text-gray-400 text-sm">Status</span>
+                      <span className={`font-medium ${content.isActive ? 'text-green-400' : 'text-red-400'}`}>
+                        {content.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
                     <span className="text-gray-400 text-sm">Content ID</span>
                     <span className="text-white font-mono text-xs">
                       {content.id}
                     </span>
                   </div>
+                  {content.createdAt && (
+                    <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                      <span className="text-gray-400 text-sm">Created</span>
+                      <span className="text-white text-xs">
+                        {new Date(content.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
+                  {content.updatedAt && (
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-400 text-sm">Updated</span>
+                      <span className="text-white text-xs">
+                        {new Date(content.updatedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Content Metadata Card */}
+              {content.metadata && (
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 shadow-xl">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="p-2 bg-purple-600/20 rounded-lg">
+                      <StarIcon className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white">Metadata</h3>
+                  </div>
+                  <div className="space-y-4">
+                    {content.metadata.difficulty && (
+                      <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                        <span className="text-gray-400 text-sm">Difficulty</span>
+                        <span className="text-white font-medium">
+                          {content.metadata.difficulty}
+                        </span>
+                      </div>
+                    )}
+                    {content.metadata.estimatedTime && (
+                      <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+                        <span className="text-gray-400 text-sm">Est. Time</span>
+                        <span className="text-white font-medium">
+                          {content.metadata.estimatedTime}
+                        </span>
+                      </div>
+                    )}
+                    {content.metadata.tags && content.metadata.tags.length > 0 && (
+                      <div className="py-2 border-b border-gray-700/50">
+                        <span className="text-gray-400 text-sm block mb-2">Tags</span>
+                        <div className="flex flex-wrap gap-2">
+                          {content.metadata.tags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-gray-600/50 rounded text-xs text-gray-300"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {content.metadata.prerequisites && content.metadata.prerequisites.length > 0 && (
+                      <div className="py-2 border-b border-gray-700/50">
+                        <span className="text-gray-400 text-sm block mb-2">Prerequisites</span>
+                        <div className="space-y-1">
+                          {content.metadata.prerequisites.map((prereq, index) => (
+                            <div key={index} className="text-white text-sm">
+                              • {prereq}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {content.metadata.tools && content.metadata.tools.length > 0 && (
+                      <div className="py-2 border-b border-gray-700/50">
+                        <span className="text-gray-400 text-sm block mb-2">Tools</span>
+                        <div className="flex flex-wrap gap-2">
+                          {content.metadata.tools.map((tool, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs border border-blue-600/30"
+                            >
+                              {tool}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {content.metadata.objectives && content.metadata.objectives.length > 0 && (
+                      <div className="py-2">
+                        <span className="text-gray-400 text-sm block mb-2">Learning Objectives</span>
+                        <div className="space-y-1">
+                          {content.metadata.objectives.map((objective, index) => (
+                            <div key={index} className="text-white text-sm">
+                              {index + 1}. {objective}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

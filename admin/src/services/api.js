@@ -7,6 +7,55 @@ const API_BASE_URL =
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
 
+// Request deduplication cache
+const pendingRequests = new Map();
+const requestCache = new Map();
+const CACHE_DURATION = 30000; // 30 seconds cache for admin operations
+
+// Create deduplicated axios instance
+const createDedupedRequest = (config) => {
+  // Include request body for POST requests in the key
+  const bodyKey = config.data ? JSON.stringify(config.data) : '';
+  const paramsKey = config.params ? JSON.stringify(config.params) : '';
+  const key = `${config.method?.toLowerCase() || 'get'}-${config.url}-${paramsKey}-${bodyKey}`;
+  
+  // Return pending request if already in progress
+  if (pendingRequests.has(key)) {
+    console.log(`🔄 Deduplicating request: ${key}`);
+    return pendingRequests.get(key);
+  }
+  
+  // Check cache for GET requests only
+  if ((!config.method || config.method.toLowerCase() === 'get') && requestCache.has(key)) {
+    const cached = requestCache.get(key);
+    if (Date.now() - cached.timestamp < CACHE_DURATION) {
+      console.log(`📋 Using cached response: ${key}`);
+      return Promise.resolve(cached.data);
+    } else {
+      requestCache.delete(key);
+    }
+  }
+  
+  // Create new request
+  const requestPromise = axios(config).then(response => {
+    // Cache GET responses only
+    if (!config.method || config.method.toLowerCase() === 'get') {
+      requestCache.set(key, {
+        data: response,
+        timestamp: Date.now()
+      });
+    }
+    return response;
+  }).catch(error => {
+    throw error;
+  }).finally(() => {
+    pendingRequests.delete(key);
+  });
+  
+  pendingRequests.set(key, requestPromise);
+  return requestPromise;
+};
+
 // Add request interceptor to include auth token
 axios.interceptors.request.use(
   (config) => {
@@ -56,7 +105,7 @@ axios.interceptors.response.use(
 export const phasesAPI = {
   // Get all phases
   getAll: async () => {
-    const response = await axios.get("/phases");
+    const response = await createDedupedRequest({ url: "/phases" });
     return response.data;
   },
 
@@ -95,25 +144,34 @@ export const phasesAPI = {
 export const modulesAPI = {
   // Get all modules
   getAll: async () => {
-    const response = await axios.get("/modules");
+    const response = await createDedupedRequest({ url: "/modules" });
     return response.data;
   },
 
   // Get modules with phases (for course page)
   getWithPhases: async () => {
-    const response = await axios.get("/modules/with-phases");
+    const response = await createDedupedRequest({ url: "/modules/with-phases" });
     return response.data;
   },
 
   // Get modules by phase
   getByPhase: async (phaseId) => {
-    const response = await axios.get(`/modules/phase/${phaseId}`);
+    const response = await createDedupedRequest({ url: `/modules/phase/${phaseId}` });
     return response.data;
   },
 
   // Get single module
   getById: async (moduleId) => {
-    const response = await axios.get(`/modules/${moduleId}`);
+    const response = await createDedupedRequest({ url: `/modules/${moduleId}` });
+    return response.data;
+  },
+
+  // Get module with phase information
+  getByIdWithPhase: async (moduleId) => {
+    const response = await createDedupedRequest({ 
+      url: `/modules/${moduleId}`, 
+      params: { includePhase: true }
+    });
     return response.data;
   },
 
@@ -148,38 +206,59 @@ export const modulesAPI = {
 export const contentAPI = {
   // Get all content with filtering and pagination
   getAll: async (params = {}) => {
-    const response = await axios.get("/content", { params });
+    const response = await createDedupedRequest({ url: "/content", params });
     return response.data;
   },
 
   // Get content by ID
   getById: async (contentId) => {
-    const response = await axios.get(`/content/${contentId}`);
+    const response = await createDedupedRequest({ url: `/content/${contentId}` });
+    return response.data;
+  },
+
+  // Get content by ID with module info (admin-optimized)
+  getByIdWithModule: async (contentId) => {
+    const response = await createDedupedRequest({ 
+      url: `/content/${contentId}`,
+      params: { includeModule: true }
+    });
+    return response.data;
+  },
+
+  // Get content with module and progress (for student frontend)
+  getWithModuleAndProgress: async (contentId) => {
+    const response = await createDedupedRequest({ url: `/content/${contentId}/with-module-and-progress` });
     return response.data;
   },
 
   // Get content by module ID (not used yet)
   getByModule: async (moduleId) => {
-    const response = await axios.get(`/content/module/${moduleId}`);
+    const response = await createDedupedRequest({ url: `/content/module/${moduleId}` });
     return response.data;
   },
 
   // Get content by module ID grouped by type
   getByModuleGrouped: async (moduleId) => {
-    const response = await axios.get(`/content/module/${moduleId}/grouped`);
+    const response = await createDedupedRequest({ url: `/content/module/${moduleId}/grouped` });
+    return response.data;
+  },
+
+  // Get module content overview with statistics
+  getModuleOverview: async (moduleId) => {
+    const response = await createDedupedRequest({ url: `/content/module-overview/${moduleId}` });
     return response.data;
   },
 
   // Get content by type
   getByType: async (type, moduleId = null) => {
     const params = moduleId ? { moduleId } : {};
-    const response = await axios.get(`/content/type/${type}`, { params });
+    const response = await createDedupedRequest({ url: `/content/type/${type}`, params });
     return response.data;
   },
 
   // Get distinct sections by module
   getSectionsByModule: async (moduleId) => {
-    const response = await axios.get(`/content/sections/by-module/${moduleId}`);
+    const response = await createDedupedRequest({ url: `/content/sections/by-module/${moduleId}` });
     return response.data;
   },
 
@@ -262,14 +341,54 @@ export const enrollmentAPI = {
 
   // Admin: Get all enrollments
   getAllAdmin: async (params = {}) => {
-    const response = await axios.get("/enrollments/admin/all", { params });
+    const response = await createDedupedRequest({ url: "/enrollments/admin/all", params });
     return response.data;
   },
 
   // Admin: Get module enrollment statistics
   getModuleStats: async (moduleId) => {
-    const response = await axios.get(`/enrollments/admin/stats/${moduleId}`);
+    const response = await createDedupedRequest({ url: `/enrollments/admin/stats/${moduleId}` });
     return response.data;
+  },
+
+  // Admin: Get batch module enrollment statistics (optimized)
+  getBatchModuleStats: async (moduleIds) => {
+    // If only one module, use single endpoint
+    if (moduleIds.length === 1) {
+      return enrollmentAPI.getModuleStats(moduleIds[0]);
+    }
+
+    // Use new batch endpoint for multiple modules
+    try {
+      const response = await createDedupedRequest({
+        method: 'POST',
+        url: "/enrollments/admin/stats/batch",
+        data: { moduleIds }
+      });
+      return response.data;
+    } catch (error) {
+      console.warn('Batch stats endpoint failed, falling back to individual calls:', error);
+      
+      // Fallback to individual calls if batch endpoint fails
+      const statsPromises = moduleIds.map(moduleId => 
+        enrollmentAPI.getModuleStats(moduleId)
+      );
+      
+      const results = await Promise.allSettled(statsPromises);
+      const batchStats = {};
+      
+      results.forEach((result, index) => {
+        const moduleId = moduleIds[index];
+        if (result.status === 'fulfilled') {
+          batchStats[moduleId] = result.value;
+        } else {
+          console.warn(`Failed to fetch stats for module ${moduleId}:`, result.reason);
+          batchStats[moduleId] = { stats: { totalEnrollments: 0, activeEnrollments: 0 } };
+        }
+      });
+      
+      return { success: true, data: batchStats };
+    }
   },
 };
 

@@ -22,80 +22,90 @@ const Dashboard = () => {
   // Simplified to overview only - removed dashboard mode tabs
 
   useEffect(() => {
+    let isMounted = true; // Prevent state updates if component unmounts
+    
     const fetchStats = async () => {
       try {
-        const [modulesRes, phasesRes, contentRes] = await Promise.allSettled([
-          modulesAPI.getAll(),
-          phasesAPI.getAll(),
+        console.log("🔄 Dashboard: Starting stats fetch");
+        
+        // OPTIMIZED: Use modules/with-phases to get phases + modules + content counts in one call
+        // This replaces the original 3 separate API calls
+        const [phasesWithModulesRes, contentRes] = await Promise.allSettled([
+          modulesAPI.getWithPhases(),
           contentAPI.getAll(),
         ]);
 
-        // Get modules data for enrollment stats
-        const modulesData =
-          modulesRes.status === "fulfilled" ? modulesRes.value.data || [] : [];
+        if (!isMounted) return; // Component unmounted, skip state update
 
-        // Fetch enrollment statistics for all modules
+        const phasesData = phasesWithModulesRes.status === "fulfilled" ? phasesWithModulesRes.value.data || [] : [];
+        
+        // Calculate totals from consolidated data
+        const totalPhases = phasesData.length;
+        const allModules = phasesData.reduce((acc, phase) => [...acc, ...(phase.modules || [])], []);
+        const totalModules = allModules.length;
+        
+        // Get content count
+        const totalContent = contentRes.status === "fulfilled" ? contentRes.value.data?.length || 0 : 0;
+        
+        // OPTIMIZED: Fetch enrollment statistics for all modules in single batch call
         let totalEnrollments = 0;
         let activeEnrollments = 0;
 
-        if (modulesData.length > 0) {
+        if (allModules.length > 0) {
           try {
-            const enrollmentPromises = modulesData.map(async (module) => {
-              try {
-                const enrollmentRes = await enrollmentAPI.getModuleStats(
-                  module.id
-                );
-                return enrollmentRes.data?.stats || {};
-              } catch (error) {
-                console.warn(
-                  `Failed to fetch enrollment stats for module ${module.id}:`,
-                  error
-                );
-                return {};
-              }
-            });
-
-            const enrollmentResults = await Promise.allSettled(
-              enrollmentPromises
-            );
-            enrollmentResults.forEach((result) => {
-              if (result.status === "fulfilled" && result.value) {
-                totalEnrollments += result.value.totalEnrollments || 0;
-                activeEnrollments += result.value.activeEnrollments || 0;
-              }
-            });
+            const moduleIds = allModules.map(module => module.id);
+            console.log("📊 Dashboard: Fetching batch stats for modules:", moduleIds.length);
+            
+            const batchStatsRes = await enrollmentAPI.getBatchModuleStats(moduleIds);
+            
+            if (!isMounted) return; // Component unmounted, skip state update
+            
+            if (batchStatsRes.success && batchStatsRes.data) {
+              Object.values(batchStatsRes.data).forEach((moduleStats) => {
+                if (moduleStats && moduleStats.stats) {
+                  totalEnrollments += moduleStats.stats.totalEnrollments || 0;
+                  activeEnrollments += moduleStats.stats.activeEnrollments || 0;
+                }
+              });
+            }
           } catch (error) {
-            console.warn("Error fetching enrollment statistics:", error);
+            console.warn("Error fetching batch enrollment statistics:", error);
           }
         }
 
+        if (!isMounted) return; // Component unmounted, skip state update
+
         setStats({
-          totalPhases:
-            phasesRes.status === "fulfilled"
-              ? phasesRes.value.data?.length || 0
-              : 0,
-          totalModules: modulesData.length,
-          totalContent:
-            contentRes.status === "fulfilled"
-              ? contentRes.value.data?.length || 0
-              : 0,
+          totalPhases,
+          totalModules,
+          totalContent,
           totalEnrollments,
           activeEnrollments,
           loading: false,
           error: null,
         });
 
+        console.log("✅ Dashboard: Stats fetch completed");
+
       } catch (error) {
         console.error("Error fetching stats:", error);
-        setStats((prev) => ({
-          ...prev,
-          loading: false,
-          error: "Failed to load statistics",
-        }));
+        if (isMounted) {
+          setStats((prev) => ({
+            ...prev,
+            loading: false,
+            error: "Failed to load statistics",
+          }));
+        }
       }
     };
 
     fetchStats();
+    
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      console.log("🧹 Dashboard: Component unmounting, canceling requests");
+    };
   }, []);
 
 

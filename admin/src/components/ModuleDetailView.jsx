@@ -33,6 +33,7 @@ const ModuleDetailView = () => {
   const [module, setModule] = useState(null);
   const [phase, setPhase] = useState(null);
   const [content, setContent] = useState([]);
+  const [contentBySections, setContentBySections] = useState({});
   const [statistics, setStatistics] = useState({
     totalContent: 0,
     totalDuration: 0,
@@ -50,30 +51,123 @@ const ModuleDetailView = () => {
     try {
       setLoading(true);
       setError("");
+      console.log("🔄 ModuleDetailView: Starting optimized module fetch");
 
-      // Fetch module details
-      const moduleResponse = await modulesAPI.getById(moduleId);
-      const moduleData = moduleResponse.data;
-      setModule(moduleData);
+      // OPTIMIZED: Use comprehensive endpoints to reduce API calls from 3 to 2
+      const [moduleWithPhaseRes, moduleOverviewRes] = await Promise.allSettled([
+        modulesAPI.getByIdWithPhase(moduleId),  // Module + Phase in one call
+        contentAPI.getModuleOverview(moduleId)  // Content + Statistics in one call
+      ]);
 
-      // Fetch phase details if module has a phaseId
-      if (moduleData.phaseId) {
-        try {
-          const phaseResponse = await phasesAPI.getById(moduleData.phaseId);
-          setPhase(phaseResponse.data);
-        } catch (phaseError) {
-          console.warn("Could not fetch phase details:", phaseError);
+      // Handle module and phase data
+      if (moduleWithPhaseRes.status === "fulfilled") {
+        const moduleData = moduleWithPhaseRes.value.data || moduleWithPhaseRes.value;
+        setModule(moduleData);
+        
+        // Extract phase data if available
+        if (moduleData.phase) {
+          setPhase(moduleData.phase);
+        } else if (moduleData.phaseId) {
+          // Fallback: fetch phase if not populated in the response
+          try {
+            const phaseResponse = await phasesAPI.getById(moduleData.phaseId);
+            setPhase(phaseResponse.data);
+          } catch (phaseError) {
+            console.warn("Could not fetch phase details:", phaseError);
+          }
+        }
+      } else {
+        // Fallback to individual calls if comprehensive endpoint fails
+        console.warn("Module with phase endpoint failed, falling back to individual calls");
+        const moduleResponse = await modulesAPI.getById(moduleId);
+        const moduleData = moduleResponse.data;
+        setModule(moduleData);
+
+        if (moduleData.phaseId) {
+          try {
+            const phaseResponse = await phasesAPI.getById(moduleData.phaseId);
+            setPhase(phaseResponse.data);
+          } catch (phaseError) {
+            console.warn("Could not fetch phase details:", phaseError);
+          }
         }
       }
 
-      // Fetch content for this module
-      const contentResponse = await contentAPI.getByModule(moduleId);
-      const contentList = contentResponse.data || [];
-      setContent(contentList);
+      // Handle content overview data
+      let contentList = [];
+      if (moduleOverviewRes.status === "fulfilled") {
+        const overviewData = moduleOverviewRes.value.data || moduleOverviewRes.value;
+        
+        if (overviewData.contentBySections) {
+          // OPTIMIZED: Preserve section structure for proper display
+          setContentBySections(overviewData.contentBySections);
+          
+          // Also create flat list for backwards compatibility
+          Object.values(overviewData.contentBySections).forEach(section => {
+            if (Array.isArray(section)) {
+              contentList.push(...section);
+            }
+          });
+          setContent(contentList);
+        } else if (overviewData.content) {
+          contentList = overviewData.content;
+          setContent(contentList);
+          // Group content by sections if no section data available
+          const grouped = contentList.reduce((acc, item) => {
+            const section = item.section || 'General';
+            if (!acc[section]) acc[section] = [];
+            acc[section].push(item);
+            return acc;
+          }, {});
+          setContentBySections(grouped);
+        } else {
+          // FIXED: Handle API response where content is directly in data object by section keys
+          // API returns: {"something": [...], "anotherSection": [...]}
+          const sections = {};
+          let hasContent = false;
+          
+          Object.entries(overviewData).forEach(([key, value]) => {
+            if (Array.isArray(value) && value.length > 0 && value[0]._id) {
+              // This looks like a content array
+              sections[key] = value.map(item => ({
+                ...item,
+                id: item._id || item.id // Normalize id field
+              }));
+              contentList.push(...sections[key]);
+              hasContent = true;
+            }
+          });
+          
+          if (hasContent) {
+            setContentBySections(sections);
+            setContent(contentList);
+          }
+        }
 
-
-      // Calculate statistics
-      setStatistics(calculateContentStatistics(contentList));
+        // Use statistics from overview if available
+        if (overviewData.statistics) {
+          setStatistics(overviewData.statistics);
+        } else {
+          // Calculate statistics from content list
+          setStatistics(calculateContentStatistics(contentList));
+        }
+      } else {
+        // Fallback to individual content fetch
+        console.warn("Module overview endpoint failed, falling back to individual content fetch");
+        const contentResponse = await contentAPI.getByModule(moduleId);
+        contentList = contentResponse.data || [];
+        setContent(contentList);
+        setStatistics(calculateContentStatistics(contentList));
+        
+        // Group content by sections for fallback
+        const grouped = contentList.reduce((acc, item) => {
+          const section = item.section || 'General';
+          if (!acc[section]) acc[section] = [];
+          acc[section].push(item);
+          return acc;
+        }, {});
+        setContentBySections(grouped);
+      }
     } catch (error) {
       console.error("Error fetching module data:", error);
       setError(
@@ -81,6 +175,7 @@ const ModuleDetailView = () => {
       );
     } finally {
       setLoading(false);
+      console.log("✅ ModuleDetailView: Module fetch completed");
     }
   };
 
@@ -221,21 +316,21 @@ const ModuleDetailView = () => {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             {/* Main Content Column */}
             <div className="lg:col-span-3 space-y-8">
-              {/* Content List */}
+              {/* Content by Sections */}
               <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700 shadow-xl">
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="p-2 bg-purple-600/20 rounded-lg">
                     <BookOpenIcon className="w-6 h-6 text-purple-400" />
                   </div>
                   <h2 className="text-2xl font-bold text-white">
-                    Content{" "}
+                    Content by Sections{" "}
                     <span className="text-gray-400 text-lg">
-                      ({content.length})
+                      ({content.length} total)
                     </span>
                   </h2>
                 </div>
 
-                {content.length === 0 ? (
+                {Object.keys(contentBySections).length === 0 ? (
                   <div className="text-center text-gray-400 py-8">
                     <BookOpenIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p>No content found in this module.</p>
@@ -250,36 +345,82 @@ const ModuleDetailView = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid gap-4">
-                    {content.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between p-4 bg-gray-700/50 rounded-xl border border-gray-600/50 hover:bg-gray-700 transition-colors group"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div
-                            className={`p-2 rounded-lg border ${getContentTypeColor(
-                              item.type
-                            )}`}
-                          >
-                            {getContentTypeIcon(item.type, "w-5 h-5")}
-                          </div>
-                          <div>
-                            <div className="text-white font-medium group-hover:text-green-400 transition-colors">
-                              {item.title}
-                            </div>
-                            <div className="text-gray-400 text-sm">
-                              {item.type} • {formatDuration(item.duration || 0)}
-                              {item.section && ` • ${item.section}`}
-                            </div>
-                          </div>
+                  <div className="space-y-6">
+                    {Object.entries(contentBySections).map(([sectionName, sectionContent]) => (
+                      <div key={sectionName} className="space-y-4">
+                        {/* Section Header */}
+                        <div className="flex items-center space-x-3 pb-2 border-b border-gray-600/50">
+                          <h3 className="text-lg font-semibold text-white">
+                            {sectionName}
+                          </h3>
+                          <span className="px-2 py-1 bg-gray-600/50 rounded-full text-xs text-gray-300">
+                            {sectionContent.length} items
+                          </span>
                         </div>
-                        <Link
-                          to={`/content/${item.id}`}
-                          className="p-2 bg-green-600/20 rounded-lg text-green-400 hover:text-green-300 hover:bg-green-600/30 transition-colors"
-                        >
-                          <EyeIcon className="w-5 h-5" />
-                        </Link>
+
+                        {/* Section Content Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          {sectionContent.map((item) => (
+                            <div
+                              key={item.id}
+                              className="p-4 bg-gradient-to-r from-gray-700/50 to-gray-800/50 rounded-xl border border-gray-600/30 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 group"
+                            >
+                              {/* Content Header */}
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center space-x-3">
+                                  <div
+                                    className={`p-2 rounded-lg border ${getContentTypeColor(
+                                      item.type
+                                    )}`}
+                                  >
+                                    {getContentTypeIcon(item.type, "w-5 h-5")}
+                                  </div>
+                                  <div>
+                                    <h4 className="text-white font-medium group-hover:text-green-400 transition-colors leading-tight">
+                                      {item.title}
+                                    </h4>
+                                    <div className="flex items-center space-x-2 mt-1">
+                                      <span className="text-xs px-2 py-1 bg-gray-600/50 rounded text-gray-300 uppercase">
+                                        {item.type}
+                                      </span>
+                                      <span className="text-gray-400 text-xs">
+                                        {formatDuration(item.duration || 0)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <Link
+                                  to={`/content/${item.id}`}
+                                  className="p-2 bg-green-600/20 rounded-lg text-green-400 hover:text-green-300 hover:bg-green-600/30 transition-colors opacity-0 group-hover:opacity-100"
+                                  title="View Details"
+                                >
+                                  <EyeIcon className="w-4 h-4" />
+                                </Link>
+                              </div>
+
+                              {/* Content Description */}
+                              {item.description && (
+                                <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">
+                                  {item.description}
+                                </p>
+                              )}
+
+                              {/* Content Footer */}
+                              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-600/30">
+                                <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                  {item.order && (
+                                    <span>#{item.order}</span>
+                                  )}
+                                  {item.isActive !== undefined && (
+                                    <span className={`px-2 py-1 rounded ${item.isActive ? 'bg-green-600/20 text-green-400' : 'bg-red-600/20 text-red-400'}`}>
+                                      {item.isActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>

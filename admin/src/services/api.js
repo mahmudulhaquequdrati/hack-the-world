@@ -293,110 +293,6 @@ export const contentAPI = {
   },
 };
 
-// Enrollment API
-export const enrollmentAPI = {
-  // Create enrollment (enroll user in module)
-  create: async (moduleId) => {
-    const response = await axios.post("/enrollments", { moduleId });
-    return response.data;
-  },
-
-  // Get user enrollments
-  getUserEnrollments: async (params = {}) => {
-    const response = await axios.get("/enrollments", { params });
-    return response.data;
-  },
-
-  // Get enrollment by module
-  getByModule: async (moduleId) => {
-    const response = await axios.get(`/enrollments/module/${moduleId}`);
-    return response.data;
-  },
-
-  // Update enrollment progress
-  updateProgress: async (enrollmentId, completedSections) => {
-    const response = await axios.put(`/enrollments/${enrollmentId}/progress`, {
-      completedSections,
-    });
-    return response.data;
-  },
-
-  // Pause enrollment
-  pause: async (enrollmentId) => {
-    const response = await axios.put(`/enrollments/${enrollmentId}/pause`);
-    return response.data;
-  },
-
-  // Resume enrollment
-  resume: async (enrollmentId) => {
-    const response = await axios.put(`/enrollments/${enrollmentId}/resume`);
-    return response.data;
-  },
-
-  // Complete enrollment
-  complete: async (enrollmentId) => {
-    const response = await axios.put(`/enrollments/${enrollmentId}/complete`);
-    return response.data;
-  },
-
-  // Unenroll (delete enrollment)
-  delete: async (enrollmentId) => {
-    const response = await axios.delete(`/enrollments/${enrollmentId}`);
-    return response.data;
-  },
-
-  // Admin: Get all enrollments
-  getAllAdmin: async (params = {}) => {
-    const response = await createDedupedRequest({ url: "/enrollments/admin/all", params });
-    return response.data;
-  },
-
-  // Admin: Get module enrollment statistics
-  getModuleStats: async (moduleId) => {
-    const response = await createDedupedRequest({ url: `/enrollments/admin/stats/${moduleId}` });
-    return response.data;
-  },
-
-  // Admin: Get batch module enrollment statistics (optimized)
-  getBatchModuleStats: async (moduleIds) => {
-    // If only one module, use single endpoint
-    if (moduleIds.length === 1) {
-      return enrollmentAPI.getModuleStats(moduleIds[0]);
-    }
-
-    // Use new batch endpoint for multiple modules
-    try {
-      const response = await createDedupedRequest({
-        method: 'POST',
-        url: "/enrollments/admin/stats/batch",
-        data: { moduleIds }
-      });
-      return response.data;
-    } catch (error) {
-      console.warn('Batch stats endpoint failed, falling back to individual calls:', error);
-      
-      // Fallback to individual calls if batch endpoint fails
-      const statsPromises = moduleIds.map(moduleId => 
-        enrollmentAPI.getModuleStats(moduleId)
-      );
-      
-      const results = await Promise.allSettled(statsPromises);
-      const batchStats = {};
-      
-      results.forEach((result, index) => {
-        const moduleId = moduleIds[index];
-        if (result.status === 'fulfilled') {
-          batchStats[moduleId] = result.value;
-        } else {
-          console.warn(`Failed to fetch stats for module ${moduleId}:`, result.reason);
-          batchStats[moduleId] = { stats: { totalEnrollments: 0, activeEnrollments: 0 } };
-        }
-      });
-      
-      return { success: true, data: batchStats };
-    }
-  },
-};
 
 // Auth API
 export const authAPI = {
@@ -424,57 +320,10 @@ export const authAPI = {
   },
 };
 
-// Progress API
-export const progressAPI = {
-  // Get user's overall progress
-  getUserProgress: async (userId, params = {}) => {
-    const response = await axios.get(`/progress/${userId}`, { params });
-    return response.data;
-  },
-
-  // Get module-specific progress for a user
-  getUserModuleProgress: async (userId, moduleId) => {
-    const response = await axios.get(`/progress/${userId}/${moduleId}`);
-    return response.data;
-  },
-
-  // Update content progress
-  updateProgress: async (progressData) => {
-    const response = await axios.post("/progress", progressData);
-    return response.data;
-  },
-
-  // Mark content as completed
-  markContentCompleted: async (progressId, score = null) => {
-    const data = score !== null ? { score } : {};
-    const response = await axios.put(`/progress/${progressId}/complete`, data);
-    return response.data;
-  },
-
-  // Get module progress statistics
-  getModuleStats: async (moduleId) => {
-    const response = await axios.get(`/progress/stats/${moduleId}`);
-    return response.data;
-  },
-
-  // Get user's labs progress across all enrolled modules
-  getUserLabsProgress: async (userId, params = {}) => {
-    const response = await axios.get(`/progress/${userId}/labs`, { params });
-    return response.data;
-  },
-
-  // Get user's games progress across all enrolled modules
-  getUserGamesProgress: async (userId, params = {}) => {
-    const response = await axios.get(`/progress/${userId}/games`, { params });
-    return response.data;
-  },
-};
 
 export default {
   phases: phasesAPI,
   modules: modulesAPI,
   content: contentAPI,
-  enrollment: enrollmentAPI,
   auth: authAPI,
-  progress: progressAPI,
 };

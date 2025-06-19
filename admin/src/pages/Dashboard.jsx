@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   contentAPI,
-  enrollmentAPI,
   modulesAPI,
   phasesAPI,
 } from "../services/api";
@@ -12,8 +11,6 @@ const Dashboard = () => {
     totalPhases: 0,
     totalModules: 0,
     totalContent: 0,
-    totalEnrollments: 0,
-    activeEnrollments: 0,
     loading: true,
     error: null,
   });
@@ -46,32 +43,6 @@ const Dashboard = () => {
         
         // Get content count
         const totalContent = contentRes.status === "fulfilled" ? contentRes.value.data?.length || 0 : 0;
-        
-        // OPTIMIZED: Fetch enrollment statistics for all modules in single batch call
-        let totalEnrollments = 0;
-        let activeEnrollments = 0;
-
-        if (allModules.length > 0) {
-          try {
-            const moduleIds = allModules.map(module => module.id);
-            console.log("📊 Dashboard: Fetching batch stats for modules:", moduleIds.length);
-            
-            const batchStatsRes = await enrollmentAPI.getBatchModuleStats(moduleIds);
-            
-            if (!isMounted) return; // Component unmounted, skip state update
-            
-            if (batchStatsRes.success && batchStatsRes.data) {
-              Object.values(batchStatsRes.data).forEach((moduleStats) => {
-                if (moduleStats && moduleStats.stats) {
-                  totalEnrollments += moduleStats.stats.totalEnrollments || 0;
-                  activeEnrollments += moduleStats.stats.activeEnrollments || 0;
-                }
-              });
-            }
-          } catch (error) {
-            console.warn("Error fetching batch enrollment statistics:", error);
-          }
-        }
 
         if (!isMounted) return; // Component unmounted, skip state update
 
@@ -79,8 +50,6 @@ const Dashboard = () => {
           totalPhases,
           totalModules,
           totalContent,
-          totalEnrollments,
-          activeEnrollments,
           loading: false,
           error: null,
         });
@@ -134,22 +103,6 @@ const Dashboard = () => {
       textColor: "text-green-400",
       link: "/content",
     },
-    {
-      title: "Total Enrollments",
-      value: stats.totalEnrollments,
-      color: "border-blue-500",
-      bgColor: "bg-blue-500/10",
-      textColor: "text-blue-400",
-      link: "/enrollments",
-    },
-    {
-      title: "Active Students",
-      value: stats.activeEnrollments,
-      color: "border-yellow-500",
-      bgColor: "bg-yellow-500/10",
-      textColor: "text-yellow-400",
-      link: "/enrollments",
-    },
   ];
   return (
     <div className="min-h-screen bg-black text-green-400">
@@ -170,7 +123,7 @@ const Dashboard = () => {
         </div>
 
         {/* Statistics Cards with Terminal Theme */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {statCards.map(
             (stat, index) => (
               <Link
@@ -186,7 +139,7 @@ const Dashboard = () => {
                     <p className="text-xs text-green-300/60 font-mono mt-1">SYSTEM_METRIC</p>
                   </div>
                   <div className="w-12 h-12 rounded-full bg-green-400/20 border-2 border-green-400/40 flex items-center justify-center group-hover:animate-pulse">
-                    <span className="text-green-400 text-xl font-mono">{index === 0 ? '📊' : index === 1 ? '📝' : index === 2 ? '📁' : '👥'}</span>
+                    <span className="text-green-400 text-xl font-mono">{index === 0 ? '📊' : index === 1 ? '📝' : '📁'}</span>
                   </div>
                 </div>
               </Link>
@@ -250,12 +203,6 @@ const Dashboard = () => {
                 className="block w-full btn-secondary text-center"
               >
                 Manage Content
-              </Link>
-              <Link
-                to="/enrollments"
-                className="block w-full btn-secondary text-center"
-              >
-                Track Enrollments
               </Link>
             </div>
           </div>

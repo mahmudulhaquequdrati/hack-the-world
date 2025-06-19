@@ -24,11 +24,8 @@ The Admin Panel is a comprehensive management interface for the Hack The World c
 | **Phases**         | 5               | 5             | 100%       | ✅ Active   |
 | **Modules**        | 9               | 6             | 67%        | ✅ Active   |
 | **Content**        | 9               | 8             | 89%        | ✅ Active   |
-| **Enrollment**     | 9               | 5             | 56%        | ✅ Active   |
-| **Progress**       | 8               | 4             | 50%        | ✅ Active   |
-| **Profile**        | 8               | 0             | 0%         | ❌ Not Used |
 
-**Total API Coverage**: 42/57 endpoints (74%)
+**Total API Coverage**: 22/32 endpoints (69%)
 
 ---
 
@@ -190,93 +187,6 @@ GET /api/content/module/:moduleId # Get content by module (could be useful)
 
 ---
 
-### 🎓 Enrollment APIs
-
-#### Used Endpoints:
-
-```
-GET    /api/enrollment/admin/all           # Get all enrollments
-GET    /api/enrollment/admin/stats         # Enrollment statistics
-GET    /api/enrollment/admin/:moduleId/stats # Module enrollment stats
-PUT    /api/enrollment/admin/:enrollmentId # Update enrollment
-DELETE /api/enrollment/admin/:enrollmentId # Delete enrollment
-```
-
-#### Component: `EnrollmentTrackingPage.jsx`
-
-- **Location**: `src/components/EnrollmentTrackingPage.jsx`
-- **Purpose**: Complete enrollment oversight and management
-- **API Calls**:
-  - `GET /api/enrollment/admin/all` - Load all student enrollments
-  - `GET /api/enrollment/admin/stats` - Global enrollment statistics
-  - `GET /api/enrollment/admin/:moduleId/stats` - Module-specific stats
-  - `PUT /api/enrollment/admin/:enrollmentId` - Update enrollment status
-  - `DELETE /api/enrollment/admin/:enrollmentId` - Remove enrollment
-
-#### Component: `ModulesManagerEnhanced.jsx`
-
-- **Location**: `src/components/ModulesManagerEnhanced.jsx`
-- **Purpose**: Enrollment integration with module management
-- **API Calls**:
-  - Enrollment statistics for modules
-  - Enrollment status indicators
-
-#### Unused Endpoints:
-
-```
-GET    /api/enrollment            # Get user enrollments (student feature)
-POST   /api/enrollment/:moduleId  # Enroll in module (student feature)
-GET    /api/enrollment/:moduleId  # Get enrollment details (student feature)
-DELETE /api/enrollment/:moduleId  # Unenroll from module (student feature)
-```
-
----
-
-### 📈 Progress APIs
-
-#### Used Endpoints:
-
-```
-GET /api/progress/admin/all           # Get all progress records
-GET /api/progress/admin/user/:userId  # Get user progress
-GET /api/progress/admin/module/:moduleId # Get module progress
-GET /api/progress/admin/analytics     # Progress analytics
-```
-
-#### Component: `Dashboard.jsx`
-
-- **Location**: `src/components/Dashboard.jsx`
-- **Purpose**: Administrative dashboard with progress analytics
-- **API Calls**:
-  - `GET /api/progress/admin/analytics` - Learning progress insights
-  - `GET /api/progress/admin/all` - Global progress overview
-
-#### Component: `ModuleProgressDetailView.jsx`
-
-- **Location**: `src/components/ModuleProgressDetailView.jsx`
-- **Purpose**: Detailed module progress analysis
-- **API Calls**:
-  - `GET /api/progress/admin/module/:moduleId` - Module-specific progress
-  - `GET /api/progress/admin/user/:userId` - Individual user progress
-
-#### Component: `ContentProgressDetailView.jsx`
-
-- **Location**: `src/components/ContentProgressDetailView.jsx`
-- **Purpose**: Content-level progress tracking
-- **API Calls**:
-  - Progress data integration for content analytics
-
-#### Unused Endpoints:
-
-```
-GET  /api/progress                        # Get user progress (student feature)
-POST /api/progress                        # Update progress (student feature)
-GET  /api/progress/module/:moduleId       # Get module progress (student feature)
-POST /api/progress/content/:contentId/complete # Mark complete (student feature)
-```
-
----
-
 ### 👤 Profile APIs (Not Used)
 
 #### Available Endpoints:
@@ -307,9 +217,9 @@ GET    /api/profile/stats         # Get profile stats
 
 #### `Dashboard.jsx`
 
-- **APIs**: Progress analytics, enrollment stats
-- **Purpose**: Main administrative overview
-- **Key Features**: System metrics, progress tracking, alerts
+- **APIs**: Phases, modules, content stats
+- **Purpose**: Main administrative overview  
+- **Key Features**: System metrics, content statistics, admin status overview
 
 #### `PhasesManager.jsx`
 
@@ -319,9 +229,9 @@ GET    /api/profile/stats         # Get profile stats
 
 #### `ModulesManagerEnhanced.jsx`
 
-- **APIs**: Module management + enrollment stats
-- **Purpose**: Advanced module management with analytics
-- **Key Features**: Module CRUD, enrollment tracking, statistics
+- **APIs**: Module management endpoints
+- **Purpose**: Advanced module management  
+- **Key Features**: Module CRUD, module organization, content integration
 
 #### `ContentManager.jsx`
 
@@ -329,45 +239,25 @@ GET    /api/profile/stats         # Get profile stats
 - **Purpose**: Complete content lifecycle management
 - **Key Features**: Multi-type content creation, section organization
 
-#### `EnrollmentTrackingPage.jsx`
-
-- **APIs**: Enrollment admin endpoints
-- **Purpose**: Student enrollment oversight
-- **Key Features**: Enrollment analytics, bulk operations, status management
-
 ### Detail View Components
 
 #### `PhaseDetailView.jsx`
 
-- **APIs**: Phases, modules, enrollment stats
+- **APIs**: Phases, modules
 - **Purpose**: Comprehensive phase information
-- **Key Features**: Phase analytics, module listing, enrollment overview
+- **Key Features**: Phase details, module listing, content overview
 
 #### `ModuleDetailView.jsx`
 
-- **APIs**: Modules, content, enrollment data
+- **APIs**: Modules, content
 - **Purpose**: Detailed module analysis
-- **Key Features**: Module statistics, content overview, enrollment tracking
+- **Key Features**: Module details, content management, module organization
 
 #### `ContentDetailView.jsx`
 
 - **APIs**: Content endpoints
 - **Purpose**: Individual content management
-- **Key Features**: Content analytics, metadata management
-
-### User Experience Components
-
-#### `MyEnrollments.jsx`
-
-- **APIs**: User enrollment data (admin context)
-- **Purpose**: User enrollment overview
-- **Key Features**: Enrollment status, progress tracking
-
-#### `MyLabs.jsx` & `MyGames.jsx`
-
-- **APIs**: Progress tracking APIs
-- **Purpose**: Specialized content views
-- **Key Features**: Lab/game progress, completion tracking
+- **Key Features**: Content details, metadata management, content organization
 
 ---
 
@@ -500,4 +390,4 @@ const fetchData = async () => {
 
 ---
 
-**Admin Panel provides comprehensive management capabilities with 74% API coverage! 🚀**
+**Admin Panel provides comprehensive content management capabilities with 69% API coverage! 🚀**

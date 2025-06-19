@@ -8,7 +8,6 @@ import {
   FolderIcon,
   HomeIcon,
   UserIcon,
-  UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import React, { useState } from "react";
@@ -25,7 +24,6 @@ const Layout = () => {
     { name: "Phases", href: "/phases", icon: CubeIcon },
     { name: "Modules", href: "/modules", icon: DocumentIcon },
     { name: "Content", href: "/content", icon: FolderIcon },
-    { name: "Enrollments", href: "/enrollments", icon: UsersIcon },
   ];
 
   const isActive = (href) => location.pathname === href;

@@ -9,17 +9,13 @@ import Layout from "./components/Layout";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ContentDetailView from "./pages/ContentDetailView";
 import ContentManager from "./pages/ContentManager";
-import ContentProgressDetailView from "./pages/ContentProgressDetailView";
 import Dashboard from "./pages/Dashboard";
-import EnrollmentTrackingPage from "./pages/EnrollmentTrackingPage";
 import Login from "./pages/Login";
 import ModuleDetailView from "./pages/ModuleDetailView";
-import ModuleProgressDetailView from "./pages/ModuleProgressDetailView";
 import ModulesManagerEnhanced from "./pages/ModulesManagerEnhanced";
 import PhaseDetailView from "./pages/PhaseDetailView";
 import PhasesManager from "./pages/PhasesManager";
 import Register from "./pages/Register";
-import UserBasedEnrollmentView from "./pages/UserBasedEnrollmentView";
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -89,21 +85,8 @@ function App() {
             <Route path="phases/:phaseId" element={<PhaseDetailView />} />
             <Route path="modules" element={<ModulesManagerEnhanced />} />
             <Route path="modules/:moduleId" element={<ModuleDetailView />} />
-            <Route
-              path="modules/:moduleId/progress"
-              element={<ModuleProgressDetailView />}
-            />
             <Route path="content" element={<ContentManager />} />
             <Route path="content/:contentId" element={<ContentDetailView />} />
-            <Route
-              path="content/:contentId/progress"
-              element={<ContentProgressDetailView />}
-            />
-            <Route path="enrollments" element={<EnrollmentTrackingPage />} />
-            <Route
-              path="enrollments/users"
-              element={<UserBasedEnrollmentView />}
-            />
           </Route>
         </Routes>
       </Router>

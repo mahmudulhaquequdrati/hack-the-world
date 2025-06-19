@@ -200,6 +200,12 @@ export const modulesAPI = {
     });
     return response.data;
   },
+
+  // Batch update module orders (similar to phases)
+  batchUpdateOrder: async (data) => {
+    const response = await axios.put("/modules/batch-order", data);
+    return response.data;
+  },
 };
 
 // Content API

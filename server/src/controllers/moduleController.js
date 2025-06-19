@@ -402,6 +402,79 @@ const reorderModules = asyncHandler(async (req, res, next) => {
   }
 });
 
+/**
+ * @desc    Batch update module orders
+ * @route   PUT /api/modules/batch-order
+ * @access  Private (Admin only)
+ */
+const batchUpdateModuleOrder = asyncHandler(async (req, res, next) => {
+  const { moduleOrders } = req.body; // Array of { id, order }
+
+  if (!Array.isArray(moduleOrders) || moduleOrders.length === 0) {
+    return next(new ErrorResponse("Module orders array is required", 400));
+  }
+
+  // Validate all module IDs and orders
+  for (const { id, order } of moduleOrders) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return next(new ErrorResponse(`Invalid module ID format: ${id}`, 400));
+    }
+    if (typeof order !== "number" || order < 1) {
+      return next(new ErrorResponse(`Invalid order value: ${order}`, 400));
+    }
+  }
+
+  // Get all module IDs and verify they exist
+  const moduleIds = moduleOrders.map(item => item.id);
+  const existingModules = await Module.find({ _id: { $in: moduleIds } });
+  
+  if (existingModules.length !== moduleIds.length) {
+    return next(new ErrorResponse("Some modules not found", 404));
+  }
+
+  // Use transaction to ensure atomicity and handle unique constraint conflicts
+  const session = await mongoose.startSession();
+  
+  try {
+    await session.withTransaction(async () => {
+      // First, set all modules to temporary negative orders to avoid conflicts
+      const tempUpdatePromises = moduleOrders.map(({ id }, index) =>
+        Module.findByIdAndUpdate(
+          id,
+          { order: -(index + 1) }, // Use negative numbers temporarily
+          { session }
+        )
+      );
+      await Promise.all(tempUpdatePromises);
+
+      // Then update with the actual orders
+      const finalUpdatePromises = moduleOrders.map(({ id, order }) =>
+        Module.findByIdAndUpdate(
+          id,
+          { order },
+          { new: true, runValidators: true, session }
+        )
+      );
+      await Promise.all(finalUpdatePromises);
+    });
+
+    await session.endSession();
+
+    // Fetch updated modules
+    const updatedModules = await Module.find({}).sort({ order: 1 }).populate("phase");
+
+    res.status(200).json({
+      success: true,
+      message: "Module orders updated successfully",
+      data: updatedModules,
+    });
+  } catch (error) {
+    await session.endSession();
+    console.error("Module batch update error:", error);
+    return next(new ErrorResponse(`Failed to update module orders: ${error.message}`, 500));
+  }
+});
+
 module.exports = {
   getModules,
   getModulesWithPhases,
@@ -411,4 +484,5 @@ module.exports = {
   deleteModule,
   getModulesByPhase,
   reorderModules,
+  batchUpdateModuleOrder,
 };

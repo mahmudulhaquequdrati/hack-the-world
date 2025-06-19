@@ -8,6 +8,7 @@ const {
   deleteModule,
   getModulesByPhase,
   reorderModules,
+  batchUpdateModuleOrder,
 } = require("../controllers/moduleController");
 
 // Import validation middleware (we'll create this)
@@ -193,6 +194,60 @@ router.get("/", getModules);
  *                           $ref: '#/components/schemas/Module'
  */
 router.get("/with-phases", getModulesWithPhases);
+
+/**
+ * @swagger
+ * /modules/batch-order:
+ *   put:
+ *     summary: Batch update module orders
+ *     tags: [Modules]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - moduleOrders
+ *             properties:
+ *               moduleOrders:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - id
+ *                     - order
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: objectId
+ *                       description: Module ObjectId
+ *                     order:
+ *                       type: number
+ *                       minimum: 1
+ *                       description: New order position
+ *     responses:
+ *       200:
+ *         description: Module orders updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Module'
+ *       400:
+ *         description: Invalid module IDs or validation error
+ *       404:
+ *         description: Some modules not found
+ */
+router.put("/batch-order", protect, requireAdmin, batchUpdateModuleOrder);
 
 /**
  * @swagger

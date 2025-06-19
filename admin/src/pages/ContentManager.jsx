@@ -6,12 +6,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { contentAPI, modulesAPI, phasesAPI } from "../services/api";
 
 // Import extracted components
-import ContentCard from "./content/views/ContentCard";
-import ContentFiltersAndControls from "./content/ContentFiltersAndControls";
-import ContentFormModal from "./content/ContentFormModal";
-import MultipleUploadModal from "./content/MultipleUploadModal";
-import ActionButtons from "./content/ui/ActionButtons";
-import TerminalHeader from "./content/ui/TerminalHeader";
+import ContentFiltersAndControls from "../components/content/ContentFiltersAndControls";
+import ContentFormModal from "../components/content/ContentFormModal";
+import MultipleUploadModal from "../components/content/MultipleUploadModal";
+import ActionButtons from "../components/content/ui/ActionButtons";
+import TerminalHeader from "../components/content/ui/TerminalHeader";
+import ContentCard from "../components/content/views/ContentCard";
 
 const ContentManager = () => {
   // Core data state

@@ -8,24 +8,20 @@ import {
 import { Gauge } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import Breadcrumb from "../components/shared/Breadcrumb";
+import ErrorState from "../components/shared/ErrorState";
+import LoadingState from "../components/shared/LoadingState";
+import NotFoundState from "../components/shared/NotFoundState";
+import QuickActionsBar from "../components/shared/QuickActionsBar";
 import { getIconFromName } from "../lib/iconUtils";
+import { contentAPI, modulesAPI, phasesAPI } from "../services/api";
 import {
-  contentAPI,
-  modulesAPI,
-  phasesAPI,
-} from "../services/api";
-import {
-  formatDuration,
-  getContentTypeIcon,
-  getContentTypeColor,
-  getDifficultyColor,
   calculateContentStatistics,
+  formatDuration,
+  getContentTypeColor,
+  getContentTypeIcon,
+  getDifficultyColor,
 } from "../utils/contentHelpers.jsx";
-import LoadingState from "./shared/LoadingState";
-import ErrorState from "./shared/ErrorState";
-import NotFoundState from "./shared/NotFoundState";
-import Breadcrumb from "./shared/Breadcrumb";
-import QuickActionsBar from "./shared/QuickActionsBar";
 
 const ModuleDetailView = () => {
   const { moduleId } = useParams();
@@ -55,15 +51,16 @@ const ModuleDetailView = () => {
 
       // OPTIMIZED: Use comprehensive endpoints to reduce API calls from 3 to 2
       const [moduleWithPhaseRes, moduleOverviewRes] = await Promise.allSettled([
-        modulesAPI.getByIdWithPhase(moduleId),  // Module + Phase in one call
-        contentAPI.getModuleOverview(moduleId)  // Content + Statistics in one call
+        modulesAPI.getByIdWithPhase(moduleId), // Module + Phase in one call
+        contentAPI.getModuleOverview(moduleId), // Content + Statistics in one call
       ]);
 
       // Handle module and phase data
       if (moduleWithPhaseRes.status === "fulfilled") {
-        const moduleData = moduleWithPhaseRes.value.data || moduleWithPhaseRes.value;
+        const moduleData =
+          moduleWithPhaseRes.value.data || moduleWithPhaseRes.value;
         setModule(moduleData);
-        
+
         // Extract phase data if available
         if (moduleData.phase) {
           setPhase(moduleData.phase);
@@ -78,7 +75,9 @@ const ModuleDetailView = () => {
         }
       } else {
         // Fallback to individual calls if comprehensive endpoint fails
-        console.warn("Module with phase endpoint failed, falling back to individual calls");
+        console.warn(
+          "Module with phase endpoint failed, falling back to individual calls"
+        );
         const moduleResponse = await modulesAPI.getById(moduleId);
         const moduleData = moduleResponse.data;
         setModule(moduleData);
@@ -96,14 +95,15 @@ const ModuleDetailView = () => {
       // Handle content overview data
       let contentList = [];
       if (moduleOverviewRes.status === "fulfilled") {
-        const overviewData = moduleOverviewRes.value.data || moduleOverviewRes.value;
-        
+        const overviewData =
+          moduleOverviewRes.value.data || moduleOverviewRes.value;
+
         if (overviewData.contentBySections) {
           // OPTIMIZED: Preserve section structure for proper display
           setContentBySections(overviewData.contentBySections);
-          
+
           // Also create flat list for backwards compatibility
-          Object.values(overviewData.contentBySections).forEach(section => {
+          Object.values(overviewData.contentBySections).forEach((section) => {
             if (Array.isArray(section)) {
               contentList.push(...section);
             }
@@ -114,7 +114,7 @@ const ModuleDetailView = () => {
           setContent(contentList);
           // Group content by sections if no section data available
           const grouped = contentList.reduce((acc, item) => {
-            const section = item.section || 'General';
+            const section = item.section || "General";
             if (!acc[section]) acc[section] = [];
             acc[section].push(item);
             return acc;
@@ -125,19 +125,19 @@ const ModuleDetailView = () => {
           // API returns: {"something": [...], "anotherSection": [...]}
           const sections = {};
           let hasContent = false;
-          
+
           Object.entries(overviewData).forEach(([key, value]) => {
             if (Array.isArray(value) && value.length > 0 && value[0]._id) {
               // This looks like a content array
-              sections[key] = value.map(item => ({
+              sections[key] = value.map((item) => ({
                 ...item,
-                id: item._id || item.id // Normalize id field
+                id: item._id || item.id, // Normalize id field
               }));
               contentList.push(...sections[key]);
               hasContent = true;
             }
           });
-          
+
           if (hasContent) {
             setContentBySections(sections);
             setContent(contentList);
@@ -153,15 +153,17 @@ const ModuleDetailView = () => {
         }
       } else {
         // Fallback to individual content fetch
-        console.warn("Module overview endpoint failed, falling back to individual content fetch");
+        console.warn(
+          "Module overview endpoint failed, falling back to individual content fetch"
+        );
         const contentResponse = await contentAPI.getByModule(moduleId);
         contentList = contentResponse.data || [];
         setContent(contentList);
         setStatistics(calculateContentStatistics(contentList));
-        
+
         // Group content by sections for fallback
         const grouped = contentList.reduce((acc, item) => {
-          const section = item.section || 'General';
+          const section = item.section || "General";
           if (!acc[section]) acc[section] = [];
           acc[section].push(item);
           return acc;
@@ -178,11 +180,6 @@ const ModuleDetailView = () => {
       console.log("✅ ModuleDetailView: Module fetch completed");
     }
   };
-
-
-
-
-
 
   if (loading) {
     return <LoadingState message="Loading module details..." />;
@@ -346,83 +343,89 @@ const ModuleDetailView = () => {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {Object.entries(contentBySections).map(([sectionName, sectionContent]) => (
-                      <div key={sectionName} className="space-y-4">
-                        {/* Section Header */}
-                        <div className="flex items-center space-x-3 pb-2 border-b border-gray-600/50">
-                          <h3 className="text-lg font-semibold text-white">
-                            {sectionName}
-                          </h3>
-                          <span className="px-2 py-1 bg-gray-600/50 rounded-full text-xs text-gray-300">
-                            {sectionContent.length} items
-                          </span>
-                        </div>
+                    {Object.entries(contentBySections).map(
+                      ([sectionName, sectionContent]) => (
+                        <div key={sectionName} className="space-y-4">
+                          {/* Section Header */}
+                          <div className="flex items-center space-x-3 pb-2 border-b border-gray-600/50">
+                            <h3 className="text-lg font-semibold text-white">
+                              {sectionName}
+                            </h3>
+                            <span className="px-2 py-1 bg-gray-600/50 rounded-full text-xs text-gray-300">
+                              {sectionContent.length} items
+                            </span>
+                          </div>
 
-                        {/* Section Content Grid */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                          {sectionContent.map((item) => (
-                            <div
-                              key={item.id}
-                              className="p-4 bg-gradient-to-r from-gray-700/50 to-gray-800/50 rounded-xl border border-gray-600/30 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 group"
-                            >
-                              {/* Content Header */}
-                              <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center space-x-3">
-                                  <div
-                                    className={`p-2 rounded-lg border ${getContentTypeColor(
-                                      item.type
-                                    )}`}
-                                  >
-                                    {getContentTypeIcon(item.type, "w-5 h-5")}
-                                  </div>
-                                  <div>
-                                    <h4 className="text-white font-medium group-hover:text-green-400 transition-colors leading-tight">
-                                      {item.title}
-                                    </h4>
-                                    <div className="flex items-center space-x-2 mt-1">
-                                      <span className="text-xs px-2 py-1 bg-gray-600/50 rounded text-gray-300 uppercase">
-                                        {item.type}
-                                      </span>
-                                      <span className="text-gray-400 text-xs">
-                                        {formatDuration(item.duration || 0)}
-                                      </span>
+                          {/* Section Content Grid */}
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {sectionContent.map((item) => (
+                              <div
+                                key={item.id}
+                                className="p-4 bg-gradient-to-r from-gray-700/50 to-gray-800/50 rounded-xl border border-gray-600/30 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 group"
+                              >
+                                {/* Content Header */}
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex items-center space-x-3">
+                                    <div
+                                      className={`p-2 rounded-lg border ${getContentTypeColor(
+                                        item.type
+                                      )}`}
+                                    >
+                                      {getContentTypeIcon(item.type, "w-5 h-5")}
+                                    </div>
+                                    <div>
+                                      <h4 className="text-white font-medium group-hover:text-green-400 transition-colors leading-tight">
+                                        {item.title}
+                                      </h4>
+                                      <div className="flex items-center space-x-2 mt-1">
+                                        <span className="text-xs px-2 py-1 bg-gray-600/50 rounded text-gray-300 uppercase">
+                                          {item.type}
+                                        </span>
+                                        <span className="text-gray-400 text-xs">
+                                          {formatDuration(item.duration || 0)}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
+                                  <Link
+                                    to={`/content/${item.id}`}
+                                    className="p-2 bg-green-600/20 rounded-lg text-green-400 hover:text-green-300 hover:bg-green-600/30 transition-colors opacity-0 group-hover:opacity-100"
+                                    title="View Details"
+                                  >
+                                    <EyeIcon className="w-4 h-4" />
+                                  </Link>
                                 </div>
-                                <Link
-                                  to={`/content/${item.id}`}
-                                  className="p-2 bg-green-600/20 rounded-lg text-green-400 hover:text-green-300 hover:bg-green-600/30 transition-colors opacity-0 group-hover:opacity-100"
-                                  title="View Details"
-                                >
-                                  <EyeIcon className="w-4 h-4" />
-                                </Link>
-                              </div>
 
-                              {/* Content Description */}
-                              {item.description && (
-                                <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">
-                                  {item.description}
-                                </p>
-                              )}
+                                {/* Content Description */}
+                                {item.description && (
+                                  <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">
+                                    {item.description}
+                                  </p>
+                                )}
 
-                              {/* Content Footer */}
-                              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-600/30">
-                                <div className="flex items-center space-x-2 text-xs text-gray-500">
-                                  {item.order && (
-                                    <span>#{item.order}</span>
-                                  )}
-                                  {item.isActive !== undefined && (
-                                    <span className={`px-2 py-1 rounded ${item.isActive ? 'bg-green-600/20 text-green-400' : 'bg-red-600/20 text-red-400'}`}>
-                                      {item.isActive ? 'Active' : 'Inactive'}
-                                    </span>
-                                  )}
+                                {/* Content Footer */}
+                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-600/30">
+                                  <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                    {item.order && <span>#{item.order}</span>}
+                                    {item.isActive !== undefined && (
+                                      <span
+                                        className={`px-2 py-1 rounded ${
+                                          item.isActive
+                                            ? "bg-green-600/20 text-green-400"
+                                            : "bg-red-600/20 text-red-400"
+                                        }`}
+                                      >
+                                        {item.isActive ? "Active" : "Inactive"}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 )}
               </div>

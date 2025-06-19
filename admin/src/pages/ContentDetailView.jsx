@@ -8,20 +8,20 @@ import {
   StarIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
+import { Gauge } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { contentAPI, modulesAPI, phasesAPI } from "../services/api";
-import { Gauge } from "lucide-react";
 import {
   formatDuration,
   getContentTypeIcon,
   getContentTypeColor,
 } from "../utils/contentHelpers.jsx";
-import LoadingState from "./shared/LoadingState";
-import ErrorState from "./shared/ErrorState";
-import NotFoundState from "./shared/NotFoundState";
-import Breadcrumb from "./shared/Breadcrumb";
-import QuickActionsBar from "./shared/QuickActionsBar";
+import Breadcrumb from "../components/shared/Breadcrumb";
+import ErrorState from "../components/shared/ErrorState";
+import LoadingState from "../components/shared/LoadingState";
+import NotFoundState from "../components/shared/NotFoundState";
+import QuickActionsBar from "../components/shared/QuickActionsBar";
 
 const ContentDetailView = () => {
   const { contentId } = useParams();
@@ -48,27 +48,29 @@ const ContentDetailView = () => {
       // OPTIMIZED: Use admin-specific endpoint for content + module (no progress tracking)
       // This replaces the original 4 separate API calls with simple admin-focused data
       const [contentWithModuleRes] = await Promise.allSettled([
-        contentAPI.getByIdWithModule(contentId)  // Simple endpoint for admin details
+        contentAPI.getByIdWithModule(contentId), // Simple endpoint for admin details
       ]);
 
       if (contentWithModuleRes.status === "fulfilled") {
         const response = contentWithModuleRes.value;
         const contentData = response.data || response;
-        
+
         // Set content data (includes module information)
         setContent(contentData);
-        
+
         // Extract module data from the response
         if (contentData.module) {
           setModule(contentData.module);
-          
+
           // Get phase info from module if available, or fetch it
           if (contentData.module.phase) {
             setPhase(contentData.module.phase);
           } else if (contentData.module.phaseId) {
             // Fetch phase if not populated in module
             try {
-              const phaseResponse = await phasesAPI.getById(contentData.module.phaseId);
+              const phaseResponse = await phasesAPI.getById(
+                contentData.module.phaseId
+              );
               setPhase(phaseResponse.data);
             } catch (phaseError) {
               console.warn("Could not fetch phase details:", phaseError);
@@ -81,7 +83,9 @@ const ContentDetailView = () => {
         }
       } else {
         // Fallback to basic content fetch if optimized endpoint fails
-        console.warn("Admin content endpoint failed, falling back to basic calls");
+        console.warn(
+          "Admin content endpoint failed, falling back to basic calls"
+        );
         const contentResponse = await contentAPI.getById(contentId);
         const contentData = contentResponse.data;
         setContent(contentData);
@@ -89,7 +93,7 @@ const ContentDetailView = () => {
         // If content has module ID, fetch module and related content
         if (contentData.module?.id || contentData.moduleId) {
           const moduleId = contentData.module?.id || contentData.moduleId;
-          
+
           try {
             // Fetch module details
             const moduleResponse = await modulesAPI.getById(moduleId);
@@ -99,7 +103,9 @@ const ContentDetailView = () => {
             // Fetch phase if module has phaseId
             if (moduleData.phaseId) {
               try {
-                const phaseResponse = await phasesAPI.getById(moduleData.phaseId);
+                const phaseResponse = await phasesAPI.getById(
+                  moduleData.phaseId
+                );
                 setPhase(phaseResponse.data);
               } catch (phaseError) {
                 console.warn("Could not fetch phase details:", phaseError);
@@ -122,9 +128,6 @@ const ContentDetailView = () => {
       console.log("✅ ContentDetailView: Content fetch completed");
     }
   };
-
-
-
 
   if (loading) {
     return <LoadingState message="Loading content details..." />;
@@ -369,8 +372,12 @@ const ContentDetailView = () => {
                   {content.isActive !== undefined && (
                     <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
                       <span className="text-gray-400 text-sm">Status</span>
-                      <span className={`font-medium ${content.isActive ? 'text-green-400' : 'text-red-400'}`}>
-                        {content.isActive ? 'Active' : 'Inactive'}
+                      <span
+                        className={`font-medium ${
+                          content.isActive ? "text-green-400" : "text-red-400"
+                        }`}
+                      >
+                        {content.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
                   )}
@@ -411,7 +418,9 @@ const ContentDetailView = () => {
                   <div className="space-y-4">
                     {content.metadata.difficulty && (
                       <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
-                        <span className="text-gray-400 text-sm">Difficulty</span>
+                        <span className="text-gray-400 text-sm">
+                          Difficulty
+                        </span>
                         <span className="text-white font-medium">
                           {content.metadata.difficulty}
                         </span>
@@ -425,60 +434,76 @@ const ContentDetailView = () => {
                         </span>
                       </div>
                     )}
-                    {content.metadata.tags && content.metadata.tags.length > 0 && (
-                      <div className="py-2 border-b border-gray-700/50">
-                        <span className="text-gray-400 text-sm block mb-2">Tags</span>
-                        <div className="flex flex-wrap gap-2">
-                          {content.metadata.tags.map((tag, index) => (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-gray-600/50 rounded text-xs text-gray-300"
-                            >
-                              {tag}
-                            </span>
-                          ))}
+                    {content.metadata.tags &&
+                      content.metadata.tags.length > 0 && (
+                        <div className="py-2 border-b border-gray-700/50">
+                          <span className="text-gray-400 text-sm block mb-2">
+                            Tags
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {content.metadata.tags.map((tag, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-gray-600/50 rounded text-xs text-gray-300"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {content.metadata.prerequisites && content.metadata.prerequisites.length > 0 && (
-                      <div className="py-2 border-b border-gray-700/50">
-                        <span className="text-gray-400 text-sm block mb-2">Prerequisites</span>
-                        <div className="space-y-1">
-                          {content.metadata.prerequisites.map((prereq, index) => (
-                            <div key={index} className="text-white text-sm">
-                              • {prereq}
-                            </div>
-                          ))}
+                      )}
+                    {content.metadata.prerequisites &&
+                      content.metadata.prerequisites.length > 0 && (
+                        <div className="py-2 border-b border-gray-700/50">
+                          <span className="text-gray-400 text-sm block mb-2">
+                            Prerequisites
+                          </span>
+                          <div className="space-y-1">
+                            {content.metadata.prerequisites.map(
+                              (prereq, index) => (
+                                <div key={index} className="text-white text-sm">
+                                  • {prereq}
+                                </div>
+                              )
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {content.metadata.tools && content.metadata.tools.length > 0 && (
-                      <div className="py-2 border-b border-gray-700/50">
-                        <span className="text-gray-400 text-sm block mb-2">Tools</span>
-                        <div className="flex flex-wrap gap-2">
-                          {content.metadata.tools.map((tool, index) => (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs border border-blue-600/30"
-                            >
-                              {tool}
-                            </span>
-                          ))}
+                      )}
+                    {content.metadata.tools &&
+                      content.metadata.tools.length > 0 && (
+                        <div className="py-2 border-b border-gray-700/50">
+                          <span className="text-gray-400 text-sm block mb-2">
+                            Tools
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {content.metadata.tools.map((tool, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs border border-blue-600/30"
+                              >
+                                {tool}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {content.metadata.objectives && content.metadata.objectives.length > 0 && (
-                      <div className="py-2">
-                        <span className="text-gray-400 text-sm block mb-2">Learning Objectives</span>
-                        <div className="space-y-1">
-                          {content.metadata.objectives.map((objective, index) => (
-                            <div key={index} className="text-white text-sm">
-                              {index + 1}. {objective}
-                            </div>
-                          ))}
+                      )}
+                    {content.metadata.objectives &&
+                      content.metadata.objectives.length > 0 && (
+                        <div className="py-2">
+                          <span className="text-gray-400 text-sm block mb-2">
+                            Learning Objectives
+                          </span>
+                          <div className="space-y-1">
+                            {content.metadata.objectives.map(
+                              (objective, index) => (
+                                <div key={index} className="text-white text-sm">
+                                  {index + 1}. {objective}
+                                </div>
+                              )
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </div>
               )}

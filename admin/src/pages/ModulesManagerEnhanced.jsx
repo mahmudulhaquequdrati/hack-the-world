@@ -7,13 +7,17 @@ import React, { useEffect, useState } from "react";
 import { modulesAPI, phasesAPI } from "../services/api";
 
 // Import extracted components
-import ActionButtons from "./modules/ui/ActionButtons";
-import BulkOperationsModal from "./modules/BulkOperationsModal";
-import DeleteConfirmationModal from "./modules/DeleteConfirmationModal";
-import ModuleFormModal from "./modules/ModuleFormModal";
-import ModuleCard from "./modules/views/ModuleCard";
-import useModuleDragAndDrop from "./modules/hooks/useModuleDragAndDrop";
-import { colorOptions, difficultyLevels, phaseColorClasses } from "./modules/constants/moduleConstants";
+import ActionButtons from "../components/modules/ui/ActionButtons";
+import BulkOperationsModal from "../components/modules/BulkOperationsModal";
+import DeleteConfirmationModal from "../components/modules/DeleteConfirmationModal";
+import ModuleFormModal from "../components/modules/ModuleFormModal";
+import ModuleCard from "../components/modules/views/ModuleCard";
+import useModuleDragAndDrop from "../components/modules/hooks/useModuleDragAndDrop";
+import {
+  colorOptions,
+  difficultyLevels,
+  phaseColorClasses,
+} from "../components/modules/constants/moduleConstants";
 
 const ModulesManagerEnhanced = () => {
   // Core data state
@@ -74,9 +78,9 @@ const ModulesManagerEnhanced = () => {
     handleModuleDragLeave,
     handleModuleDrop,
   } = useModuleDragAndDrop(
-    modulesWithPhases, 
-    setModulesWithPhases, 
-    setHasModuleChanges, 
+    modulesWithPhases,
+    setModulesWithPhases,
+    setHasModuleChanges,
     setSuccess
   );
 
@@ -359,12 +363,12 @@ const ModulesManagerEnhanced = () => {
 
       // Prepare module orders for batch update (same pattern as phases)
       const moduleOrders = [];
-      
+
       modulesWithPhases.forEach((phase) => {
         phase.modules.forEach((module) => {
           moduleOrders.push({
             id: module.id,
-            order: module.order
+            order: module.order,
           });
         });
       });
@@ -374,36 +378,39 @@ const ModulesManagerEnhanced = () => {
 
       setSuccess("Module order saved successfully!");
       setHasModuleChanges(false);
-      
+
       // Use the response data instead of fetching fresh data to avoid race condition
       if (response.data && Array.isArray(response.data)) {
         // Group the updated modules by phase
         const phaseMap = new Map();
-        
+
         // Initialize phase map with current phases
-        modulesWithPhases.forEach(phase => {
+        modulesWithPhases.forEach((phase) => {
           phaseMap.set(phase.id, {
             ...phase,
-            modules: []
+            modules: [],
           });
         });
-        
+
         // Add modules to their respective phases
-        response.data.forEach(module => {
-          const phaseId = module.phaseId || module.phase?._id || module.phase?.id;
+        response.data.forEach((module) => {
+          const phaseId =
+            module.phaseId || module.phase?._id || module.phase?.id;
           if (phaseId && phaseMap.has(phaseId)) {
             phaseMap.get(phaseId).modules.push(module);
           }
         });
-        
+
         // Convert map back to array and sort modules by order
-        const updatedModulesWithPhases = Array.from(phaseMap.values()).map(phase => ({
-          ...phase,
-          modules: phase.modules.sort((a, b) => a.order - b.order)
-        }));
-        
+        const updatedModulesWithPhases = Array.from(phaseMap.values()).map(
+          (phase) => ({
+            ...phase,
+            modules: phase.modules.sort((a, b) => a.order - b.order),
+          })
+        );
+
         setModulesWithPhases(updatedModulesWithPhases);
-        
+
         // Also update the modules state for consistency
         setModules(response.data);
       } else {
@@ -761,9 +768,7 @@ const ModulesManagerEnhanced = () => {
             <p className="mt-2 font-mono">Loading modules...</p>
           </div>
         ) : (
-          <div>
-            {renderGroupedView()}
-          </div>
+          <div>{renderGroupedView()}</div>
         )}
 
         {/* Form Modal */}

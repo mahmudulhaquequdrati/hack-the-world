@@ -48,7 +48,7 @@ export const getContentTypeIcon = (type, size = "w-6 h-6") => {
  */
 export const getContentTypeColor = (type) => {
   const colors = {
-    video: "bg-red-900/30 text-red-400 border-red-500/30",
+    video: "bg-green-900/30 text-green-400 border-green-500/30",
     lab: "bg-blue-900/30 text-blue-400 border-blue-500/30",
     game: "bg-purple-900/30 text-purple-400 border-purple-500/30",
     document: "bg-green-900/30 text-green-400 border-green-500/30",
@@ -68,7 +68,9 @@ export const getDifficultyColor = (difficulty) => {
     advanced: "bg-red-900/30 text-red-400 border-red-500/30",
     expert: "bg-purple-900/30 text-purple-400 border-purple-500/30",
   };
-  return colors[difficulty] || "bg-gray-900/30 text-gray-400 border-gray-500/30";
+  return (
+    colors[difficulty] || "bg-gray-900/30 text-gray-400 border-gray-500/30"
+  );
 };
 
 /**

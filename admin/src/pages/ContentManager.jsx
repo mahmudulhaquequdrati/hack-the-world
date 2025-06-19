@@ -9,6 +9,7 @@ import { contentAPI, modulesAPI, phasesAPI } from "../services/api";
 import ContentFiltersAndControls from "../components/content/ContentFiltersAndControls";
 import ContentFormModal from "../components/content/ContentFormModal";
 import MultipleUploadModal from "../components/content/MultipleUploadModal";
+import ContentDeleteConfirmationModal from "../components/content/ContentDeleteConfirmationModal";
 import ActionButtons from "../components/content/ui/ActionButtons";
 import TerminalHeader from "../components/content/ui/TerminalHeader";
 import ContentCard from "../components/content/views/ContentCard";
@@ -19,8 +20,13 @@ const ContentManager = () => {
   const [modules, setModules] = useState([]);
   const [phases, setPhases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [contentToDelete, setContentToDelete] = useState(null);
 
   // Section auto-complete state
   const [availableSections, setAvailableSections] = useState([]);
@@ -117,18 +123,28 @@ const ContentManager = () => {
   }, []);
 
   // Data fetching functions
-  const fetchContent = async () => {
+  const fetchContent = async (showLoader = true) => {
     try {
-      setLoading(true);
-      const response = await contentAPI.getAll();
-      setContent(response.data || []);
+      if (showLoader) setLoading(true);
       setError("");
+      console.log("🔄 Fetching content...");
+      const response = await contentAPI.getAll();
+      console.log("✅ Content fetched:", response.data);
+
+      // Ensure we have a valid array
+      const contentData = Array.isArray(response.data) ? response.data : [];
+
+      // Force state update using functional update to ensure React detects the change
+      setContent(prevContent => {
+        console.log("🔄 Updating content state from", prevContent.length, "to", contentData.length, "items");
+        return [...contentData];
+      });
     } catch (err) {
-      console.error("Error fetching content:", err);
+      console.error("❌ Error fetching content:", err);
       setError("Failed to fetch content");
       setContent([]);
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   };
 
@@ -307,7 +323,7 @@ const ContentManager = () => {
     e.preventDefault();
 
     try {
-      setLoading(true);
+      setSaving(true);
       setError("");
 
       const contentData = {
@@ -315,31 +331,129 @@ const ContentManager = () => {
         section: sectionInputValue || formData.section,
       };
 
+      let responseData;
+
       if (editingContent) {
-        await contentAPI.update(editingContent.id, contentData);
+        console.log("🔄 Updating content:", editingContent.id);
+
+        // Optimistic update for editing - update content array
+        setContent(prevContent =>
+          prevContent.map(item =>
+            item.id === editingContent.id
+              ? { ...item, ...contentData }
+              : item
+          )
+        );
+
+        // Update hierarchical data if in hierarchical view
+        if (viewMode === "hierarchical") {
+          setHierarchicalData(prevHierarchical =>
+            prevHierarchical.map(phase => ({
+              ...phase,
+              modules: phase.modules.map(module => ({
+                ...module,
+                content: module.content.map(item =>
+                  item.id === editingContent.id
+                    ? { ...item, ...contentData }
+                    : item
+                )
+              }))
+            }))
+          );
+        }
+
+        // Update grouped data if in grouped view
+        if (viewMode === "groupedByModule" || viewMode === "groupedByType") {
+          setGroupedContent(prevGrouped => {
+            const newGrouped = { ...prevGrouped };
+            Object.keys(newGrouped).forEach(groupKey => {
+              newGrouped[groupKey] = newGrouped[groupKey].map(item =>
+                item.id === editingContent.id
+                  ? { ...item, ...contentData }
+                  : item
+              );
+            });
+            return newGrouped;
+          });
+        }
+
+        const response = await contentAPI.update(editingContent.id, contentData);
+        responseData = response.data;
+        console.log("✅ Content updated:", responseData);
         setSuccess("Content updated successfully!");
+
+        // Update with server response data
+        setContent(prevContent =>
+          prevContent.map(item =>
+            item.id === editingContent.id ? responseData : item
+          )
+        );
+
       } else {
-        await contentAPI.create(contentData);
+        console.log("🔄 Creating new content");
+        const response = await contentAPI.create(contentData);
+        responseData = response.data;
+        console.log("✅ Content created:", responseData);
         setSuccess("Content created successfully!");
+
+        // Optimistic add for new content
+        setContent(prevContent => [...prevContent, responseData]);
+
+        // Add to hierarchical data if applicable
+        if (viewMode === "hierarchical" && responseData.moduleId) {
+          setHierarchicalData(prevHierarchical =>
+            prevHierarchical.map(phase => ({
+              ...phase,
+              modules: phase.modules.map(module =>
+                module.id === responseData.moduleId
+                  ? {
+                      ...module,
+                      content: [...module.content, responseData],
+                      contentCount: module.content.length + 1
+                    }
+                  : module
+              )
+            }))
+          );
+        }
+
+        // Add to grouped data if applicable
+        if (viewMode === "groupedByModule" || viewMode === "groupedByType") {
+          // Will be handled by the refresh logic below for simplicity
+        }
       }
 
       setShowForm(false);
       resetForm();
-      fetchContent();
 
-      // Refresh current view
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(""), 3000);
+
+      // For grouped views, refresh the specific view data to ensure consistency
       if (viewMode === "groupedByModule") {
-        fetchAllModulesGrouped();
+        setTimeout(() => fetchAllModulesGrouped(), 100);
       } else if (viewMode === "groupedByType") {
-        fetchAllContentGroupedByType();
-      } else if (viewMode === "hierarchical") {
-        fetchHierarchicalData();
+        setTimeout(() => fetchAllContentGroupedByType(), 100);
       }
+
     } catch (err) {
-      console.error("Error saving content:", err);
+      console.error("❌ Error saving content:", err);
       setError("Failed to save content");
+
+      // Rollback optimistic updates on error by refetching
+      await fetchContent(false);
+      if (viewMode === "hierarchical") {
+        await fetchHierarchicalData();
+      } else if (viewMode === "groupedByModule") {
+        await fetchAllModulesGrouped();
+      } else if (viewMode === "groupedByType") {
+        await fetchAllContentGroupedByType();
+      }
+
+      // Clear error message after 5 seconds
+      setTimeout(() => setError(""), 5000);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -401,33 +515,88 @@ const ContentManager = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (contentItem) => {
-    if (
-      !window.confirm(`Are you sure you want to delete "${contentItem.title}"?`)
-    ) {
-      return;
-    }
+  const handleDelete = (contentItem) => {
+    setContentToDelete(contentItem);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!contentToDelete) return;
 
     try {
-      setLoading(true);
-      await contentAPI.delete(contentItem.id);
-      setSuccess("Content deleted successfully!");
-      fetchContent();
+      setSaving(true);
+      setError("");
 
-      // Refresh current view
-      if (viewMode === "groupedByModule") {
-        fetchAllModulesGrouped();
-      } else if (viewMode === "groupedByType") {
-        fetchAllContentGroupedByType();
-      } else if (viewMode === "hierarchical") {
-        fetchHierarchicalData();
-      }
+      console.log("🔄 Deleting content:", contentToDelete.id);
+
+      // Optimistic removal - remove from UI immediately
+      const contentToDeleteId = contentToDelete.id;
+
+      // Remove from main content array
+      setContent(prevContent =>
+        prevContent.filter(item => item.id !== contentToDeleteId)
+      );
+
+      // Remove from hierarchical data
+      setHierarchicalData(prevHierarchical =>
+        prevHierarchical.map(phase => ({
+          ...phase,
+          modules: phase.modules.map(module => ({
+            ...module,
+            content: module.content.filter(item => item.id !== contentToDeleteId),
+            contentCount: Math.max(0, module.contentCount - 1)
+          }))
+        }))
+      );
+
+      // Remove from grouped data
+      setGroupedContent(prevGrouped => {
+        const newGrouped = { ...prevGrouped };
+        Object.keys(newGrouped).forEach(groupKey => {
+          newGrouped[groupKey] = newGrouped[groupKey].filter(item => item.id !== contentToDeleteId);
+          // Remove empty groups
+          if (newGrouped[groupKey].length === 0) {
+            delete newGrouped[groupKey];
+          }
+        });
+        return newGrouped;
+      });
+
+      // Close modal immediately for better UX
+      setShowDeleteModal(false);
+      setContentToDelete(null);
+
+      const response = await contentAPI.delete(contentToDeleteId);
+      console.log("✅ Content deleted:", response);
+
+      setSuccess("Content deleted successfully!");
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      console.error("Error deleting content:", err);
+      console.error("❌ Error deleting content:", err);
       setError("Failed to delete content");
+
+      // Rollback optimistic deletion on error by refetching
+      await fetchContent(false);
+      if (viewMode === "hierarchical") {
+        await fetchHierarchicalData();
+      } else if (viewMode === "groupedByModule") {
+        await fetchAllModulesGrouped();
+      } else if (viewMode === "groupedByType") {
+        await fetchAllContentGroupedByType();
+      }
+
+      // Clear error message after 5 seconds
+      setTimeout(() => setError(""), 5000);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setContentToDelete(null);
   };
 
   // Filter handlers
@@ -485,7 +654,7 @@ const ContentManager = () => {
 
   const handleMultipleUploadSubmit = async () => {
     try {
-      setLoading(true);
+      setSaving(true);
       setError("");
 
       // Validate all items
@@ -507,6 +676,8 @@ const ContentManager = () => {
         }
       }
 
+      console.log("🔄 Creating multiple content items:", multipleUploads.length);
+
       // Create all content items
       const createPromises = multipleUploads.map((item) => {
         const contentData = {
@@ -517,7 +688,31 @@ const ContentManager = () => {
         return contentAPI.create(contentData);
       });
 
-      await Promise.all(createPromises);
+      const responses = await Promise.all(createPromises);
+      const createdItems = responses.map(response => response.data);
+
+      console.log("✅ Multiple content items created:", createdItems);
+
+      // Optimistic add for new content items
+      setContent(prevContent => [...prevContent, ...createdItems]);
+
+      // Add to hierarchical data if applicable
+      if (viewMode === "hierarchical" && selectedModuleForUpload) {
+        setHierarchicalData(prevHierarchical =>
+          prevHierarchical.map(phase => ({
+            ...phase,
+            modules: phase.modules.map(module =>
+              module.id === selectedModuleForUpload
+                ? {
+                    ...module,
+                    content: [...module.content, ...createdItems],
+                    contentCount: module.content.length + createdItems.length
+                  }
+                : module
+            )
+          }))
+        );
+      }
 
       setSuccess(
         `Successfully created ${multipleUploads.length} content items`
@@ -526,21 +721,34 @@ const ContentManager = () => {
       setMultipleUploads([]);
       setSelectedPhaseForUpload("");
       setSelectedModuleForUpload("");
-      fetchContent();
 
-      // Refresh current view
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(""), 3000);
+
+      // For grouped views, refresh the specific view data to ensure consistency
       if (viewMode === "groupedByModule") {
-        fetchAllModulesGrouped();
+        setTimeout(() => fetchAllModulesGrouped(), 100);
       } else if (viewMode === "groupedByType") {
-        fetchAllContentGroupedByType();
-      } else if (viewMode === "hierarchical") {
-        fetchHierarchicalData();
+        setTimeout(() => fetchAllContentGroupedByType(), 100);
       }
     } catch (err) {
-      console.error("Error creating multiple content:", err);
+      console.error("❌ Error creating multiple content:", err);
       setError("Failed to create content items");
+
+      // Rollback optimistic updates on error by refetching
+      await fetchContent(false);
+      if (viewMode === "hierarchical") {
+        await fetchHierarchicalData();
+      } else if (viewMode === "groupedByModule") {
+        await fetchAllModulesGrouped();
+      } else if (viewMode === "groupedByType") {
+        await fetchAllContentGroupedByType();
+      }
+
+      // Clear error message after 5 seconds
+      setTimeout(() => setError(""), 5000);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -636,7 +844,7 @@ const ContentManager = () => {
                                 contentItem={contentItem}
                                 contentTypes={contentTypes}
                                 onEdit={handleEdit}
-                                onDelete={() => handleDelete(contentItem)}
+                                onDelete={handleDelete}
                               />
                             ))}
                           </div>
@@ -682,7 +890,7 @@ const ContentManager = () => {
                     contentItem={contentItem}
                     contentTypes={contentTypes}
                     onEdit={handleEdit}
-                    onDelete={() => handleDelete(contentItem)}
+                    onDelete={handleDelete}
                   />
                 ))}
               </div>
@@ -767,7 +975,7 @@ const ContentManager = () => {
           sectionLoading={sectionLoading}
           filteredSections={filteredSections}
           onSubmit={handleFormSubmit}
-          loading={loading}
+          loading={saving}
           onSectionInputChange={handleSectionInputChange}
           onSectionInputFocus={handleSectionInputFocus}
           onSectionInputBlur={handleSectionInputBlur}
@@ -792,8 +1000,17 @@ const ContentManager = () => {
           onUpdateUploadItem={updateUploadItem}
           onSubmit={handleMultipleUploadSubmit}
           contentTypes={contentTypes}
-          loading={loading}
+          loading={saving}
           error={error}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <ContentDeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={cancelDelete}
+          onConfirm={confirmDelete}
+          contentToDelete={contentToDelete}
+          saving={saving}
         />
       </div>
     </div>

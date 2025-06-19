@@ -95,7 +95,7 @@ const ModulesManagerEnhanced = () => {
       setLoading(true);
       setError("");
 
-      console.log("Fetching modules and phases data...");
+      console.log("🔄 Fetching modules and phases data...");
 
       const [modulesRes, phasesRes, modulesWithPhasesRes] =
         await Promise.allSettled([
@@ -105,30 +105,40 @@ const ModulesManagerEnhanced = () => {
         ]);
 
       if (modulesRes.status === "fulfilled") {
-        console.log("Modules fetched successfully:", modulesRes.value);
-        setModules(modulesRes.value.data || []);
+        console.log("✅ Modules fetched successfully:", modulesRes.value);
+        const modulesData = Array.isArray(modulesRes.value.data) ? modulesRes.value.data : [];
+        
+        // Force state update using functional update to ensure React detects the change
+        setModules(prevModules => {
+          console.log("🔄 Updating modules state from", prevModules.length, "to", modulesData.length, "modules");
+          return [...modulesData];
+        });
       } else {
-        console.error("Error fetching modules:", modulesRes.reason);
+        console.error("❌ Error fetching modules:", modulesRes.reason);
       }
 
       if (phasesRes.status === "fulfilled") {
-        console.log("Phases fetched successfully:", phasesRes.value);
-        setPhases(phasesRes.value.data || []);
+        console.log("✅ Phases fetched successfully:", phasesRes.value);
+        const phasesData = Array.isArray(phasesRes.value.data) ? phasesRes.value.data : [];
+        
+        setPhases(prevPhases => {
+          console.log("🔄 Updating phases state from", prevPhases.length, "to", phasesData.length, "phases");
+          return [...phasesData];
+        });
       } else {
-        console.error("Error fetching phases:", phasesRes.reason);
+        console.error("❌ Error fetching phases:", phasesRes.reason);
       }
 
       if (modulesWithPhasesRes.status === "fulfilled") {
-        console.log(
-          "Modules with phases fetched successfully:",
-          modulesWithPhasesRes.value
-        );
-        setModulesWithPhases(modulesWithPhasesRes.value.data || []);
+        console.log("✅ Modules with phases fetched successfully:", modulesWithPhasesRes.value);
+        const modulesWithPhasesData = Array.isArray(modulesWithPhasesRes.value.data) ? modulesWithPhasesRes.value.data : [];
+        
+        setModulesWithPhases(prevModulesWithPhases => {
+          console.log("🔄 Updating modulesWithPhases state from", prevModulesWithPhases.length, "to", modulesWithPhasesData.length, "items");
+          return [...modulesWithPhasesData];
+        });
       } else {
-        console.error(
-          "Error fetching modules with phases:",
-          modulesWithPhasesRes.reason
-        );
+        console.error("❌ Error fetching modules with phases:", modulesWithPhasesRes.reason);
       }
 
       // Set error if all failed
@@ -138,7 +148,7 @@ const ModulesManagerEnhanced = () => {
         );
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("❌ Error fetching data:", error);
       setError(
         "Failed to load data. Please check your connection and authentication."
       );
@@ -287,19 +297,72 @@ const ModulesManagerEnhanced = () => {
 
       console.log("Submitting module data:", moduleData);
 
-      if (editingModule) {
-        console.log("Updating module:", editingModule.id);
-        const response = await modulesAPI.update(editingModule.id, moduleData);
-        console.log("Update response:", response);
-        setSuccess("Module updated successfully!");
-      } else {
-        console.log("Creating new module");
-        const response = await modulesAPI.create(moduleData);
-        console.log("Create response:", response);
-        setSuccess("Module created successfully!");
-      }
+      let responseData;
 
-      await fetchData();
+      if (editingModule) {
+        console.log("🔄 Updating module:", editingModule.id);
+        
+        // Optimistic update for editing - update both modules and modulesWithPhases
+        setModules(prevModules =>
+          prevModules.map(module =>
+            module.id === editingModule.id
+              ? { ...module, ...moduleData }
+              : module
+          )
+        );
+
+        setModulesWithPhases(prevModulesWithPhases =>
+          prevModulesWithPhases.map(phase => ({
+            ...phase,
+            modules: phase.modules.map(module =>
+              module.id === editingModule.id
+                ? { ...module, ...moduleData }
+                : module
+            )
+          }))
+        );
+
+        const response = await modulesAPI.update(editingModule.id, moduleData);
+        responseData = response.data;
+        console.log("✅ Module updated:", responseData);
+        setSuccess("Module updated successfully!");
+
+        // Update with server response data
+        setModules(prevModules =>
+          prevModules.map(module =>
+            module.id === editingModule.id ? responseData : module
+          )
+        );
+
+        setModulesWithPhases(prevModulesWithPhases =>
+          prevModulesWithPhases.map(phase => ({
+            ...phase,
+            modules: phase.modules.map(module =>
+              module.id === editingModule.id ? responseData : module
+            )
+          }))
+        );
+      } else {
+        console.log("🔄 Creating new module");
+        const response = await modulesAPI.create(moduleData);
+        responseData = response.data;
+        console.log("✅ Module created:", responseData);
+        setSuccess("Module created successfully!");
+
+        // Optimistic add for new module - add to both modules and modulesWithPhases
+        setModules(prevModules => [...prevModules, responseData]);
+
+        setModulesWithPhases(prevModulesWithPhases =>
+          prevModulesWithPhases.map(phase =>
+            phase.id === responseData.phaseId
+              ? {
+                  ...phase,
+                  modules: [...phase.modules, responseData].sort((a, b) => a.order - b.order)
+                }
+              : phase
+          )
+        );
+      }
 
       // Auto-close modal after 1.5 seconds on success
       setTimeout(() => {
@@ -316,6 +379,9 @@ const ModulesManagerEnhanced = () => {
       }
 
       setError(errorMessage);
+      
+      // Rollback optimistic updates on error by refetching
+      await fetchData();
     } finally {
       setSaving(false);
     }
@@ -334,17 +400,44 @@ const ModulesManagerEnhanced = () => {
       setSaving(true);
       setError("");
 
-      console.log("Deleting module:", moduleToDelete.id);
-      const response = await modulesAPI.delete(moduleToDelete.id);
-      console.log("Delete response:", response);
+      console.log("🔄 Deleting module:", moduleToDelete.id);
 
-      setSuccess("Module deleted successfully!");
+      // Optimistic removal - remove from UI immediately
+      const moduleToDeleteId = moduleToDelete.id;
+      
+      // Remove from modules array
+      setModules(prevModules => 
+        prevModules.filter(module => module.id !== moduleToDeleteId)
+      );
+
+      // Remove from modulesWithPhases array
+      setModulesWithPhases(prevModulesWithPhases =>
+        prevModulesWithPhases.map(phase => ({
+          ...phase,
+          modules: phase.modules.filter(module => module.id !== moduleToDeleteId)
+        }))
+      );
+
+      // Close modal immediately for better UX
       setShowDeleteModal(false);
       setModuleToDelete(null);
-      await fetchData();
+
+      const response = await modulesAPI.delete(moduleToDeleteId);
+      console.log("✅ Module deleted:", response);
+
+      setSuccess("Module deleted successfully!");
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
-      console.error("Error deleting module:", error);
+      console.error("❌ Error deleting module:", error);
       setError("Failed to delete module");
+      
+      // Rollback optimistic deletion on error by refetching
+      await fetchData();
+
+      // Clear error message after 5 seconds
+      setTimeout(() => setError(""), 5000);
     } finally {
       setSaving(false);
     }
@@ -492,6 +585,28 @@ const ModulesManagerEnhanced = () => {
         updateData.color = bulkFormData.color;
       }
 
+      console.log("🔄 Bulk updating modules:", moduleIds, updateData);
+
+      // Optimistic bulk update - apply changes immediately to both state arrays
+      setModules(prevModules =>
+        prevModules.map(module =>
+          moduleIds.includes(module.id)
+            ? { ...module, ...updateData }
+            : module
+        )
+      );
+
+      setModulesWithPhases(prevModulesWithPhases =>
+        prevModulesWithPhases.map(phase => ({
+          ...phase,
+          modules: phase.modules.map(module =>
+            moduleIds.includes(module.id)
+              ? { ...module, ...updateData }
+              : module
+          )
+        }))
+      );
+
       // Execute bulk update
       const updatePromises = moduleIds.map((moduleId) =>
         modulesAPI.update(moduleId, updateData)
@@ -499,6 +614,7 @@ const ModulesManagerEnhanced = () => {
 
       await Promise.all(updatePromises);
 
+      console.log("✅ Bulk update completed successfully");
       setSuccess(`Successfully updated ${moduleIds.length} modules`);
       setShowBulkModal(false);
       setSelectedModules(new Set());
@@ -508,10 +624,18 @@ const ModulesManagerEnhanced = () => {
         isActive: true,
         color: "",
       });
-      await fetchData();
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
-      console.error("Error in bulk update:", error);
+      console.error("❌ Error in bulk update:", error);
       setError("Failed to update modules");
+      
+      // Rollback optimistic updates on error by refetching
+      await fetchData();
+
+      // Clear error message after 5 seconds
+      setTimeout(() => setError(""), 5000);
     } finally {
       setSaving(false);
     }

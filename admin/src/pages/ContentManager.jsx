@@ -2,8 +2,7 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
-import React, { useEffect, useMemo, useState } from "react";
-import { contentAPI, modulesAPI, phasesAPI } from "../services/api";
+import React from "react";
 
 // Import extracted components
 import ContentFiltersAndControls from "../components/content/ContentFiltersAndControls";
@@ -12,894 +11,93 @@ import MultipleUploadModal from "../components/content/MultipleUploadModal";
 import ContentDeleteConfirmationModal from "../components/content/ContentDeleteConfirmationModal";
 import ActionButtons from "../components/content/ui/ActionButtons";
 import TerminalHeader from "../components/content/ui/TerminalHeader";
-import ContentCard from "../components/content/views/ContentCard";
+import StatisticsGrid from "../components/content/ui/StatisticsGrid";
+import ViewModeRenderer from "../components/content/ui/ViewModeRenderer";
+
+// Import the main hook
+import { useContentManager } from "../components/content/hooks/useContentManager";
 
 const ContentManager = () => {
-  // Core data state
-  const [content, setContent] = useState([]);
-  const [modules, setModules] = useState([]);
-  const [phases, setPhases] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  // Use the main content manager hook
+  const {
+    // Content types
+    contentTypes,
+    
+    // Core data
+    content,
+    modules,
+    phases,
+    filteredContent,
+    
+    // Loading states
+    loading,
+    saving,
+    
+    // Messages
+    error,
+    success,
+    
+    // Form management
+    showForm,
+    formData,
+    editingContent,
+    sectionInputValue,
+    availableSections,
+    filteredSections,
+    showSectionDropdown,
+    sectionLoading,
+    setFormData,
+    setSectionInputValue,
+    setShowSectionDropdown,
+    setShowForm,
+    
+    // View mode management
+    viewMode,
+    hierarchicalData,
+    groupedContent,
+    selectedPhaseId,
+    selectedModuleId,
+    setSelectedPhaseId,
+    setSelectedModuleId,
+    
+    // Filter management
+    filters,
+    handleFilterChange,
+    
+    // Modal management
+    showDeleteModal,
+    contentToDelete,
+    
+    // Multiple upload management
+    showMultipleUpload,
+    multipleUploads,
+    selectedPhaseForUpload,
+    selectedModuleForUpload,
+    setSelectedPhaseForUpload,
+    setSelectedModuleForUpload,
+    addNewUploadItem,
+    removeUploadItem,
+    updateUploadItem,
+    
+    // Event handlers
+    handleFormSubmit,
+    handleEdit,
+    handleDelete,
+    confirmDelete,
+    cancelDelete,
+    handleViewModeChange,
+    handleSectionInputChange,
+    handleSectionInputFocus,
+    handleSectionInputBlur,
+    handleSectionSelect,
+    handleMultipleUploadSubmit,
+    handleMultipleUploadStart,
+    openNewContentForm,
+    closeMultipleUpload,
+    resetForm,
+  } = useContentManager();
 
-  // Delete modal state
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [contentToDelete, setContentToDelete] = useState(null);
 
-  // Section auto-complete state
-  const [availableSections, setAvailableSections] = useState([]);
-  const [sectionLoading, setSectionLoading] = useState(false);
-  const [showSectionDropdown, setShowSectionDropdown] = useState(false);
-  const [sectionInputValue, setSectionInputValue] = useState("");
-
-  // Filters
-  const [filters, setFilters] = useState({
-    type: "",
-    moduleId: "",
-  });
-
-  // Form state
-  const [showForm, setShowForm] = useState(false);
-  const [editingContent, setEditingContent] = useState(null);
-  const [formData, setFormData] = useState({
-    moduleId: "",
-    type: "video",
-    title: "",
-    description: "",
-    section: "",
-    url: "",
-    instructions: "",
-    duration: 1,
-    resources: [],
-    tags: [],
-    difficulty: "beginner",
-    prerequisites: [],
-    learningObjectives: [],
-    estimatedTime: 1,
-    contentFormat: "",
-    language: "en",
-    accessibility: {
-      hasSubtitles: false,
-      hasTranscript: false,
-      hasAudioDescription: false,
-    },
-    technicalRequirements: [],
-    author: "",
-    version: "1.0",
-    lastUpdated: "",
-    isPublished: false,
-    thumbnailUrl: "",
-  });
-
-  // Multiple upload state
-  const [showMultipleUpload, setShowMultipleUpload] = useState(false);
-  const [multipleUploads, setMultipleUploads] = useState([]);
-  const [selectedPhaseForUpload, setSelectedPhaseForUpload] = useState("");
-  const [selectedModuleForUpload, setSelectedModuleForUpload] = useState("");
-
-  // View modes
-  const [viewMode, setViewMode] = useState("hierarchical");
-  const [groupedContent, setGroupedContent] = useState({});
-  const [selectedPhaseId, setSelectedPhaseId] = useState("");
-  const [selectedModuleId, setSelectedModuleId] = useState("");
-  const [hierarchicalData, setHierarchicalData] = useState([]);
-
-  const contentTypes = [
-    { value: "video", label: "Video", icon: "🎥", color: "bg-blue-500" },
-    { value: "lab", label: "Lab", icon: "🧪", color: "bg-purple-500" },
-    { value: "game", label: "Game", icon: "🎮", color: "bg-green-500" },
-    {
-      value: "document",
-      label: "Document",
-      icon: "📄",
-      color: "bg-yellow-500",
-    },
-  ];
-
-  // Computed values
-  const filteredSections = useMemo(() => {
-    if (!sectionInputValue) return availableSections;
-    return availableSections.filter((section) =>
-      section.toLowerCase().includes(sectionInputValue.toLowerCase())
-    );
-  }, [availableSections, sectionInputValue]);
-
-  const filteredContent = useMemo(() => {
-    return content.filter((item) => {
-      if (filters.type && item.type !== filters.type) return false;
-      if (filters.moduleId && item.moduleId !== filters.moduleId) return false;
-      return true;
-    });
-  }, [content, filters]);
-
-  // Initialize data
-  useEffect(() => {
-    fetchModules();
-    fetchPhases();
-    fetchContent();
-    fetchHierarchicalData();
-  }, []);
-
-  // Data fetching functions
-  const fetchContent = async (showLoader = true) => {
-    try {
-      if (showLoader) setLoading(true);
-      setError("");
-      console.log("🔄 Fetching content...");
-      const response = await contentAPI.getAll();
-      console.log("✅ Content fetched:", response.data);
-
-      // Ensure we have a valid array
-      const contentData = Array.isArray(response.data) ? response.data : [];
-
-      // Force state update using functional update to ensure React detects the change
-      setContent(prevContent => {
-        console.log("🔄 Updating content state from", prevContent.length, "to", contentData.length, "items");
-        return [...contentData];
-      });
-    } catch (err) {
-      console.error("❌ Error fetching content:", err);
-      setError("Failed to fetch content");
-      setContent([]);
-    } finally {
-      if (showLoader) setLoading(false);
-    }
-  };
-
-  const fetchModules = async () => {
-    try {
-      const response = await modulesAPI.getAll();
-      setModules(response.data || []);
-    } catch (err) {
-      console.error("Error fetching modules:", err);
-      setError("Failed to fetch modules");
-    }
-  };
-
-  const fetchPhases = async () => {
-    try {
-      const response = await phasesAPI.getAll();
-      setPhases(response.data || []);
-    } catch (err) {
-      console.error("Error fetching phases:", err);
-      setError("Failed to fetch phases");
-    }
-  };
-
-  // View mode handlers
-  const handleViewModeChange = (mode) => {
-    setViewMode(mode);
-    switch (mode) {
-      case "hierarchical":
-        fetchHierarchicalData();
-        break;
-      case "groupedByModule":
-        fetchAllModulesGrouped();
-        break;
-      case "groupedByType":
-        fetchAllContentGroupedByType();
-        break;
-    }
-  };
-
-  const fetchHierarchicalData = async () => {
-    try {
-      setLoading(true);
-      const [phasesResponse, modulesResponse, contentResponse] =
-        await Promise.all([
-          phasesAPI.getAll(),
-          modulesAPI.getAll(),
-          contentAPI.getAll(),
-        ]);
-
-      const phasesData = phasesResponse.data || [];
-      const modulesData = modulesResponse.data || [];
-      const contentData = contentResponse.data || [];
-
-      const hierarchical = phasesData.map((phase) => {
-        const phaseModules = modulesData.filter(
-          (module) => module.phaseId === phase.id
-        );
-        const modulesWithContent = phaseModules.map((module) => {
-          const moduleContent = contentData.filter(
-            (content) => content.moduleId === module.id
-          );
-          return {
-            ...module,
-            content: moduleContent,
-            contentCount: moduleContent.length,
-          };
-        });
-
-        return {
-          ...phase,
-          modules: modulesWithContent,
-        };
-      });
-
-      setHierarchicalData(hierarchical);
-    } catch (err) {
-      console.error("Error fetching hierarchical data:", err);
-      setError("Failed to fetch hierarchical data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAllModulesGrouped = async () => {
-    try {
-      setLoading(true);
-      const [modulesResponse, contentResponse] = await Promise.all([
-        modulesAPI.getAll(),
-        contentAPI.getAll(),
-      ]);
-
-      const modulesData = modulesResponse.data || [];
-      const contentData = contentResponse.data || [];
-
-      const grouped = {};
-      modulesData.forEach((module) => {
-        const moduleContent = contentData.filter(
-          (content) => content.moduleId === module.id
-        );
-        if (moduleContent.length > 0) {
-          grouped[module.title] = moduleContent;
-        }
-      });
-
-      setGroupedContent(grouped);
-    } catch (err) {
-      console.error("Error fetching grouped content:", err);
-      setError("Failed to fetch grouped content");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAllContentGroupedByType = async () => {
-    try {
-      setLoading(true);
-      const response = await contentAPI.getAll();
-      const contentData = response.data || [];
-
-      const grouped = {};
-      contentTypes.forEach((type) => {
-        const typeContent = contentData.filter(
-          (content) => content.type === type.value
-        );
-        if (typeContent.length > 0) {
-          grouped[type.label] = typeContent;
-        }
-      });
-
-      setGroupedContent(grouped);
-    } catch (err) {
-      console.error("Error fetching content grouped by type:", err);
-      setError("Failed to fetch content grouped by type");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Form handlers
-  const resetForm = () => {
-    setFormData({
-      moduleId: "",
-      type: "video",
-      title: "",
-      description: "",
-      section: "",
-      url: "",
-      instructions: "",
-      duration: 1,
-      resources: [],
-      tags: [],
-      difficulty: "beginner",
-      prerequisites: [],
-      learningObjectives: [],
-      estimatedTime: 1,
-      contentFormat: "",
-      language: "en",
-      accessibility: {
-        hasSubtitles: false,
-        hasTranscript: false,
-        hasAudioDescription: false,
-      },
-      technicalRequirements: [],
-      author: "",
-      version: "1.0",
-      lastUpdated: "",
-      isPublished: false,
-      thumbnailUrl: "",
-    });
-    setEditingContent(null);
-    setSectionInputValue("");
-    setAvailableSections([]);
-  };
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      setSaving(true);
-      setError("");
-
-      const contentData = {
-        ...formData,
-        section: sectionInputValue || formData.section,
-      };
-
-      let responseData;
-
-      if (editingContent) {
-        console.log("🔄 Updating content:", editingContent.id);
-
-        // Optimistic update for editing - update content array
-        setContent(prevContent =>
-          prevContent.map(item =>
-            item.id === editingContent.id
-              ? { ...item, ...contentData }
-              : item
-          )
-        );
-
-        // Update hierarchical data if in hierarchical view
-        if (viewMode === "hierarchical") {
-          setHierarchicalData(prevHierarchical =>
-            prevHierarchical.map(phase => ({
-              ...phase,
-              modules: phase.modules.map(module => ({
-                ...module,
-                content: module.content.map(item =>
-                  item.id === editingContent.id
-                    ? { ...item, ...contentData }
-                    : item
-                )
-              }))
-            }))
-          );
-        }
-
-        // Update grouped data if in grouped view
-        if (viewMode === "groupedByModule" || viewMode === "groupedByType") {
-          setGroupedContent(prevGrouped => {
-            const newGrouped = { ...prevGrouped };
-            Object.keys(newGrouped).forEach(groupKey => {
-              newGrouped[groupKey] = newGrouped[groupKey].map(item =>
-                item.id === editingContent.id
-                  ? { ...item, ...contentData }
-                  : item
-              );
-            });
-            return newGrouped;
-          });
-        }
-
-        const response = await contentAPI.update(editingContent.id, contentData);
-        responseData = response.data;
-        console.log("✅ Content updated:", responseData);
-        setSuccess("Content updated successfully!");
-
-        // Update with server response data
-        setContent(prevContent =>
-          prevContent.map(item =>
-            item.id === editingContent.id ? responseData : item
-          )
-        );
-
-      } else {
-        console.log("🔄 Creating new content");
-        const response = await contentAPI.create(contentData);
-        responseData = response.data;
-        console.log("✅ Content created:", responseData);
-        setSuccess("Content created successfully!");
-
-        // Optimistic add for new content
-        setContent(prevContent => [...prevContent, responseData]);
-
-        // Add to hierarchical data if applicable
-        if (viewMode === "hierarchical" && responseData.moduleId) {
-          setHierarchicalData(prevHierarchical =>
-            prevHierarchical.map(phase => ({
-              ...phase,
-              modules: phase.modules.map(module =>
-                module.id === responseData.moduleId
-                  ? {
-                      ...module,
-                      content: [...module.content, responseData],
-                      contentCount: module.content.length + 1
-                    }
-                  : module
-              )
-            }))
-          );
-        }
-
-        // Add to grouped data if applicable
-        if (viewMode === "groupedByModule" || viewMode === "groupedByType") {
-          // Will be handled by the refresh logic below for simplicity
-        }
-      }
-
-      setShowForm(false);
-      resetForm();
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(""), 3000);
-
-      // For grouped views, refresh the specific view data to ensure consistency
-      if (viewMode === "groupedByModule") {
-        setTimeout(() => fetchAllModulesGrouped(), 100);
-      } else if (viewMode === "groupedByType") {
-        setTimeout(() => fetchAllContentGroupedByType(), 100);
-      }
-
-    } catch (err) {
-      console.error("❌ Error saving content:", err);
-      setError("Failed to save content");
-
-      // Rollback optimistic updates on error by refetching
-      await fetchContent(false);
-      if (viewMode === "hierarchical") {
-        await fetchHierarchicalData();
-      } else if (viewMode === "groupedByModule") {
-        await fetchAllModulesGrouped();
-      } else if (viewMode === "groupedByType") {
-        await fetchAllContentGroupedByType();
-      }
-
-      // Clear error message after 5 seconds
-      setTimeout(() => setError(""), 5000);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Section handlers
-  const handleSectionInputChange = (e) => {
-    setSectionInputValue(e.target.value);
-    setFormData((prev) => ({ ...prev, section: e.target.value }));
-  };
-
-  const handleSectionInputFocus = () => {
-    if (formData.moduleId) {
-      setShowSectionDropdown(true);
-      fetchSectionsByModule(formData.moduleId);
-    }
-  };
-
-  const handleSectionInputBlur = () => {
-    setTimeout(() => {
-      setShowSectionDropdown(false);
-    }, 200);
-  };
-
-  const handleSectionSelect = (section) => {
-    setSectionInputValue(section);
-    setFormData((prev) => ({ ...prev, section }));
-    setShowSectionDropdown(false);
-  };
-
-  const fetchSectionsByModule = async (moduleId) => {
-    try {
-      setSectionLoading(true);
-      const response = await contentAPI.getSectionsByModule(moduleId);
-      setAvailableSections(response.data || []);
-    } catch (err) {
-      console.error("Error fetching sections:", err);
-      setAvailableSections([]);
-    } finally {
-      setSectionLoading(false);
-    }
-  };
-
-  // Content action handlers
-  const handleEdit = (contentItem) => {
-    setEditingContent(contentItem);
-    setFormData({
-      ...contentItem,
-      resources: contentItem.resources || [],
-      tags: contentItem.tags || [],
-      prerequisites: contentItem.prerequisites || [],
-      learningObjectives: contentItem.learningObjectives || [],
-      technicalRequirements: contentItem.technicalRequirements || [],
-      accessibility: contentItem.accessibility || {
-        hasSubtitles: false,
-        hasTranscript: false,
-        hasAudioDescription: false,
-      },
-    });
-    setSectionInputValue(contentItem.section || "");
-    setShowForm(true);
-  };
-
-  const handleDelete = (contentItem) => {
-    setContentToDelete(contentItem);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!contentToDelete) return;
-
-    try {
-      setSaving(true);
-      setError("");
-
-      console.log("🔄 Deleting content:", contentToDelete.id);
-
-      // Optimistic removal - remove from UI immediately
-      const contentToDeleteId = contentToDelete.id;
-
-      // Remove from main content array
-      setContent(prevContent =>
-        prevContent.filter(item => item.id !== contentToDeleteId)
-      );
-
-      // Remove from hierarchical data
-      setHierarchicalData(prevHierarchical =>
-        prevHierarchical.map(phase => ({
-          ...phase,
-          modules: phase.modules.map(module => ({
-            ...module,
-            content: module.content.filter(item => item.id !== contentToDeleteId),
-            contentCount: Math.max(0, module.contentCount - 1)
-          }))
-        }))
-      );
-
-      // Remove from grouped data
-      setGroupedContent(prevGrouped => {
-        const newGrouped = { ...prevGrouped };
-        Object.keys(newGrouped).forEach(groupKey => {
-          newGrouped[groupKey] = newGrouped[groupKey].filter(item => item.id !== contentToDeleteId);
-          // Remove empty groups
-          if (newGrouped[groupKey].length === 0) {
-            delete newGrouped[groupKey];
-          }
-        });
-        return newGrouped;
-      });
-
-      // Close modal immediately for better UX
-      setShowDeleteModal(false);
-      setContentToDelete(null);
-
-      const response = await contentAPI.delete(contentToDeleteId);
-      console.log("✅ Content deleted:", response);
-
-      setSuccess("Content deleted successfully!");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(""), 3000);
-    } catch (err) {
-      console.error("❌ Error deleting content:", err);
-      setError("Failed to delete content");
-
-      // Rollback optimistic deletion on error by refetching
-      await fetchContent(false);
-      if (viewMode === "hierarchical") {
-        await fetchHierarchicalData();
-      } else if (viewMode === "groupedByModule") {
-        await fetchAllModulesGrouped();
-      } else if (viewMode === "groupedByType") {
-        await fetchAllContentGroupedByType();
-      }
-
-      // Clear error message after 5 seconds
-      setTimeout(() => setError(""), 5000);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const cancelDelete = () => {
-    setShowDeleteModal(false);
-    setContentToDelete(null);
-  };
-
-  // Filter handlers
-  const handleFilterChange = (filterType, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterType]: value,
-    }));
-  };
-
-  // Multiple upload handlers
-  const handleMultipleUploadStart = () => {
-    setShowMultipleUpload(true);
-    setMultipleUploads([
-      {
-        id: Date.now(),
-        type: "video",
-        title: "",
-        description: "",
-        section: "",
-        url: "",
-        instructions: "",
-        duration: 1,
-        resources: [],
-      },
-    ]);
-  };
-
-  const addNewUploadItem = () => {
-    setMultipleUploads((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        type: "video",
-        title: "",
-        description: "",
-        section: "",
-        url: "",
-        instructions: "",
-        duration: 1,
-        resources: [],
-      },
-    ]);
-  };
-
-  const removeUploadItem = (id) => {
-    setMultipleUploads((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const updateUploadItem = (id, field, value) => {
-    setMultipleUploads((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
-    );
-  };
-
-  const handleMultipleUploadSubmit = async () => {
-    try {
-      setSaving(true);
-      setError("");
-
-      // Validate all items
-      for (const item of multipleUploads) {
-        if (!item.title || !item.description) {
-          setError("Please fill in title and description for all items");
-          return;
-        }
-        if (item.type === "video" && !item.url) {
-          setError("URL is required for video content");
-          return;
-        }
-        if (
-          (item.type === "lab" || item.type === "game") &&
-          !item.instructions
-        ) {
-          setError("Instructions are required for lab and game content");
-          return;
-        }
-      }
-
-      console.log("🔄 Creating multiple content items:", multipleUploads.length);
-
-      // Create all content items
-      const createPromises = multipleUploads.map((item) => {
-        const contentData = {
-          ...item,
-          moduleId: selectedModuleForUpload,
-        };
-        delete contentData.id;
-        return contentAPI.create(contentData);
-      });
-
-      const responses = await Promise.all(createPromises);
-      const createdItems = responses.map(response => response.data);
-
-      console.log("✅ Multiple content items created:", createdItems);
-
-      // Optimistic add for new content items
-      setContent(prevContent => [...prevContent, ...createdItems]);
-
-      // Add to hierarchical data if applicable
-      if (viewMode === "hierarchical" && selectedModuleForUpload) {
-        setHierarchicalData(prevHierarchical =>
-          prevHierarchical.map(phase => ({
-            ...phase,
-            modules: phase.modules.map(module =>
-              module.id === selectedModuleForUpload
-                ? {
-                    ...module,
-                    content: [...module.content, ...createdItems],
-                    contentCount: module.content.length + createdItems.length
-                  }
-                : module
-            )
-          }))
-        );
-      }
-
-      setSuccess(
-        `Successfully created ${multipleUploads.length} content items`
-      );
-      setShowMultipleUpload(false);
-      setMultipleUploads([]);
-      setSelectedPhaseForUpload("");
-      setSelectedModuleForUpload("");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(""), 3000);
-
-      // For grouped views, refresh the specific view data to ensure consistency
-      if (viewMode === "groupedByModule") {
-        setTimeout(() => fetchAllModulesGrouped(), 100);
-      } else if (viewMode === "groupedByType") {
-        setTimeout(() => fetchAllContentGroupedByType(), 100);
-      }
-    } catch (err) {
-      console.error("❌ Error creating multiple content:", err);
-      setError("Failed to create content items");
-
-      // Rollback optimistic updates on error by refetching
-      await fetchContent(false);
-      if (viewMode === "hierarchical") {
-        await fetchHierarchicalData();
-      } else if (viewMode === "groupedByModule") {
-        await fetchAllModulesGrouped();
-      } else if (viewMode === "groupedByType") {
-        await fetchAllContentGroupedByType();
-      }
-
-      // Clear error message after 5 seconds
-      setTimeout(() => setError(""), 5000);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const closeMultipleUpload = () => {
-    setShowMultipleUpload(false);
-    setMultipleUploads([]);
-    setSelectedPhaseForUpload("");
-    setSelectedModuleForUpload("");
-    setError("");
-    setSuccess("");
-  };
-
-  // Render hierarchical view
-  const renderHierarchicalView = () => {
-    return (
-      <div className="space-y-8">
-        {hierarchicalData.map((phase) => (
-          <div
-            key={phase.id}
-            className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-green-400/30 rounded-xl p-6 relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 animate-pulse"></div>
-            {/* Phase Header */}
-            <div
-              className="relative z-10 flex items-center justify-between mb-6 cursor-pointer p-4 bg-gradient-to-r from-green-900/30 to-cyan-900/30 rounded-xl border border-green-400/30 hover:border-green-400/50 transition-all duration-300"
-              onClick={() =>
-                setSelectedPhaseId(selectedPhaseId === phase.id ? "" : phase.id)
-              }
-            >
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-400/20 to-green-600/20 border-2 border-green-400/50 rounded-xl flex items-center justify-center mr-4 shadow-lg shadow-green-400/20">
-                  <span className="text-2xl font-bold text-green-400 font-mono">
-                    P
-                  </span>
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-green-400 font-mono uppercase tracking-wider">
-                    📚 {phase.title}
-                  </h2>
-                  <p className="text-sm text-gray-400 font-mono">
-                    ◆ {phase.modules.length} modules •{" "}
-                    {phase.modules.reduce((sum, m) => sum + m.contentCount, 0)}{" "}
-                    content items
-                  </p>
-                </div>
-              </div>
-              <div className="text-green-400 text-2xl font-mono">
-                {selectedPhaseId === phase.id ? "▲" : "▼"}
-              </div>
-            </div>
-
-            {/* Modules */}
-            {selectedPhaseId === phase.id && (
-              <div className="relative z-10 space-y-4 mt-6">
-                {phase.modules.map((module) => (
-                  <div key={module.id} className="ml-6">
-                    <div
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border border-cyan-400/30 rounded-xl cursor-pointer hover:border-cyan-400/50 transition-all duration-300"
-                      onClick={() =>
-                        setSelectedModuleId(
-                          selectedModuleId === module.id ? "" : module.id
-                        )
-                      }
-                    >
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-400/20 to-cyan-600/20 border-2 border-cyan-400/50 rounded-lg flex items-center justify-center mr-4 shadow-lg shadow-cyan-400/20">
-                          <span className="text-lg font-bold text-cyan-400 font-mono">
-                            M
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-cyan-400 font-mono">
-                            📖 {module.title}
-                          </h3>
-                          <p className="text-sm text-gray-400 font-mono">
-                            ◆ {module.contentCount} content items
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-cyan-400 text-xl font-mono">
-                        {selectedModuleId === module.id ? "▲" : "▼"}
-                      </div>
-                    </div>
-
-                    {/* Content Items */}
-                    {selectedModuleId === module.id &&
-                      module.content.length > 0 && (
-                        <div className="mt-4 ml-6">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {module.content.map((contentItem) => (
-                              <ContentCard
-                                key={contentItem.id}
-                                contentItem={contentItem}
-                                contentTypes={contentTypes}
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                    {selectedModuleId === module.id &&
-                      module.content.length === 0 && (
-                        <div className="mt-4 ml-6 text-center text-gray-500 py-8">
-                          <p className="font-mono">
-                            No content items found in this module
-                          </p>
-                        </div>
-                      )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Render grouped view
-  const renderGroupedView = () => {
-    return (
-      <div className="space-y-6">
-        {Object.entries(groupedContent).map(([groupName, groupContent]) => (
-          <div
-            key={groupName}
-            className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-green-400/30 rounded-xl p-6 relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 animate-pulse"></div>
-            <div className="relative z-10">
-              <h2 className="text-xl font-bold text-green-400 font-mono uppercase tracking-wider mb-4">
-                📁 {groupName} ({groupContent.length})
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {groupContent.map((contentItem) => (
-                  <ContentCard
-                    key={contentItem.id}
-                    contentItem={contentItem}
-                    contentTypes={contentTypes}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
 
   // Main render
   return (
@@ -913,7 +111,7 @@ const ContentManager = () => {
 
         {/* Action Buttons */}
         <ActionButtons
-          onAddContent={() => setShowForm(true)}
+          onAddContent={openNewContentForm}
           onBulkUpload={handleMultipleUploadStart}
           loading={loading}
         />
@@ -934,6 +132,9 @@ const ContentManager = () => {
           </div>
         )}
 
+        {/* Statistics Grid */}
+        <StatisticsGrid content={content} contentTypes={contentTypes} />
+
         {/* Filters and Controls */}
         <ContentFiltersAndControls
           filters={filters}
@@ -952,11 +153,18 @@ const ContentManager = () => {
             <p className="mt-2 font-mono">Loading content...</p>
           </div>
         ) : (
-          <div>
-            {viewMode === "hierarchical" && renderHierarchicalView()}
-            {(viewMode === "groupedByModule" || viewMode === "groupedByType") &&
-              renderGroupedView()}
-          </div>
+          <ViewModeRenderer
+            viewMode={viewMode}
+            hierarchicalData={hierarchicalData}
+            groupedContent={groupedContent}
+            selectedPhaseId={selectedPhaseId}
+            setSelectedPhaseId={setSelectedPhaseId}
+            selectedModuleId={selectedModuleId}
+            setSelectedModuleId={setSelectedModuleId}
+            contentTypes={contentTypes}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         )}
 
         {/* Form Modal */}

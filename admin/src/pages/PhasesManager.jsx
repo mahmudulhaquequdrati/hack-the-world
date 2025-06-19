@@ -5,16 +5,17 @@ import {
 import { Layers } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { TERMINAL_CHARS } from "../lib/colorUtils";
-import { getIconOptions } from "../lib/iconUtils";
 import { phasesAPI } from "../services/api";
 
 // Import extracted components
-import ActionButtons from "../components/phases/ui/ActionButtons";
-import PhasesFormModal from "../components/phases/PhasesFormModal";
-import PhaseCard, { PhaseCardMobile } from "../components/phases/views/PhaseCard";
+import { colorOptions } from "../components/phases/constants/phaseConstants";
 import DeleteConfirmationModal from "../components/phases/DeleteConfirmationModal";
 import usePhaseDragAndDrop from "../components/phases/hooks/usePhaseDragAndDrop";
-import { colorOptions } from "../components/phases/constants/phaseConstants";
+import PhasesFormModal from "../components/phases/PhasesFormModal";
+import ActionButtons from "../components/phases/ui/ActionButtons";
+import PhaseCard, {
+  PhaseCardMobile,
+} from "../components/phases/views/PhaseCard";
 
 const PhasesManager = () => {
   const [phases, setPhases] = useState([]);
@@ -51,9 +52,6 @@ const PhasesManager = () => {
     handleDrop,
   } = usePhaseDragAndDrop(phases, setPhases, setHasChanges, setSuccess);
 
-  // Available icon options from utility
-  const iconOptions = getIconOptions();
-
   useEffect(() => {
     fetchPhases();
   }, []);
@@ -65,13 +63,19 @@ const PhasesManager = () => {
       console.log("🔄 Fetching phases...");
       const response = await phasesAPI.getAll();
       console.log("✅ Phases fetched:", response.data);
-      
+
       // Ensure we have a valid array
       const phasesData = Array.isArray(response.data) ? response.data : [];
-      
+
       // Force state update using functional update to ensure React detects the change
-      setPhases(prevPhases => {
-        console.log("🔄 Updating phases state from", prevPhases.length, "to", phasesData.length, "phases");
+      setPhases((prevPhases) => {
+        console.log(
+          "🔄 Updating phases state from",
+          prevPhases.length,
+          "to",
+          phasesData.length,
+          "phases"
+        );
         return [...phasesData];
       });
     } catch (error) {
@@ -162,27 +166,23 @@ const PhasesManager = () => {
 
       if (editingPhase) {
         console.log("🔄 Updating phase:", editingPhase.id, phaseData);
-        
+
         // Optimistic update for editing
-        setPhases(prevPhases => 
-          prevPhases.map(phase => 
-            phase.id === editingPhase.id 
-              ? { ...phase, ...phaseData }
-              : phase
+        setPhases((prevPhases) =>
+          prevPhases.map((phase) =>
+            phase.id === editingPhase.id ? { ...phase, ...phaseData } : phase
           )
         );
-        
+
         const response = await phasesAPI.update(editingPhase.id, phaseData);
         responseData = response.data;
         console.log("✅ Phase updated:", responseData);
         setSuccess("Phase updated successfully!");
-        
+
         // Update with server response data
-        setPhases(prevPhases => 
-          prevPhases.map(phase => 
-            phase.id === editingPhase.id 
-              ? responseData
-              : phase
+        setPhases((prevPhases) =>
+          prevPhases.map((phase) =>
+            phase.id === editingPhase.id ? responseData : phase
           )
         );
       } else {
@@ -191,9 +191,9 @@ const PhasesManager = () => {
         responseData = response.data;
         console.log("✅ Phase created:", responseData);
         setSuccess("Phase created successfully!");
-        
+
         // Optimistic add for new phase
-        setPhases(prevPhases => [...prevPhases, responseData]);
+        setPhases((prevPhases) => [...prevPhases, responseData]);
       }
 
       // Auto-close modal after 1.5 seconds on success
@@ -205,7 +205,7 @@ const PhasesManager = () => {
       setError(
         error.response?.data?.message || error.message || "Failed to save phase"
       );
-      
+
       // Rollback optimistic updates on error by refetching
       await fetchPhases(false);
     } finally {
@@ -224,20 +224,22 @@ const PhasesManager = () => {
     try {
       setSaving(true);
       setError("");
-      
+
       console.log("🔄 Deleting phase:", phaseToDelete.id);
-      
+
       // Optimistic removal - remove from UI immediately
       const phaseToDeleteId = phaseToDelete.id;
-      setPhases(prevPhases => prevPhases.filter(phase => phase.id !== phaseToDeleteId));
-      
+      setPhases((prevPhases) =>
+        prevPhases.filter((phase) => phase.id !== phaseToDeleteId)
+      );
+
       // Close modal immediately for better UX
       setShowDeleteModal(false);
       setPhaseToDelete(null);
-      
+
       const response = await phasesAPI.delete(phaseToDeleteId);
       console.log("✅ Phase deleted:", response);
-      
+
       setSuccess("Phase deleted successfully!");
 
       // Clear success message after 3 seconds
@@ -245,7 +247,7 @@ const PhasesManager = () => {
     } catch (error) {
       console.error("❌ Error deleting phase:", error);
       setError(error.response?.data?.message || "Failed to delete phase");
-      
+
       // Rollback optimistic deletion on error by refetching
       await fetchPhases(false);
 

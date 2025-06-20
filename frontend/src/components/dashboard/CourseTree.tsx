@@ -59,7 +59,6 @@ const CourseTree = ({
 
   const renderModuleTreeItem = (
     module: Module,
-    moduleIndex: number,
     isLastModule: boolean,
     isLastPhase: boolean
   ) => {
@@ -229,11 +228,11 @@ const CourseTree = ({
                   </div>
 
                   {/* Simple progress for enrolled modules */}
-                  {isEnrolled && module.progress > 0 && (
+                  {isEnrolled && (module.progress ?? 0) > 0 && (
                     <div className="flex justify-between items-center text-xs mb-2">
                       <span className="text-green-300/70">Progress</span>
                       <span className={`${module.color} font-medium`}>
-                        {module.progress}%
+                        {module.progress ?? 0}%
                       </span>
                     </div>
                   )}
@@ -279,8 +278,8 @@ const CourseTree = ({
   const renderPhaseTree = (phase: Phase, phaseIndex: number) => {
     const isExpanded = expandedPhases.includes(phase.id);
     const isLastPhase = phaseIndex === phases.length - 1;
-    const enrolledModules = phase.modules.filter((m) => m.enrolled);
-    const completedModules = phase.modules.filter((m) => m.completed);
+    const enrolledModules = (phase.modules || []).filter((m) => m.enrolled);
+    const completedModules = (phase.modules || []).filter((m) => m.completed);
 
     return (
       <div key={phase.id} className="relative mb-4">
@@ -315,7 +314,7 @@ const CourseTree = ({
 
                     {/* Simple phase stats */}
                     <div className="flex items-center space-x-3 text-xs text-green-300/60 mt-1">
-                      <span>{phase.modules.length} modules</span>
+                      <span>{(phase.modules || []).length} modules</span>
                       {enrolledModules.length > 0 && (
                         <>
                           <span>•</span>
@@ -345,11 +344,10 @@ const CourseTree = ({
 
           <CollapsibleContent>
             <div className="ml-8 space-y-1">
-              {phase.modules.map((module, moduleIndex) =>
+              {(phase.modules || []).map((module, moduleIndex) =>
                 renderModuleTreeItem(
                   module,
-                  moduleIndex,
-                  moduleIndex === phase.modules.length - 1,
+                  moduleIndex === (phase.modules || []).length - 1,
                   isLastPhase
                 )
               )}

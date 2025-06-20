@@ -19,7 +19,6 @@ interface ProgressTrackerProps {
   course: EnrolledCourse;
   completedLessons: string[];
   currentLessonIndex: number;
-  moduleId?: string; // Optional - no longer used in 2-API system
   onContinueLearning: () => void;
   enableDetailedProgress?: boolean;
 }
@@ -29,8 +28,6 @@ const ProgressTracker = ({
   course,
   completedLessons,
   currentLessonIndex,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  moduleId,
   onContinueLearning,
   enableDetailedProgress = false,
 }: ProgressTrackerProps) => {

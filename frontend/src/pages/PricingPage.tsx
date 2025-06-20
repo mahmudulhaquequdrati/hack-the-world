@@ -1,14 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Star, Zap } from "lucide-react";
-// import { useState } from "react";
-// import { useNavigate } from "react-router-dom";
 
 const PricingPage = () => {
-  // Currently unused but kept for future implementation
-  // const navigate = useNavigate();
-  // const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
-
   const plans = [
     {
       name: "Basic Hacker",
@@ -65,72 +59,28 @@ const PricingPage = () => {
     },
   ];
 
-  // Currently unused data - commented out to avoid ESLint errors
-  /*
-  const features = [
+  const faqs = [
     {
-      icon: Target,
-      title: "Hands-on Labs",
-      description: "Practice on real vulnerable systems in safe environments",
+      question: "What's included in the free plan?",
+      answer:
+        "The free plan includes access to 5 basic courses, community forum access, basic lab simulations, progress tracking, and completion certificates.",
     },
     {
-      icon: Code,
-      title: "Interactive Learning",
-      description: "Code along with expert instructors in live sessions",
+      question: "Can I upgrade or downgrade my plan anytime?",
+      answer:
+        "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.",
     },
     {
-      icon: Users,
-      title: "Community Support",
-      description: "Connect with fellow ethical hackers and mentors",
+      question: "Are the courses suitable for beginners?",
+      answer:
+        "Absolutely! Our courses are designed for all skill levels, from complete beginners to advanced professionals.",
     },
     {
-      icon: Globe,
-      title: "Global Recognition",
-      description: "Industry-recognized certifications and achievements",
+      question: "Do you offer refunds?",
+      answer:
+        "Yes, we offer a 30-day money-back guarantee for all paid plans. No questions asked.",
     },
   ];
-  */
-
-  /*
-  const getPriceColor = (color: string) => {
-    switch (color) {
-      case "green":
-        return "text-green-400";
-      case "blue":
-        return "text-blue-400";
-      case "purple":
-        return "text-purple-400";
-      default:
-        return "text-green-400";
-    }
-  };
-
-  const getBorderColor = (color: string) => {
-    switch (color) {
-      case "green":
-        return "border-green-400/30 hover:border-green-400";
-      case "blue":
-        return "border-blue-400/30 hover:border-blue-400";
-      case "purple":
-        return "border-purple-400/30 hover:border-purple-400";
-      default:
-        return "border-green-400/30 hover:border-green-400";
-    }
-  };
-
-  const getButtonColor = (color: string) => {
-    switch (color) {
-      case "green":
-        return "bg-green-400 text-black hover:bg-green-300";
-      case "blue":
-        return "bg-blue-400 text-black hover:bg-blue-300";
-      case "purple":
-        return "bg-purple-400 text-black hover:bg-purple-300";
-      default:
-        return "bg-green-400 text-black hover:bg-green-300";
-    }
-  };
-  */
 
   return (
     <div className="min-h-screen bg-background">

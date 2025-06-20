@@ -95,8 +95,16 @@ const createWrapper = () => {
 };
 
 // Import mocked authApi dynamically
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let mockAuthApi: any;
+interface MockedAuthApi {
+  useLoginMutation: ReturnType<typeof vi.fn>;
+  useRegisterMutation: ReturnType<typeof vi.fn>;
+  useLogoutMutation: ReturnType<typeof vi.fn>;
+  useForgotPasswordMutation: ReturnType<typeof vi.fn>;
+  useResetPasswordMutation: ReturnType<typeof vi.fn>;
+  useGetCurrentUserQuery: ReturnType<typeof vi.fn>;
+}
+
+let mockAuthApi: MockedAuthApi;
 
 describe("useAuthRTK", () => {
   beforeEach(async () => {
@@ -107,7 +115,7 @@ describe("useAuthRTK", () => {
     mockLocalStorage.removeItem.mockClear();
 
     // Import mocked hooks dynamically
-    mockAuthApi = await import("@/features/auth/authApi");
+    mockAuthApi = (await import("@/features/auth/authApi")) as unknown as MockedAuthApi;
 
     // Default mock implementations
     mockAuthApi.useLoginMutation.mockReturnValue([

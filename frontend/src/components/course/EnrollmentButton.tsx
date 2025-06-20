@@ -9,7 +9,6 @@ interface EnrollmentButtonProps {
   enrollmentStatus: string;
   onEnrollment: () => Promise<void>;
   disabled?: boolean;
-  prerequisites?: string[];
   isLoadingEnrollment?: boolean;
   moduleId?: string; // Add moduleId to support enrollment checking
 }
@@ -18,7 +17,6 @@ const EnrollmentButton = ({
   enrollmentStatus,
   onEnrollment,
   disabled = false,
-  prerequisites = [], // eslint-disable-line @typescript-eslint/no-unused-vars
   isLoadingEnrollment = false,
   moduleId,
 }: EnrollmentButtonProps) => {
@@ -26,15 +24,9 @@ const EnrollmentButton = ({
   const { isAuthenticated } = useAuthRTK();
   const [isEnrolling, setIsEnrolling] = useState(false);
   const isEnrolled = enrollmentStatus === "enrolled";
-  // const hasUnmetPrerequisites = prerequisites.length > 0; // Temporarily disabled
 
   const handleEnrollment = async () => {
-    if (
-      disabled ||
-      // hasUnmetPrerequisites ||  // Temporarily disabled - allow enrollment regardless of prerequisites
-      isEnrolling ||
-      isLoadingEnrollment
-    ) {
+    if (disabled || isEnrolling || isLoadingEnrollment) {
       return;
     }
 
@@ -76,7 +68,6 @@ const EnrollmentButton = ({
   const getButtonText = () => {
     if (isLoadingEnrollment) return "LOADING_ENROLLMENT_STATUS...";
     if (isEnrolling) return "ENROLLING_IN_MISSION...";
-    // if (hasUnmetPrerequisites) return "PREREQUISITES_REQUIRED";
     if (isEnrolled) return "> CONTINUE_MISSION";
     if (!isAuthenticated) return "> INITIALIZE_LEARNING_PROTOCOL";
     return "> INITIALIZE_LEARNING_PROTOCOL";
@@ -85,7 +76,6 @@ const EnrollmentButton = ({
   const getButtonIcon = () => {
     if (isLoadingEnrollment || isEnrolling)
       return <Loader2 className="w-6 h-6 animate-spin" />;
-    // if (hasUnmetPrerequisites) return <UserCheck className="w-6 h-6" />;
     if (isEnrolled) return <CheckCircle className="w-6 h-6" />;
     return <Play className="w-6 h-6" />;
   };
@@ -136,26 +126,6 @@ const EnrollmentButton = ({
           </p>
         </div>
       )}
-
-      {/* Prerequisites warning */}
-      {/* {hasUnmetPrerequisites && (
-      <div className="mt-4 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
-        <div className="flex items-center space-x-2 mb-2">
-          <UserCheck className="w-5 h-5 text-yellow-400" />
-          <h4 className="text-yellow-400 font-mono font-semibold">
-            PREREQUISITES_REQUIRED
-          </h4>
-        </div>
-        <p className="text-yellow-300/80 text-sm font-mono mb-2">
-          Complete the following modules before enrolling:
-        </p>
-        <ul className="list-disc list-inside text-yellow-300/70 text-sm font-mono space-y-1">
-          {prerequisites.map((prereq, index) => (
-            <li key={index}>{prereq}</li>
-          ))}
-        </ul>
-      </div>
-      )} */}
     </div>
   );
 };

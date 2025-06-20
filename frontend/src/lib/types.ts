@@ -68,13 +68,6 @@ export interface Lesson {
   content?: string;
 }
 
-export interface CurriculumSection {
-  title: string;
-  lessons: number;
-  duration: string;
-  topics: string[];
-  completed: boolean;
-}
 
 export interface LearningOutcome {
   title: string;
@@ -97,11 +90,6 @@ export interface GameItem {
   type: string;
 }
 
-export interface AssetItem {
-  name: string;
-  type: string;
-  size: string;
-}
 
 export interface Instructor {
   name: string;
@@ -215,12 +203,6 @@ export interface Resource {
   relatedTopics?: string[];
 }
 
-export interface PlaygroundTool {
-  id: string;
-  name: string;
-  description: string;
-  available: boolean;
-}
 
 export interface Playground {
   title: string;
@@ -270,23 +252,7 @@ export interface LabStep {
   completed: boolean;
 }
 
-export interface LabData {
-  name: string;
-  description: string;
-  difficulty: string;
-  duration: string;
-  objectives: string[];
-  steps: LabStep[];
-}
 
-export interface GameData {
-  name: string;
-  description: string;
-  type: string;
-  maxPoints: number;
-  timeLimit?: string;
-  objectives: string[];
-}
 
 export interface User {
   id: string;

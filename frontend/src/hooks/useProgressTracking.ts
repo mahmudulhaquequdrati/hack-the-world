@@ -13,11 +13,6 @@ export interface ContentProgressStatus {
   maxScore?: number | null;
 }
 
-interface ProgressValidationResult {
-  shouldStart: boolean;
-  existingProgress: ContentProgressStatus | null;
-  reason: string;
-}
 
 export const useProgressTracking = () => {
   const [completeContent] = useCompleteContentMutation();
@@ -112,29 +107,6 @@ export const useProgressTracking = () => {
     [handleCompleteContent]
   );
 
-  // Legacy compatibility - no-op functions for components that still expect them
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleStartContent = useCallback(async (_contentId: string) => {
-    console.warn(
-      "handleStartContent is deprecated - use getContentWithModuleAndProgress API instead"
-    );
-    return null;
-  }, []);
-
-  const checkContentProgress = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async (_contentId: string): Promise<ProgressValidationResult> => {
-      console.warn(
-        "checkContentProgress is deprecated - use getContentWithModuleAndProgress API instead"
-      );
-      return {
-        shouldStart: false,
-        existingProgress: null,
-        reason: "Function deprecated - use 2-API system instead",
-      };
-    },
-    []
-  );
 
   return {
     // Core functionality for 2-API system
@@ -142,10 +114,8 @@ export const useProgressTracking = () => {
     invalidateProgressCache,
     onCacheInvalidation,
 
-    // Legacy compatibility (deprecated but maintained for existing components)
+    // Legacy compatibility (maintained for existing components)
     markLessonComplete,
-    handleStartContent, // No-op
-    checkContentProgress, // No-op
 
     // Cache management
     progressCache: progressValidationCache.current,

@@ -14,6 +14,7 @@ const {
   getBatchModuleEnrollmentStats,
   getUserEnrollmentsByUserId,
   getCurrentUserEnrollments,
+  getUsersWithEnrollmentSummary,
 } = require("../controllers/enrollmentController");
 const { protect, authorize } = require("../middleware/auth");
 
@@ -609,6 +610,115 @@ router.get(
  *                     $ref: '#/components/schemas/Enrollment'
  */
 router.get("/admin/all", authorize("admin"), getAllEnrollments);
+
+/**
+ * @swagger
+ * /enrollments/admin/users-summary:
+ *   get:
+ *     summary: Get all users with enrollment summary (Admin only)
+ *     tags: [Enrollments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search users by name or email
+ *     responses:
+ *       200:
+ *         description: Users with enrollment summary retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Users with enrollment summary retrieved successfully
+ *                 count:
+ *                   type: number
+ *                   example: 20
+ *                 total:
+ *                   type: number
+ *                   example: 150
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: number
+ *                       example: 1
+ *                     limit:
+ *                       type: number
+ *                       example: 20
+ *                     pages:
+ *                       type: number
+ *                       example: 8
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       username:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       profile:
+ *                         type: object
+ *                         properties:
+ *                           firstName:
+ *                             type: string
+ *                           lastName:
+ *                             type: string
+ *                           displayName:
+ *                             type: string
+ *                           avatar:
+ *                             type: string
+ *                       enrollmentSummary:
+ *                         type: object
+ *                         properties:
+ *                           total:
+ *                             type: number
+ *                           active:
+ *                             type: number
+ *                           completed:
+ *                             type: number
+ *                           paused:
+ *                             type: number
+ *                           dropped:
+ *                             type: number
+ *                           averageProgress:
+ *                             type: number
+ *                           totalTimeSpent:
+ *                             type: number
+ *                           lastActivity:
+ *                             type: string
+ *                             format: date-time
+ *                       recentEnrollments:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *       403:
+ *         description: Access denied - Admin only
+ */
+router.get("/admin/users-summary", authorize("admin"), getUsersWithEnrollmentSummary);
 
 /**
  * @swagger

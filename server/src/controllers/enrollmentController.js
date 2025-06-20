@@ -286,8 +286,30 @@ const getUserEnrollmentsByUserId = asyncHandler(async (req, res, next) => {
   options.skip = skip;
   options.limit = Number(limit);
 
+  // Get enrollments with enhanced population including phase data
+  let enrollmentsQuery = UserEnrollment.find({ userId });
+  
+  if (status) {
+    enrollmentsQuery = enrollmentsQuery.where("status", status);
+  }
+  
+  // Enhanced population to include phase information
+  enrollmentsQuery = enrollmentsQuery
+    .populate("userId", "username email profile")
+    .populate({
+      path: "moduleId",
+      select: "title description difficulty duration estimatedDuration phaseId",
+      populate: {
+        path: "phaseId",
+        select: "title description color"
+      }
+    })
+    .sort({ lastAccessedAt: -1 })
+    .skip(skip)
+    .limit(Number(limit));
+
   const [enrollments, total] = await Promise.all([
-    UserEnrollment.getUserEnrollments(userId, options),
+    enrollmentsQuery,
     UserEnrollment.countDocuments({
       userId,
       ...(status && { status }),
@@ -351,8 +373,15 @@ const getAllEnrollments = asyncHandler(async (req, res, next) => {
 
   const [enrollments, total] = await Promise.all([
     UserEnrollment.find(query)
-      .populate("userId", "username email")
-      .populate("moduleId", "title description difficulty")
+      .populate("userId", "username email profile")
+      .populate({
+        path: "moduleId",
+        select: "title description difficulty phaseId",
+        populate: {
+          path: "phaseId",
+          select: "title description color"
+        }
+      })
       .sort({ enrolledAt: -1 })
       .skip(skip)
       .limit(Number(limit)),
@@ -524,6 +553,155 @@ const getBatchModuleEnrollmentStats = asyncHandler(async (req, res, next) => {
   }
 });
 
+/**
+ * @desc    Get all users with enrollment summary (Admin only)
+ * @route   GET /api/enrollments/admin/users-summary
+ * @access  Private/Admin
+ */
+const getUsersWithEnrollmentSummary = asyncHandler(async (req, res, next) => {
+  const { page = 1, limit = 20, search = "" } = req.query;
+
+  try {
+    // Build aggregation pipeline
+    const pipeline = [
+      // Match users with enrollments and optional search
+      {
+        $lookup: {
+          from: "userenrollments",
+          localField: "_id",
+          foreignField: "userId",
+          as: "enrollments"
+        }
+      },
+      {
+        $match: {
+          enrollments: { $ne: [] }, // Only users with enrollments
+          ...(search && {
+            $or: [
+              { username: { $regex: search, $options: "i" } },
+              { email: { $regex: search, $options: "i" } },
+              { "profile.firstName": { $regex: search, $options: "i" } },
+              { "profile.lastName": { $regex: search, $options: "i" } }
+            ]
+          })
+        }
+      },
+      // Add enrollment statistics
+      {
+        $addFields: {
+          enrollmentSummary: {
+            total: { $size: "$enrollments" },
+            active: {
+              $size: {
+                $filter: {
+                  input: "$enrollments",
+                  cond: { $eq: ["$$this.status", "active"] }
+                }
+              }
+            },
+            completed: {
+              $size: {
+                $filter: {
+                  input: "$enrollments",
+                  cond: { $eq: ["$$this.status", "completed"] }
+                }
+              }
+            },
+            paused: {
+              $size: {
+                $filter: {
+                  input: "$enrollments",
+                  cond: { $eq: ["$$this.status", "paused"] }
+                }
+              }
+            },
+            dropped: {
+              $size: {
+                $filter: {
+                  input: "$enrollments",
+                  cond: { $eq: ["$$this.status", "dropped"] }
+                }
+              }
+            },
+            averageProgress: {
+              $avg: "$enrollments.progressPercentage"
+            },
+            totalTimeSpent: {
+              $sum: "$enrollments.timeSpent"
+            },
+            lastActivity: {
+              $max: "$enrollments.lastAccessedAt"
+            }
+          }
+        }
+      },
+      // Project only needed fields
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          email: 1,
+          profile: {
+            firstName: 1,
+            lastName: 1,
+            displayName: 1,
+            avatar: 1
+          },
+          enrollmentSummary: 1,
+          // Keep recent enrollments for preview
+          recentEnrollments: {
+            $slice: [
+              {
+                $sortArray: {
+                  input: "$enrollments",
+                  sortBy: { lastAccessedAt: -1 }
+                }
+              },
+              3
+            ]
+          }
+        }
+      },
+      // Sort by last activity
+      {
+        $sort: { "enrollmentSummary.lastActivity": -1 }
+      }
+    ];
+
+    // Add pagination
+    const skip = (page - 1) * limit;
+    pipeline.push({ $skip: skip }, { $limit: Number(limit) });
+
+    // Execute aggregation
+    const User = require("../models/User");
+    const [users, totalCount] = await Promise.all([
+      User.aggregate(pipeline),
+      User.aggregate([
+        ...pipeline.slice(0, -2), // Remove skip and limit for count
+        { $count: "total" }
+      ])
+    ]);
+
+    const total = totalCount[0]?.total || 0;
+
+    res.status(200).json({
+      success: true,
+      message: "Users with enrollment summary retrieved successfully",
+      count: users.length,
+      total,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(total / limit)
+      },
+      data: users
+    });
+  } catch (error) {
+    console.error("Error in getUsersWithEnrollmentSummary:", error);
+    return next(new ErrorResponse("Error retrieving users enrollment summary", 500));
+  }
+});
+
 module.exports = {
   enrollUser,
   getUserEnrollments,
@@ -538,4 +716,5 @@ module.exports = {
   getBatchModuleEnrollmentStats,
   getUserEnrollmentsByUserId,
   getCurrentUserEnrollments,
+  getUsersWithEnrollmentSummary,
 };

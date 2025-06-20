@@ -24,6 +24,7 @@ const Layout = () => {
     { name: "Phases", href: "/phases", icon: CubeIcon },
     { name: "Modules", href: "/modules", icon: DocumentIcon },
     { name: "Content", href: "/content", icon: FolderIcon },
+    { name: "Enrollments", href: "/enrollments", icon: UserIcon },
   ];
 
   const isActive = (href) => location.pathname === href;
@@ -71,6 +72,12 @@ const Layout = () => {
               name: "Content Details",
               href: currentPath,
               icon: FolderIcon,
+            });
+          } else if (detailType === "enrollments") {
+            breadcrumbs.push({
+              name: "Enrollment Details",
+              href: currentPath,
+              icon: UserIcon,
             });
           }
         }

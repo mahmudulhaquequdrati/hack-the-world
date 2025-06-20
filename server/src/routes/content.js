@@ -1746,7 +1746,7 @@ router.get(
  *                 summary: Content not found
  *                 value:
  *                   success: false
- *                   message: 'Some content not found or doesn\'t belong to this module and section'
+ *                   message: 'Some content not found or does not belong to this module and section'
  *       401:
  *         description: Unauthorized
  *         content:

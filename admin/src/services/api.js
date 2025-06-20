@@ -302,6 +302,21 @@ export const contentAPI = {
 };
 
 
+// Enrollment API
+export const enrollmentAPI = {
+  // Get users with enrollment summary (Admin only)
+  getUsersSummary: async (params = {}) => {
+    const response = await createDedupedRequest({ url: "/enrollments/admin/users-summary", params });
+    return response.data;
+  },
+
+  // Get detailed enrollments for a specific user (Admin only)
+  getUserDetails: async (userId, params = {}) => {
+    const response = await createDedupedRequest({ url: `/enrollments/user/${userId}`, params });
+    return response.data;
+  },
+};
+
 // Auth API
 export const authAPI = {
   login: async (credentials) => {
@@ -333,5 +348,6 @@ export default {
   phases: phasesAPI,
   modules: modulesAPI,
   content: contentAPI,
+  enrollment: enrollmentAPI,
   auth: authAPI,
 };

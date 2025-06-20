@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import ContentDetailView from "./pages/ContentDetailView";
 import ContentManager from "./pages/ContentManager";
 import Dashboard from "./pages/Dashboard";
+import EnrollmentManager from "./pages/EnrollmentManager";
 import Login from "./pages/Login";
 import ModuleDetailView from "./pages/ModuleDetailView";
 import ModulesManager from "./pages/ModulesManager";
@@ -87,6 +88,7 @@ function App() {
             <Route path="modules/:moduleId" element={<ModuleDetailView />} />
             <Route path="content" element={<ContentManager />} />
             <Route path="content/:contentId" element={<ContentDetailView />} />
+            <Route path="enrollments" element={<EnrollmentManager />} />
           </Route>
         </Routes>
       </Router>

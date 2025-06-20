@@ -14,7 +14,6 @@ import {
   getContentTypeColor, 
   formatDuration 
 } from "../../../utils/contentHelpers.jsx";
-import { getModuleColor } from "../utils/contentDetailUtils";
 
 /**
  * Content Hero Section Component
@@ -32,7 +31,6 @@ const ContentHeroSection = ({
   if (!content) return null;
 
   const contentTypeColor = getContentTypeColor(content.type);
-  const moduleColor = module?.color ? getModuleColor(module.color) : "#10b981";
 
   // Get content action details
   const getContentActionDetails = () => {

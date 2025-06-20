@@ -9,7 +9,7 @@ import ContentFiltersAndControls from "../components/content/ContentFiltersAndCo
 import ContentFormModal from "../components/content/ContentFormModal";
 import MultipleUploadModal from "../components/content/MultipleUploadModal";
 import ContentDeleteConfirmationModal from "../components/content/ContentDeleteConfirmationModal";
-import ActionButtons from "../components/content/ui/ActionButtons";
+import ActionButtonsWithFilters from "../components/content/ui/ActionButtonsWithFilters";
 import TerminalHeader from "../components/content/ui/TerminalHeader";
 import StatisticsGrid from "../components/content/ui/StatisticsGrid";
 import ViewModeRenderer from "../components/content/ui/ViewModeRenderer";
@@ -109,11 +109,15 @@ const ContentManager = () => {
           subtitle="./manage --learning-content --cybersec-platform --enhanced"
         />
 
-        {/* Action Buttons */}
-        <ActionButtons
+        {/* Action Buttons with Filters */}
+        <ActionButtonsWithFilters
           onAddContent={openNewContentForm}
           onBulkUpload={handleMultipleUploadStart}
           loading={loading}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          contentTypes={contentTypes}
+          modules={modules}
         />
 
         {/* Success Message */}
@@ -135,14 +139,10 @@ const ContentManager = () => {
         {/* Statistics Grid */}
         <StatisticsGrid content={content} contentTypes={contentTypes} />
 
-        {/* Filters and Controls */}
+        {/* View Mode and Controls */}
         <ContentFiltersAndControls
-          filters={filters}
-          onFilterChange={handleFilterChange}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
-          contentTypes={contentTypes}
-          modules={modules}
           content={filteredContent}
         />
 

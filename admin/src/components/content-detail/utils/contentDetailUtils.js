@@ -175,17 +175,10 @@ export const getDifficultyBadgeStyle = (difficulty) => {
  * @param {Object} phase - Phase data (optional)
  * @returns {Array} Breadcrumb items
  */
-export const createContentBreadcrumbs = (content, module = null, phase = null) => {
+export const createContentBreadcrumbs = (content, module = null) => {
   const breadcrumbs = [
     { label: "Content", href: "/content" }
   ];
-
-  if (phase) {
-    breadcrumbs.push({ 
-      label: phase.title, 
-      href: `/phases/${phase.id}` 
-    });
-  }
 
   if (module) {
     breadcrumbs.push({ 

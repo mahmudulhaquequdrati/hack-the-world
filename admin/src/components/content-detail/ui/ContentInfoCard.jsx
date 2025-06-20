@@ -10,7 +10,6 @@ import { formatDuration } from "../../../utils/contentHelpers.jsx";
 const ContentInfoCard = ({
   content,
   module = null,
-  phase = null,
   className = "",
 }) => {
   if (!content) return null;
@@ -41,12 +40,6 @@ const ContentInfoCard = ({
       value: module ? module.title : "Not assigned",
       isLink: Boolean(module?.id),
       linkTo: module?.id ? `/modules/${module.id}` : null,
-    },
-    {
-      label: "Phase",
-      value: phase ? phase.title : "Not assigned",
-      isLink: Boolean(phase?.id),
-      linkTo: phase?.id ? `/phases/${phase.id}` : null,
     },
     {
       label: "Status",

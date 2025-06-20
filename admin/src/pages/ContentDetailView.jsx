@@ -18,7 +18,6 @@ const ContentDetailView = () => {
     data,
     content,
     module,
-    phase,
     processedResources,
     metadataBreakdown,
     breadcrumbs,
@@ -60,7 +59,6 @@ const ContentDetailView = () => {
       <ContentHeroSection
         content={content}
         module={module}
-        phase={phase}
         onNavigateBack={actions.handleBackNavigation}
         onContentUrlClick={actions.handleContentUrlClick}
         breadcrumbs={breadcrumbs}
@@ -84,7 +82,7 @@ const ContentDetailView = () => {
             {/* Sidebar */}
             <div className="lg:col-span-2 space-y-6">
               {/* Content Info Card */}
-              <ContentInfoCard content={content} module={module} phase={phase} />
+              <ContentInfoCard content={content} module={module} />
             </div>
           </div>
         </div>

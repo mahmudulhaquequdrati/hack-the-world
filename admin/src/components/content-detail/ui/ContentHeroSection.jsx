@@ -1,7 +1,6 @@
 import {
   ClockIcon,
   CubeIcon,
-  StarIcon,
   ArrowLeftIcon,
   PencilIcon,
   PlayIcon,
@@ -24,7 +23,6 @@ import { getModuleColor } from "../utils/contentDetailUtils";
 const ContentHeroSection = ({ 
   content, 
   module, 
-  phase,
   onNavigateBack,
   onContentUrlClick,
   breadcrumbs = [],
@@ -162,12 +160,6 @@ const ContentHeroSection = ({
                 </div>
               )}
               
-              {phase && (
-                <div className="flex items-center text-gray-400">
-                  <StarIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                  <span className="font-medium">{phase.title}</span>
-                </div>
-              )}
               
               {content.metadata?.estimatedTime && (
                 <div className="flex items-center text-gray-400">

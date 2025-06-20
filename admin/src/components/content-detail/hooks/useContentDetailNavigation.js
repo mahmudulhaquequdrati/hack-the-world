@@ -80,8 +80,8 @@ const useContentDetailNavigation = (content, module, phase) => {
    * Breadcrumb navigation data
    */
   const breadcrumbs = useMemo(() => {
-    return createContentBreadcrumbs(content, module, phase);
-  }, [content, module, phase]);
+    return createContentBreadcrumbs(content, module);
+  }, [content, module]);
 
   /**
    * Quick action configurations

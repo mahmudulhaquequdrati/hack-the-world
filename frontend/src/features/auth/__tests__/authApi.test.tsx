@@ -264,7 +264,7 @@ describe("authApi", () => {
         },
       };
 
-      (fetch as any).mockResolvedValueOnce({
+      (fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       });

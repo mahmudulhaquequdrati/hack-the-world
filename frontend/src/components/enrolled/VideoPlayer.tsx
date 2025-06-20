@@ -247,16 +247,16 @@ const VideoPlayer = ({
       // Simple progress tracking - let parent handle API calls
       // We just track local video progress for UI purposes
     },
-    [contentId, duration, lesson?.id, onMarkComplete]
+    [onVideoProgress]
   );
 
   const handleDuration = useCallback((duration: number) => {
     setDuration(duration);
   }, []);
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     setMuted(!muted);
-  };
+  }, [muted]);
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -334,7 +334,7 @@ const VideoPlayer = ({
     }
   };
 
-  const skipBackward = () => {
+  const skipBackward = useCallback(() => {
     if (playerRef.current) {
       const currentTime = playerRef.current.getCurrentTime();
       const newTime = Math.max(0, currentTime - 5);
@@ -342,9 +342,9 @@ const VideoPlayer = ({
       setProgress(newTime);
       setPlayed(newTime / duration);
     }
-  };
+  }, [duration]);
 
-  const skipForward = () => {
+  const skipForward = useCallback(() => {
     if (playerRef.current) {
       const currentTime = playerRef.current.getCurrentTime();
       const newTime = Math.min(duration, currentTime + 5);
@@ -352,7 +352,7 @@ const VideoPlayer = ({
       setProgress(newTime);
       setPlayed(newTime / duration);
     }
-  };
+  }, [duration]);
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -398,7 +398,7 @@ const VideoPlayer = ({
       window.addEventListener("keydown", handleKeyPress);
       return () => window.removeEventListener("keydown", handleKeyPress);
     }
-  }, [hasStarted, onPlayPause, duration]);
+  }, [hasStarted, onPlayPause, duration, skipBackward, skipForward, toggleMute]);
 
   // Determine if we should show the center play button
   const showCenterPlayButton =

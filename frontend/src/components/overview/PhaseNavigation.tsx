@@ -10,7 +10,7 @@ interface PhaseNavigationProps {
 const PhaseNavigation = ({ phases, onPhaseChange }: PhaseNavigationProps) => {
   return (
     <div className="flex justify-center px-4">
-      <div className="w-full max-w-full overflow-x-auto">
+      <div className="w-full max-w-3xl overflow-x-auto">
         <TabsList className="bg-black/50 border border-green-400/30 p-1 flex w-max min-w-full sm:w-auto">
           {phases.map((phase) => {
             const PhaseIcon = getIconFromName(phase.icon);

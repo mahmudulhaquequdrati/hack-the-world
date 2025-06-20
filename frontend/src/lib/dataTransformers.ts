@@ -456,7 +456,7 @@ export const transformApiContentToEnrolledCourse = (
   const resources: Resource[] = Object.values(groupedContent)
     .flat()
     .filter((item) => item.type === "document")
-    .map((doc, index) => ({
+    .map((doc) => ({
       name: doc.title,
       type: "PDF" as const,
       size: "1.2 MB",

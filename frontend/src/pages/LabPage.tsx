@@ -14,7 +14,7 @@ import {
   Terminal,
   Zap,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 interface LabStep {
@@ -82,9 +82,9 @@ const LabPage = () => {
   // Use the labId from URL as the MongoDB content ID (it's already the real content ID now)
   const contentId = labId || "";
   
-  // Get current progress from API data
-  const currentProgress = labData?.data?.progress?.progressPercentage || 0;
-  const currentScore = labData?.data?.progress?.score || 0;
+  // Progress data is available but currently unused
+  // const currentProgress = labData?.data?.progress?.progressPercentage || 0;
+  // const currentScore = labData?.data?.progress?.score || 0;
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {

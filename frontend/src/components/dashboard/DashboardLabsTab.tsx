@@ -1,5 +1,5 @@
 import { getDifficultyColor } from "@/lib";
-import { Module, Phase } from "@/lib/types";
+import { Phase } from "@/lib/types";
 import {
   Beaker,
   Clock,
@@ -16,7 +16,6 @@ import { useAuthRTK } from "@/hooks/useAuthRTK";
 
 interface DashboardLabsTabProps {
   phases: Phase[];
-  getModulesByPhase: (phaseId: string, enrolledOnly?: boolean) => Module[];
 }
 
 interface LabItem {
@@ -42,7 +41,6 @@ interface LabItem {
 
 export const DashboardLabsTab = ({
   phases,
-  getModulesByPhase,
 }: DashboardLabsTabProps) => {
   const navigate = useNavigate();
   const { user } = useAuthRTK();
@@ -203,7 +201,7 @@ export const DashboardLabsTab = ({
         <div className="space-y-6">
           {/* Lab Grid - Show all labs in a retro lab style */}
           <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
-            {labs.map((lab, index) => (
+            {labs.map((lab) => (
               <div
                 key={lab.id}
                 className="group relative bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-green-400/30 rounded-lg overflow-hidden hover:border-cyan-400/60 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-400/25"

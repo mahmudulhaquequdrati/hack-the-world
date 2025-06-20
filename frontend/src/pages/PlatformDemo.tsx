@@ -61,7 +61,7 @@ const PlatformDemo = () => {
 
       return () => clearInterval(interval);
     }
-  }, [activeDemo, currentStep]);
+  }, [activeDemo, currentStep, demoSteps.terminal]);
 
   const resetDemo = () => {
     setTerminalOutput([]);

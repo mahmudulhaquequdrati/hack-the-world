@@ -571,10 +571,13 @@ const generateEnhancedGames = (course: Course): Game[] => {
 
 // Helper function to check if a lesson is completed - now returns false since mock data is removed
 const isLessonCompletedByIndex = (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _moduleId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _lessonIndex: number
 ): boolean => {
   // TODO: Replace with real API call to check lesson completion status
+  // Parameters prefixed with _ to indicate they're intentionally unused
   return false;
 };
 

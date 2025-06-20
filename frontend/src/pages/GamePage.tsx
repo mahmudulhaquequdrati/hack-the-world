@@ -15,7 +15,7 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const GamePage = () => {
@@ -55,9 +55,9 @@ const GamePage = () => {
   // Use the gameId from URL as the MongoDB content ID (it's already the real content ID now)
   const contentId = gameId || "";
   
-  // Get current score from API data
-  const currentScore = gameData?.data?.progress?.score || 0;
-  const progressPercentage = gameData?.data?.progress?.progressPercentage || 0;
+  // Progress data is available but currently unused
+  // const currentScore = gameData?.data?.progress?.score || 0;
+  // const progressPercentage = gameData?.data?.progress?.progressPercentage || 0;
 
   // Initialize score from API data and timer based on game's timeLimit
   useEffect(() => {

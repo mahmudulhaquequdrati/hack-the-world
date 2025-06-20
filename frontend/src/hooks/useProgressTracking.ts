@@ -113,7 +113,8 @@ export const useProgressTracking = () => {
   );
 
   // Legacy compatibility - no-op functions for components that still expect them
-  const handleStartContent = useCallback(async (contentId: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleStartContent = useCallback(async (_contentId: string) => {
     console.warn(
       "handleStartContent is deprecated - use getContentWithModuleAndProgress API instead"
     );
@@ -121,7 +122,8 @@ export const useProgressTracking = () => {
   }, []);
 
   const checkContentProgress = useCallback(
-    async (contentId: string): Promise<ProgressValidationResult> => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async (_contentId: string): Promise<ProgressValidationResult> => {
       console.warn(
         "checkContentProgress is deprecated - use getContentWithModuleAndProgress API instead"
       );

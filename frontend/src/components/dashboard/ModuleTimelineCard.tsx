@@ -18,7 +18,6 @@ interface ModuleTimelineCardProps {
 
 export const ModuleTimelineCard = ({
   module,
-  isLast,
   onModuleClick,
 }: ModuleTimelineCardProps) => {
   // Extract color from module.color (e.g., "text-blue-400" -> "blue")

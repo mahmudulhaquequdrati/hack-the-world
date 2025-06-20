@@ -62,7 +62,8 @@ const CircularProgress = ({
   );
 };
 
-// Progress Stats Card Component
+// Progress Stats Card Component (currently unused)
+/* 
 const ProgressStatsCard = ({
   title,
   value,
@@ -108,6 +109,7 @@ const ProgressStatsCard = ({
     />
   </div>
 );
+*/
 
 export const LearningDashboard = ({
   enrolledModules,

@@ -1,14 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Code, Globe, Star, Target, Users, Zap } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Check, Star, Zap } from "lucide-react";
+// import { useState } from "react";
+// import { useNavigate } from "react-router-dom";
 
 const PricingPage = () => {
-  const navigate = useNavigate();
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
-    "monthly"
-  );
+  // Currently unused but kept for future implementation
+  // const navigate = useNavigate();
+  // const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
 
   const plans = [
     {
@@ -66,6 +65,8 @@ const PricingPage = () => {
     },
   ];
 
+  // Currently unused data - commented out to avoid ESLint errors
+  /*
   const features = [
     {
       icon: Target,
@@ -88,30 +89,9 @@ const PricingPage = () => {
       description: "Industry-recognized certifications and achievements",
     },
   ];
+  */
 
-  const faqs = [
-    {
-      question: "Can I upgrade or downgrade anytime?",
-      answer:
-        "Yes, you can change your plan at any time. Changes take effect immediately and we'll prorate your billing accordingly.",
-    },
-    {
-      question: "Is there a money-back guarantee?",
-      answer:
-        "We offer a 30-day money-back guarantee for all paid plans. If you're not satisfied, we'll refund your payment in full.",
-    },
-    {
-      question: "Do you offer student discounts?",
-      answer:
-        "Yes! Students with valid .edu email addresses receive 50% off all paid plans. Contact support to verify your student status.",
-    },
-    {
-      question: "What payment methods do you accept?",
-      answer:
-        "We accept all major credit cards, PayPal, and cryptocurrency payments for maximum security and convenience.",
-    },
-  ];
-
+  /*
   const getPriceColor = (color: string) => {
     switch (color) {
       case "green":
@@ -150,6 +130,7 @@ const PricingPage = () => {
         return "bg-green-400 text-black hover:bg-green-300";
     }
   };
+  */
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,4 +1,4 @@
-import { Module, Phase } from "@/lib/types";
+import { Phase } from "@/lib/types";
 import { Gamepad2, Network, Target, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGetContentTypeProgressQuery } from "@/features/api/apiSlice";
@@ -6,7 +6,6 @@ import { useAuthRTK } from "@/hooks/useAuthRTK";
 
 interface DashboardGamesTabProps {
   phases: Phase[];
-  getModulesByPhase: (phaseId: string, enrolledOnly?: boolean) => Module[];
 }
 
 interface GameItem {
@@ -31,7 +30,6 @@ interface GameItem {
 
 export const DashboardGamesTab = ({
   phases,
-  getModulesByPhase,
 }: DashboardGamesTabProps) => {
   const navigate = useNavigate();
   const { user } = useAuthRTK();
@@ -169,7 +167,7 @@ export const DashboardGamesTab = ({
         <div className="space-y-6">
           {/* Game Grid - Show all games in a retro arcade style */}
           <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
-            {games.map((game, index) => (
+            {games.map((game) => (
               <div
                 key={game.id}
                 className="group relative bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-cyan-400/30 rounded-lg overflow-hidden hover:border-purple-400/60 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/25"

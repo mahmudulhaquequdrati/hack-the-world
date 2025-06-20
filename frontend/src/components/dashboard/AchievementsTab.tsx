@@ -53,8 +53,7 @@ export const AchievementsTab = ({ achievements, enrolledModules }: AchievementsT
   // Fetch real achievement data
   const { 
     data: achievementData, 
-    isLoading: achievementsLoading, 
-    error: achievementsError 
+    isLoading: achievementsLoading
   } = useGetUserAchievementsQuery();
   
   // Get current user data for real stats

@@ -618,11 +618,11 @@ const ContentFormModal = ({
                   <label className="flex items-center space-x-3">
                     <input
                       type="checkbox"
-                      checked={formData.isPublished}
+                      checked={formData.isActive}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          isPublished: e.target.checked,
+                          isActive: e.target.checked,
                         }))
                       }
                       className="rounded bg-gray-700 border-green-400/30 text-green-400 focus:ring-green-400"

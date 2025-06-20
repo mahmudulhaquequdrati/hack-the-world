@@ -11,6 +11,7 @@ export const useContentFilters = () => {
     phaseId: "",
     difficulty: "",
     section: "",
+    isActive: "",
   });
 
   // Handle filter changes
@@ -29,6 +30,7 @@ export const useContentFilters = () => {
       phaseId: "",
       difficulty: "",
       section: "",
+      isActive: "",
     });
   }, []);
 
@@ -60,6 +62,13 @@ export const useContentFilters = () => {
       
       // Section filter (partial match)
       if (filters.section && !item.section?.toLowerCase().includes(filters.section.toLowerCase())) return false;
+      
+      // Active/Inactive filter
+      if (filters.isActive !== "") {
+        const isItemActive = Boolean(item.isActive);
+        const filterActive = filters.isActive === "true";
+        if (isItemActive !== filterActive) return false;
+      }
       
       return true;
     });
@@ -107,6 +116,10 @@ export const useContentFilters = () => {
     
     if (filters.section) {
       activeParts.push(`Section: ${filters.section}`);
+    }
+    
+    if (filters.isActive !== "") {
+      activeParts.push(`Status: ${filters.isActive === "true" ? "Active" : "Inactive"}`);
     }
     
     return activeParts.length > 0 ? activeParts.join(" • ") : "No filters applied";
@@ -162,6 +175,12 @@ export const useContentFilters = () => {
         break;
       case 'advanced':
         setFilters(prev => ({ ...prev, difficulty: "advanced" }));
+        break;
+      case 'active':
+        setFilters(prev => ({ ...prev, isActive: "true" }));
+        break;
+      case 'inactive':
+        setFilters(prev => ({ ...prev, isActive: "false" }));
         break;
       default:
         resetFilters();

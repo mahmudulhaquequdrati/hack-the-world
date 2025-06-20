@@ -54,6 +54,36 @@ export const useContentManager = () => {
     return sectionManagement.getFilteredSections(formManagement.sectionInputValue);
   }, [sectionManagement.availableSections, formManagement.sectionInputValue]);
 
+  // Apply filters to hierarchical data
+  const filteredHierarchicalData = useMemo(() => {
+    if (!viewModeManagement.hierarchicalData.length) return [];
+    
+    return viewModeManagement.hierarchicalData.map(phase => ({
+      ...phase,
+      modules: phase.modules.map(module => ({
+        ...module,
+        content: filterManagement.filterContent(module.content),
+        contentCount: filterManagement.filterContent(module.content).length
+      }))
+    }));
+    // Note: Removed filter that hides phases with no content - show all phases regardless
+  }, [viewModeManagement.hierarchicalData, filterManagement.filters, filterManagement.filterContent]);
+
+  // Apply filters to grouped data
+  const filteredGroupedContent = useMemo(() => {
+    if (!Object.keys(viewModeManagement.groupedContent).length) return {};
+    
+    const filtered = {};
+    Object.entries(viewModeManagement.groupedContent).forEach(([groupName, groupContent]) => {
+      const filteredGroup = filterManagement.filterContent(groupContent);
+      if (filteredGroup.length > 0) {
+        filtered[groupName] = filteredGroup;
+      }
+    });
+    
+    return filtered;
+  }, [viewModeManagement.groupedContent, filterManagement.filters, filterManagement.filterContent]);
+
   // Handle form submission
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -229,8 +259,8 @@ export const useContentManager = () => {
 
     // View mode management
     viewMode: viewModeManagement.viewMode,
-    hierarchicalData: viewModeManagement.hierarchicalData,
-    groupedContent: viewModeManagement.groupedContent,
+    hierarchicalData: filteredHierarchicalData,
+    groupedContent: filteredGroupedContent,
     selectedPhaseId: viewModeManagement.selectedPhaseId,
     selectedModuleId: viewModeManagement.selectedModuleId,
     setSelectedPhaseId: viewModeManagement.setSelectedPhaseId,

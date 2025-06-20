@@ -31,7 +31,7 @@ export const createContentData = (formData, sectionInputValue) => {
     version: formData.version || '1.0',
     language: formData.language || 'en',
     difficulty: formData.difficulty || 'beginner',
-    isPublished: Boolean(formData.isPublished),
+    isActive: Boolean(formData.isActive),
   };
 };
 
@@ -164,7 +164,7 @@ export const createDefaultFormData = () => ({
   author: "",
   version: "1.0",
   lastUpdated: "",
-  isPublished: false,
+  isActive: false,
   thumbnailUrl: "",
 });
 
@@ -394,7 +394,7 @@ export const calculateContentStats = (content, contentTypes) => {
     
     stats.totalDuration += item.duration || 0;
     
-    if (item.isPublished) {
+    if (item.isActive) {
       stats.published++;
     } else {
       stats.unpublished++;

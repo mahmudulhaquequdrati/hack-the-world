@@ -133,13 +133,15 @@ const ContentManager = () => {
         )}
 
         {/* Statistics Grid */}
-        <StatisticsGrid content={content} contentTypes={contentTypes} />
+        <StatisticsGrid content={filteredContent} contentTypes={contentTypes} />
 
         {/* View Mode and Controls */}
         <ContentFiltersAndControls
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
           content={filteredContent}
+          filters={filters}
+          onFilterChange={handleFilterChange}
         />
 
         {/* Content Display */}

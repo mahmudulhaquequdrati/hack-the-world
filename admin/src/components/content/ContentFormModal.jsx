@@ -331,25 +331,49 @@ const ContentFormModal = ({
               </div>
             )}
 
-            {/* Duration Input */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                ▶ Duration (minutes)
-              </label>
-              <input
-                type="number"
-                value={formData.duration}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    duration: parseInt(e.target.value),
-                  }))
-                }
-                className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
-                min="1"
-                max="300"
-                placeholder="15"
-              />
+            {/* Duration and Order Inputs */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                  ▶ Duration (minutes)
+                </label>
+                <input
+                  type="number"
+                  value={formData.duration}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      duration: parseInt(e.target.value),
+                    }))
+                  }
+                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
+                  min="1"
+                  max="300"
+                  placeholder="15"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                  ▶ Order (optional)
+                </label>
+                <input
+                  type="number"
+                  value={formData.order || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      order: e.target.value ? parseInt(e.target.value) : null,
+                    }))
+                  }
+                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
+                  min="1"
+                  placeholder="Auto-assigned if empty"
+                />
+                <p className="text-xs text-green-400/60 font-mono">
+                  ℹ️ Leave empty for auto-assignment. Use drag-and-drop for reordering.
+                </p>
+              </div>
             </div>
 
             {/* Resources Input */}

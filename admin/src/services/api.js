@@ -291,6 +291,14 @@ export const contentAPI = {
     const response = await axios.delete(`/content/${contentId}/permanent`);
     return response.data;
   },
+
+  // Reorder content within a section
+  reorderInSection: async (moduleId, section, contentOrders) => {
+    const response = await axios.put(`/content/module/${moduleId}/section/${encodeURIComponent(section)}/reorder`, {
+      contentOrders
+    });
+    return response.data;
+  },
 };
 
 

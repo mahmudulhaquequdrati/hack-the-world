@@ -6,6 +6,7 @@ import { useContentViewMode } from './useContentViewMode';
 import { useContentFilters } from './useContentFilters';
 import { useContentSections } from './useContentSections';
 import { useContentMultipleUpload } from './useContentMultipleUpload';
+import useContentDragAndDrop from './useContentDragAndDrop';
 
 /**
  * Composite hook that combines all content management functionality
@@ -20,6 +21,10 @@ export const useContentManager = () => {
   const filterManagement = useContentFilters();
   const sectionManagement = useContentSections();
   const multipleUploadManagement = useContentMultipleUpload();
+  const dragAndDropManagement = useContentDragAndDrop(
+    () => {}, // setHasChanges placeholder
+    (message) => apiManagement.showSuccessMessage(message)
+  );
 
   // Content types configuration
   const contentTypes = [
@@ -83,6 +88,49 @@ export const useContentManager = () => {
     
     return filtered;
   }, [viewModeManagement.groupedContent, filterManagement.filters, filterManagement.filterContent]);
+
+  // Update section content in hierarchical data for drag-and-drop
+  const updateSectionContent = (moduleId, section, updatedContent) => {
+    viewModeManagement.setHierarchicalData(prevData => {
+      return prevData.map(phase => ({
+        ...phase,
+        modules: phase.modules.map(module => {
+          if (module.id === moduleId) {
+            // Replace content for this section
+            const otherContent = module.content.filter(c => c.section !== section);
+            
+            // Ensure updatedContent is properly sorted (server should return it sorted)
+            const sortedUpdatedContent = [...updatedContent].sort((a, b) => {
+              if (a.section !== b.section) {
+                return a.section.localeCompare(b.section);
+              }
+              if (a.order && b.order) {
+                return a.order - b.order;
+              }
+              return new Date(a.createdAt) - new Date(b.createdAt);
+            });
+            
+            // Combine and sort all content
+            const newContent = [...otherContent, ...sortedUpdatedContent].sort((a, b) => {
+              if (a.section !== b.section) {
+                return a.section.localeCompare(b.section);
+              }
+              if (a.order && b.order) {
+                return a.order - b.order;
+              }
+              return new Date(a.createdAt) - new Date(b.createdAt);
+            });
+            
+            return {
+              ...module,
+              content: newContent
+            };
+          }
+          return module;
+        })
+      }));
+    });
+  };
 
   // Handle form submission
   const handleFormSubmit = async (e) => {
@@ -261,10 +309,10 @@ export const useContentManager = () => {
     viewMode: viewModeManagement.viewMode,
     hierarchicalData: filteredHierarchicalData,
     groupedContent: filteredGroupedContent,
-    selectedPhaseId: viewModeManagement.selectedPhaseId,
-    selectedModuleId: viewModeManagement.selectedModuleId,
-    setSelectedPhaseId: viewModeManagement.setSelectedPhaseId,
-    setSelectedModuleId: viewModeManagement.setSelectedModuleId,
+    expandedPhases: viewModeManagement.expandedPhases,
+    expandedModules: viewModeManagement.expandedModules,
+    setExpandedPhases: viewModeManagement.setExpandedPhases,
+    setExpandedModules: viewModeManagement.setExpandedModules,
 
     // Filter management
     filters: filterManagement.filters,
@@ -289,6 +337,23 @@ export const useContentManager = () => {
     updateUploadItem: multipleUploadManagement.updateUploadItem,
     closeMultipleUpload: multipleUploadManagement.closeMultipleUpload,
     startMultipleUpload: multipleUploadManagement.startMultipleUpload,
+
+    // Drag-and-drop management
+    draggedContent: dragAndDropManagement.draggedContent,
+    dragOverContent: dragAndDropManagement.dragOverContent,
+    isDragging: dragAndDropManagement.isDragging,
+    sectionChanges: dragAndDropManagement.sectionChanges,
+    hasUnsavedChanges: dragAndDropManagement.hasUnsavedChanges,
+    handleDragStart: dragAndDropManagement.handleDragStart,
+    handleDragEnd: dragAndDropManagement.handleDragEnd,
+    handleDragOver: dragAndDropManagement.handleDragOver,
+    handleDragEnter: dragAndDropManagement.handleDragEnter,
+    handleDragLeave: dragAndDropManagement.handleDragLeave,
+    handleDrop: dragAndDropManagement.handleDrop,
+    getSectionChanges: dragAndDropManagement.getSectionChanges,
+    clearSectionChanges: dragAndDropManagement.clearSectionChanges,
+    clearAllChanges: dragAndDropManagement.clearAllChanges,
+    updateSectionContent,
 
     // Event handlers
     handleFormSubmit,

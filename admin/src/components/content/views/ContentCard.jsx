@@ -7,7 +7,17 @@ const ContentCard = ({
   onEdit, 
   onDelete,
   showContext = false,
-  contextData = null
+  contextData = null,
+  // Drag-and-drop props
+  isDraggable = false,
+  isDragging = false,
+  isDraggedOver = false,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragEnter,
+  onDragLeave,
+  onDrop
 }) => {
   const contentType = contentTypes.find((type) => type.value === contentItem.type);
 
@@ -29,17 +39,41 @@ const ContentCard = ({
   return (
     <div
       key={contentItem.id}
-      className="bg-gradient-to-br from-gray-800/80 to-black/80 border border-gray-600/50 rounded-xl p-4 hover:border-green-400/50 hover:shadow-lg hover:shadow-green-400/10 transition-all duration-300 group relative overflow-hidden"
+      draggable={isDraggable}
+      onDragStart={(e) => isDraggable && onDragStart?.(e, contentItem)}
+      onDragEnd={(e) => isDraggable && onDragEnd?.(e)}
+      onDragOver={(e) => isDraggable && onDragOver?.(e)}
+      onDragEnter={(e) => isDraggable && onDragEnter?.(e, contentItem)}
+      onDragLeave={(e) => isDraggable && onDragLeave?.(e)}
+      onDrop={(e) => isDraggable && onDrop?.(e, contentItem)}
+      className={`
+        bg-gradient-to-br from-gray-800/80 to-black/80 border rounded-xl p-4 transition-all duration-300 group relative overflow-hidden
+        ${isDraggable ? 'cursor-move' : ''}
+        ${isDraggedOver ? 'border-cyan-400/70 shadow-lg shadow-cyan-400/20 scale-105' : 'border-gray-600/50'}
+        ${isDragging ? 'opacity-50 scale-95' : 'hover:border-green-400/50 hover:shadow-lg hover:shadow-green-400/10'}
+      `}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       <div className="relative z-10">
         {/* Content Type Badge and Duration */}
         <div className="flex items-start justify-between mb-2">
-          <span 
-            className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold font-mono uppercase tracking-wider border ${getContentTypeStyles(contentItem.type)}`}
-          >
-            {contentType?.icon} {contentType?.label}
-          </span>
+          <div className="flex items-center gap-2">
+            {isDraggable && (
+              <span className="text-gray-500 text-xs opacity-50 group-hover:opacity-100 transition-opacity">
+                ⋮⋮
+              </span>
+            )}
+            {contentItem.order && (
+              <span className="text-xs font-mono text-gray-400 bg-gray-700/50 px-2 py-1 rounded border border-gray-600/50">
+                #{contentItem.order}
+              </span>
+            )}
+            <span 
+              className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold font-mono uppercase tracking-wider border ${getContentTypeStyles(contentItem.type)}`}
+            >
+              {contentType?.icon} {contentType?.label}
+            </span>
+          </div>
           <span className="text-xs text-gray-400 font-mono">
             {contentItem.duration}m
           </span>

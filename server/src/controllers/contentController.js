@@ -33,7 +33,7 @@ const getAllContent = asyncHandler(async (req, res, next) => {
 
   const content = await Content.find(query)
     .populate("module", "title")
-    .sort({ moduleId: 1, section: 1, createdAt: 1 });
+    .sort({ moduleId: 1, section: 1, order: 1, createdAt: 1 });
 
   const total = await Content.countDocuments(query);
 
@@ -295,6 +295,21 @@ const createContent = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("Module not found", 404));
   }
 
+  // Auto-assign order if not provided
+  if (!contentData.order && contentData.section) {
+    // Find the highest order number in this module and section
+    const highestOrderContent = await Content.findOne({
+      moduleId: contentData.moduleId,
+      section: contentData.section,
+      isActive: true
+    })
+    .sort({ order: -1 })
+    .select('order');
+
+    // Assign next order number (default to 1 if no content exists)
+    contentData.order = highestOrderContent?.order ? highestOrderContent.order + 1 : 1;
+  }
+
   const content = await Content.create(contentData);
 
   // Populate module information
@@ -502,6 +517,98 @@ const getContentWithModuleAndProgress = asyncHandler(async (req, res, next) => {
   });
 });
 
+/**
+ * @desc    Reorder content within a section
+ * @route   PUT /api/content/module/:moduleId/section/:section/reorder
+ * @access  Private (Admin only)
+ */
+const reorderContentInSection = asyncHandler(async (req, res, next) => {
+  const { moduleId, section } = req.params;
+  const { contentOrders } = req.body; // Array of { contentId, order }
+
+  // Validate moduleId ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(moduleId)) {
+    return next(new ErrorResponse(`Invalid module ID format`, 400));
+  }
+
+  // Validate that contentOrders is provided and is an array
+  if (!contentOrders || !Array.isArray(contentOrders) || contentOrders.length === 0) {
+    return next(new ErrorResponse("Content orders array is required", 400));
+  }
+
+  // Validate that all content IDs are valid ObjectIds
+  const contentIds = contentOrders.map((item) => item.contentId);
+  for (const contentId of contentIds) {
+    if (!mongoose.Types.ObjectId.isValid(contentId)) {
+      return next(
+        new ErrorResponse(`Invalid content ID format: ${contentId}`, 400)
+      );
+    }
+  }
+
+  // Validate that all content exists, belongs to this module and section
+  const content = await Content.find({
+    _id: { $in: contentIds },
+    moduleId,
+    section,
+    isActive: true,
+  });
+
+  if (content.length !== contentIds.length) {
+    return next(
+      new ErrorResponse(
+        "Some content not found or doesn't belong to this module and section",
+        400
+      )
+    );
+  }
+
+  // Use transaction to ensure atomicity and handle unique constraint conflicts
+  const session = await mongoose.startSession();
+  
+  try {
+    await session.withTransaction(async () => {
+      // First, set all content to temporary negative orders to avoid conflicts
+      const tempUpdatePromises = contentOrders.map(({ contentId }, index) =>
+        Content.findOneAndUpdate(
+          { _id: contentId, moduleId, section },
+          { order: -(index + 1) }, // Use negative numbers temporarily
+          { session }
+        )
+      );
+      await Promise.all(tempUpdatePromises);
+
+      // Then update with the actual orders
+      const finalUpdatePromises = contentOrders.map(({ contentId, order }) =>
+        Content.findOneAndUpdate(
+          { _id: contentId, moduleId, section },
+          { order },
+          { new: true, runValidators: true, session }
+        )
+      );
+      await Promise.all(finalUpdatePromises);
+    });
+
+    await session.endSession();
+
+    // Fetch updated content for this section
+    const updatedContent = await Content.find({ moduleId, section, isActive: true })
+      .sort({ order: 1, createdAt: 1 });
+
+    res.status(200).json({
+      success: true,
+      message: "Content order updated successfully",
+      data: updatedContent,
+    });
+  } catch (error) {
+    await session.endSession();
+    console.error("Reorder transaction failed:", error);
+    return next(
+      new ErrorResponse("Failed to update content order", 500)
+    );
+  }
+});
+
 module.exports = {
   getAllContent,
   getContentById,
@@ -518,4 +625,5 @@ module.exports = {
   getContentByModuleGroupedOptimized,
   getContentWithNavigation,
   getContentWithModuleAndProgress,
+  reorderContentInSection,
 };

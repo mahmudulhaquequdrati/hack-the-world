@@ -102,6 +102,19 @@ const ContentSchema = new mongoose.Schema(
       },
     },
 
+    // Order within section for drag-and-drop functionality
+    order: {
+      type: Number,
+      min: [1, "Order must be at least 1"],
+      validate: {
+        validator: function (v) {
+          // Order can be null/undefined for existing content, but if provided must be positive
+          return v == null || (Number.isInteger(v) && v > 0);
+        },
+        message: "Order must be a positive integer",
+      },
+    },
+
     // Content status
     isActive: {
       type: Boolean,
@@ -132,9 +145,10 @@ const ContentSchema = new mongoose.Schema(
 );
 
 // Indexes for performance
-ContentSchema.index({ moduleId: 1, section: 1 });
+ContentSchema.index({ moduleId: 1, section: 1, order: 1 });
 ContentSchema.index({ type: 1 });
 ContentSchema.index({ moduleId: 1, isActive: 1 });
+ContentSchema.index({ moduleId: 1, section: 1, isActive: 1, order: 1 });
 
 // Virtual to populate module information
 ContentSchema.virtual("module", {
@@ -148,7 +162,7 @@ ContentSchema.virtual("module", {
 ContentSchema.statics.getByModule = function (moduleId) {
   return this.find({ moduleId, isActive: true })
     .populate("module", "title")
-    .sort({ section: 1, createdAt: 1 });
+    .sort({ section: 1, order: 1, createdAt: 1 });
 };
 
 // Static method to get content by module and type
@@ -156,7 +170,7 @@ ContentSchema.statics.getByModuleForOverview = async function (moduleId) {
   // Get content for each section
   const content = await this.find({ moduleId, isActive: true })
     .select("title description type section")
-    .sort({ section: 1, createdAt: 1 })
+    .sort({ section: 1, order: 1, createdAt: 1 })
     .lean();
 
   // Group content by section
@@ -186,6 +200,7 @@ ContentSchema.statics.getByModuleGrouped = async function (moduleId) {
     .populate("module", "title")
     .sort({
       section: 1,
+      order: 1,
       createdAt: 1,
     });
 
@@ -205,7 +220,7 @@ ContentSchema.statics.getByModuleGrouped = async function (moduleId) {
 ContentSchema.statics.getFirstContentByModule = async function (moduleId) {
   const firstContent = await this.findOne({ moduleId, isActive: true })
     .populate("module", "title")
-    .sort({ section: 1, createdAt: 1 });
+    .sort({ section: 1, order: 1, createdAt: 1 });
 
   return firstContent;
 };
@@ -219,6 +234,7 @@ ContentSchema.statics.getByModuleGroupedOptimized = async function (
     .select("_id title type section duration")
     .sort({
       section: 1,
+      order: 1,
       createdAt: 1,
     })
     .lean()
@@ -280,13 +296,13 @@ ContentSchema.statics.getContentWithNavigation = async function (contentId) {
     return null;
   }
 
-  // Get all content for the same module, sorted by navigation order (section, createdAt)
+  // Get all content for the same module, sorted by navigation order (section, order, createdAt)
   const allModuleContent = await this.find({
     moduleId: currentContent.moduleId,
     isActive: true,
   })
     .select("_id title section createdAt")
-    .sort({ section: 1, createdAt: 1 })
+    .sort({ section: 1, order: 1, createdAt: 1 })
     .lean();
 
   // Find current content's position in the ordered list

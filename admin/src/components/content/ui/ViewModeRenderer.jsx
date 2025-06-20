@@ -1,25 +1,63 @@
-import React from 'react';
-import ContentCard from '../views/ContentCard';
+import React from "react";
+import ContentCard from "../views/ContentCard";
 
 const ViewModeRenderer = ({
   viewMode,
   hierarchicalData,
   groupedContent,
-  selectedPhaseId,
-  setSelectedPhaseId,
-  selectedModuleId,
-  setSelectedModuleId,
+  expandedPhases,
+  setExpandedPhases,
+  expandedModules,
+  setExpandedModules,
   contentTypes,
   onEdit,
   onDelete,
   modules = [],
   phases = [],
+  // Drag-and-drop props
+  isDragAndDropEnabled = false,
+  draggedContent,
+  dragOverContent,
+  isDragging,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragEnter,
+  onDragLeave,
+  onDrop,
+  updateSectionContent,
 }) => {
   // Helper function to get context data for content item
   const getContextData = (contentItem) => {
-    const module = modules.find(m => m.id === contentItem.moduleId);
-    const phase = module ? phases.find(p => p.id === module.phaseId) : null;
+    const module = modules.find((m) => m.id === contentItem.moduleId);
+    const phase = module ? phases.find((p) => p.id === module.phaseId) : null;
     return { module, phase };
+  };
+
+  // Helper function to toggle phase expansion
+  const togglePhase = (phaseId) => {
+    setExpandedPhases(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(phaseId)) {
+        newSet.delete(phaseId);
+      } else {
+        newSet.add(phaseId);
+      }
+      return newSet;
+    });
+  };
+
+  // Helper function to toggle module expansion
+  const toggleModule = (moduleId) => {
+    setExpandedModules(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(moduleId)) {
+        newSet.delete(moduleId);
+      } else {
+        newSet.add(moduleId);
+      }
+      return newSet;
+    });
   };
 
   // Render hierarchical view
@@ -34,10 +72,8 @@ const ViewModeRenderer = ({
             <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/5 to-green-400/0 animate-pulse"></div>
             {/* Phase Header */}
             <div
-              className="relative z-10 flex items-center justify-between mb-6 cursor-pointer p-4 bg-gradient-to-r from-green-900/30 to-cyan-900/30 rounded-xl border border-green-400/30 hover:border-green-400/50 transition-all duration-300"
-              onClick={() =>
-                setSelectedPhaseId(selectedPhaseId === phase.id ? "" : phase.id)
-              }
+              className="relative z-10 flex items-center justify-between  cursor-pointer p-4 bg-gradient-to-r from-green-900/30 to-cyan-900/30 rounded-xl border border-green-400/30 hover:border-green-400/50 transition-all duration-300"
+              onClick={() => togglePhase(phase.id)}
             >
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-gradient-to-br from-green-400/20 to-green-600/20 border-2 border-green-400/50 rounded-xl flex items-center justify-center mr-4 shadow-lg shadow-green-400/20">
@@ -57,22 +93,18 @@ const ViewModeRenderer = ({
                 </div>
               </div>
               <div className="text-green-400 text-2xl font-mono">
-                {selectedPhaseId === phase.id ? "▲" : "▼"}
+                {expandedPhases.has(phase.id) ? "▲" : "▼"}
               </div>
             </div>
 
             {/* Modules */}
-            {selectedPhaseId === phase.id && (
+            {expandedPhases.has(phase.id) && (
               <div className="relative z-10 space-y-4 mt-6">
                 {phase.modules.map((module) => (
                   <div key={module.id} className="ml-6">
                     <div
                       className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border border-cyan-400/30 rounded-xl cursor-pointer hover:border-cyan-400/50 transition-all duration-300"
-                      onClick={() =>
-                        setSelectedModuleId(
-                          selectedModuleId === module.id ? "" : module.id
-                        )
-                      }
+                      onClick={() => toggleModule(module.id)}
                     >
                       <div className="flex items-center">
                         <div className="w-10 h-10 bg-gradient-to-br from-cyan-400/20 to-cyan-600/20 border-2 border-cyan-400/50 rounded-lg flex items-center justify-center mr-4 shadow-lg shadow-cyan-400/20">
@@ -90,34 +122,108 @@ const ViewModeRenderer = ({
                         </div>
                       </div>
                       <div className="text-cyan-400 text-xl font-mono">
-                        {selectedModuleId === module.id ? "▲" : "▼"}
+                        {expandedModules.has(module.id) ? "▲" : "▼"}
                       </div>
                     </div>
 
-                    {/* Content Items */}
-                    {selectedModuleId === module.id &&
+                    {/* Content Items grouped by sections */}
+                    {expandedModules.has(module.id) &&
                       module.content.length > 0 && (
                         <div className="mt-4 ml-6">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {module.content.map((contentItem) => (
-                              <ContentCard
-                                key={contentItem.id}
-                                contentItem={contentItem}
-                                contentTypes={contentTypes}
-                                onEdit={onEdit}
-                                onDelete={onDelete}
-                                showContext={false}
-                                contextData={{
-                                  module: module,
-                                  phase: phase
-                                }}
-                              />
-                            ))}
-                          </div>
+                          {(() => {
+                            // Group content by sections
+                            const contentBySection = {};
+                            module.content.forEach((contentItem) => {
+                              const section =
+                                contentItem.section || "No Section";
+                              if (!contentBySection[section]) {
+                                contentBySection[section] = [];
+                              }
+                              contentBySection[section].push(contentItem);
+                            });
+
+                            // Sort content within each section by order, then createdAt
+                            Object.values(contentBySection).forEach(
+                              (sectionContent) => {
+                                sectionContent.sort((a, b) => {
+                                  if (a.order && b.order) {
+                                    return a.order - b.order;
+                                  } else if (a.order && !b.order) {
+                                    return -1;
+                                  } else if (!a.order && b.order) {
+                                    return 1;
+                                  } else {
+                                    return (
+                                      new Date(a.createdAt) -
+                                      new Date(b.createdAt)
+                                    );
+                                  }
+                                });
+                              }
+                            );
+
+                            return Object.entries(contentBySection).map(
+                              ([sectionName, sectionContent]) => (
+                                <div key={sectionName} className="mb-6">
+                                  {/* Section Header */}
+                                  <div className="flex items-center mb-3">
+                                    <span className="text-sm font-semibold text-yellow-400 font-mono uppercase tracking-wider">
+                                      📁 {sectionName} ({sectionContent.length})
+                                    </span>
+                                  </div>
+
+                                  {/* Section Content Grid */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {sectionContent.map((contentItem) => (
+                                      <ContentCard
+                                        key={contentItem.id}
+                                        contentItem={contentItem}
+                                        contentTypes={contentTypes}
+                                        onEdit={onEdit}
+                                        onDelete={onDelete}
+                                        showContext={false}
+                                        contextData={{
+                                          module: module,
+                                          phase: phase,
+                                        }}
+                                        // Drag-and-drop props
+                                        isDraggable={isDragAndDropEnabled}
+                                        isDragging={
+                                          draggedContent?.id === contentItem.id
+                                        }
+                                        isDraggedOver={
+                                          dragOverContent?.id === contentItem.id
+                                        }
+                                        onDragStart={onDragStart}
+                                        onDragEnd={onDragEnd}
+                                        onDragOver={onDragOver}
+                                        onDragEnter={onDragEnter}
+                                        onDragLeave={onDragLeave}
+                                        onDrop={(e, targetContent) =>
+                                          onDrop?.(
+                                            e,
+                                            targetContent,
+                                            sectionContent,
+                                            (updatedContent) => {
+                                              updateSectionContent?.(
+                                                module.id,
+                                                sectionName,
+                                                updatedContent
+                                              );
+                                            }
+                                          )
+                                        }
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              )
+                            );
+                          })()}
                         </div>
                       )}
 
-                    {selectedModuleId === module.id &&
+                    {expandedModules.has(module.id) &&
                       module.content.length === 0 && (
                         <div className="mt-4 ml-6 text-center text-gray-500 py-8">
                           <p className="font-mono">
@@ -176,10 +282,9 @@ const ViewModeRenderer = ({
         <div className="text-6xl mb-4">📄</div>
         <h3 className="text-xl font-mono mb-2">No Content Found</h3>
         <p className="font-mono text-sm">
-          {viewMode === 'hierarchical' 
-            ? 'No phases with content available'
-            : 'No content items match the current filters'
-          }
+          {viewMode === "hierarchical"
+            ? "No phases with content available"
+            : "No content items match the current filters"}
         </p>
       </div>
     );

@@ -9,8 +9,8 @@ export const useContentViewMode = () => {
   // View mode state
   const [viewMode, setViewMode] = useState("hierarchical");
   const [groupedContent, setGroupedContent] = useState({});
-  const [selectedPhaseId, setSelectedPhaseId] = useState("");
-  const [selectedModuleId, setSelectedModuleId] = useState("");
+  const [expandedPhases, setExpandedPhases] = useState(new Set());
+  const [expandedModules, setExpandedModules] = useState(new Set());
   const [hierarchicalData, setHierarchicalData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -70,6 +70,11 @@ export const useContentViewMode = () => {
       });
 
       setHierarchicalData(hierarchical);
+      
+      // Auto-expand all phases by default
+      const allPhaseIds = new Set(hierarchical.map(phase => phase.id));
+      setExpandedPhases(allPhaseIds);
+      
       return hierarchical;
     } catch (err) {
       console.error("Error fetching hierarchical data:", err);
@@ -193,18 +198,34 @@ export const useContentViewMode = () => {
 
   // Reset expansion states
   const resetExpansionStates = useCallback(() => {
-    setSelectedPhaseId("");
-    setSelectedModuleId("");
+    setExpandedPhases(new Set());
+    setExpandedModules(new Set());
   }, []);
 
   // Toggle phase expansion
   const togglePhase = useCallback((phaseId) => {
-    setSelectedPhaseId(prev => prev === phaseId ? "" : phaseId);
+    setExpandedPhases(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(phaseId)) {
+        newSet.delete(phaseId);
+      } else {
+        newSet.add(phaseId);
+      }
+      return newSet;
+    });
   }, []);
 
   // Toggle module expansion
   const toggleModule = useCallback((moduleId) => {
-    setSelectedModuleId(prev => prev === moduleId ? "" : moduleId);
+    setExpandedModules(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(moduleId)) {
+        newSet.delete(moduleId);
+      } else {
+        newSet.add(moduleId);
+      }
+      return newSet;
+    });
   }, []);
 
   // Get view mode label
@@ -235,8 +256,8 @@ export const useContentViewMode = () => {
     // State
     viewMode,
     groupedContent,
-    selectedPhaseId,
-    selectedModuleId,
+    expandedPhases,
+    expandedModules,
     hierarchicalData,
     loading,
     error,
@@ -244,8 +265,8 @@ export const useContentViewMode = () => {
     // Actions
     setViewMode,
     setGroupedContent,
-    setSelectedPhaseId,
-    setSelectedModuleId,
+    setExpandedPhases,
+    setExpandedModules,
     setHierarchicalData,
     handleViewModeChange,
     fetchHierarchicalData,

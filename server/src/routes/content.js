@@ -15,6 +15,7 @@ const {
   getContentByModuleGroupedOptimized,
   getContentWithNavigation,
   getContentWithModuleAndProgress,
+  reorderContentInSection,
 } = require("../controllers/contentController");
 const { protect, authorize } = require("../middleware/auth");
 
@@ -1633,6 +1634,146 @@ router.get(
   "/:id/with-module-and-progress",
   protect,
   getContentWithModuleAndProgress
+);
+
+/**
+ * @swagger
+ * /content/module/{moduleId}/section/{section}/reorder:
+ *   put:
+ *     summary: 🔄 Reorder content within a section (Admin only)
+ *     description: |
+ *       Reorder content items within a specific section of a module. This endpoint allows admins to change the order of content items for better learning flow.
+ *
+ *       **🎯 Reordering Logic:**
+ *       - Only affects content within the specified module and section
+ *       - Uses transaction-based updates for data consistency
+ *       - Handles order conflicts with temporary negative numbers
+ *       - Maintains section boundaries during reordering
+ *
+ *       **✅ Validation:**
+ *       - All content IDs must exist and belong to the specified module and section
+ *       - Order values must be positive integers
+ *       - All content must be active
+ *
+ *       **🔒 Security:**
+ *       - Admin role required
+ *       - Input validation and sanitization
+ *       - Transaction rollback on errors
+ *     tags: [📚 Content Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: moduleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Module ObjectId
+ *         example: "64a1b2c3d4e5f6789012346"
+ *       - in: path
+ *         name: section
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Section name
+ *         example: "Fundamentals"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - contentOrders
+ *             properties:
+ *               contentOrders:
+ *                 type: array
+ *                 description: Array of content items with their new order
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - contentId
+ *                     - order
+ *                   properties:
+ *                     contentId:
+ *                       type: string
+ *                       description: Content ObjectId
+ *                       example: "64a1b2c3d4e5f6789012345"
+ *                     order:
+ *                       type: number
+ *                       minimum: 1
+ *                       description: New order position
+ *                       example: 1
+ *           example:
+ *             contentOrders:
+ *               - contentId: "64a1b2c3d4e5f6789012345"
+ *                 order: 1
+ *               - contentId: "64a1b2c3d4e5f6789012346"
+ *                 order: 2
+ *               - contentId: "64a1b2c3d4e5f6789012347"
+ *                 order: 3
+ *     responses:
+ *       200:
+ *         description: Content order updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Content order updated successfully"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Content'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               invalid_module:
+ *                 summary: Invalid module ID
+ *                 value:
+ *                   success: false
+ *                   message: 'Invalid module ID format'
+ *               missing_content:
+ *                 summary: Content not found
+ *                 value:
+ *                   success: false
+ *                   message: 'Some content not found or doesn\'t belong to this module and section'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Forbidden - Admin role required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Server error during reordering
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               success: false
+ *               message: 'Failed to update content order'
+ */
+router.put(
+  "/module/:moduleId/section/:section/reorder",
+  protect,
+  authorize("admin"),
+  reorderContentInSection
 );
 
 module.exports = router;

@@ -14,8 +14,9 @@ import TerminalHeader from "../components/content/ui/TerminalHeader";
 import StatisticsGrid from "../components/content/ui/StatisticsGrid";
 import ViewModeRenderer from "../components/content/ui/ViewModeRenderer";
 
-// Import the main hook
+// Import the main hook and API
 import { useContentManager } from "../components/content/hooks/useContentManager";
+import { contentAPI } from "../services/api";
 
 const ContentManager = () => {
   // Use the main content manager hook
@@ -55,10 +56,10 @@ const ContentManager = () => {
     viewMode,
     hierarchicalData,
     groupedContent,
-    selectedPhaseId,
-    selectedModuleId,
-    setSelectedPhaseId,
-    setSelectedModuleId,
+    expandedPhases,
+    expandedModules,
+    setExpandedPhases,
+    setExpandedModules,
     
     // Filter management
     filters,
@@ -79,6 +80,23 @@ const ContentManager = () => {
     removeUploadItem,
     updateUploadItem,
     
+    // Drag-and-drop management
+    draggedContent,
+    dragOverContent,
+    isDragging,
+    sectionChanges,
+    hasUnsavedChanges,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDragEnter,
+    handleDragLeave,
+    handleDrop,
+    getSectionChanges,
+    clearSectionChanges,
+    clearAllChanges,
+    updateSectionContent,
+    
     // Event handlers
     handleFormSubmit,
     handleEdit,
@@ -95,6 +113,10 @@ const ContentManager = () => {
     openNewContentForm,
     closeMultipleUpload,
     resetForm,
+    
+    // Additional functions for save order
+    clearMessages,
+    refreshCurrentView,
   } = useContentManager();
 
 
@@ -115,6 +137,75 @@ const ContentManager = () => {
           onBulkUpload={handleMultipleUploadStart}
           loading={loading}
         />
+
+        {/* Save Order Button - Only show when there are unsaved changes */}
+        {hasUnsavedChanges && (
+          <div className="bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border border-cyan-400/30 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-cyan-400 font-mono mb-1">
+                  🔄 UNSAVED CHANGES DETECTED
+                </h3>
+                <p className="text-sm text-gray-400 font-mono">
+                  You have {Object.keys(sectionChanges).length} section(s) with reordered content. Save changes to persist the new order.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={clearAllChanges}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 font-mono text-sm rounded-lg transition-colors"
+                >
+                  DISCARD
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      // Save all section changes and update local state with server response
+                      for (const [sectionKey, changes] of Object.entries(sectionChanges)) {
+                        const response = await contentAPI.reorderInSection(
+                          changes.moduleId,
+                          changes.section,
+                          changes.contentOrders
+                        );
+                        
+                        // Update local state with server response instead of refreshing all data
+                        // API client returns response.data, and server response is { data: [...] }
+                        const updatedContent = response.data || response;
+                        if (updatedContent && Array.isArray(updatedContent)) {
+                          updateSectionContent(changes.moduleId, changes.section, updatedContent);
+                        } else {
+                          console.warn('Invalid response data format:', response);
+                        }
+                        
+                        // Clear section changes after successful update
+                        clearSectionChanges(changes.moduleId, changes.section);
+                      }
+                      
+                      // Clear any existing messages - changes saved successfully
+                      clearMessages();
+                    } catch (error) {
+                      console.error('Failed to save content order:', error);
+                      // On error, refresh data to ensure consistency
+                      refreshCurrentView();
+                      alert('Failed to save content order. Please try again.');
+                    }
+                  }}
+                  disabled={saving}
+                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-700 disabled:opacity-50 text-white font-mono text-sm rounded-lg transition-colors flex items-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      SAVING...
+                    </>
+                  ) : (
+                    'SAVE ORDER'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Success Message */}
         {success && (
@@ -155,15 +246,27 @@ const ContentManager = () => {
             viewMode={viewMode}
             hierarchicalData={hierarchicalData}
             groupedContent={groupedContent}
-            selectedPhaseId={selectedPhaseId}
-            setSelectedPhaseId={setSelectedPhaseId}
-            selectedModuleId={selectedModuleId}
-            setSelectedModuleId={setSelectedModuleId}
+            expandedPhases={expandedPhases}
+            setExpandedPhases={setExpandedPhases}
+            expandedModules={expandedModules}
+            setExpandedModules={setExpandedModules}
             contentTypes={contentTypes}
             onEdit={handleEdit}
             onDelete={handleDelete}
             modules={modules}
             phases={phases}
+            // Drag-and-drop props
+            isDragAndDropEnabled={viewMode === "hierarchical"}
+            draggedContent={draggedContent}
+            dragOverContent={dragOverContent}
+            isDragging={isDragging}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            updateSectionContent={updateSectionContent}
           />
         )}
 

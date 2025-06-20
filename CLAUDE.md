@@ -288,6 +288,176 @@ hack-the-world/
 
 ### Recent Updates (2025-06-17)\n\n#### 🎯 **Complete Overview Page Redesign - Original Frontend Pattern Implementation**\n\n**Objective**: Implemented exact replica of original CyberSecOverview page design and API patterns\n\n**Key Implementations**:\n\n- ✅ **Replaced fetch with axios** throughout the codebase using centralized API client\n- ✅ **Exact terminal-style cybersecurity theme** with black background and green accents\n- ✅ **Tab-based phase navigation** matching original interactive design\n- ✅ **Terminal tree structure** for module display with directory-style navigation\n- ✅ **Smart API optimization pattern** - single comprehensive query + enrollment mapping\n- ✅ **Authentication-aware UI** with conditional loading and enrollment features\n- ✅ **Complete enrollment functionality** with enroll/continue actions\n- ✅ **Progress tracking integration** with real-time enrollment status\n- ✅ **Fixed all linting warnings** including img elements and TypeScript types\n\n**New Components Created**:\n- `PhaseNavigation.tsx` - Tab-based phase switching with terminal aesthetic\n- `ModuleTree.tsx` - Terminal-style module listing with enrollment integration\n- `PhaseCompletionCTA.tsx` - Context-aware call-to-action sections\n- `lib/api/client.ts` - Centralized axios client with auth token handling\n\n**API Pattern Implementation**:\n```typescript\n// Single comprehensive query (matching original efficiency)\nconst response = await apiClient.get('/api/modules/with-phases');\n\n// O(1) enrollment lookup map\nconst enrollmentMap = useMemo(() => {\n  const map = new Map();\n  enrollmentResponse?.data?.forEach((enrollment) => {\n    map.set(enrollment.moduleId, enrollment);\n  });\n  return map;\n}, [enrollmentResponse]);\n\n// Smart conditional loading\nconst { data: enrollmentResponse } = useGetCurrentUserEnrollmentsQuery(\n  undefined,\n  { skip: !isAuthenticated }\n);\n```\n\n**Visual Design Achievements**:\n- **Cybersecurity Terminal Theme**: Black background, green accents, monospace fonts\n- **Interactive Module Cards**: Color-coded by module type with hover effects\n- **Progress Visualization**: Real-time progress bars with enrollment status indicators\n- **Difficulty Badges**: Color-coded difficulty levels (beginner → expert)\n- **Terminal Directory Structure**: `~/cybersec_courses/` with file tree navigation\n\n**Performance Optimizations**:\n- **Reduced API calls**: Single endpoint replaces multiple separate queries\n- **Client-side processing**: Efficient enrollment mapping for instant UI updates\n- **Authentication-aware loading**: Skip unnecessary API calls for unauthenticated users\n- **Smart caching**: Axios interceptors with automatic token management\n\n### Recent Updates (2025-06-20)
 
+#### 🎯 **Tree View Default Expanded State - Enhanced Content Management UX (2025-06-20)**
+
+**Objective**: Changed hierarchical tree view to default all phases and modules to expanded state for better content discoverability.
+
+**🚀 Key Implementations:**
+
+- ✅ **Multi-Selection State**: Converted from single `selectedPhaseId/selectedModuleId` to `Set` objects for multiple expanded states
+- ✅ **Auto-Expand All Phases**: Phases automatically expand when hierarchical data loads
+- ✅ **Independent Toggle Control**: Each phase and module can be independently expanded/collapsed
+- ✅ **Enhanced State Management**: Updated `useContentViewMode.js` with proper Set-based expansion tracking
+- ✅ **UI Logic Update**: Modified `ViewModeRenderer.jsx` to use `expandedPhases.has(id)` instead of single selection
+- ✅ **Complete Integration**: Updated `ContentManager.jsx` and `useContentManager.js` to pass new state props
+
+**🎨 UX Improvements:**
+- **Better Content Discoverability**: Admins can see all available content immediately without manual expansion
+- **Flexible Interaction**: Multiple phases can remain open simultaneously for cross-phase content management
+- **Preserved Functionality**: All existing drag-and-drop and content management features maintain full compatibility
+- **Professional Tree Navigation**: Arrow indicators (▲/▼) correctly reflect expansion state
+
+**🔧 Technical Implementation:**
+```javascript
+// State management upgrade
+const [expandedPhases, setExpandedPhases] = useState(new Set());
+const [expandedModules, setExpandedModules] = useState(new Set());
+
+// Auto-expand on data load
+const allPhaseIds = new Set(hierarchical.map(phase => phase.id));
+setExpandedPhases(allPhaseIds);
+
+// Set-based toggle functions
+const togglePhase = (phaseId) => {
+  setExpandedPhases(prev => {
+    const newSet = new Set(prev);
+    newSet.has(phaseId) ? newSet.delete(phaseId) : newSet.add(phaseId);
+    return newSet;
+  });
+};
+```
+
+**📊 Files Modified:**
+- `admin/src/components/content/hooks/useContentViewMode.js` - State management with Set-based expansion
+- `admin/src/components/content/ui/ViewModeRenderer.jsx` - UI logic updates with expanded state checks
+- `admin/src/components/content/hooks/useContentManager.js` - Integration layer prop updates
+- `admin/src/pages/ContentManager.jsx` - Component prop updates for new expansion state
+
+**🎯 User Experience Result:**
+- Tree view opens with all phases showing their modules immediately
+- Admins can quickly browse all content without multiple click navigation
+- Individual modules can still be collapsed/expanded for focused work
+- Maintains all existing functionality including drag-and-drop content reordering
+
+#### 🎯 **Content Order Field Implementation - Complete Content Management Enhancement (2025-06-20)**
+
+**Objective**: Implemented comprehensive content ordering system with automatic assignment, drag-and-drop reordering, and professional admin UI enhancements.
+
+**🚀 Key Implementations:**
+
+- ✅ **Database Schema Enhancement**: Added `order` field to Content model with proper validation, indexes, and fallback sorting
+- ✅ **Automatic Order Assignment**: New content automatically receives sequential order numbers within sections
+- ✅ **Transaction-Based API**: Robust `PUT /api/content/module/:moduleId/section/:section/reorder` endpoint with conflict-safe updates
+- ✅ **Section-Aware Dragging**: Content can only be reordered within the same section (maintains logical boundaries)
+- ✅ **Visual Feedback System**: Enhanced drag handles, visual states, and professional drag-and-drop animations
+- ✅ **Unsaved Changes Tracking**: Real-time detection of changes with save/discard functionality
+- ✅ **Batch Save Operations**: Save multiple section changes in one transaction
+- ✅ **Order Field Visibility**: Added order display to content cards and optional order input in forms
+- ✅ **Data Migration Support**: Complete migration script for existing content without order fields
+
+**🎨 UI/UX Features:**
+- **Drag Handle Indicator**: Visible grip (`⋮⋮`) when dragging is enabled
+- **Section Organization**: Content grouped by sections with clear headers (`📁 Section Name (3)`)
+- **Smart Visual States**: 
+  - Dragging: 50% opacity + 95% scale
+  - Drag Over: Cyan border + shadow + 105% scale
+  - Cursor: Changes to `cursor-move` when draggable
+- **Save System**: Prominent banner for unsaved changes with batch save functionality
+
+**🔧 Technical Architecture:**
+```javascript
+// New drag-and-drop hook
+const useContentDragAndDrop = (setHasChanges, setSuccess) => {
+  // Section-aware drag state management
+  // Change tracking per module+section
+  // Batch update functionality
+}
+
+// Enhanced ContentCard with drag capabilities
+<ContentCard
+  isDraggable={isDragAndDropEnabled}
+  isDragging={draggedContent?.id === contentItem.id}
+  isDraggedOver={dragOverContent?.id === contentItem.id}
+  // ... drag handlers
+/>
+```
+
+**📊 Performance Optimizations:**
+- **Optimized Indexes**: `{ moduleId: 1, section: 1, order: 1 }` for fast section queries
+- **Transaction Safety**: Temporary negative numbers prevent order conflicts during updates
+- **Efficient UI Updates**: O(1) content lookup with client-side section grouping
+- **Fallback Sorting**: Graceful degradation to `createdAt` when order is missing
+
+**🔄 Migration Support:**
+- **Data Migration Script**: `/server/scripts/addContentOrder.js` for existing content
+- **Backward Compatibility**: Optional order field with fallback to creation date sorting
+- **Zero Downtime**: Existing content continues to work during migration
+
+**📊 Order Field Technical Specifications:**
+
+**Database Model (Content.js):**
+```javascript
+order: {
+  type: Number,
+  min: [1, "Order must be at least 1"],
+  validate: {
+    validator: function (v) {
+      return v == null || (Number.isInteger(v) && v > 0);
+    },
+    message: "Order must be a positive integer",
+  },
+}
+```
+
+**Automatic Assignment Logic (contentController.js):**
+```javascript
+// Auto-assign order if not provided
+if (!contentData.order && contentData.section) {
+  const highestOrderContent = await Content.findOne({
+    moduleId: contentData.moduleId,
+    section: contentData.section,
+    isActive: true
+  }).sort({ order: -1 }).select('order');
+  
+  contentData.order = highestOrderContent?.order ? highestOrderContent.order + 1 : 1;
+}
+```
+
+**Consistent Sorting Pattern:**
+```javascript
+// All content queries use consistent sorting
+.sort({ section: 1, order: 1, createdAt: 1 })
+```
+
+**Performance Indexes:**
+```javascript
+ContentSchema.index({ moduleId: 1, section: 1, order: 1 });
+ContentSchema.index({ moduleId: 1, section: 1, isActive: 1, order: 1 });
+```
+
+**New Components Created:**
+- `useContentDragAndDrop.js` - Section-aware drag-and-drop hook
+- Enhanced `ContentCard.jsx` - Drag handlers and visual feedback
+- Enhanced `ViewModeRenderer.jsx` - Section grouping and drag integration
+- `addContentOrder.js` - Data migration script for existing content
+
+**API Enhancement:**
+```javascript
+PUT /api/content/module/:moduleId/section/:section/reorder
+Body: {
+  contentOrders: [
+    { contentId: "...", order: 1 },
+    { contentId: "...", order: 2 }
+  ]
+}
+```
+
+**User Experience:**
+- **Intuitive Interactions**: Familiar drag-and-drop with clear visual feedback
+- **Section Boundaries**: Prevents accidental cross-section moves
+- **Change Management**: Clear indication of what will be saved with batch operations
+- **Error Prevention**: Validation prevents invalid drag operations
+
 #### 🔧 ContentManager Filter Enhancement & Bug Fixes
 
 - **Filter System Redesign**: Added fully functional Active/Inactive filter in ContentFiltersAndControls component

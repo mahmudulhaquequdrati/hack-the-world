@@ -71,9 +71,16 @@ export const useContentViewMode = () => {
 
       setHierarchicalData(hierarchical);
       
-      // Auto-expand all phases by default
+      // Auto-expand all phases AND all modules by default
       const allPhaseIds = new Set(hierarchical.map(phase => phase.id));
+      const allModuleIds = new Set(
+        hierarchical.flatMap(phase => 
+          phase.modules.map(module => module.id)
+        )
+      );
+
       setExpandedPhases(allPhaseIds);
+      setExpandedModules(allModuleIds);
       
       return hierarchical;
     } catch (err) {

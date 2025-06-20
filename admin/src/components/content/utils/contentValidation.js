@@ -9,46 +9,55 @@
  */
 export const validateContentData = (contentData) => {
   const errors = [];
-  
+
   // Basic required fields
   if (!contentData.title?.trim()) {
     errors.push("Title is required");
   }
-  
+
   if (!contentData.description?.trim()) {
     errors.push("Description is required");
   }
-  
+
   if (!contentData.moduleId) {
     errors.push("Module selection is required");
   }
-  
+
   if (!contentData.type) {
     errors.push("Content type is required");
   }
-  
+
   // Type-specific validation
   if (contentData.type === "video" && !contentData.url?.trim()) {
     errors.push("URL is required for video content");
   }
-  
-  if ((contentData.type === "lab" || contentData.type === "game") && !contentData.instructions?.trim()) {
+
+  if (
+    (contentData.type === "lab" || contentData.type === "game") &&
+    !contentData.instructions?.trim()
+  ) {
     errors.push("Instructions are required for lab and game content");
   }
-  
+
   // Duration validation
-  if (contentData.duration && (isNaN(contentData.duration) || contentData.duration < 1)) {
+  if (
+    contentData.duration &&
+    (isNaN(contentData.duration) || contentData.duration < 1)
+  ) {
     errors.push("Duration must be a positive number");
   }
-  
+
   // Estimated time validation
-  if (contentData.estimatedTime && (isNaN(contentData.estimatedTime) || contentData.estimatedTime < 1)) {
+  if (
+    contentData.estimatedTime &&
+    (isNaN(contentData.estimatedTime) || contentData.estimatedTime < 1)
+  ) {
     errors.push("Estimated time must be a positive number");
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -58,10 +67,10 @@ export const validateContentData = (contentData) => {
  * @returns {boolean} - True if required fields are valid
  */
 export const validateRequiredFields = (formData) => {
-  const requiredFields = ['title', 'description', 'moduleId', 'type'];
-  
-  return requiredFields.every(field => {
-    if (field === 'moduleId' || field === 'type') {
+  const requiredFields = ["title", "description", "moduleId", "type"];
+
+  return requiredFields.every((field) => {
+    if (field === "moduleId" || field === "type") {
       return formData[field] && formData[field].trim();
     }
     return formData[field]?.trim();
@@ -75,41 +84,41 @@ export const validateRequiredFields = (formData) => {
  */
 export const validateContentType = (contentData) => {
   const errors = [];
-  
+
   switch (contentData.type) {
-    case 'video':
+    case "video":
       if (!contentData.url?.trim()) {
         errors.push("Video URL is required for video content");
       } else if (!isValidURL(contentData.url)) {
         errors.push("Please enter a valid URL for video content");
       }
       break;
-      
-    case 'lab':
+
+    case "lab":
       if (!contentData.instructions?.trim()) {
         errors.push("Instructions are required for lab content");
       }
       break;
-      
-    case 'game':
+
+    case "game":
       if (!contentData.instructions?.trim()) {
         errors.push("Instructions are required for game content");
       }
       break;
-      
-    case 'document':
+
+    case "document":
       if (!contentData.url?.trim()) {
         errors.push("Document URL is required for document content");
       }
       break;
-      
+
     default:
       errors.push("Invalid content type");
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -121,24 +130,28 @@ export const validateContentType = (contentData) => {
 export const validateMultipleUploads = (uploadItems) => {
   const errors = [];
   const itemErrors = {};
-  
+
+  console.log(uploadItems, "uploadItems");
+
   if (!uploadItems || uploadItems.length === 0) {
     errors.push("At least one upload item is required");
     return { isValid: false, errors, itemErrors };
   }
-  
+
   uploadItems.forEach((item, index) => {
     const itemValidation = validateContentData(item);
     if (!itemValidation.isValid) {
       itemErrors[index] = itemValidation.errors;
-      errors.push(`Item ${index + 1}: ${itemValidation.errors.join(', ')}`);
+      errors.push(`Item ${index + 1}: ${itemValidation.errors.join(", ")}`);
     }
   });
-  
+
+  console.log(errors, "errors");
+
   return {
     isValid: errors.length === 0,
     errors,
-    itemErrors
+    itemErrors,
   };
 };
 
@@ -150,24 +163,24 @@ export const validateMultipleUploads = (uploadItems) => {
  */
 export const validateArrayField = (arrayField, fieldName) => {
   const errors = [];
-  
+
   if (!Array.isArray(arrayField)) {
     errors.push(`${fieldName} must be an array`);
     return { isValid: false, errors };
   }
-  
+
   // Check for empty strings in array
-  const hasEmptyStrings = arrayField.some(item => 
-    typeof item === 'string' && !item.trim()
+  const hasEmptyStrings = arrayField.some(
+    (item) => typeof item === "string" && !item.trim()
   );
-  
+
   if (hasEmptyStrings) {
     errors.push(`${fieldName} cannot contain empty values`);
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -178,23 +191,27 @@ export const validateArrayField = (arrayField, fieldName) => {
  */
 export const validateAccessibility = (accessibility) => {
   const errors = [];
-  
-  if (!accessibility || typeof accessibility !== 'object') {
+
+  if (!accessibility || typeof accessibility !== "object") {
     errors.push("Accessibility settings must be an object");
     return { isValid: false, errors };
   }
-  
-  const requiredFields = ['hasSubtitles', 'hasTranscript', 'hasAudioDescription'];
-  
-  requiredFields.forEach(field => {
-    if (typeof accessibility[field] !== 'boolean') {
+
+  const requiredFields = [
+    "hasSubtitles",
+    "hasTranscript",
+    "hasAudioDescription",
+  ];
+
+  requiredFields.forEach((field) => {
+    if (typeof accessibility[field] !== "boolean") {
       errors.push(`Accessibility ${field} must be a boolean value`);
     }
   });
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -206,18 +223,20 @@ export const validateAccessibility = (accessibility) => {
  */
 export const validateSection = (section, availableSections = []) => {
   const errors = [];
-  
+
   if (section && section.trim() && availableSections.length > 0) {
     const sectionExists = availableSections.includes(section.trim());
     if (!sectionExists) {
       // Allow new sections, just warn
-      console.warn(`Section "${section}" is not in the available sections list`);
+      console.warn(
+        `Section "${section}" is not in the available sections list`
+      );
     }
   }
-  
+
   return {
     isValid: true, // Allow new sections
-    errors
+    errors,
   };
 };
 
@@ -241,16 +260,16 @@ const isValidURL = (url) => {
  * @returns {Object} - { isValid: boolean, errors: string[] }
  */
 export const validateDifficulty = (difficulty) => {
-  const validDifficulties = ['beginner', 'intermediate', 'advanced', 'expert'];
+  const validDifficulties = ["beginner", "intermediate", "advanced", "expert"];
   const errors = [];
-  
+
   if (!validDifficulties.includes(difficulty)) {
-    errors.push(`Difficulty must be one of: ${validDifficulties.join(', ')}`);
+    errors.push(`Difficulty must be one of: ${validDifficulties.join(", ")}`);
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -260,16 +279,16 @@ export const validateDifficulty = (difficulty) => {
  * @returns {Object} - { isValid: boolean, errors: string[] }
  */
 export const validateLanguage = (language) => {
-  const validLanguages = ['en', 'es', 'fr', 'de', 'it', 'pt', 'zh', 'ja', 'ko'];
+  const validLanguages = ["en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko"];
   const errors = [];
-  
+
   if (!validLanguages.includes(language)) {
-    errors.push(`Language must be one of: ${validLanguages.join(', ')}`);
+    errors.push(`Language must be one of: ${validLanguages.join(", ")}`);
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -282,70 +301,89 @@ export const validateLanguage = (language) => {
 export const validateComprehensive = (contentData, availableSections = []) => {
   const errors = [];
   const warnings = [];
-  
+
   // Basic validation
   const basicValidation = validateContentData(contentData);
   errors.push(...basicValidation.errors);
-  
+
   // Type-specific validation
   const typeValidation = validateContentType(contentData);
   errors.push(...typeValidation.errors);
-  
+
   // Array fields validation
   if (contentData.resources) {
-    const resourcesValidation = validateArrayField(contentData.resources, 'Resources');
+    const resourcesValidation = validateArrayField(
+      contentData.resources,
+      "Resources"
+    );
     errors.push(...resourcesValidation.errors);
   }
-  
+
   if (contentData.tags) {
-    const tagsValidation = validateArrayField(contentData.tags, 'Tags');
+    const tagsValidation = validateArrayField(contentData.tags, "Tags");
     errors.push(...tagsValidation.errors);
   }
-  
+
   if (contentData.prerequisites) {
-    const prerequisitesValidation = validateArrayField(contentData.prerequisites, 'Prerequisites');
+    const prerequisitesValidation = validateArrayField(
+      contentData.prerequisites,
+      "Prerequisites"
+    );
     errors.push(...prerequisitesValidation.errors);
   }
-  
+
   if (contentData.learningObjectives) {
-    const objectivesValidation = validateArrayField(contentData.learningObjectives, 'Learning Objectives');
+    const objectivesValidation = validateArrayField(
+      contentData.learningObjectives,
+      "Learning Objectives"
+    );
     errors.push(...objectivesValidation.errors);
   }
-  
+
   if (contentData.technicalRequirements) {
-    const techValidation = validateArrayField(contentData.technicalRequirements, 'Technical Requirements');
+    const techValidation = validateArrayField(
+      contentData.technicalRequirements,
+      "Technical Requirements"
+    );
     errors.push(...techValidation.errors);
   }
-  
+
   // Accessibility validation
   if (contentData.accessibility) {
-    const accessibilityValidation = validateAccessibility(contentData.accessibility);
+    const accessibilityValidation = validateAccessibility(
+      contentData.accessibility
+    );
     errors.push(...accessibilityValidation.errors);
   }
-  
+
   // Difficulty validation
   if (contentData.difficulty) {
     const difficultyValidation = validateDifficulty(contentData.difficulty);
     errors.push(...difficultyValidation.errors);
   }
-  
+
   // Language validation
   if (contentData.language) {
     const languageValidation = validateLanguage(contentData.language);
     errors.push(...languageValidation.errors);
   }
-  
+
   // Section validation (warnings only)
   if (contentData.section) {
-    const sectionValidation = validateSection(contentData.section, availableSections);
+    const sectionValidation = validateSection(
+      contentData.section,
+      availableSections
+    );
     if (!availableSections.includes(contentData.section)) {
-      warnings.push(`Section "${contentData.section}" is not in the available sections list`);
+      warnings.push(
+        `Section "${contentData.section}" is not in the available sections list`
+      );
     }
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
-    warnings
+    warnings,
   };
 };

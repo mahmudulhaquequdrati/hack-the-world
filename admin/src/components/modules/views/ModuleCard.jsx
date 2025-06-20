@@ -108,20 +108,20 @@ const ModuleCard = ({
 
       <div className="relative z-10">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 w-full">
             <div
-              className={`w-12 h-12 rounded-lg bg-gradient-to-br from-gray-800/50 to-black/50 border-2 shadow-lg flex items-center justify-center group-hover:animate-pulse ${colorClasses.icon}`}
+              className={`w-12 h-12 p-2 rounded-lg bg-gradient-to-br from-gray-800/50 to-black/50 border-2 shadow-lg flex items-center justify-center group-hover:animate-pulse ${colorClasses.icon}`}
             >
               {(() => {
                 const IconComponent = getIconFromName(module.icon);
                 return (
                   <IconComponent
-                    className={`w-6 h-6 ${colorClasses.statText}`}
+                    className={`w-full h-full ${colorClasses.statText}`}
                   />
                 );
               })()}
             </div>
-            <div className="">
+            <div className="w-full">
               <h4
                 className={`font-bold font-mono uppercase tracking-wider transition-colors line-clamp-1 ${colorClasses.text}`}
               >

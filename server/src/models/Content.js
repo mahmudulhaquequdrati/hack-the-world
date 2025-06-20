@@ -396,10 +396,40 @@ ContentSchema.statics.updateModuleStats = async function (moduleId) {
   });
 };
 
-// Post-save middleware to update module statistics
+// Post-save middleware to update module statistics and sync enrollment progress
+// Pre-save middleware to track isActive changes
+ContentSchema.pre("save", function (next) {
+  // Track if isActive status changed
+  if (this.isModified('isActive')) {
+    this._isActiveChanged = true;
+    this._previousIsActive = this._original?.isActive || false;
+  }
+  next();
+});
+
 ContentSchema.post("save", async function (doc) {
   if (doc.moduleId) {
     await this.constructor.updateModuleStats(doc.moduleId);
+    
+    // Trigger enrollment section count update for new/updated content
+    // Especially important when isActive status changes
+    if (doc.isNew || doc._isActiveChanged) {
+      try {
+        const UserEnrollment = require("./UserEnrollment");
+        await UserEnrollment.updateModuleSectionCounts(doc.moduleId);
+        
+        // If isActive changed, also trigger progress recalculation for all enrollments
+        if (doc._isActiveChanged) {
+          const ProgressSyncService = require("../utils/progressSyncService");
+          ProgressSyncService.syncModuleEnrollments(doc.moduleId)
+            .catch(error => {
+              console.error(`Failed to sync enrollments after isActive change for module ${doc.moduleId}:`, error);
+            });
+        }
+      } catch (error) {
+        console.error('Error updating enrollment section counts:', error);
+      }
+    }
   }
 });
 
@@ -410,40 +440,105 @@ ContentSchema.post("insertMany", async function (docs) {
     const moduleIds = [...new Set(docs.map((doc) => doc.moduleId))];
     const Content = mongoose.model("Content");
 
-    // Update each affected module
+    // Update each affected module with proper error handling
     for (const moduleId of moduleIds) {
       if (moduleId) {
-        await Content.updateModuleStats(moduleId);
+        try {
+          await Content.updateModuleStats(moduleId);
+          
+          // Update enrollment section counts for bulk inserts
+          const UserEnrollment = require("./UserEnrollment");
+          await UserEnrollment.updateModuleSectionCounts(moduleId);
+          
+          // Trigger progress recalculation for affected enrollments
+          const ProgressSyncService = require("../utils/progressSyncService");
+          ProgressSyncService.syncModuleEnrollments(moduleId)
+            .catch(error => {
+              console.error(`Failed to sync enrollments for bulk insert in module ${moduleId}:`, error);
+            });
+        } catch (error) {
+          console.error(`Error updating module ${moduleId} after bulk insert:`, error);
+        }
       }
     }
   }
 });
 
-// Post-remove middleware to update module statistics
+// Post-remove middleware to update module statistics and sync enrollment progress
 ContentSchema.post("remove", async function (doc) {
   if (doc.moduleId) {
-    await this.constructor.updateModuleStats(doc.moduleId);
+    try {
+      await this.constructor.updateModuleStats(doc.moduleId);
+      
+      // Update enrollment section counts for removed content
+      const UserEnrollment = require("./UserEnrollment");
+      await UserEnrollment.updateModuleSectionCounts(doc.moduleId);
+      
+      // Trigger progress recalculation for all enrollments since content was removed
+      const ProgressSyncService = require("../utils/progressSyncService");
+      ProgressSyncService.syncModuleEnrollments(doc.moduleId)
+        .catch(error => {
+          console.error(`Failed to sync enrollments after content removal for module ${doc.moduleId}:`, error);
+        });
+    } catch (error) {
+      console.error(`Error updating module ${doc.moduleId} after content removal:`, error);
+    }
   }
 });
 
-// Post-findOneAndDelete middleware to update module statistics
+// Post-findOneAndDelete middleware to update module statistics and sync enrollment progress
 ContentSchema.post("findOneAndDelete", async function (doc) {
   if (doc && doc.moduleId) {
-    const Content = mongoose.model("Content");
-    await Content.updateModuleStats(doc.moduleId);
+    try {
+      const Content = mongoose.model("Content");
+      await Content.updateModuleStats(doc.moduleId);
+      
+      // Update enrollment section counts for deleted content
+      const UserEnrollment = require("./UserEnrollment");
+      await UserEnrollment.updateModuleSectionCounts(doc.moduleId);
+      
+      // Trigger progress recalculation for all enrollments since content was deleted
+      const ProgressSyncService = require("../utils/progressSyncService");
+      ProgressSyncService.syncModuleEnrollments(doc.moduleId)
+        .catch(error => {
+          console.error(`Failed to sync enrollments after content deletion for module ${doc.moduleId}:`, error);
+        });
+    } catch (error) {
+      console.error(`Error updating module ${doc.moduleId} after content deletion:`, error);
+    }
   }
 });
 
 // Post-deleteMany middleware to update module statistics for multiple deletions
 ContentSchema.post("deleteMany", async function (result) {
-  // For bulk operations, we need to update all affected modules
-  // This is less efficient but ensures consistency
-  const Module = mongoose.model("Module");
-  const Content = mongoose.model("Content");
-  const modules = await Module.find({});
+  try {
+    // For bulk operations, we need to update all affected modules
+    // Since we can't track specific deleted documents, update all modules
+    const Module = mongoose.model("Module");
+    const Content = mongoose.model("Content");
+    const UserEnrollment = require("./UserEnrollment");
+    const ProgressSyncService = require("../utils/progressSyncService");
+    
+    const modules = await Module.find({}).select('_id');
 
-  for (const module of modules) {
-    await Content.updateModuleStats(module.id);
+    console.log(`Updating ${modules.length} modules after bulk content deletion`);
+    
+    for (const module of modules) {
+      try {
+        await Content.updateModuleStats(module.id);
+        await UserEnrollment.updateModuleSectionCounts(module.id);
+        
+        // Trigger progress recalculation for all enrollments
+        ProgressSyncService.syncModuleEnrollments(module.id)
+          .catch(error => {
+            console.error(`Failed to sync enrollments after bulk deletion for module ${module.id}:`, error);
+          });
+      } catch (error) {
+        console.error(`Error updating module ${module.id} after bulk deletion:`, error);
+      }
+    }
+  } catch (error) {
+    console.error('Error in deleteMany middleware:', error);
   }
 });
 

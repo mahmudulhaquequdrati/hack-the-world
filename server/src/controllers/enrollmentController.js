@@ -261,13 +261,13 @@ const unenrollUser = asyncHandler(async (req, res, next) => {
 // Admin-only endpoints
 
 /**
- * @desc    Get enrollments for a specific user (Admin only)
+ * @desc    Get enrollments for a specific user (Admin only) with enhanced progress data
  * @route   GET /api/enrollments/user/:userId
  * @access  Private/Admin
  */
 const getUserEnrollmentsByUserId = asyncHandler(async (req, res, next) => {
   const { userId } = req.params;
-  const { status, populate, page = 1, limit = 20 } = req.query;
+  const { status, populate, page = 1, limit = 20, enhancedProgress = false } = req.query;
 
   // Check if user exists (basic validation)
   const User = require("../models/User");
@@ -316,17 +316,40 @@ const getUserEnrollmentsByUserId = asyncHandler(async (req, res, next) => {
     }),
   ]);
 
+  // Enhanced progress data if requested
+  let enhancedEnrollments = enrollments;
+  if (enhancedProgress === "true") {
+    const ProgressSyncService = require("../utils/progressSyncService");
+    enhancedEnrollments = await Promise.all(
+      enrollments.map(async (enrollment) => {
+        try {
+          const progressStats = await ProgressSyncService.calculateModuleProgress(
+            enrollment.userId._id || enrollment.userId,
+            enrollment.moduleId._id || enrollment.moduleId
+          );
+          return {
+            ...enrollment.toObject(),
+            enhancedProgress: progressStats
+          };
+        } catch (error) {
+          console.error(`Failed to get enhanced progress for enrollment ${enrollment.id}:`, error);
+          return enrollment.toObject();
+        }
+      })
+    );
+  }
+
   res.status(200).json({
     success: true,
     message: "User enrollments retrieved successfully",
-    count: enrollments.length,
+    count: enhancedEnrollments.length,
     total,
     pagination: {
       page: Number(page),
       limit: Number(limit),
       pages: Math.ceil(total / limit),
     },
-    data: enrollments,
+    data: enhancedEnrollments,
   });
 });
 
@@ -554,14 +577,31 @@ const getBatchModuleEnrollmentStats = asyncHandler(async (req, res, next) => {
 });
 
 /**
- * @desc    Get all users with enrollment summary (Admin only)
+ * @desc    Get all users with enrollment summary (Admin only) - Enhanced with real-time progress
  * @route   GET /api/enrollments/admin/users-summary
  * @access  Private/Admin
  */
 const getUsersWithEnrollmentSummary = asyncHandler(async (req, res, next) => {
-  const { page = 1, limit = 20, search = "" } = req.query;
+  const { page = 1, limit = 20, search = "", syncProgress = false } = req.query;
 
   try {
+    // If syncProgress is requested, recalculate progress for recent users first
+    if (syncProgress === "true") {
+      console.log("Syncing recent user progress...");
+      const ProgressSyncService = require("../utils/progressSyncService");
+      
+      // Get recently active users to sync (last 7 days)
+      const recentlyActiveUsers = await UserEnrollment.find({
+        lastAccessedAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+      }).distinct('userId');
+      
+      // Sync progress for recent users (async, don't wait)
+      recentlyActiveUsers.slice(0, 50).forEach(userId => { // Limit to 50 to avoid overload
+        ProgressSyncService.syncUserEnrollments(userId.toString())
+          .catch(error => console.error(`Failed to sync user ${userId}:`, error));
+      });
+    }
+
     // Build aggregation pipeline
     const pipeline = [
       // Match users with enrollments and optional search
@@ -694,7 +734,8 @@ const getUsersWithEnrollmentSummary = asyncHandler(async (req, res, next) => {
         limit: Number(limit),
         pages: Math.ceil(total / limit)
       },
-      data: users
+      data: users,
+      syncedProgress: syncProgress === "true"
     });
   } catch (error) {
     console.error("Error in getUsersWithEnrollmentSummary:", error);

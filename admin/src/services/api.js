@@ -315,6 +315,20 @@ export const enrollmentAPI = {
     const response = await createDedupedRequest({ url: `/enrollments/user/${userId}`, params });
     return response.data;
   },
+
+  // Get detailed enrollments with enhanced progress data
+  getUserDetailsEnhanced: async (userId, params = {}) => {
+    const enhancedParams = { ...params, enhancedProgress: true };
+    const response = await createDedupedRequest({ url: `/enrollments/user/${userId}`, params: enhancedParams });
+    return response.data;
+  },
+
+  // Sync progress for recent users (trigger recalculation)
+  syncRecentProgress: async (params = {}) => {
+    const syncParams = { ...params, syncProgress: true };
+    const response = await createDedupedRequest({ url: "/enrollments/admin/users-summary", params: syncParams });
+    return response.data;
+  },
 };
 
 // Auth API

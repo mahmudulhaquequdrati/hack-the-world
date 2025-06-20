@@ -129,39 +129,130 @@ UserProgressSchema.virtual("scorePercentage").get(function () {
   return null;
 });
 
-// Pre-save middleware to handle status transitions
+// Pre-save middleware to handle status transitions, validation, and sync enrollment progress
 UserProgressSchema.pre("save", function (next) {
-  // Auto-complete if progress reaches 100%
-  if (this.progressPercentage === 100 && this.status !== "completed") {
-    this.status = "completed";
-    if (!this.completedAt) {
-      this.completedAt = new Date();
+  try {
+    // Validate and correct progress percentage
+    if (this.progressPercentage < 0) {
+      console.warn(`Corrected negative progress percentage for UserProgress ${this._id}`);
+      this.progressPercentage = 0;
     }
-  }
+    
+    if (this.progressPercentage > 100) {
+      console.warn(`Corrected progress percentage exceeding 100% for UserProgress ${this._id}`);
+      this.progressPercentage = 100;
+    }
 
-  // Auto-start if progress > 0 and status is not-started
-  if (this.progressPercentage > 0 && this.status === "not-started") {
-    this.status = "in-progress";
-    if (!this.startedAt) {
+    // Validate and correct scores
+    if (this.score !== null && this.score < 0) {
+      console.warn(`Corrected negative score for UserProgress ${this._id}`);
+      this.score = 0;
+    }
+    
+    if (this.maxScore !== null && this.maxScore < 0) {
+      console.warn(`Corrected negative maxScore for UserProgress ${this._id}`);
+      this.maxScore = 0;
+    }
+
+    // Validate score/maxScore consistency
+    if (
+      this.score !== null &&
+      this.maxScore !== null &&
+      this.score > this.maxScore
+    ) {
+      console.warn(`Corrected score exceeding maxScore for UserProgress ${this._id}`);
+      this.score = this.maxScore;
+    }
+
+    // Auto-complete if progress reaches 100%
+    if (this.progressPercentage === 100 && this.status !== "completed") {
+      this.status = "completed";
+      if (!this.completedAt) {
+        this.completedAt = new Date();
+      }
+    }
+
+    // Auto-start if progress > 0 and status is not-started
+    if (this.progressPercentage > 0 && this.status === "not-started") {
+      this.status = "in-progress";
+      if (!this.startedAt) {
+        this.startedAt = new Date();
+      }
+    }
+
+    // Set startedAt when moving to in-progress
+    if (this.status === "in-progress" && !this.startedAt) {
       this.startedAt = new Date();
     }
-  }
 
-  // Set startedAt when moving to in-progress
-  if (this.status === "in-progress" && !this.startedAt) {
-    this.startedAt = new Date();
-  }
+    // Ensure completed status has completion date
+    if (this.status === "completed" && !this.completedAt) {
+      this.completedAt = new Date();
+    }
 
-  // Validate score/maxScore consistency
-  if (
-    this.score !== null &&
-    this.maxScore !== null &&
-    this.score > this.maxScore
-  ) {
-    return next(new Error("Score cannot exceed max score"));
-  }
+    // Validate status consistency
+    if (this.status === "completed" && this.progressPercentage < 100) {
+      console.warn(`Status is completed but progress is ${this.progressPercentage}% for UserProgress ${this._id}, correcting to 100%`);
+      this.progressPercentage = 100;
+    }
 
-  next();
+    next();
+  } catch (error) {
+    console.error('Error in UserProgress pre-save validation:', error);
+    next(error);
+  }
+});
+
+// Post-save middleware to trigger enrollment progress sync with atomic operations
+UserProgressSchema.post("save", async function (doc) {
+  // Use setImmediate to avoid blocking the save operation but ensure atomic execution
+  setImmediate(async () => {
+    const session = await doc.constructor.startSession();
+    try {
+      await session.withTransaction(async () => {
+        // Get the content to find the module
+        const Content = require("./Content");
+        const content = await Content.findById(doc.contentId).select('moduleId').lean().session(session);
+        
+        if (content && content.moduleId) {
+          // Use atomic progress sync with session
+          const ProgressSyncService = require("../utils/progressSyncService");
+          await ProgressSyncService.syncEnrollmentProgressAtomic(doc.userId, content.moduleId, session);
+        }
+      });
+    } catch (error) {
+      console.error(`Failed to sync enrollment progress for user ${doc.userId}:`, error);
+      // Log the error but don't throw to avoid disrupting the original save
+    } finally {
+      await session.endSession();
+    }
+  });
+});
+
+// Post-remove middleware to trigger enrollment progress sync when progress is deleted
+UserProgressSchema.post("remove", async function (doc) {
+  // Use setImmediate to avoid blocking the remove operation but ensure atomic execution
+  setImmediate(async () => {
+    const session = await doc.constructor.startSession();
+    try {
+      await session.withTransaction(async () => {
+        // Get the content to find the module
+        const Content = require("./Content");
+        const content = await Content.findById(doc.contentId).select('moduleId').lean().session(session);
+        
+        if (content && content.moduleId) {
+          // Use atomic progress sync with session
+          const ProgressSyncService = require("../utils/progressSyncService");
+          await ProgressSyncService.syncEnrollmentProgressAtomic(doc.userId, content.moduleId, session);
+        }
+      });
+    } catch (error) {
+      console.error(`Failed to sync enrollment progress for user ${doc.userId}:`, error);
+      // Log the error but don't throw to avoid disrupting the original remove
+    } finally {
+      await session.endSession();
+    }
+  });
 });
 
 // Static method to find progress by user and content

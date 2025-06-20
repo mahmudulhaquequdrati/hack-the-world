@@ -100,23 +100,63 @@ UserEnrollmentSchema.virtual("isActive").get(function () {
   return this.status === "active";
 });
 
-// Pre-save middleware to calculate progress percentage
+// Pre-save middleware to calculate progress percentage and validate data
 UserEnrollmentSchema.pre("save", function (next) {
-  if (this.totalSections > 0) {
-    this.progressPercentage = Math.round(
-      (this.completedSections / this.totalSections) * 100
-    );
-
-    // Auto-complete if all sections done
-    if (this.progressPercentage === 100 && this.status === "active") {
-      this.status = "completed";
+  try {
+    // Data validation and consistency checks
+    if (this.completedSections < 0) {
+      this.completedSections = 0;
+      console.warn(`Corrected negative completedSections for enrollment ${this._id}`);
     }
+    
+    if (this.totalSections < 0) {
+      this.totalSections = 0;
+      console.warn(`Corrected negative totalSections for enrollment ${this._id}`);
+    }
+    
+    // Ensure completedSections doesn't exceed totalSections
+    if (this.completedSections > this.totalSections) {
+      console.warn(`Corrected completedSections (${this.completedSections}) exceeding totalSections (${this.totalSections}) for enrollment ${this._id}`);
+      this.completedSections = this.totalSections;
+    }
+
+    // Calculate progress percentage with validation
+    if (this.totalSections > 0) {
+      const calculatedPercentage = Math.round(
+        (this.completedSections / this.totalSections) * 100
+      );
+      
+      // Ensure percentage is within valid range
+      this.progressPercentage = Math.max(0, Math.min(100, calculatedPercentage));
+
+      // Auto-complete if all sections done and currently active
+      if (this.progressPercentage === 100 && this.status === "active") {
+        this.status = "completed";
+      }
+    } else {
+      // No sections means 0% progress
+      this.progressPercentage = 0;
+    }
+
+    // Validate progress percentage consistency
+    if (this.progressPercentage > 100) {
+      console.warn(`Corrected progress percentage exceeding 100% for enrollment ${this._id}`);
+      this.progressPercentage = 100;
+    }
+    
+    if (this.progressPercentage < 0) {
+      console.warn(`Corrected negative progress percentage for enrollment ${this._id}`);
+      this.progressPercentage = 0;
+    }
+
+    // Update lastAccessedAt on any save (indicating activity)
+    this.lastAccessedAt = new Date();
+
+    next();
+  } catch (error) {
+    console.error('Error in UserEnrollment pre-save validation:', error);
+    next(error);
   }
-
-  // Update lastAccessedAt on any save (indicating activity)
-  this.lastAccessedAt = new Date();
-
-  next();
 });
 
 // Static method to find enrollment by user and module
@@ -193,6 +233,42 @@ UserEnrollmentSchema.methods.pause = function () {
 UserEnrollmentSchema.methods.resume = function () {
   this.status = "active";
   return this.save();
+};
+
+// Enhanced instance method to sync progress from UserProgress data
+UserEnrollmentSchema.methods.syncProgressFromUserProgress = async function () {
+  const ProgressSyncService = require("../utils/progressSyncService");
+  return await ProgressSyncService.syncEnrollmentProgress(this.userId, this.moduleId);
+};
+
+// Enhanced instance method to get detailed progress breakdown
+UserEnrollmentSchema.methods.getDetailedProgress = async function () {
+  const ProgressSyncService = require("../utils/progressSyncService");
+  return await ProgressSyncService.calculateModuleProgress(this.userId, this.moduleId);
+};
+
+// Static method to get enrollment with enhanced progress data
+UserEnrollmentSchema.statics.findWithEnhancedProgress = async function (userId, moduleId) {
+  const ProgressSyncService = require("../utils/progressSyncService");
+  return await ProgressSyncService.getEnhancedEnrollmentData(userId, moduleId);
+};
+
+// Static method to sync all enrollments for a user
+UserEnrollmentSchema.statics.syncUserEnrollments = async function (userId) {
+  const ProgressSyncService = require("../utils/progressSyncService");
+  return await ProgressSyncService.syncUserEnrollments(userId);
+};
+
+// Static method to sync all enrollments for a module
+UserEnrollmentSchema.statics.syncModuleEnrollments = async function (moduleId) {
+  const ProgressSyncService = require("../utils/progressSyncService");
+  return await ProgressSyncService.syncModuleEnrollments(moduleId);
+};
+
+// Static method to update section counts when module content changes
+UserEnrollmentSchema.statics.updateModuleSectionCounts = async function (moduleId) {
+  const ProgressSyncService = require("../utils/progressSyncService");
+  return await ProgressSyncService.updateModuleSectionCounts(moduleId);
 };
 
 module.exports = mongoose.model("UserEnrollment", UserEnrollmentSchema);

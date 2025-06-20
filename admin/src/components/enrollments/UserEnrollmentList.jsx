@@ -10,6 +10,7 @@ const UserEnrollmentList = ({ onUserSelect }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState(null);
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 500);
@@ -122,6 +123,27 @@ const UserEnrollmentList = ({ onUserSelect }) => {
     }
   };
 
+  // Sync progress for all users
+  const handleSyncProgress = async () => {
+    try {
+      setSyncing(true);
+      console.log("Syncing progress for all users...");
+      
+      // Call the sync API
+      await enrollmentAPI.syncRecentProgress();
+      
+      // Refresh user data
+      await fetchUsers(true, false);
+      
+      console.log("Progress sync completed");
+    } catch (err) {
+      console.error("Error syncing progress:", err);
+      setError(`Failed to sync progress: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   if (loading && users.length === 0) {
     return <LoadingState message="Loading users..." />;
   }
@@ -134,12 +156,29 @@ const UserEnrollmentList = ({ onUserSelect }) => {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-green-400 font-mono uppercase tracking-wider">
-          User Enrollments Overview
-        </h2>
-        <p className="text-gray-400 font-mono text-sm mt-2">
-          Click on a user to view their detailed enrollment progress
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1"></div>
+          <div>
+            <h2 className="text-2xl font-bold text-green-400 font-mono uppercase tracking-wider">
+              User Enrollments Overview
+            </h2>
+            <p className="text-gray-400 font-mono text-sm mt-2">
+              Click on a user to view their detailed enrollment progress
+            </p>
+          </div>
+          <div className="flex-1 flex justify-end">
+            <button
+              onClick={handleSyncProgress}
+              disabled={syncing || loading}
+              className="flex items-center space-x-2 px-3 py-2 bg-cyan-500/20 border border-cyan-400/50 hover:bg-cyan-500/30 hover:border-cyan-400/70 text-cyan-400 font-mono text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>{syncing ? 'Syncing...' : 'Sync All'}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Search Bar */}

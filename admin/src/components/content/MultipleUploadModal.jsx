@@ -1,6 +1,7 @@
-import { CheckCircleIcon, ExclamationCircleIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, ExclamationCircleIcon, PlusIcon, XMarkIcon, MagnifyingGlassIcon, FolderIcon, ChevronRightIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { Upload } from "lucide-react";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useContentSections } from "./hooks/useContentSections";
 
 const MultipleUploadModal = ({
   isOpen,
@@ -20,6 +21,56 @@ const MultipleUploadModal = ({
   loading,
   error,
 }) => {
+  // Section management for autocomplete
+  const {
+    availableSections,
+    sectionLoading,
+    handleSectionInputFocus,
+    handleSectionInputBlur,
+    handleSectionSelect,
+    getFilteredSections,
+    fetchSectionsByModule,
+  } = useContentSections();
+
+  // Per-item section dropdown state
+  const [sectionDropdowns, setSectionDropdowns] = useState({});
+  const [sectionInputValues, setSectionInputValues] = useState({});
+
+  // Fetch sections when module changes
+  useEffect(() => {
+    if (selectedModuleForUpload) {
+      fetchSectionsByModule(selectedModuleForUpload);
+    }
+  }, [selectedModuleForUpload, fetchSectionsByModule]);
+
+  // Handle section input change for specific item
+  const handleSectionInputChange = (itemId, value) => {
+    setSectionInputValues(prev => ({ ...prev, [itemId]: value }));
+    onUpdateUploadItem(itemId, "section", value);
+  };
+
+  // Handle section focus for specific item
+  const handleItemSectionFocus = (itemId) => {
+    if (selectedModuleForUpload) {
+      setSectionDropdowns(prev => ({ ...prev, [itemId]: true }));
+      handleSectionInputFocus(selectedModuleForUpload);
+    }
+  };
+
+  // Handle section blur for specific item
+  const handleItemSectionBlur = (itemId) => {
+    setTimeout(() => {
+      setSectionDropdowns(prev => ({ ...prev, [itemId]: false }));
+    }, 200);
+  };
+
+  // Handle section selection for specific item
+  const handleItemSectionSelect = (itemId, section) => {
+    onUpdateUploadItem(itemId, "section", section);
+    setSectionInputValues(prev => ({ ...prev, [itemId]: section }));
+    setSectionDropdowns(prev => ({ ...prev, [itemId]: false }));
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -203,23 +254,92 @@ const MultipleUploadModal = ({
                             />
                           </div>
 
-                          <div>
+                          <div className="relative">
                             <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
                               ▶ Section
                             </label>
-                            <input
-                              type="text"
-                              value={item.section}
-                              onChange={(e) =>
-                                onUpdateUploadItem(
-                                  item.id,
-                                  "section",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-3 py-2 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-lg text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
-                              placeholder="Content section"
-                            />
+                            <div className="relative">
+                              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              <input
+                                type="text"
+                                value={sectionInputValues[item.id] || item.section || ""}
+                                onChange={(e) => handleSectionInputChange(item.id, e.target.value)}
+                                onFocus={() => handleItemSectionFocus(item.id)}
+                                onBlur={() => handleItemSectionBlur(item.id)}
+                                className="w-full pl-10 pr-4 py-2 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-lg text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50 disabled:opacity-50"
+                                placeholder={
+                                  selectedModuleForUpload
+                                    ? "🔍 Search existing sections or create new..."
+                                    : "⚠️ Select a module first"
+                                }
+                                disabled={!selectedModuleForUpload}
+                              />
+                              {selectedModuleForUpload && !sectionLoading && (sectionInputValues[item.id] || item.section) && (
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                  <SparklesIcon className="h-4 w-4 text-green-400 animate-pulse" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Section Dropdown */}
+                            {sectionDropdowns[item.id] && selectedModuleForUpload && (
+                              <div className="absolute z-50 w-full mt-2 bg-gray-800 border border-green-500/50 rounded-lg shadow-2xl max-h-48 overflow-auto backdrop-blur-sm">
+                                <div className="px-4 py-2 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-green-500/30 rounded-t-lg">
+                                  <div className="flex items-center text-xs text-green-400">
+                                    <FolderIcon className="h-3 w-3 mr-1" />
+                                    Available Sections
+                                  </div>
+                                </div>
+
+                                {(() => {
+                                  const currentInput = sectionInputValues[item.id] || item.section || "";
+                                  const filteredSections = getFilteredSections(currentInput);
+                                  
+                                  if (filteredSections.length > 0) {
+                                    return (
+                                      <>
+                                        <div className="px-4 py-2 text-xs text-gray-400 bg-gray-900/50 border-b border-gray-700">
+                                          Existing sections ({filteredSections.length}) - Click to select:
+                                        </div>
+                                        {filteredSections.map((section) => (
+                                          <button
+                                            key={section}
+                                            type="button"
+                                            onClick={() => handleItemSectionSelect(item.id, section)}
+                                            className="w-full text-left px-4 py-2 text-green-400 hover:bg-gray-700 focus:bg-gray-700 focus:outline-none transition-all duration-150 border-l-2 border-transparent hover:border-green-400 flex items-center group"
+                                          >
+                                            <FolderIcon className="h-4 w-4 mr-3 text-green-400 group-hover:scale-110 transition-transform duration-150" />
+                                            <span className="flex-1">{section}</span>
+                                            <ChevronRightIcon className="h-3 w-3 text-gray-500 group-hover:text-green-400 transition-colors duration-150" />
+                                          </button>
+                                        ))}
+                                      </>
+                                    );
+                                  } else if (currentInput) {
+                                    return (
+                                      <div className="px-4 py-4 text-sm text-center">
+                                        <div className="flex items-center justify-center mb-2">
+                                          <SparklesIcon className="h-5 w-5 text-green-400 animate-pulse mr-2" />
+                                          <span className="text-green-400 font-medium">Create New Section</span>
+                                        </div>
+                                        <div className="bg-gradient-to-r from-green-900/20 to-cyan-900/20 border border-green-500/30 rounded-lg p-3 mb-2">
+                                          <div className="font-medium text-white">"{currentInput}"</div>
+                                        </div>
+                                        <div className="text-xs text-gray-400">Press Enter or click outside to create</div>
+                                      </div>
+                                    );
+                                  } else {
+                                    return (
+                                      <div className="px-4 py-4 text-center text-gray-400">
+                                        <FolderIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                        <div className="font-mono text-sm">No existing sections found</div>
+                                        <div className="text-xs mt-1">Start typing to create a new section</div>
+                                      </div>
+                                    );
+                                  }
+                                })()}
+                              </div>
+                            )}
                           </div>
 
                           <div className="md:col-span-2">

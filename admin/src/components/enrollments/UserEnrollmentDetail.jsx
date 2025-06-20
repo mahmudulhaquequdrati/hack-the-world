@@ -4,6 +4,8 @@ import {
   CalendarIcon,
   ChartBarIcon,
   CheckCircleIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   ClockIcon,
   PauseIcon,
   PlayIcon,
@@ -20,6 +22,7 @@ const UserEnrollmentDetail = ({ user, onBack }) => {
   const [error, setError] = useState(null);
   const [enhancedMode, setEnhancedMode] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [expandedEnrollments, setExpandedEnrollments] = useState(new Set());
 
   // Fetch detailed enrollments for the user
   const fetchUserEnrollments = async (enhanced = false) => {
@@ -160,6 +163,99 @@ const UserEnrollmentDetail = ({ user, onBack }) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours}h ${mins}m`;
+  };
+
+  // Calculate estimated duration from completed content
+  const getEstimatedDuration = (enrollment) => {
+    if (enrollment.enhancedProgress?.detailedProgress) {
+      // Sum up duration of completed content
+      const completedDuration = enrollment.enhancedProgress.detailedProgress
+        .filter(item => item.isCompleted)
+        .reduce((total, item) => total + (item.duration || 15), 0); // Default 15 min if no duration
+      return completedDuration;
+    }
+    
+    // Fallback: estimate based on completed sections
+    const completedSections = enrollment.completedSections || 0;
+    return completedSections * 15; // Estimate 15 minutes per section
+  };
+
+  // Toggle enrollment expansion
+  const toggleEnrollmentExpansion = (enrollmentId) => {
+    setExpandedEnrollments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(enrollmentId)) {
+        newSet.delete(enrollmentId);
+      } else {
+        newSet.add(enrollmentId);
+      }
+      return newSet;
+    });
+  };
+
+  // Render content details
+  const renderContentDetails = (enrollment) => {
+    if (!enrollment.enhancedProgress?.detailedProgress) {
+      return (
+        <div className="text-center text-gray-400 py-4">
+          <p className="text-sm font-mono">Enable Enhanced Mode to view content details</p>
+        </div>
+      );
+    }
+
+    const contentByType = enrollment.enhancedProgress.detailedProgress.reduce((acc, item) => {
+      const type = item.type || 'document';
+      if (!acc[type]) acc[type] = [];
+      acc[type].push(item);
+      return acc;
+    }, {});
+
+    const typeIcons = {
+      video: '📹',
+      lab: '🔬', 
+      game: '🎮',
+      document: '📄'
+    };
+
+    return (
+      <div className="space-y-3">
+        {Object.entries(contentByType).map(([type, items]) => (
+          <div key={type} className="space-y-2">
+            <h6 className="text-xs font-mono text-gray-400 uppercase flex items-center">
+              <span className="mr-2">{typeIcons[type] || '📄'}</span>
+              {type}s ({items.length})
+            </h6>
+            <div className="space-y-1">
+              {items.map((item) => (
+                <div 
+                  key={item.contentId} 
+                  className="flex items-center justify-between p-2 bg-gray-800/50 rounded text-xs font-mono"
+                >
+                  <div className="flex-1">
+                    <div className="text-gray-300 font-medium">{item.title || 'Untitled Content'}</div>
+                    {item.section && (
+                      <div className="text-gray-500 text-xs">Section: {item.section}</div>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-400">{item.progressPercentage}%</span>
+                    <span className={`px-2 py-1 rounded ${
+                      item.isCompleted 
+                        ? 'bg-green-500/20 text-green-400' 
+                        : item.status === 'in-progress' 
+                          ? 'bg-yellow-500/20 text-yellow-400'
+                          : 'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {item.isCompleted ? '✓' : item.status === 'in-progress' ? '◐' : '○'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   // Render content type progress breakdown
@@ -353,6 +449,7 @@ const UserEnrollmentDetail = ({ user, onBack }) => {
           {enrollments.map((enrollment) => {
             const statusColors = getStatusColor(enrollment.status);
             const StatusIcon = () => getStatusIcon(enrollment.status);
+            const isExpanded = expandedEnrollments.has(enrollment.id);
 
             return (
               <div
@@ -603,10 +700,10 @@ const UserEnrollmentDetail = ({ user, onBack }) => {
 
                         <div className="text-center p-3 rounded-lg bg-gray-800/30">
                           <div className="font-mono text-sm font-bold text-orange-400">
-                            {formatTimeSpent(enrollment.timeSpent)}
+                            {formatTimeSpent(getEstimatedDuration(enrollment))}
                           </div>
                           <div className="text-xs font-mono uppercase text-gray-400">
-                            Duration
+                            Completed Time
                           </div>
                         </div>
                       </div>
@@ -721,6 +818,33 @@ const UserEnrollmentDetail = ({ user, onBack }) => {
                           </span>
                         </div>
                       </div>
+
+                      {/* View Details Button */}
+                      <div className="mt-4 pt-4 border-t border-gray-600/30">
+                        <button
+                          onClick={() => toggleEnrollmentExpansion(enrollment.id)}
+                          className="flex items-center justify-center w-full px-3 py-2 text-xs font-mono text-gray-400 hover:text-green-400 border border-gray-600/50 hover:border-green-400/50 rounded transition-colors"
+                        >
+                          <span className="mr-2">
+                            {isExpanded ? "Hide Details" : "View Content Details"}
+                          </span>
+                          {isExpanded ? (
+                            <ChevronUpIcon className="w-4 h-4" />
+                          ) : (
+                            <ChevronDownIcon className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Content Details (Collapsible) */}
+                      {isExpanded && (
+                        <div className="mt-4 p-4 bg-gray-900/80 rounded-lg border border-gray-600/30">
+                          <h6 className="text-sm font-mono text-gray-300 uppercase mb-3">
+                            Content Progress Details
+                          </h6>
+                          {renderContentDetails(enrollment)}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

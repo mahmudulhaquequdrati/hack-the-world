@@ -139,10 +139,19 @@ export const validateMultipleUploads = (uploadItems) => {
   }
 
   uploadItems.forEach((item, index) => {
-    const itemValidation = validateContentData(item);
-    if (!itemValidation.isValid) {
-      itemErrors[index] = itemValidation.errors;
-      errors.push(`Item ${index + 1}: ${itemValidation.errors.join(", ")}`);
+    // Create a copy of the item and add a temporary moduleId for validation
+    // Since moduleId is set globally in multiple upload, we skip this validation
+    const itemForValidation = { ...item, moduleId: "temp-module-id" };
+    const itemValidation = validateContentData(itemForValidation);
+    
+    // Filter out moduleId errors since it's handled globally
+    const filteredErrors = itemValidation.errors.filter(error => 
+      !error.includes("Module selection is required")
+    );
+    
+    if (filteredErrors.length > 0) {
+      itemErrors[index] = filteredErrors;
+      errors.push(`Item ${index + 1}: ${filteredErrors.join(", ")}`);
     }
   });
 

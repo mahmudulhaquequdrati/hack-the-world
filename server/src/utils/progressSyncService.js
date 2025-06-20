@@ -30,7 +30,7 @@ class ProgressSyncService {
           { isDeleted: { $exists: false } },
           { isDeleted: false }
         ]
-      }).select('_id type section').lean();
+      }).select('_id type section duration title').lean();
 
       if (moduleContent.length === 0) {
         return {
@@ -96,10 +96,12 @@ class ProgressSyncService {
           contentId,
           type: contentType,
           section: content.section,
+          title: content.title, // Include content title
           status: progress?.status || 'not-started',
           progressPercentage: progress?.progressPercentage || 0,
           score: progress?.score || null,
           maxScore: progress?.maxScore || null,
+          duration: content.duration || 15, // Include content duration
           isCompleted
         });
       });
@@ -139,7 +141,7 @@ class ProgressSyncService {
           { isDeleted: { $exists: false } },
           { isDeleted: false }
         ]
-      }).select('_id type section').lean().session(session);
+      }).select('_id type section duration title').lean().session(session);
 
       if (moduleContent.length === 0) {
         return {
@@ -205,10 +207,12 @@ class ProgressSyncService {
           contentId,
           type: contentType,
           section: content.section,
+          title: content.title, // Include content title
           status: progress?.status || 'not-started',
           progressPercentage: progress?.progressPercentage || 0,
           score: progress?.score || null,
           maxScore: progress?.maxScore || null,
+          duration: content.duration || 15, // Include content duration
           isCompleted
         });
       });

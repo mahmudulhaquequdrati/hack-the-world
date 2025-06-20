@@ -290,7 +290,13 @@ export const useContentAPI = () => {
       setSaving(true);
       setError("");
 
+      // Validate moduleId
+      if (!selectedModuleId || selectedModuleId === "") {
+        throw new Error("Module ID is required for content creation");
+      }
+
       console.log("🔄 Creating multiple content items:", contentItems.length);
+      console.log("📍 Using moduleId:", selectedModuleId);
 
       // Create all content items
       const createPromises = contentItems.map((item) => {

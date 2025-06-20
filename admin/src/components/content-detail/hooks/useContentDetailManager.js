@@ -117,7 +117,7 @@ const useContentDetailManager = (contentId) => {
       },
 
       handleBackNavigation: () => {
-        if (stateHook.module?.id) {
+        if (stateHook.module?._id) {
           navigationHook.actions.goToModule();
         } else {
           navigationHook.actions.goToContent();
@@ -125,19 +125,19 @@ const useContentDetailManager = (contentId) => {
       },
 
       handleEditContent: () => {
-        if (stateHook.content?.id) {
+        if (stateHook.content?._id) {
           navigationHook.actions.goToEditContent();
         }
       },
 
       handleViewModule: () => {
-        if (stateHook.module?.id) {
+        if (stateHook.module?._id) {
           navigationHook.actions.goToModule();
         }
       },
 
       handleViewPhase: () => {
-        if (stateHook.phase?.id) {
+        if (stateHook.phase?._id) {
           navigationHook.actions.goToPhase();
         }
       },

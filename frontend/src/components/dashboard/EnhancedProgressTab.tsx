@@ -22,7 +22,7 @@ export const EnhancedProgressTab = ({
   // Get all available modules for enrollment
   const allModules = getAllModules();
   const availableModules = allModules.filter(
-    (module) => !enrolledModules.some((m) => m.id === module.id)
+    (module) => !enrolledModules.some((m) => m._id === module._id)
   );
 
   // Categorize enrolled modules by phase using API data
@@ -193,7 +193,7 @@ export const EnhancedProgressTab = ({
                   const treeChar = isLast ? "└──" : "├──";
 
                   return (
-                    <div key={module.id} className="relative">
+                    <div key={module._id} className="relative">
                       <div className="flex items-start space-x-1">
                         <div className="flex flex-col items-center">
                           <span className="text-green-400/70 text-sm leading-none font-mono">
@@ -361,7 +361,7 @@ export const EnhancedProgressTab = ({
 
                   return (
                     <div
-                      key={module.id}
+                      key={module._id}
                       className="relative group cursor-pointer transform transition-all duration-300 hover:scale-[1.02]"
                       onClick={() => onModuleClick(module)}
                     >

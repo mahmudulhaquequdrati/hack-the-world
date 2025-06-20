@@ -157,7 +157,7 @@ export const useContentFormManagement = () => {
       success: true, 
       data: submissionData,
       isEditing: !!editingContent,
-      editingId: editingContent?.id
+      editingId: editingContent?._id
     };
   }, [validateForm, formErrors, getSubmissionData, editingContent]);
 

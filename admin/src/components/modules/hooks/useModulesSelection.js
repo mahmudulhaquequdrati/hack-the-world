@@ -18,7 +18,7 @@ const useModulesSelection = (modules = []) => {
       setSelectedModules(new Set());
     } else {
       // Otherwise, select all modules
-      setSelectedModules(new Set(modules.map((m) => m.id)));
+      setSelectedModules(new Set(modules.map((m) => m._id)));
     }
   }, [modules, selectedModules.size]);
 
@@ -48,7 +48,7 @@ const useModulesSelection = (modules = []) => {
    * @param {Array} phaseModules - Array of modules in the phase
    */
   const handlePhaseSelection = useCallback((phaseModules) => {
-    const phaseModuleIds = phaseModules.map((m) => m.id);
+    const phaseModuleIds = phaseModules.map((m) => m._id);
     const allSelected = phaseModuleIds.every((id) => selectedModules.has(id));
     const newSelected = new Set(selectedModules);
 
@@ -104,7 +104,7 @@ const useModulesSelection = (modules = []) => {
    */
   const areAllPhaseModulesSelected = useCallback((phaseModules) => {
     if (phaseModules.length === 0) return false;
-    return phaseModules.every((m) => selectedModules.has(m.id));
+    return phaseModules.every((m) => selectedModules.has(m._id));
   }, [selectedModules]);
 
   /**
@@ -114,7 +114,7 @@ const useModulesSelection = (modules = []) => {
    */
   const areSomePhaseModulesSelected = useCallback((phaseModules) => {
     if (phaseModules.length === 0) return false;
-    const selectedInPhase = phaseModules.filter((m) => selectedModules.has(m.id));
+    const selectedInPhase = phaseModules.filter((m) => selectedModules.has(m._id));
     return selectedInPhase.length > 0 && selectedInPhase.length < phaseModules.length;
   }, [selectedModules]);
 
@@ -124,7 +124,7 @@ const useModulesSelection = (modules = []) => {
    * @returns {number} Count of selected modules in the phase
    */
   const getPhaseSelectionCount = useCallback((phaseModules) => {
-    return phaseModules.filter((m) => selectedModules.has(m.id)).length;
+    return phaseModules.filter((m) => selectedModules.has(m._id)).length;
   }, [selectedModules]);
 
   /**
@@ -132,7 +132,7 @@ const useModulesSelection = (modules = []) => {
    * @returns {Array} Array of selected module objects
    */
   const getSelectedModules = useCallback(() => {
-    return modules.filter(module => selectedModules.has(module.id));
+    return modules.filter(module => selectedModules.has(module._id));
   }, [modules, selectedModules]);
 
   /**
@@ -150,7 +150,7 @@ const useModulesSelection = (modules = []) => {
    */
   const selectModulesByFilter = useCallback((filterFn, replace = false) => {
     const matchingModules = modules.filter(filterFn);
-    const moduleIds = matchingModules.map(m => m.id);
+    const moduleIds = matchingModules.map(m => m._id);
     selectModules(moduleIds, replace);
   }, [modules, selectModules]);
 
@@ -167,7 +167,7 @@ const useModulesSelection = (modules = []) => {
     // Get selected modules grouped by phase
     const selectedByPhase = {};
     modules.forEach(module => {
-      if (selectedModules.has(module.id)) {
+      if (selectedModules.has(module._id)) {
         const phaseId = module.phaseId;
         if (!selectedByPhase[phaseId]) {
           selectedByPhase[phaseId] = [];

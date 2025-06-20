@@ -267,7 +267,7 @@ const VideoPlayer = ({
   const handleVideoEnd = async () => {
     // Auto-mark as complete when video ends
     if (enhancedLesson && !isCompleted) {
-      onMarkComplete(enhancedLesson.id);
+      onMarkComplete(enhancedLesson._id);
     }
 
     // Auto-advance to next lesson if available
@@ -780,7 +780,7 @@ const VideoPlayer = ({
                 <Button
                   onClick={() => {
                     if (enhancedLesson) {
-                      onMarkComplete(enhancedLesson.id);
+                      onMarkComplete(enhancedLesson._id);
                     }
                   }}
                   className="bg-green-400 text-black hover:bg-green-300"

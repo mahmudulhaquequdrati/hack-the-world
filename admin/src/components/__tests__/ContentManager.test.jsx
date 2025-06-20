@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "../../test/utils/testUtils";
-import ContentManager from "../ContentManager";
+import ContentManager from "../../pages/ContentManager";
 
 // Mock the API services
 vi.mock("../../services/api", () => ({
@@ -31,12 +31,12 @@ import { contentAPI, modulesAPI } from "../../services/api";
 // Mock data
 const mockModules = [
   {
-    id: "module-1",
+    _id: "module-1",
     title: "Cybersecurity Basics",
     phaseId: "phase-1",
   },
   {
-    id: "module-2",
+    _id: "module-2",
     title: "Advanced Security",
     phaseId: "phase-2",
   },
@@ -44,7 +44,7 @@ const mockModules = [
 
 const mockContent = [
   {
-    id: "content-1",
+    _id: "content-1",
     moduleId: "module-1",
     type: "video",
     title: "Introduction to Cybersecurity",
@@ -56,7 +56,7 @@ const mockContent = [
     isActive: true,
   },
   {
-    id: "content-2",
+    _id: "content-2",
     moduleId: "module-1",
     type: "lab",
     title: "Security Assessment Lab",
@@ -691,7 +691,7 @@ describe("ContentManager", () => {
 
       contentAPI.create.mockResolvedValue({
         data: {
-          id: "new-content",
+          _id: "new-content",
           title: "Test Content",
           section: "Fundamentals",
         },

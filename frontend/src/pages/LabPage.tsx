@@ -18,7 +18,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 interface LabStep {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   completed: boolean;
@@ -51,19 +51,19 @@ const LabPage = () => {
       objectives: ["Complete the lab exercises", "Practice security techniques", "Gain hands-on experience"],
       steps: [
         {
-          id: "step-1",
+          _id: "step-1",
           title: "Setup Environment",
           description: "Initialize the lab environment and tools",
           completed: false
         },
         {
-          id: "step-2", 
+          _id: "step-2", 
           title: "Execute Lab Tasks",
           description: "Complete the main lab objectives",
           completed: false
         },
         {
-          id: "step-3",
+          _id: "step-3",
           title: "Document Results",
           description: "Record findings and submit results",
           completed: false
@@ -105,7 +105,7 @@ const LabPage = () => {
       setLabProgress(labData.data.progress.progressPercentage);
       // If lab was already completed, mark all steps as completed
       if (labData.data.progress.status === 'completed') {
-        setCompletedSteps(lab.steps.map(step => step.id));
+        setCompletedSteps(lab.steps.map(step => step._id));
       }
     }
   }, [labData, lab.steps]);
@@ -431,15 +431,15 @@ const LabPage = () => {
                   <div className="space-y-3">
                     {lab.steps.map((step: LabStep) => (
                       <div
-                        key={step.id}
+                        key={step._id}
                         className={`p-3 rounded border transition-colors ${
-                          completedSteps.includes(step.id)
+                          completedSteps.includes(step._id)
                             ? "border-green-400 bg-green-400/10"
                             : "border-green-400/30"
                         }`}
                       >
                         <div className="flex items-center space-x-2 mb-1">
-                          {completedSteps.includes(step.id) ? (
+                          {completedSteps.includes(step._id) ? (
                             <CheckCircle className="w-4 h-4 text-green-400" />
                           ) : (
                             <div className="w-4 h-4 border border-green-400/30 rounded-full" />

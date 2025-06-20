@@ -31,7 +31,7 @@ export const useContentMultipleUpload = () => {
 
   // Remove upload item
   const removeUploadItem = useCallback((id) => {
-    setMultipleUploads((prev) => prev.filter((item) => item.id !== id));
+    setMultipleUploads((prev) => prev.filter((item) => item._id !== id));
     setUploadErrors(prev => {
       const newErrors = { ...prev };
       delete newErrors[id];
@@ -47,7 +47,7 @@ export const useContentMultipleUpload = () => {
   // Update upload item
   const updateUploadItem = useCallback((id, field, value) => {
     setMultipleUploads((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      prev.map((item) => (item._id === id ? { ...item, [field]: value } : item))
     );
     
     // Clear errors for this field
@@ -67,7 +67,7 @@ export const useContentMultipleUpload = () => {
   const updateUploadItemArray = useCallback((id, field, index, value) => {
     setMultipleUploads((prev) =>
       prev.map((item) => {
-        if (item.id === id) {
+        if (item._id === id) {
           const newArray = [...(item[field] || [])];
           newArray[index] = value;
           return { ...item, [field]: newArray };
@@ -81,7 +81,7 @@ export const useContentMultipleUpload = () => {
   const addUploadItemArrayItem = useCallback((id, field, defaultValue = "") => {
     setMultipleUploads((prev) =>
       prev.map((item) => {
-        if (item.id === id) {
+        if (item._id === id) {
           return { 
             ...item, 
             [field]: [...(item[field] || []), defaultValue] 
@@ -96,7 +96,7 @@ export const useContentMultipleUpload = () => {
   const removeUploadItemArrayItem = useCallback((id, field, index) => {
     setMultipleUploads((prev) =>
       prev.map((item) => {
-        if (item.id === id) {
+        if (item._id === id) {
           return { 
             ...item, 
             [field]: (item[field] || []).filter((_, i) => i !== index)
@@ -167,11 +167,11 @@ export const useContentMultipleUpload = () => {
 
   // Duplicate upload item
   const duplicateUploadItem = useCallback((id) => {
-    const itemToDuplicate = multipleUploads.find(item => item.id === id);
+    const itemToDuplicate = multipleUploads.find(item => item._id === id);
     if (itemToDuplicate) {
       const duplicatedItem = {
         ...itemToDuplicate,
-        id: Date.now() + Math.random(),
+        _id: Date.now() + Math.random(),
         title: `${itemToDuplicate.title} (Copy)`,
       };
       setMultipleUploads(prev => [...prev, duplicatedItem]);

@@ -100,7 +100,7 @@ const ContentFormModal = ({
                 >
                   <option value="" className="bg-gray-900 text-green-400">◆ Select Module</option>
                   {modules.map((module) => (
-                    <option key={module.id} value={module.id} className="bg-gray-900 text-green-400">
+                    <option key={module._id} value={module._id} className="bg-gray-900 text-green-400">
                       ▸ {module.title}
                     </option>
                   ))}

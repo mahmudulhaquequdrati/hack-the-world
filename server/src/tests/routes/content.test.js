@@ -35,7 +35,7 @@ describe("Content API Endpoints", () => {
 
     // Create test module
     testModule = await Module.create({
-      phaseId: testPhase.id,
+      phaseId: testPhase._id,
       title: "Test Module",
       description: "Test module description",
       icon: "lock",
@@ -57,7 +57,7 @@ describe("Content API Endpoints", () => {
 
     // Create test content
     testContent = {
-      moduleId: testModule.id,
+      moduleId: testModule._id,
       type: "video",
       title: "Test Video Content",
       description: "Test video description",
@@ -129,7 +129,7 @@ describe("Content API Endpoints", () => {
 
     it("should filter content by moduleId", async () => {
       const response = await request(app)
-        .get(`/api/content?moduleId=${testModule.id}`)
+        .get(`/api/content?moduleId=${testModule._id}`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(200);
 
@@ -141,15 +141,15 @@ describe("Content API Endpoints", () => {
         "DEBUG - Module ID type:",
         typeof response.body.data[0]?.moduleId
       );
-      console.log("DEBUG - Expected module ID:", testModule.id.toString());
+      console.log("DEBUG - Expected module ID:", testModule._id.toString());
 
       expect(response.body.data).toHaveLength(3);
       response.body.data.forEach((content) => {
         // Check if moduleId is populated (object) or just the ID (string)
         if (typeof content.moduleId === "object" && content.moduleId !== null) {
-          expect(content.moduleId.id).toBe(testModule.id.toString());
+          expect(content.moduleId._id).toBe(testModule._id.toString());
         } else {
-          expect(content.moduleId).toBe(testModule.id.toString());
+          expect(content.moduleId).toBe(testModule._id.toString());
         }
       });
     });
@@ -203,9 +203,9 @@ describe("Content API Endpoints", () => {
         typeof response.body.data.moduleId === "object" &&
         response.body.data.moduleId !== null
       ) {
-        expect(response.body.data.moduleId.id).toBe(testModule.id.toString());
+        expect(response.body.data.moduleId._id).toBe(testModule._id.toString());
       } else {
-        expect(response.body.data.moduleId).toBe(testModule.id.toString());
+        expect(response.body.data.moduleId).toBe(testModule._id.toString());
       }
     });
 
@@ -320,12 +320,12 @@ describe("Content API Endpoints", () => {
 
     it("should get content by ID", async () => {
       const response = await request(app)
-        .get(`/api/content/${createdContent.id}`)
+        .get(`/api/content/${createdContent._id}`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.id).toBe(createdContent.id.toString());
+      expect(response.body.data._id).toBe(createdContent._id.toString());
       expect(response.body.data.title).toBe(testContent.title);
     });
 
@@ -345,7 +345,7 @@ describe("Content API Endpoints", () => {
     });
 
     it("should return 401 without authentication", async () => {
-      await request(app).get(`/api/content/${createdContent.id}`).expect(401);
+      await request(app).get(`/api/content/${createdContent._id}`).expect(401);
     });
   });
 
@@ -363,7 +363,7 @@ describe("Content API Endpoints", () => {
       };
 
       const response = await request(app)
-        .put(`/api/content/${createdContent.id}`)
+        .put(`/api/content/${createdContent._id}`)
         .set("Authorization", `Bearer ${adminToken}`)
         .send(updateData)
         .expect(200);
@@ -377,7 +377,7 @@ describe("Content API Endpoints", () => {
       const updateData = { title: "Updated Title" };
 
       await request(app)
-        .put(`/api/content/${createdContent.id}`)
+        .put(`/api/content/${createdContent._id}`)
         .set("Authorization", `Bearer ${authToken}`)
         .send(updateData)
         .expect(403);
@@ -402,7 +402,7 @@ describe("Content API Endpoints", () => {
 
     it("should return 401 without authentication", async () => {
       await request(app)
-        .put(`/api/content/${createdContent.id}`)
+        .put(`/api/content/${createdContent._id}`)
         .send({ title: "Updated" })
         .expect(401);
     });
@@ -417,20 +417,20 @@ describe("Content API Endpoints", () => {
 
     it("should soft delete content with admin role", async () => {
       const response = await request(app)
-        .delete(`/api/content/${createdContent.id}`)
+        .delete(`/api/content/${createdContent._id}`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
 
       // Verify content is soft deleted
-      const deletedContent = await Content.findById(createdContent.id);
+      const deletedContent = await Content.findById(createdContent._id);
       expect(deletedContent.isActive).toBe(false);
     });
 
     it("should return 403 for non-admin user", async () => {
       await request(app)
-        .delete(`/api/content/${createdContent.id}`)
+        .delete(`/api/content/${createdContent._id}`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(403);
     });
@@ -452,7 +452,7 @@ describe("Content API Endpoints", () => {
 
     it("should return 401 without authentication", async () => {
       await request(app)
-        .delete(`/api/content/${createdContent.id}`)
+        .delete(`/api/content/${createdContent._id}`)
         .expect(401);
     });
   });
@@ -466,27 +466,27 @@ describe("Content API Endpoints", () => {
 
     it("should permanently delete content with admin role", async () => {
       const response = await request(app)
-        .delete(`/api/content/${createdContent.id}/permanent`)
+        .delete(`/api/content/${createdContent._id}/permanent`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
 
       // Verify content is permanently deleted
-      const deletedContent = await Content.findById(createdContent.id);
+      const deletedContent = await Content.findById(createdContent._id);
       expect(deletedContent).toBeNull();
     });
 
     it("should return 403 for non-admin user", async () => {
       await request(app)
-        .delete(`/api/content/${createdContent.id}/permanent`)
+        .delete(`/api/content/${createdContent._id}/permanent`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(403);
     });
 
     it("should return 401 without authentication", async () => {
       await request(app)
-        .delete(`/api/content/${createdContent.id}/permanent`)
+        .delete(`/api/content/${createdContent._id}/permanent`)
         .expect(401);
     });
   });
@@ -502,7 +502,7 @@ describe("Content API Endpoints", () => {
 
     it("should get content by module", async () => {
       const response = await request(app)
-        .get(`/api/content/module/${testModule.id}`)
+        .get(`/api/content/module/${testModule._id}`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(200);
 
@@ -512,9 +512,9 @@ describe("Content API Endpoints", () => {
       response.body.data.forEach((content) => {
         // Check if moduleId is populated (object) or just the ID (string)
         if (typeof content.moduleId === "object" && content.moduleId !== null) {
-          expect(content.moduleId.id).toBe(testModule.id.toString());
+          expect(content.moduleId._id).toBe(testModule._id.toString());
         } else {
-          expect(content.moduleId).toBe(testModule.id.toString());
+          expect(content.moduleId).toBe(testModule._id.toString());
         }
       });
     });
@@ -528,7 +528,7 @@ describe("Content API Endpoints", () => {
 
     it("should return 401 without authentication", async () => {
       await request(app)
-        .get(`/api/content/module/${testModule.id}`)
+        .get(`/api/content/module/${testModule._id}`)
         .expect(401);
     });
   });
@@ -544,7 +544,7 @@ describe("Content API Endpoints", () => {
 
     it("should get content grouped by sections", async () => {
       const response = await request(app)
-        .get(`/api/content/module/${testModule.id}/grouped`)
+        .get(`/api/content/module/${testModule._id}/grouped`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(200);
 
@@ -563,7 +563,7 @@ describe("Content API Endpoints", () => {
 
     it("should return 401 without authentication", async () => {
       await request(app)
-        .get(`/api/content/module/${testModule.id}/grouped`)
+        .get(`/api/content/module/${testModule._id}/grouped`)
         .expect(401);
     });
   });
@@ -594,7 +594,7 @@ describe("Content API Endpoints", () => {
 
     it("should get optimized content grouped by sections with contentId", async () => {
       const response = await request(app)
-        .get(`/api/content/module/${testModule.id}/grouped-optimized`)
+        .get(`/api/content/module/${testModule._id}/grouped-optimized`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(200);
 
@@ -628,7 +628,7 @@ describe("Content API Endpoints", () => {
 
     it("should return 401 without authentication", async () => {
       await request(app)
-        .get(`/api/content/module/${testModule.id}/grouped-optimized`)
+        .get(`/api/content/module/${testModule._id}/grouped-optimized`)
         .expect(401);
     });
   });
@@ -664,7 +664,7 @@ describe("Content API Endpoints", () => {
 
     it("should filter by type and moduleId", async () => {
       const response = await request(app)
-        .get(`/api/content/type/video?moduleId=${testModule.id}`)
+        .get(`/api/content/type/video?moduleId=${testModule._id}`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(200);
 
@@ -673,9 +673,9 @@ describe("Content API Endpoints", () => {
         expect(content.type).toBe("video");
         // Check if moduleId is populated (object) or just the ID (string)
         if (typeof content.moduleId === "object" && content.moduleId !== null) {
-          expect(content.moduleId.id).toBe(testModule.id.toString());
+          expect(content.moduleId._id).toBe(testModule._id.toString());
         } else {
-          expect(content.moduleId).toBe(testModule.id.toString());
+          expect(content.moduleId).toBe(testModule._id.toString());
         }
       });
     });
@@ -712,7 +712,7 @@ describe("Content API Endpoints", () => {
 
     it("should get distinct sections for a module", async () => {
       const response = await request(app)
-        .get(`/api/content/sections/by-module/${testModule.id}`)
+        .get(`/api/content/sections/by-module/${testModule._id}`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(200);
 
@@ -731,10 +731,10 @@ describe("Content API Endpoints", () => {
 
     it("should return empty array when module has no content", async () => {
       // Clear content for the module
-      await Content.deleteMany({ moduleId: testModule.id });
+      await Content.deleteMany({ moduleId: testModule._id });
 
       const response = await request(app)
-        .get(`/api/content/sections/by-module/${testModule.id}`)
+        .get(`/api/content/sections/by-module/${testModule._id}`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(200);
 
@@ -754,7 +754,7 @@ describe("Content API Endpoints", () => {
       });
 
       const response = await request(app)
-        .get(`/api/content/sections/by-module/${testModule.id}`)
+        .get(`/api/content/sections/by-module/${testModule._id}`)
         .set("Authorization", `Bearer ${authToken}`)
         .expect(200);
 
@@ -780,7 +780,7 @@ describe("Content API Endpoints", () => {
 
     it("should return 401 without authentication", async () => {
       await request(app)
-        .get(`/api/content/sections/by-module/${testModule.id}`)
+        .get(`/api/content/sections/by-module/${testModule._id}`)
         .expect(401);
     });
   });

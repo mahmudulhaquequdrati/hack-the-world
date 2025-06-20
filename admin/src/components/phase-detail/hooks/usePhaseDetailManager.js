@@ -67,7 +67,7 @@ const usePhaseDetailManager = (phaseId) => {
      */
     handleModuleSelect: (module) => {
       console.log("Selected module:", module.title);
-      navigateToModuleDetail(module.id);
+      navigateToModuleDetail(module._id);
     },
 
     /**

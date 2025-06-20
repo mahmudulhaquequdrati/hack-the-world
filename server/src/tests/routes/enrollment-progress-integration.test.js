@@ -35,7 +35,7 @@ describe("Enrollment-Progress Integration API Endpoints", () => {
 
     // Create test modules
     testModule1 = await Module.create({
-      phaseId: testPhase.id,
+      phaseId: testPhase._id,
       title: "Module 1 - Security Basics",
       description: "Basic security concepts",
       icon: "lock",
@@ -56,7 +56,7 @@ describe("Enrollment-Progress Integration API Endpoints", () => {
     });
 
     testModule2 = await Module.create({
-      phaseId: testPhase.id,
+      phaseId: testPhase._id,
       title: "Module 2 - Advanced Security",
       description: "Advanced security topics",
       icon: "shield",

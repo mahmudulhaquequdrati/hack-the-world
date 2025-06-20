@@ -6,7 +6,7 @@ import { AuthProvider } from "../../context/AuthContext";
 
 // Mock user for testing
 export const mockUser = {
-  id: "1",
+  _id: "1",
   email: "admin@test.com",
   name: "Test Admin",
   role: "admin",

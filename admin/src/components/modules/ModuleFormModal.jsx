@@ -87,8 +87,8 @@ const ModuleFormModal = ({
                   </option>
                   {phases.map((phase) => (
                     <option
-                      key={phase.id}
-                      value={phase.id}
+                      key={phase._id}
+                      value={phase._id}
                       className="bg-gray-900 text-blue-400"
                     >
                       ▸ {phase.title}

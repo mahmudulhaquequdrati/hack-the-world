@@ -66,7 +66,7 @@ const CourseTree = ({
     const isEnrolled = module.enrolled;
 
     return (
-      <div key={module.id} className="relative group">
+      <div key={module._id} className="relative group">
         {/* Tree structure lines */}
         <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col items-center pointer-events-none">
           {/* Vertical line from parent phase */}
@@ -276,13 +276,13 @@ const CourseTree = ({
   };
 
   const renderPhaseTree = (phase: Phase, phaseIndex: number) => {
-    const isExpanded = expandedPhases.includes(phase.id);
+    const isExpanded = expandedPhases.includes(phase._id);
     const isLastPhase = phaseIndex === phases.length - 1;
     const enrolledModules = (phase.modules || []).filter((m) => m.enrolled);
     const completedModules = (phase.modules || []).filter((m) => m.completed);
 
     return (
-      <div key={phase.id} className="relative mb-4">
+      <div key={phase._id} className="relative mb-4">
         {/* Main tree trunk */}
         <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col items-center pointer-events-none">
           {/* Vertical trunk line */}
@@ -297,7 +297,7 @@ const CourseTree = ({
         {/* Phase container */}
         <Collapsible
           open={isExpanded}
-          onOpenChange={() => onTogglePhase(phase.id)}
+          onOpenChange={() => onTogglePhase(phase._id)}
         >
           <CollapsibleTrigger className="w-full">
             <div className="ml-8 mb-4 p-4 bg-green-400/10 border border-green-400/30 rounded-lg hover:bg-green-400/15 transition-all">

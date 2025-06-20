@@ -18,7 +18,7 @@ export const ProgressTab = ({ enrolledModules }: ProgressTabProps) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {enrolledModules.map((module) => (
-          <ModuleProgressCard key={module.id} module={module} />
+          <ModuleProgressCard key={module._id} module={module} />
         ))}
       </div>
 

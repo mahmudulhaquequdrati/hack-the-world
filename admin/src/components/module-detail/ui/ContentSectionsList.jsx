@@ -93,7 +93,7 @@ const ContentSectionsList = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {sectionData.items.map((item) => (
                 <ContentCard
-                  key={item.id}
+                  key={item._id}
                   content={item}
                   onContentClick={onContentClick}
                   showSection={false} // Don't show section since we're already in section context

@@ -106,7 +106,7 @@ export const useContentFilters = () => {
     }
     
     if (filters.moduleId) {
-      const module = modules.find(m => m.id === filters.moduleId);
+      const module = modules.find(m => m._id === filters.moduleId);
       activeParts.push(`Module: ${module?.title || filters.moduleId}`);
     }
     

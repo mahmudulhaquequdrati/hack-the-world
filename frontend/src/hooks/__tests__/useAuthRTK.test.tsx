@@ -29,7 +29,7 @@ vi.mock("@/features/auth/authApi", () => ({
 
 // Mock data
 const mockUser = {
-  id: "user123",
+  _id: "user123",
   username: "testuser",
   email: "test@example.com",
   profile: {

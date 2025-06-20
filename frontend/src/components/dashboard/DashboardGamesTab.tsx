@@ -9,7 +9,7 @@ interface DashboardGamesTabProps {
 }
 
 interface GameItem {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   type: string;
@@ -41,17 +41,17 @@ export const DashboardGamesTab = ({
     error: gamesError,
   } = useGetContentTypeProgressQuery(
     {
-      userId: user?.id || "",
+      userId: user?._id || "",
       contentType: "game",
     },
     {
-      skip: !user?.id,
+      skip: !user?._id,
     }
   );
 
   const handlePlayGame = (game: GameItem) => {
     // Navigate to dedicated game route using the real content ID
-    navigate(`/learn/${game.moduleId}/game/${game.id}`);
+    navigate(`/learn/${game.moduleId}/game/${game._id}`);
   };
 
   // Transform real API data into GameItem format
@@ -66,10 +66,10 @@ export const DashboardGamesTab = ({
       const isCompleted = progress?.status === "completed";
 
       // Find the phase this module belongs to
-      const phase = phases.find((p) => p.id === module.phase) || phases[0];
+      const phase = phases.find((p) => p._id === module.phase) || phases[0];
 
       return {
-        id: gameContent.id,
+        _id: gameContent._id,
         title: gameContent.title,
         description:
           gameContent.description ||
@@ -83,9 +83,9 @@ export const DashboardGamesTab = ({
         completed: isCompleted,
         available: true,
         score: progress?.score || undefined,
-        phaseId: phase.id,
+        phaseId: phase._id,
         phaseTitle: phase.title,
-        moduleId: module.id,
+        moduleId: module._id,
         progressPercentage: progress?.progressPercentage || 0,
         maxScore: progress?.maxScore || undefined,
       };
@@ -169,7 +169,7 @@ export const DashboardGamesTab = ({
           <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
             {games.map((game) => (
               <div
-                key={game.id}
+                key={game._id}
                 className="group relative bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-cyan-400/30 rounded-lg overflow-hidden hover:border-purple-400/60 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/25"
               >
                 {/* Retro scanlines effect */}

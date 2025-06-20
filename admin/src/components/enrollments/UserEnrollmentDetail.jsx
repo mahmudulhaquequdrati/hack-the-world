@@ -449,11 +449,11 @@ const UserEnrollmentDetail = ({ user, onBack }) => {
           {enrollments.map((enrollment) => {
             const statusColors = getStatusColor(enrollment.status);
             const StatusIcon = () => getStatusIcon(enrollment.status);
-            const isExpanded = expandedEnrollments.has(enrollment.id);
+            const isExpanded = expandedEnrollments.has(enrollment._id);
 
             return (
               <div
-                key={enrollment.id}
+                key={enrollment._id}
                 className={`relative overflow-hidden rounded-xl border-2 p-6 ${statusColors.border} bg-gradient-to-br from-gray-900/80 to-black/80`}
               >
                 <div
@@ -822,7 +822,7 @@ const UserEnrollmentDetail = ({ user, onBack }) => {
                       {/* View Details Button */}
                       <div className="mt-4 pt-4 border-t border-gray-600/30">
                         <button
-                          onClick={() => toggleEnrollmentExpansion(enrollment.id)}
+                          onClick={() => toggleEnrollmentExpansion(enrollment._id)}
                           className="flex items-center justify-center w-full px-3 py-2 text-xs font-mono text-gray-400 hover:text-green-400 border border-gray-600/50 hover:border-green-400/50 rounded transition-colors"
                         >
                           <span className="mr-2">

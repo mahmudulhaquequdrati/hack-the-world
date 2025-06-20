@@ -175,7 +175,7 @@ const getContentByModuleGroupedOptimized = asyncHandler(
 
     const groupedContent = await Content.getByModuleGroupedOptimized(
       moduleId,
-      req.user.id
+      req.user._id
     );
 
     res.status(200).json({
@@ -429,7 +429,7 @@ const permanentDeleteContent = asyncHandler(async (req, res, next) => {
  */
 const getContentWithModuleAndProgress = asyncHandler(async (req, res, next) => {
   const { id: contentId } = req.params;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   // Validate content ObjectId format
   if (!mongoose.Types.ObjectId.isValid(contentId)) {
@@ -438,7 +438,7 @@ const getContentWithModuleAndProgress = asyncHandler(async (req, res, next) => {
 
   // Get content with module populated
   const content = await Content.findById(contentId)
-    .populate("moduleId", "id title description icon color difficulty")
+    .populate("moduleId", "_id title description icon color difficulty")
     .lean();
 
   if (!content) {
@@ -481,7 +481,7 @@ const getContentWithModuleAndProgress = asyncHandler(async (req, res, next) => {
   // Format the response
   const response = {
     content: {
-      id: content._id.toString(),
+      _id: content._id.toString(),
       title: content.title,
       description: content.description,
       type: content.type,
@@ -491,7 +491,7 @@ const getContentWithModuleAndProgress = asyncHandler(async (req, res, next) => {
       section: content.section,
     },
     module: {
-      id: content.moduleId._id.toString(),
+      _id: content.moduleId._id.toString(),
       title: content.moduleId.title,
       description: content.moduleId.description,
       icon: content.moduleId.icon,
@@ -499,7 +499,7 @@ const getContentWithModuleAndProgress = asyncHandler(async (req, res, next) => {
       difficulty: content.moduleId.difficulty,
     },
     progress: {
-      id: progress.id,
+      _id: progress._id,
       status: progress.status,
       progressPercentage: progress.progressPercentage,
       startedAt: progress.startedAt,

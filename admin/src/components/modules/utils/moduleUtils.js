@@ -77,7 +77,7 @@ export const prepareModuleOrders = (modulesWithPhases) => {
   modulesWithPhases.forEach((phase) => {
     phase.modules.forEach((module) => {
       moduleOrders.push({
-        id: module.id,
+        _id: module._id,
         order: module.order,
       });
     });
@@ -172,7 +172,7 @@ export const optimisticUpdate = (prevModules, prevModulesWithPhases, moduleData,
     case 'update':
       // Update modules array
       updatedModules = prevModules.map(module =>
-        module.id === moduleId
+        module._id === moduleId
           ? { ...module, ...moduleData }
           : module
       );
@@ -181,7 +181,7 @@ export const optimisticUpdate = (prevModules, prevModulesWithPhases, moduleData,
       updatedModulesWithPhases = prevModulesWithPhases.map(phase => ({
         ...phase,
         modules: phase.modules.map(module =>
-          module.id === moduleId
+          module._id === moduleId
             ? { ...module, ...moduleData }
             : module
         )
@@ -194,7 +194,7 @@ export const optimisticUpdate = (prevModules, prevModulesWithPhases, moduleData,
 
       // Add to modulesWithPhases array
       updatedModulesWithPhases = prevModulesWithPhases.map(phase =>
-        phase.id === moduleData.phaseId
+        phase._id === moduleData.phaseId
           ? {
               ...phase,
               modules: [...phase.modules, moduleData].sort((a, b) => a.order - b.order)
@@ -205,12 +205,12 @@ export const optimisticUpdate = (prevModules, prevModulesWithPhases, moduleData,
 
     case 'delete':
       // Remove from modules array
-      updatedModules = prevModules.filter(module => module.id !== moduleId);
+      updatedModules = prevModules.filter(module => module._id !== moduleId);
 
       // Remove from modulesWithPhases array
       updatedModulesWithPhases = prevModulesWithPhases.map(phase => ({
         ...phase,
-        modules: phase.modules.filter(module => module.id !== moduleId)
+        modules: phase.modules.filter(module => module._id !== moduleId)
       }));
       break;
 
@@ -219,7 +219,7 @@ export const optimisticUpdate = (prevModules, prevModulesWithPhases, moduleData,
       
       // Update modules array
       updatedModules = prevModules.map(module =>
-        moduleIds.includes(module.id)
+        moduleIds.includes(module._id)
           ? { ...module, ...moduleData }
           : module
       );
@@ -228,7 +228,7 @@ export const optimisticUpdate = (prevModules, prevModulesWithPhases, moduleData,
       updatedModulesWithPhases = prevModulesWithPhases.map(phase => ({
         ...phase,
         modules: phase.modules.map(module =>
-          moduleIds.includes(module.id)
+          moduleIds.includes(module._id)
             ? { ...module, ...moduleData }
             : module
         )
@@ -300,7 +300,7 @@ export const processModulesWithPhasesResponse = (response, currentModulesWithPha
 
     // Initialize phase map with current phases
     currentModulesWithPhases.forEach((phase) => {
-      phaseMap.set(phase.id, {
+      phaseMap.set(phase._id, {
         ...phase,
         modules: [],
       });
@@ -308,7 +308,7 @@ export const processModulesWithPhasesResponse = (response, currentModulesWithPha
 
     // Add modules to their respective phases
     response.data.forEach((module) => {
-      const phaseId = module.phaseId || module.phase?._id || module.phase?.id;
+      const phaseId = module.phaseId || module.phase?._id;
       if (phaseId && phaseMap.has(phaseId)) {
         phaseMap.get(phaseId).modules.push(module);
       }

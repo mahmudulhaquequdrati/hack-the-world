@@ -160,10 +160,10 @@ const EnrolledCoursePage = () => {
     const moduleData = currentContentData.data.module;
     const sections = Object.entries(groupedContentData.data).map(
       ([sectionTitle, items], index) => ({
-        id: `section-${index}`,
+        _id: `section-${index}`,
         title: sectionTitle,
         lessons: items.map((item, itemIndex) => ({
-          id: `lesson-${index}-${itemIndex}`,
+          _id: `lesson-${index}-${itemIndex}`,
           contentId: item.contentId,
           title: item.contentTitle,
           duration: item.duration ? `${item.duration}:00` : "15:00",
@@ -290,7 +290,7 @@ const EnrolledCoursePage = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [
-    currentContentData?.data?.content?.id,
+    currentContentData?.data?.content?._id,
     courseData,
     isNavigating,
     isCompleting,
@@ -602,13 +602,13 @@ const EnrolledCoursePage = () => {
 
     const modes = [
       {
-        id: "terminal",
+        _id: "terminal",
         name: "Terminal",
         icon: Terminal,
         description: "AI-enhanced terminal for cybersecurity commands",
       },
       {
-        id: "chat",
+        _id: "chat",
         name: "AI Assistant",
         icon: Brain,
         description: "Chat with AI learning assistant",
@@ -617,7 +617,7 @@ const EnrolledCoursePage = () => {
 
     if (lessonTitle.includes("threat")) {
       modes.push({
-        id: "threat-intel",
+        _id: "threat-intel",
         name: "Threat Intel",
         icon: Target,
         description: "Threat intelligence analysis",
@@ -626,7 +626,7 @@ const EnrolledCoursePage = () => {
 
     if (lessonTitle.includes("cia") || lessonTitle.includes("triad")) {
       modes.push({
-        id: "risk-calc",
+        _id: "risk-calc",
         name: "Risk Calculator",
         icon: Calculator,
         description: "Risk assessment tools",
@@ -828,7 +828,9 @@ const EnrolledCoursePage = () => {
             />
           ) : (
             <div className="text-center text-green-400 font-mono p-4 sm:p-8">
-              <div className="mb-4 text-sm sm:text-base">No content available</div>
+              <div className="mb-4 text-sm sm:text-base">
+                No content available
+              </div>
               <div className="text-xs sm:text-sm text-green-400/60">
                 This lesson type is not yet supported.
               </div>
@@ -872,10 +874,10 @@ const EnrolledCoursePage = () => {
           ),
           sections: Object.entries(groupedContentData?.data || {}).map(
             ([sectionTitle, items], index) => ({
-              id: `section-${index}`,
+              _id: `section-${index}`,
               title: sectionTitle,
               lessons: items.map((item) => ({
-                id: item.contentId,
+                _id: item.contentId,
                 contentId: item.contentId,
                 title: item.contentTitle,
                 duration: item.duration ? `${item.duration}:00` : "15:00",

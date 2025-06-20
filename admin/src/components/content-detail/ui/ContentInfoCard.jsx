@@ -38,8 +38,8 @@ const ContentInfoCard = ({
     {
       label: "Module",
       value: module ? module.title : "Not assigned",
-      isLink: Boolean(module?.id),
-      linkTo: module?.id ? `/modules/${module.id}` : null,
+      isLink: Boolean(module?._id),
+      linkTo: module?._id ? `/modules/${module._id}` : null,
     },
     {
       label: "Status",

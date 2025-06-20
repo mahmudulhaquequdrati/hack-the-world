@@ -39,7 +39,6 @@ describe("ModuleDetailView", () => {
   });
 
   const mockModule = {
-    id: "test-module-id",
     _id: "test-module-id",
     title: "Test Module",
     description: "This is a test module for cybersecurity learning",
@@ -56,7 +55,6 @@ describe("ModuleDetailView", () => {
   };
 
   const mockPhase = {
-    id: "test-phase-id",
     _id: "test-phase-id",
     title: "Foundation Phase",
     description: "Learn cybersecurity fundamentals",
@@ -65,7 +63,6 @@ describe("ModuleDetailView", () => {
 
   const mockContent = [
     {
-      id: "content-1",
       _id: "content-1",
       title: "Introduction Video",
       description: "Learn the basics of cybersecurity",
@@ -75,7 +72,6 @@ describe("ModuleDetailView", () => {
       moduleId: "test-module-id",
     },
     {
-      id: "content-2",
       _id: "content-2",
       title: "Security Lab",
       description: "Practice penetration testing",
@@ -85,7 +81,6 @@ describe("ModuleDetailView", () => {
       moduleId: "test-module-id",
     },
     {
-      id: "content-3",
       _id: "content-3",
       title: "Capture the Flag",
       description: "Solve security challenges",
@@ -95,7 +90,6 @@ describe("ModuleDetailView", () => {
       moduleId: "test-module-id",
     },
     {
-      id: "content-4",
       _id: "content-4",
       title: "Security Guide",
       description: "Comprehensive security documentation",

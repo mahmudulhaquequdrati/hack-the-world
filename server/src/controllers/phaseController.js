@@ -147,16 +147,16 @@ const deletePhase = asyncHandler(async (req, res, next) => {
 // @route   PUT /api/phases/batch-order
 // @access  Private/Admin
 const batchUpdatePhaseOrder = asyncHandler(async (req, res, next) => {
-  const { phaseOrders } = req.body; // Array of { id, order }
+  const { phaseOrders } = req.body; // Array of { _id, order }
 
   if (!Array.isArray(phaseOrders) || phaseOrders.length === 0) {
     return next(new ErrorResponse("Phase orders array is required", 400));
   }
 
   // Validate all phase IDs and orders
-  for (const { id, order } of phaseOrders) {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return next(new ErrorResponse(`Invalid phase ID format: ${id}`, 400));
+  for (const { _id, order } of phaseOrders) {
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      return next(new ErrorResponse(`Invalid phase ID format: ${_id}`, 400));
     }
     if (typeof order !== "number" || order < 1) {
       return next(new ErrorResponse(`Invalid order value: ${order}`, 400));
@@ -164,7 +164,7 @@ const batchUpdatePhaseOrder = asyncHandler(async (req, res, next) => {
   }
 
   // Get all phase IDs and verify they exist
-  const phaseIds = phaseOrders.map(item => item.id);
+  const phaseIds = phaseOrders.map(item => item._id);
   const existingPhases = await Phase.find({ _id: { $in: phaseIds } });
   
   if (existingPhases.length !== phaseIds.length) {
@@ -177,9 +177,9 @@ const batchUpdatePhaseOrder = asyncHandler(async (req, res, next) => {
   try {
     await session.withTransaction(async () => {
       // First, set all phases to temporary negative orders to avoid conflicts
-      const tempUpdatePromises = phaseOrders.map(({ id }, index) =>
+      const tempUpdatePromises = phaseOrders.map(({ _id }, index) =>
         Phase.findByIdAndUpdate(
-          id,
+          _id,
           { order: -(index + 1) }, // Use negative numbers temporarily
           { session }
         )
@@ -187,9 +187,9 @@ const batchUpdatePhaseOrder = asyncHandler(async (req, res, next) => {
       await Promise.all(tempUpdatePromises);
 
       // Then update with the actual orders
-      const finalUpdatePromises = phaseOrders.map(({ id, order }) =>
+      const finalUpdatePromises = phaseOrders.map(({ _id, order }) =>
         Phase.findByIdAndUpdate(
-          id,
+          _id,
           { order },
           { new: true, runValidators: true, session }
         )

@@ -31,7 +31,7 @@ vi.mock("react-router-dom", async () => {
 
 // Test data
 const mockContent = {
-  id: "test-content-id",
+  _id: "test-content-id",
   title: "Test Content",
   description: "This is a test content description",
   type: "video",
@@ -41,12 +41,12 @@ const mockContent = {
   instructions: "Watch this video to learn the basics",
   resources: ["Resource 1", "Resource 2"],
   module: {
-    id: "test-module-id",
+    _id: "test-module-id",
   },
 };
 
 const mockModule = {
-  id: "test-module-id",
+  _id: "test-module-id",
   title: "Test Module",
   description: "Test module description",
   difficulty: "beginner",
@@ -54,20 +54,20 @@ const mockModule = {
 };
 
 const mockPhase = {
-  id: "test-phase-id",
+  _id: "test-phase-id",
   title: "Test Phase",
   description: "Test phase description",
 };
 
 const mockRelatedContent = [
   {
-    id: "related-1",
+    _id: "related-1",
     title: "Related Content 1",
     type: "lab",
     duration: 45,
   },
   {
-    id: "related-2",
+    _id: "related-2",
     title: "Related Content 2",
     type: "document",
     duration: 15,
@@ -220,7 +220,7 @@ describe("ContentDetailView", () => {
 
   it("should handle missing optional fields gracefully", async () => {
     const minimalContent = {
-      id: "test-content-id",
+      _id: "test-content-id",
       title: "Minimal Content",
       description: "Basic content",
       type: "document",

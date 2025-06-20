@@ -47,7 +47,7 @@ const useContentDragAndDrop = (setHasChanges, setSuccess) => {
     e.preventDefault();
     if (
       draggedContent &&
-      draggedContent.id !== content.id &&
+      draggedContent._id !== content._id &&
       draggedContent.moduleId === content.moduleId &&
       draggedContent.section === content.section
     ) {
@@ -67,7 +67,7 @@ const useContentDragAndDrop = (setHasChanges, setSuccess) => {
 
     if (
       !draggedContent ||
-      draggedContent.id === targetContent.id ||
+      draggedContent._id === targetContent._id ||
       draggedContent.moduleId !== targetContent.moduleId ||
       draggedContent.section !== targetContent.section
     ) {
@@ -89,9 +89,9 @@ const useContentDragAndDrop = (setHasChanges, setSuccess) => {
 
     // Find indices
     const draggedIndex = sortedContent.findIndex(
-      (c) => c.id === draggedContent.id
+      (c) => c._id === draggedContent._id
     );
-    const targetIndex = sortedContent.findIndex((c) => c.id === targetContent.id);
+    const targetIndex = sortedContent.findIndex((c) => c._id === targetContent._id);
 
     if (draggedIndex === -1 || targetIndex === -1) return;
 
@@ -117,7 +117,7 @@ const useContentDragAndDrop = (setHasChanges, setSuccess) => {
         moduleId: draggedContent.moduleId,
         section: draggedContent.section,
         contentOrders: updatedContent.map(content => ({
-          contentId: content.id,
+          contentId: content._id,
           order: content.order
         }))
       }

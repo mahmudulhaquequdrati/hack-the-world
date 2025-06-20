@@ -7,7 +7,7 @@ const AppError = require("../utils/appError");
  * GET /api/streak/status
  */
 const getStreakStatus = catchAsync(async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user._id);
   
   if (!user) {
     return res.status(404).json({
@@ -30,7 +30,7 @@ const getStreakStatus = catchAsync(async (req, res) => {
  * POST /api/streak/update
  */
 const updateStreak = catchAsync(async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user._id);
   
   if (!user) {
     return res.status(404).json({
@@ -73,7 +73,7 @@ const getStreakLeaderboard = catchAsync(async (req, res) => {
   .limit(parseInt(limit));
 
   const leaderboard = users.map(user => ({
-    id: user.id,
+    _id: user._id,
     username: user.username,
     displayName: user.profile.displayName,
     avatar: user.profile.avatar,

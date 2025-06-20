@@ -95,7 +95,7 @@ export const useContentManager = () => {
       return prevData.map(phase => ({
         ...phase,
         modules: phase.modules.map(module => {
-          if (module.id === moduleId) {
+          if (module._id === moduleId) {
             // Replace content for this section
             const otherContent = module.content.filter(c => c.section !== section);
             

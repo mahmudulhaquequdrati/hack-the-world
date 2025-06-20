@@ -9,7 +9,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 // API response types
 interface ApiModuleResponse {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   icon: string;
@@ -25,7 +25,7 @@ interface ApiModuleResponse {
     estimatedHours: number;
   };
   phase?: {
-    id: string;
+    _id: string;
     title: string;
     description: string;
     icon: string;
@@ -148,11 +148,11 @@ export const apiSlice = createApi({
       {
         success: boolean;
         data: {
-          id: string;
+          _id: string;
           status: string;
           progressPercentage: number;
           enrolledAt: string;
-          moduleId: { id: string; title: string };
+          moduleId: { _id: string; title: string };
         } | null;
       },
       string
@@ -161,11 +161,11 @@ export const apiSlice = createApi({
       transformResponse: (response: {
         success: boolean;
         data?: {
-          id: string;
+          _id: string;
           status: string;
           progressPercentage: number;
           enrolledAt: string;
-          moduleId: { id: string; title: string };
+          moduleId: { _id: string; title: string };
         };
         message?: string;
       }) => {
@@ -201,7 +201,7 @@ export const apiSlice = createApi({
           updatedAt: string;
           isCompleted: boolean;
           isActive: boolean;
-          id: string;
+          _id: string;
         }>;
       },
       void
@@ -221,10 +221,10 @@ export const apiSlice = createApi({
         success: boolean;
         message: string;
         data: {
-          id: string;
+          _id: string;
           userId: string;
           contentId: {
-            id: string;
+            _id: string;
             title: string;
             type: string;
             section: string;
@@ -264,7 +264,7 @@ export const apiSlice = createApi({
           };
           moduleProgress: Array<{
             module: {
-              id: string;
+              _id: string;
               title: string;
               description: string;
               difficulty: string;
@@ -307,7 +307,7 @@ export const apiSlice = createApi({
         message: string;
         data: {
           module: {
-            id: string;
+            _id: string;
             title: string;
             description: string;
             difficulty: string;
@@ -319,7 +319,7 @@ export const apiSlice = createApi({
             progressPercentage: number;
           };
           content: Array<{
-            id: string;
+            _id: string;
             title: string;
             type: string;
             section: string;
@@ -362,19 +362,19 @@ export const apiSlice = createApi({
         message: string;
         data: {
           content: Array<{
-            id: string;
+            _id: string;
             title: string;
             description: string;
             section: string;
             duration: number;
             module: {
-              id: string;
+              _id: string;
               title: string;
               difficulty: string;
               phase: string;
             };
             progress: {
-              id: string;
+              _id: string;
               status: string;
               progressPercentage: number;
               startedAt: string;
@@ -392,7 +392,7 @@ export const apiSlice = createApi({
           };
           modules: Array<{
             module: {
-              id: string;
+              _id: string;
               title: string;
             };
             enrollment: {
@@ -434,7 +434,7 @@ export const apiSlice = createApi({
     getModuleOverview: builder.query<
       {
         [sectionName: string]: Array<{
-          id: string;
+          _id: string;
           type: "video" | "lab" | "game" | "text" | "quiz";
           title: string;
           description: string;
@@ -449,7 +449,7 @@ export const apiSlice = createApi({
         message: string;
         data: {
           [sectionName: string]: Array<{
-            id: string;
+            _id: string;
             type: "video" | "lab" | "game" | "text" | "quiz";
             title: string;
             description: string;
@@ -497,7 +497,7 @@ export const apiSlice = createApi({
         message: string;
         data: {
           content: {
-            id: string;
+            _id: string;
             title: string;
             description?: string;
             type: "video" | "lab" | "game" | "document";
@@ -507,7 +507,7 @@ export const apiSlice = createApi({
             section: string;
           };
           module: {
-            id: string;
+            _id: string;
             title: string;
             description: string;
             icon: string;
@@ -515,7 +515,7 @@ export const apiSlice = createApi({
             difficulty: string;
           };
           progress: {
-            id?: string;
+            _id?: string;
             status: "not-started" | "in-progress" | "completed";
             progressPercentage: number;
             startedAt?: string;
@@ -542,7 +542,7 @@ export const apiSlice = createApi({
       {
         success: boolean;
         data: Array<{
-          id: string;
+          _id: string;
           slug: string;
           title: string;
           description: string;
@@ -628,11 +628,11 @@ export const apiSlice = createApi({
             updatedAt: string;
             isCompleted: boolean;
             isActive: boolean;
-            id: string;
+            _id: string;
           }>;
           phases: Phase[];
           achievements: Array<{
-            id: string;
+            _id: string;
             slug: string;
             title: string;
             description: string;
@@ -684,7 +684,7 @@ export const apiSlice = createApi({
         message: string;
         data: {
           course: {
-            id: string;
+            _id: string;
             title: string;
             description: string;
             icon: string;
@@ -701,7 +701,7 @@ export const apiSlice = createApi({
               estimatedHours: number;
             };
             phase?: {
-              id: string;
+              _id: string;
               title: string;
               description: string;
               icon: string;
@@ -714,15 +714,15 @@ export const apiSlice = createApi({
             updatedAt?: string;
           };
           enrollment: {
-            id: string;
+            _id: string;
             status: string;
             progressPercentage: number;
             enrolledAt: string;
-            moduleId: { id: string; title: string };
+            moduleId: { _id: string; title: string };
           } | null;
           moduleOverview?: {
             [sectionName: string]: Array<{
-              id: string;
+              _id: string;
               type: "video" | "lab" | "game" | "text" | "quiz";
               title: string;
               description: string;

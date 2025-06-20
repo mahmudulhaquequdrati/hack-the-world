@@ -2,7 +2,7 @@ import { ContentContainer } from "./ContentContainer";
 import { LoadingContent } from "./LoadingContent";
 
 interface ContentItem {
-  id: string;
+  _id: string;
   name: string;
   description: string;
 }
@@ -24,7 +24,7 @@ export const InteractiveContent = ({
   onClose,
   loadingTitle,
 }: InteractiveContentProps) => {
-  const item = items.find((item) => item.id === activeItemId);
+  const item = items.find((item) => item._id === activeItemId);
 
   if (!item) return null;
 

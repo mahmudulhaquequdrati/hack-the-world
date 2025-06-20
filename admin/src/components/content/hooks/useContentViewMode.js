@@ -50,11 +50,11 @@ export const useContentViewMode = () => {
 
       const hierarchical = phasesData.map((phase) => {
         const phaseModules = modulesData.filter(
-          (module) => module.phaseId === phase.id
+          (module) => module.phaseId === phase._id
         );
         const modulesWithContent = phaseModules.map((module) => {
           const moduleContent = contentData.filter(
-            (content) => content.moduleId === module.id
+            (content) => content.moduleId === module._id
           );
           return {
             ...module,
@@ -72,10 +72,10 @@ export const useContentViewMode = () => {
       setHierarchicalData(hierarchical);
       
       // Auto-expand all phases AND all modules by default
-      const allPhaseIds = new Set(hierarchical.map(phase => phase.id));
+      const allPhaseIds = new Set(hierarchical.map(phase => phase._id));
       const allModuleIds = new Set(
         hierarchical.flatMap(phase => 
-          phase.modules.map(module => module.id)
+          phase.modules.map(module => module._id)
         )
       );
 
@@ -111,7 +111,7 @@ export const useContentViewMode = () => {
       const grouped = {};
       modulesData.forEach((module) => {
         const moduleContent = contentData.filter(
-          (content) => content.moduleId === module.id
+          (content) => content.moduleId === module._id
         );
         if (moduleContent.length > 0) {
           grouped[module.title] = moduleContent;

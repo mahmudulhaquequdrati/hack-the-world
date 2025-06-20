@@ -31,7 +31,7 @@ const usePhaseDragAndDrop = (phases, setPhases, setHasChanges, setSuccess) => {
 
   const handleDragEnter = (e, phase) => {
     e.preventDefault();
-    if (draggedPhase && draggedPhase.id !== phase.id) {
+    if (draggedPhase && draggedPhase._id !== phase._id) {
       setDragOverPhase(phase);
     }
   };
@@ -46,7 +46,7 @@ const usePhaseDragAndDrop = (phases, setPhases, setHasChanges, setSuccess) => {
   const handleDrop = (e, targetPhase) => {
     e.preventDefault();
 
-    if (!draggedPhase || draggedPhase.id === targetPhase.id) {
+    if (!draggedPhase || draggedPhase._id === targetPhase._id) {
       return;
     }
 
@@ -55,9 +55,9 @@ const usePhaseDragAndDrop = (phases, setPhases, setHasChanges, setSuccess) => {
 
     // Find indices
     const draggedIndex = sortedPhases.findIndex(
-      (p) => p.id === draggedPhase.id
+      (p) => p._id === draggedPhase._id
     );
-    const targetIndex = sortedPhases.findIndex((p) => p.id === targetPhase.id);
+    const targetIndex = sortedPhases.findIndex((p) => p._id === targetPhase._id);
 
     if (draggedIndex === -1 || targetIndex === -1) return;
 

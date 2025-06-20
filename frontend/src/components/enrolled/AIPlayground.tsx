@@ -110,7 +110,7 @@ const AIPlayground = ({
   // Ensure active tab is visible
   useEffect(() => {
     const activeIndex = playgroundModes.findIndex(
-      (mode) => mode.id === activeMode
+      (mode) => mode._id === activeMode
     );
     if (activeIndex !== -1) {
       setTabStartIndex((prevIndex) => {
@@ -230,10 +230,10 @@ const AIPlayground = ({
             <div className="flex-1 flex gap-1 min-w-0">
               {visibleTabs.map((mode) => (
                 <button
-                  key={mode.id}
-                  onClick={() => onModeChange(mode.id)}
+                  key={mode._id}
+                  onClick={() => onModeChange(mode._id)}
                   className={`flex items-center justify-center px-2 py-1.5 rounded text-xs sm:text-sm font-medium transition-all duration-200 flex-1 min-w-0 h-8 ${
-                    activeMode === mode.id
+                    activeMode === mode._id
                       ? "bg-green-400 text-black"
                       : "text-green-400 hover:bg-green-400/10"
                   }`}
@@ -405,12 +405,12 @@ const AIPlayground = ({
           {/* Generic TabsContent for dynamic modes */}
           {playgroundModes
             .filter(
-              (mode) => !["terminal", "chat", "analysis"].includes(mode.id)
+              (mode) => !["terminal", "chat", "analysis"].includes(mode._id)
             )
             .map((mode) => (
               <TabsContent
-                key={mode.id}
-                value={mode.id}
+                key={mode._id}
+                value={mode._id}
                 className="h-[calc(100%-60px)]"
               >
                 <div className="bg-black border border-green-400/30 rounded-lg h-full flex flex-col">

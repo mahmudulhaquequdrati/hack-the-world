@@ -25,42 +25,42 @@ const useContentDetailNavigation = (content, module, phase) => {
     }, [navigate]),
 
     goToModule: useCallback(() => {
-      if (module?.id) {
-        navigate(`/modules/${module.id}`);
+      if (module?._id) {
+        navigate(`/modules/${module._id}`);
       }
     }, [navigate, module]),
 
     goToPhase: useCallback(() => {
-      if (phase?.id) {
-        navigate(`/phases/${phase.id}`);
+      if (phase?._id) {
+        navigate(`/phases/${phase._id}`);
       }
     }, [navigate, phase]),
 
     goToEditContent: useCallback(() => {
-      if (content?.id) {
-        navigate(`/content/${content.id}/edit`);
+      if (content?._id) {
+        navigate(`/content/${content._id}/edit`);
       }
     }, [navigate, content]),
 
     goToModuleContent: useCallback(() => {
-      if (module?.id) {
-        navigate(`/content?moduleId=${module.id}`);
+      if (module?._id) {
+        navigate(`/content?moduleId=${module._id}`);
       }
     }, [navigate, module]),
 
     goToPhaseContent: useCallback(() => {
-      if (phase?.id) {
-        navigate(`/content?phaseId=${phase.id}`);
+      if (phase?._id) {
+        navigate(`/content?phaseId=${phase._id}`);
       }
     }, [navigate, phase]),
 
     goToCreateContent: useCallback(() => {
       const params = new URLSearchParams();
-      if (module?.id) {
-        params.set('moduleId', module.id);
+      if (module?._id) {
+        params.set('moduleId', module._id);
       }
-      if (phase?.id) {
-        params.set('phaseId', phase.id);
+      if (phase?._id) {
+        params.set('phaseId', phase._id);
       }
       navigate(`/content/create?${params.toString()}`);
     }, [navigate, module, phase]),
@@ -87,10 +87,10 @@ const useContentDetailNavigation = (content, module, phase) => {
    * Quick action configurations
    */
   const quickActions = useMemo(() => {
-    if (!content?.id) return [];
+    if (!content?._id) return [];
     
-    return getContentQuickActions(content.id, module?.id, phase?.id);
-  }, [content?.id, module?.id, phase?.id]);
+    return getContentQuickActions(content._id, module?._id, phase?._id);
+  }, [content?._id, module?._id, phase?._id]);
 
   /**
    * Enhanced quick actions with handlers
@@ -146,8 +146,8 @@ const useContentDetailNavigation = (content, module, phase) => {
      * Navigate to content in same module
      */
     goToModuleSiblings: useCallback(() => {
-      if (module?.id) {
-        navigate(`/content?moduleId=${module.id}&exclude=${content?.id}`);
+      if (module?._id) {
+        navigate(`/content?moduleId=${module._id}&exclude=${content?._id}`);
       }
     }, [navigate, module, content]),
 
@@ -155,8 +155,8 @@ const useContentDetailNavigation = (content, module, phase) => {
      * Navigate to content in same phase
      */
     goToPhaseSiblings: useCallback(() => {
-      if (phase?.id) {
-        navigate(`/content?phaseId=${phase.id}&exclude=${content?.id}`);
+      if (phase?._id) {
+        navigate(`/content?phaseId=${phase._id}&exclude=${content?._id}`);
       }
     }, [navigate, phase, content]),
 
@@ -167,11 +167,11 @@ const useContentDetailNavigation = (content, module, phase) => {
       const params = new URLSearchParams();
       params.set('type', contentType);
       
-      if (module?.id) {
-        params.set('moduleId', module.id);
+      if (module?._id) {
+        params.set('moduleId', module._id);
       }
-      if (phase?.id) {
-        params.set('phaseId', phase.id);
+      if (phase?._id) {
+        params.set('phaseId', phase._id);
       }
       
       navigate(`/content?${params.toString()}`);
@@ -253,17 +253,17 @@ const useContentDetailNavigation = (content, module, phase) => {
     /**
      * Check if navigation to module is possible
      */
-    canNavigateToModule: Boolean(module?.id),
+    canNavigateToModule: Boolean(module?._id),
 
     /**
      * Check if navigation to phase is possible
      */
-    canNavigateToPhase: Boolean(phase?.id),
+    canNavigateToPhase: Boolean(phase?._id),
 
     /**
      * Check if editing content is possible
      */
-    canEditContent: Boolean(content?.id),
+    canEditContent: Boolean(content?._id),
 
     /**
      * Check if viewing content URL is possible
@@ -273,17 +273,17 @@ const useContentDetailNavigation = (content, module, phase) => {
     /**
      * Check if creating related content is possible
      */
-    canCreateRelatedContent: Boolean(module?.id || phase?.id),
+    canCreateRelatedContent: Boolean(module?._id || phase?._id),
 
     /**
      * Check if content belongs to a module
      */
-    hasModule: Boolean(module?.id),
+    hasModule: Boolean(module?._id),
 
     /**
      * Check if content belongs to a phase
      */
-    hasPhase: Boolean(phase?.id),
+    hasPhase: Boolean(phase?._id),
   };
 
   /**

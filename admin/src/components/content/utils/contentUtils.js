@@ -94,7 +94,7 @@ export const handleApiError = (error, operation = 'save') => {
  */
 export const optimisticUpdate = (contentArray, updatedContent) => {
   return contentArray.map(item =>
-    item.id === updatedContent.id ? { ...item, ...updatedContent } : item
+    item._id === updatedContent._id ? { ...item, ...updatedContent } : item
   );
 };
 
@@ -115,7 +115,7 @@ export const optimisticAdd = (contentArray, newContent) => {
  * @returns {Array} - Updated content array
  */
 export const optimisticRemove = (contentArray, contentId) => {
-  return contentArray.filter(item => item.id !== contentId);
+  return contentArray.filter(item => item._id !== contentId);
 };
 
 /**
@@ -198,7 +198,7 @@ export const updateHierarchicalData = (hierarchicalData, contentData, operation)
   return hierarchicalData.map(phase => ({
     ...phase,
     modules: phase.modules.map(module => {
-      if (module.id === contentData.moduleId) {
+      if (module._id === contentData.moduleId) {
         switch (operation) {
           case 'add':
             return {
@@ -210,13 +210,13 @@ export const updateHierarchicalData = (hierarchicalData, contentData, operation)
             return {
               ...module,
               content: module.content.map(item =>
-                item.id === contentData.id ? { ...item, ...contentData } : item
+                item._id === contentData._id ? { ...item, ...contentData } : item
               )
             };
           case 'remove':
             return {
               ...module,
-              content: module.content.filter(item => item.id !== contentData.id),
+              content: module.content.filter(item => item._id !== contentData._id),
               contentCount: Math.max(0, module.contentCount - 1)
             };
           default:
@@ -242,7 +242,7 @@ export const updateGroupedData = (groupedData, contentData, operation, groupBy, 
   const newGroupedData = { ...groupedData };
   
   if (groupBy === 'module') {
-    const module = modules.find(m => m.id === contentData.moduleId);
+    const module = modules.find(m => m._id === contentData.moduleId);
     const groupKey = module?.title || 'Unknown Module';
     
     switch (operation) {
@@ -255,13 +255,13 @@ export const updateGroupedData = (groupedData, contentData, operation, groupBy, 
       case 'update':
         Object.keys(newGroupedData).forEach(key => {
           newGroupedData[key] = newGroupedData[key].map(item =>
-            item.id === contentData.id ? { ...item, ...contentData } : item
+            item._id === contentData._id ? { ...item, ...contentData } : item
           );
         });
         break;
       case 'remove':
         Object.keys(newGroupedData).forEach(key => {
-          newGroupedData[key] = newGroupedData[key].filter(item => item.id !== contentData.id);
+          newGroupedData[key] = newGroupedData[key].filter(item => item._id !== contentData._id);
           if (newGroupedData[key].length === 0) {
             delete newGroupedData[key];
           }
@@ -282,13 +282,13 @@ export const updateGroupedData = (groupedData, contentData, operation, groupBy, 
       case 'update':
         Object.keys(newGroupedData).forEach(key => {
           newGroupedData[key] = newGroupedData[key].map(item =>
-            item.id === contentData.id ? { ...item, ...contentData } : item
+            item._id === contentData._id ? { ...item, ...contentData } : item
           );
         });
         break;
       case 'remove':
         Object.keys(newGroupedData).forEach(key => {
-          newGroupedData[key] = newGroupedData[key].filter(item => item.id !== contentData.id);
+          newGroupedData[key] = newGroupedData[key].filter(item => item._id !== contentData._id);
           if (newGroupedData[key].length === 0) {
             delete newGroupedData[key];
           }
@@ -427,7 +427,7 @@ export const sortBy = (array, field, direction = 'asc') => {
  * @returns {Object} - Upload item template
  */
 export const createUploadItemTemplate = () => ({
-  id: Date.now() + Math.random(),
+  _id: Date.now() + Math.random(),
   type: "video",
   title: "",
   description: "",

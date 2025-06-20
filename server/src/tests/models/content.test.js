@@ -24,7 +24,7 @@ describe("Content Model", () => {
 
     // Create test module
     testModule = await Module.create({
-      phaseId: testPhase.id,
+      phaseId: testPhase._id,
       title: "Test Module",
       description: "Test module description",
       icon: "TestIcon",
@@ -51,7 +51,7 @@ describe("Content Model", () => {
   describe("Content Creation", () => {
     it("should create a valid video content", async () => {
       const videoData = {
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "video",
         title: "Test Video",
         description: "Test video description",
@@ -71,7 +71,7 @@ describe("Content Model", () => {
 
     it("should create a valid lab content", async () => {
       const labData = {
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "lab",
         title: "Test Lab",
         description: "Test lab description",
@@ -92,7 +92,7 @@ describe("Content Model", () => {
 
     it("should create a valid game content", async () => {
       const gameData = {
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "game",
         title: "Test Game",
         description: "Test game description",
@@ -115,7 +115,7 @@ describe("Content Model", () => {
 
     it("should create a valid document content", async () => {
       const documentData = {
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "document",
         title: "Test Document",
         description: "Test document description",
@@ -139,7 +139,7 @@ describe("Content Model", () => {
   describe("Content Validation", () => {
     it("should require URL for video content", async () => {
       const videoData = {
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "video",
         title: "Test Video",
         description: "Test video description",
@@ -154,7 +154,7 @@ describe("Content Model", () => {
 
     it("should require instructions for lab content", async () => {
       const labData = {
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "lab",
         title: "Test Lab",
         description: "Test lab description",
@@ -169,7 +169,7 @@ describe("Content Model", () => {
 
     it("should require instructions for game content", async () => {
       const gameData = {
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "game",
         title: "Test Game",
         description: "Test game description",
@@ -184,7 +184,7 @@ describe("Content Model", () => {
 
     it("should validate URL format for videos", async () => {
       const videoData = {
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "video",
         title: "Test Video",
         description: "Test video description",
@@ -203,7 +203,7 @@ describe("Content Model", () => {
       // Create test content
       const contentItems = [
         {
-          moduleId: testModule.id,
+          moduleId: testModule._id,
           type: "video",
           title: "Video 1",
           description: "First video",
@@ -212,7 +212,7 @@ describe("Content Model", () => {
           duration: 15,
         },
         {
-          moduleId: testModule.id,
+          moduleId: testModule._id,
           type: "lab",
           title: "Lab 1",
           description: "First lab",
@@ -221,7 +221,7 @@ describe("Content Model", () => {
           duration: 45,
         },
         {
-          moduleId: testModule.id,
+          moduleId: testModule._id,
           type: "video",
           title: "Video 2",
           description: "Second video",
@@ -235,7 +235,7 @@ describe("Content Model", () => {
     });
 
     it("should get content by module", async () => {
-      const content = await Content.getByModule(testModule.id);
+      const content = await Content.getByModule(testModule._id);
 
       expect(content).toHaveLength(3);
       expect(content[0].section).toBe("Introduction");
@@ -250,21 +250,21 @@ describe("Content Model", () => {
     });
 
     it("should get content by type and module", async () => {
-      const moduleVideos = await Content.getByType("video", testModule.id);
+      const moduleVideos = await Content.getByType("video", testModule._id);
 
       expect(moduleVideos).toHaveLength(2);
       moduleVideos.forEach((video) => {
         expect(video.type).toBe("video");
         const moduleIdValue =
-          typeof video.moduleId === "object" && video.moduleId.id
-            ? video.moduleId.id.toString()
+          typeof video.moduleId === "object" && video.moduleId._id
+            ? video.moduleId._id.toString()
             : video.moduleId.toString();
-        expect(moduleIdValue).toBe(testModule.id.toString());
+        expect(moduleIdValue).toBe(testModule._id.toString());
       });
     });
 
     it("should get content grouped by sections", async () => {
-      const sections = await Content.getByModuleGrouped(testModule.id);
+      const sections = await Content.getByModuleGrouped(testModule._id);
 
       expect(sections).toHaveProperty("Introduction");
       expect(sections).toHaveProperty("Practice");
@@ -277,7 +277,7 @@ describe("Content Model", () => {
     it("should automatically update module content counts when content is added", async () => {
       // Add video content
       const videoData = {
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "video",
         title: "Test Video",
         description: "Test video description",
@@ -289,13 +289,13 @@ describe("Content Model", () => {
       await new Content(videoData).save();
 
       // Check if module was updated
-      const updatedModule = await Module.findById(testModule.id);
+      const updatedModule = await Module.findById(testModule._id);
       expect(updatedModule.content.videos.length).toBe(1);
       expect(updatedModule.content.estimatedHours).toBe(1); // 30 minutes = 1 hour (rounded up)
 
       // Add lab content
       const labData = {
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "lab",
         title: "Test Lab",
         description: "Test lab description",
@@ -307,7 +307,7 @@ describe("Content Model", () => {
       await new Content(labData).save();
 
       // Check if module was updated again
-      const updatedModule2 = await Module.findById(testModule.id);
+      const updatedModule2 = await Module.findById(testModule._id);
       expect(updatedModule2.content.videos.length).toBe(1);
       expect(updatedModule2.content.labs.length).toBe(1);
       expect(updatedModule2.content.estimatedHours).toBe(2); // 120 minutes = 2 hours
@@ -316,7 +316,7 @@ describe("Content Model", () => {
     it("should automatically update module content counts when content is deleted", async () => {
       // Create content first
       const content1 = await new Content({
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "video",
         title: "Test Video 1",
         description: "Test video description",
@@ -326,7 +326,7 @@ describe("Content Model", () => {
       }).save();
 
       const content2 = await new Content({
-        moduleId: testModule.id,
+        moduleId: testModule._id,
         type: "video",
         title: "Test Video 2",
         description: "Test video description",
@@ -336,15 +336,15 @@ describe("Content Model", () => {
       }).save();
 
       // Verify module was updated
-      let updatedModule = await Module.findById(testModule.id);
+      let updatedModule = await Module.findById(testModule._id);
       expect(updatedModule.content.videos.length).toBe(2);
       expect(updatedModule.content.estimatedHours).toBe(2); // 75 minutes = 2 hours (rounded up)
 
       // Delete one content
-      await Content.findByIdAndDelete(content1.id);
+      await Content.findByIdAndDelete(content1._id);
 
       // Check if module was updated
-      updatedModule = await Module.findById(testModule.id);
+      updatedModule = await Module.findById(testModule._id);
       expect(updatedModule.content.videos.length).toBe(1);
       expect(updatedModule.content.estimatedHours).toBe(1); // 45 minutes = 1 hour (rounded up)
     });
@@ -353,7 +353,7 @@ describe("Content Model", () => {
       // Add different types of content
       const contentItems = [
         {
-          moduleId: testModule.id,
+          moduleId: testModule._id,
           type: "video",
           title: "Video",
           description: "Video description",
@@ -362,7 +362,7 @@ describe("Content Model", () => {
           duration: 20,
         },
         {
-          moduleId: testModule.id,
+          moduleId: testModule._id,
           type: "lab",
           title: "Lab",
           description: "Lab description",
@@ -371,7 +371,7 @@ describe("Content Model", () => {
           duration: 60,
         },
         {
-          moduleId: testModule.id,
+          moduleId: testModule._id,
           type: "game",
           title: "Game",
           description: "Game description",
@@ -380,7 +380,7 @@ describe("Content Model", () => {
           duration: 30,
         },
         {
-          moduleId: testModule.id,
+          moduleId: testModule._id,
           type: "document",
           title: "Document",
           description: "Document description",
@@ -392,7 +392,7 @@ describe("Content Model", () => {
       await Content.insertMany(contentItems);
 
       // Check final module state
-      const updatedModule = await Module.findById(testModule.id);
+      const updatedModule = await Module.findById(testModule._id);
       expect(updatedModule.content.videos.length).toBe(1);
       expect(updatedModule.content.labs.length).toBe(1);
       expect(updatedModule.content.games.length).toBe(1);

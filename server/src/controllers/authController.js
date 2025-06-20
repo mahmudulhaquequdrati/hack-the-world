@@ -82,7 +82,7 @@ const register = async (req, res, next) => {
     await user.save();
 
     // Generate JWT token
-    const token = generateToken(user.id);
+    const token = generateToken(user._id);
 
     // Update last login
     user.security.lastLogin = new Date();
@@ -158,7 +158,7 @@ const login = async (req, res, next) => {
       await user.incrementLoginAttempts();
 
       // Check if account should be locked after this failed attempt
-      const updatedUser = await User.findById(user.id).select(
+      const updatedUser = await User.findById(user._id).select(
         "+security.lockUntil"
       );
       if (
@@ -180,7 +180,7 @@ const login = async (req, res, next) => {
     }
 
     // Generate JWT token
-    const token = generateToken(user.id);
+    const token = generateToken(user._id);
 
     // Update last login and activity
     user.security.lastLogin = new Date();
@@ -340,7 +340,7 @@ const resetPassword = async (req, res, next) => {
     await user.save();
 
     // Generate JWT token for immediate login
-    const jwtToken = generateToken(user.id);
+    const jwtToken = generateToken(user._id);
 
     // Update last login
     user.security.lastLogin = new Date();

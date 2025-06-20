@@ -61,7 +61,6 @@ const mockModules = [
 const mockPhases = [
   {
     _id: "phase1",
-    id: "phase1",
     title: "Test Phase",
     description: "Test Phase Description",
   },

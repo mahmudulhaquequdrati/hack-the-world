@@ -31,7 +31,7 @@ const useModuleDragAndDrop = (modulesWithPhases, setModulesWithPhases, setHasMod
     e.preventDefault();
     if (
       draggedModule &&
-      draggedModule.id !== module.id &&
+      draggedModule._id !== module._id &&
       draggedModule.phaseId === module.phaseId
     ) {
       setDragOverModule(module);
@@ -50,7 +50,7 @@ const useModuleDragAndDrop = (modulesWithPhases, setModulesWithPhases, setHasMod
 
     if (
       !draggedModule ||
-      draggedModule.id === targetModule.id ||
+      draggedModule._id === targetModule._id ||
       draggedModule.phaseId !== targetModule.phaseId
     ) {
       return;
@@ -58,17 +58,17 @@ const useModuleDragAndDrop = (modulesWithPhases, setModulesWithPhases, setHasMod
 
     // Get modules in the same phase sorted by order
     const phaseModules =
-      modulesWithPhases.find((phase) => phase.id === draggedModule.phaseId)
+      modulesWithPhases.find((phase) => phase._id === draggedModule.phaseId)
         ?.modules || [];
 
     const sortedModules = [...phaseModules].sort((a, b) => a.order - b.order);
 
     // Find indices
     const draggedIndex = sortedModules.findIndex(
-      (m) => m.id === draggedModule.id
+      (m) => m._id === draggedModule._id
     );
     const targetIndex = sortedModules.findIndex(
-      (m) => m.id === targetModule.id
+      (m) => m._id === targetModule._id
     );
 
     if (draggedIndex === -1 || targetIndex === -1) return;
@@ -86,7 +86,7 @@ const useModuleDragAndDrop = (modulesWithPhases, setModulesWithPhases, setHasMod
 
     // Update modulesWithPhases state immediately for instant UI feedback
     const updatedModulesWithPhases = modulesWithPhases.map((phase) => {
-      if (phase.id === draggedModule.phaseId) {
+      if (phase._id === draggedModule.phaseId) {
         return {
           ...phase,
           modules: updatedModules,

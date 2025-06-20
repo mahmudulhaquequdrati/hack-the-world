@@ -183,7 +183,7 @@ export const createContentBreadcrumbs = (content, module = null) => {
   if (module) {
     breadcrumbs.push({ 
       label: module.title, 
-      href: `/modules/${module.id}` 
+      href: `/modules/${module._id}` 
     });
   }
 
@@ -275,7 +275,7 @@ export const handleApiError = (error, context = "operation") => {
  * @returns {boolean} True if content data is valid
  */
 export const isContentDataValid = (content) => {
-  return content && content.id && content.title && content.type;
+  return content && content._id && content.title && content.type;
 };
 
 /**

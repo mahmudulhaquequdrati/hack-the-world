@@ -82,14 +82,14 @@ const usePhasesAPI = () => {
       let responseData;
 
       if (editingPhase) {
-        console.log("🔄 Updating phase:", editingPhase.id, validation.validatedData);
+        console.log("🔄 Updating phase:", editingPhase._id, validation.validatedData);
 
         // Optimistic update for editing
         setPhases((prevPhases) =>
           optimisticUpdate(prevPhases, { ...editingPhase, ...validation.validatedData }, 'update')
         );
 
-        const response = await phasesAPI.update(editingPhase.id, validation.validatedData);
+        const response = await phasesAPI.update(editingPhase._id, validation.validatedData);
         responseData = response.data;
         console.log("✅ Phase updated:", responseData);
 
@@ -148,12 +148,12 @@ const usePhasesAPI = () => {
       setSaving(true);
       setError("");
 
-      console.log("🔄 Deleting phase:", phaseToDelete.id);
+      console.log("🔄 Deleting phase:", phaseToDelete._id);
 
       // Optimistic removal - remove from UI immediately
-      const phaseToDeleteId = phaseToDelete.id;
+      const phaseToDeleteId = phaseToDelete._id;
       setPhases((prevPhases) => 
-        optimisticUpdate(prevPhases, { id: phaseToDeleteId }, 'delete')
+        optimisticUpdate(prevPhases, { _id: phaseToDeleteId }, 'delete')
       );
 
       const response = await phasesAPI.delete(phaseToDeleteId);

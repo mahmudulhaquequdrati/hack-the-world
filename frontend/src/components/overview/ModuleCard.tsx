@@ -83,13 +83,13 @@ const ModuleCard = ({
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      onEnroll(getCoursePath(initialModule.id));
+      onEnroll(getCoursePath(initialModule._id));
       return;
     }
 
     setLocalEnrolling(true);
     try {
-      await enrollInModule(initialModule.id).unwrap();
+      await enrollInModule(initialModule._id).unwrap();
       // After successful enrollment, the query will be invalidated and refetched
     } catch (error) {
       console.error("Enrollment failed:", error);
@@ -100,14 +100,14 @@ const ModuleCard = ({
 
   const handleNavigate = () => {
     if (isEnrolled) {
-      onNavigate(getEnrollPath(initialModule.id));
+      onNavigate(getEnrollPath(initialModule._id));
     } else {
-      onNavigate(getCoursePath(initialModule.id));
+      onNavigate(getCoursePath(initialModule._id));
     }
   };
 
   const handleViewDetails = () => {
-    onNavigate(getCoursePath(initialModule.id));
+    onNavigate(getCoursePath(initialModule._id));
   };
 
   const getDifficultyColor = (difficulty: string) => {

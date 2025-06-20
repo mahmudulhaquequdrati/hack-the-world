@@ -54,7 +54,7 @@ const getModulesWithPhases = asyncHandler(async (req, res, next) => {
   // Combine phases with their modules
   const result = phases.map((phase) => ({
     ...phase.toJSON(),
-    modules: groupedModules[phase.id]?.modules || [],
+    modules: groupedModules[phase._id.toString()]?.modules || [],
   }));
 
   res.status(200).json({
@@ -408,16 +408,16 @@ const reorderModules = asyncHandler(async (req, res, next) => {
  * @access  Private (Admin only)
  */
 const batchUpdateModuleOrder = asyncHandler(async (req, res, next) => {
-  const { moduleOrders } = req.body; // Array of { id, order }
+  const { moduleOrders } = req.body; // Array of { _id, order }
 
   if (!Array.isArray(moduleOrders) || moduleOrders.length === 0) {
     return next(new ErrorResponse("Module orders array is required", 400));
   }
 
   // Validate all module IDs and orders
-  for (const { id, order } of moduleOrders) {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return next(new ErrorResponse(`Invalid module ID format: ${id}`, 400));
+  for (const { _id, order } of moduleOrders) {
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      return next(new ErrorResponse(`Invalid module ID format: ${_id}`, 400));
     }
     if (typeof order !== "number" || order < 1) {
       return next(new ErrorResponse(`Invalid order value: ${order}`, 400));
@@ -425,7 +425,7 @@ const batchUpdateModuleOrder = asyncHandler(async (req, res, next) => {
   }
 
   // Get all module IDs and verify they exist
-  const moduleIds = moduleOrders.map(item => item.id);
+  const moduleIds = moduleOrders.map(item => item._id);
   const existingModules = await Module.find({ _id: { $in: moduleIds } });
   
   if (existingModules.length !== moduleIds.length) {
@@ -438,9 +438,9 @@ const batchUpdateModuleOrder = asyncHandler(async (req, res, next) => {
   try {
     await session.withTransaction(async () => {
       // First, set all modules to temporary negative orders to avoid conflicts
-      const tempUpdatePromises = moduleOrders.map(({ id }, index) =>
+      const tempUpdatePromises = moduleOrders.map(({ _id }, index) =>
         Module.findByIdAndUpdate(
-          id,
+          _id,
           { order: -(index + 1) }, // Use negative numbers temporarily
           { session }
         )
@@ -448,9 +448,9 @@ const batchUpdateModuleOrder = asyncHandler(async (req, res, next) => {
       await Promise.all(tempUpdatePromises);
 
       // Then update with the actual orders
-      const finalUpdatePromises = moduleOrders.map(({ id, order }) =>
+      const finalUpdatePromises = moduleOrders.map(({ _id, order }) =>
         Module.findByIdAndUpdate(
-          id,
+          _id,
           { order },
           { new: true, runValidators: true, session }
         )

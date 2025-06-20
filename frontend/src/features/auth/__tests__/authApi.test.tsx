@@ -46,7 +46,7 @@ describe("authApi", () => {
   describe("changePassword", () => {
     it("should change password and return success message", async () => {
       const mockUser = {
-        id: "user-123",
+        _id: "user-123",
         username: "testuser",
         email: "test@example.com",
         profile: {
@@ -120,7 +120,7 @@ describe("authApi", () => {
 
     it("should handle password change failure", async () => {
       const mockUser = {
-        id: "user-123",
+        _id: "user-123",
         username: "testuser",
         email: "test@example.com",
         profile: {
@@ -185,7 +185,7 @@ describe("authApi", () => {
         message: "Login successful",
         data: {
           user: {
-            id: "user-123",
+            _id: "user-123",
             username: "testuser",
             email: "test@example.com",
             profile: {},
@@ -241,7 +241,7 @@ describe("authApi", () => {
         message: "Registration successful",
         data: {
           user: {
-            id: "user-123",
+            _id: "user-123",
             username: "newuser",
             email: "newuser@example.com",
             profile: {

@@ -44,7 +44,7 @@ const mockAPIErrors = {
 // Mock data
 const mockPhases = [
   {
-    id: "507f1f77bcf86cd799439011",
+    _id: "507f1f77bcf86cd799439011",
     title: "Beginner",
     description: "Introduction to cybersecurity basics",
     icon: "🛡️",
@@ -52,7 +52,7 @@ const mockPhases = [
     order: 1,
   },
   {
-    id: "507f1f77bcf86cd799439012",
+    _id: "507f1f77bcf86cd799439012",
     title: "Intermediate",
     description: "Advanced security concepts",
     icon: "⚔️",
@@ -65,7 +65,7 @@ describe("PhasesManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     phasesAPI.getAll.mockResolvedValue({ data: mockPhases });
-    phasesAPI.create.mockResolvedValue({ data: { id: "new-id" } });
+    phasesAPI.create.mockResolvedValue({ data: { _id: "new-id" } });
     phasesAPI.update.mockResolvedValue({ data: {} });
     phasesAPI.delete.mockResolvedValue({ data: {} });
   });

@@ -105,7 +105,7 @@ const useModuleDetailManager = (moduleId) => {
       // Combined actions
       handleContentClick: (content) => {
         // You can add analytics or other side effects here
-        navigationHook.actions.goToContent(content.id);
+        navigationHook.actions.goToContent(content._id);
       },
 
       handleRetry: () => {
@@ -114,7 +114,7 @@ const useModuleDetailManager = (moduleId) => {
       },
 
       handleBackNavigation: () => {
-        if (stateHook.phase?.id) {
+        if (stateHook.phase?._id) {
           navigationHook.actions.goToPhase();
         } else {
           navigationHook.actions.goToModules();

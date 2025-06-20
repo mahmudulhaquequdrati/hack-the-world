@@ -71,7 +71,7 @@ export const formatContentBySection = (contentBySections = {}) => {
     if (Array.isArray(sectionContent) && sectionContent.length > 0) {
       formatted[sectionName] = sectionContent.map(item => ({
         ...item,
-        id: item._id || item.id, // Normalize id field
+_id: item._id, // Normalize _id field
         section: sectionName,
       }));
     }
@@ -161,7 +161,7 @@ export const createModuleBreadcrumbs = (module, phase = null) => {
   if (phase) {
     breadcrumbs.push({ 
       label: phase.title, 
-      path: `/phases/${phase.id}`, 
+      path: `/phases/${phase._id}`, 
       active: false 
     });
   }
@@ -202,7 +202,7 @@ export const handleApiError = (error, context = "operation") => {
  * @returns {boolean} True if module data is valid
  */
 export const isModuleDataValid = (module) => {
-  return module && module.id && module.title;
+  return module && module._id && module.title;
 };
 
 /**
@@ -268,7 +268,7 @@ export const processContentSections = (contentBySections, contentList = []) => {
         processed[sectionName] = {
           items: items.map(item => ({
             ...item,
-            id: item._id || item.id,
+            _id: item._id,
           })),
           count: items.length,
           totalDuration: items.reduce((sum, item) => sum + (item.duration || 0), 0),

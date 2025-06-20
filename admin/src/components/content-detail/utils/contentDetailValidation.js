@@ -60,7 +60,7 @@ export const validateContentData = (content) => {
   const errors = [];
 
   // Required fields validation
-  if (!content.id && !content._id) {
+  if (!content._id) {
     errors.push("Content ID is required");
   }
 
@@ -215,7 +215,7 @@ export const validateModuleData = (module) => {
 
   const errors = [];
 
-  if (!module.id && !module._id) {
+  if (!module._id) {
     errors.push("Module ID is required when module data is provided");
   }
 
@@ -264,7 +264,7 @@ export const validatePhaseData = (phase) => {
 
   const errors = [];
 
-  if (!phase.id && !phase._id) {
+  if (!phase._id) {
     errors.push("Phase ID is required when phase data is provided");
   }
 
@@ -300,7 +300,7 @@ export const sanitizeContentData = (content) => {
   if (!content) return null;
 
   return {
-    id: content.id || content._id,
+    _id: content._id,
     title: typeof content.title === "string" ? content.title.trim() : "",
     description:
       typeof content.description === "string" ? content.description.trim() : "",
@@ -388,7 +388,7 @@ export const sanitizeModuleData = (module) => {
   if (!module) return null;
 
   return {
-    id: module.id || module._id,
+    _id: module._id,
     title: typeof module.title === "string" ? module.title.trim() : "",
     description:
       typeof module.description === "string" ? module.description.trim() : "",
@@ -417,7 +417,7 @@ export const sanitizePhaseData = (phase) => {
   if (!phase) return null;
 
   return {
-    id: phase.id || phase._id,
+    _id: phase._id,
     title: typeof phase.title === "string" ? phase.title.trim() : "",
     description:
       typeof phase.description === "string" ? phase.description.trim() : "",

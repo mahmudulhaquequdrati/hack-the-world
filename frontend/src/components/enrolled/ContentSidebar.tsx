@@ -344,7 +344,7 @@ const ContentSidebar = ({
 
                       return (
                         <div
-                          key={lesson.id}
+                          key={lesson._id}
                           className={`group cursor-pointer transition-all duration-200 px-1 ${
                             isActive
                               ? "transform scale-[1.01]"

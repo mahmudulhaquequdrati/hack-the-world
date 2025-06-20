@@ -28,7 +28,7 @@ import { LearningOutcome } from "./types";
 
 // API response types
 interface ApiModule {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   icon: string;
@@ -44,7 +44,7 @@ interface ApiModule {
     estimatedHours: number | string;
   };
   phase?: {
-    id: string;
+    _id: string;
     title: string;
     description: string;
     icon: string;
@@ -62,7 +62,7 @@ interface ApiModule {
 }
 
 interface ApiPhase {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   icon: string;
@@ -137,7 +137,7 @@ export const transformApiModuleToCourse = (
   userProgress?: UserProgress[]
 ): Course => {
   // Get user progress for this module
-  const moduleProgress = userProgress?.find((p) => p.moduleId === apiModule.id);
+  const moduleProgress = userProgress?.find((p) => p.moduleId === apiModule._id);
 
   // Determine colors based on difficulty
   const getColorsForDifficulty = (difficulty: string) => {
@@ -186,7 +186,7 @@ export const transformApiModuleToCourse = (
     })) || [];
 
   return {
-    id: apiModule.id,
+    _id: apiModule._id,
     title: apiModule.title,
     description: apiModule.description,
     category: apiModule.phase?.title || "Course",
@@ -227,7 +227,7 @@ export const transformApiModule = (
   userProgress?: UserProgress[]
 ): Module => {
   // Get user progress for this module
-  const moduleProgress = userProgress?.find((p) => p.moduleId === apiModule.id);
+  const moduleProgress = userProgress?.find((p) => p.moduleId === apiModule._id);
 
   // Determine colors based on difficulty
   const getColorsForDifficulty = (difficulty: string) => {
@@ -268,7 +268,7 @@ export const transformApiModule = (
   const colors = getColorsForDifficulty(apiModule.difficulty);
 
   return {
-    id: apiModule.id,
+    _id: apiModule._id,
     title: apiModule.title,
     description: apiModule.description,
     icon: apiModule.icon,
@@ -284,7 +284,7 @@ export const transformApiModule = (
     assets: apiModule.content?.documents?.length || 0,
     enrolled: moduleProgress ? true : false,
     completed: moduleProgress?.progress === 100,
-    phaseId: apiModule.phaseId || apiModule.phase?.id,
+    phaseId: apiModule.phaseId || apiModule.phase?._id,
     // Keep API specific fields
     content: apiModule.content,
     phase: apiModule.phase,
@@ -305,7 +305,7 @@ export const transformApiPhase = (
   modules?: Module[]
 ): Phase => {
   return {
-    id: apiPhase.id,
+    _id: apiPhase._id,
     title: apiPhase.title,
     description: apiPhase.description,
     icon: apiPhase.icon,
@@ -331,7 +331,7 @@ export const organizeModulesByPhase = (
       const phaseModules = modules
         .filter(
           (module) =>
-            module.phaseId === phase.id || module.phase?.id === phase.id
+            module.phaseId === phase._id || module.phase?._id === phase._id
         )
         .map((module) => transformApiModule(module, userProgress))
         .sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -349,7 +349,7 @@ export const transformApiContentToEnrolledCourse = (
   groupedContent: Record<
     string,
     Array<{
-      id: string;
+      _id: string;
       title: string;
       description?: string;
       type: "video" | "lab" | "game" | "document";
@@ -365,7 +365,7 @@ export const transformApiContentToEnrolledCourse = (
   const sections: CourseSection[] = Object.entries(groupedContent).map(
     ([sectionTitle, contentItems], sectionIndex) => {
       const lessons: EnrolledLesson[] = contentItems.map((item, itemIndex) => {
-        const lessonId = `${moduleId}-${sectionIndex}-${itemIndex}-${item.id}`;
+        const lessonId = `${moduleId}-${sectionIndex}-${itemIndex}-${item._id}`;
 
         // Generate realistic duration if not provided
         const duration = item.duration
@@ -379,7 +379,7 @@ export const transformApiContentToEnrolledCourse = (
           : "10:00";
 
         return {
-          id: lessonId,
+          _id: lessonId,
           title: item.title,
           duration,
           type: item.type === "document" ? "text" : item.type, // Map document to text
@@ -401,7 +401,7 @@ export const transformApiContentToEnrolledCourse = (
       });
 
       return {
-        id: `${moduleId}-section-${sectionIndex}`,
+        _id: `${moduleId}-section-${sectionIndex}`,
         title: sectionTitle,
         lessons,
       };
@@ -413,7 +413,7 @@ export const transformApiContentToEnrolledCourse = (
     .flat()
     .filter((item) => item.type === "lab")
     .map((lab, index) => ({
-      id: `${moduleId}-lab-${index}`,
+      _id: `${moduleId}-lab-${index}`,
       name: lab.title,
       description: lab.description || `Hands-on lab: ${lab.title}`,
       difficulty: "intermediate",
@@ -436,7 +436,7 @@ export const transformApiContentToEnrolledCourse = (
     .flat()
     .filter((item) => item.type === "game")
     .map((game, index) => ({
-      id: `${moduleId}-game-${index}`,
+      _id: `${moduleId}-game-${index}`,
       name: game.title,
       description: game.description || `Interactive game: ${game.title}`,
       difficulty: "intermediate",
@@ -467,7 +467,7 @@ export const transformApiContentToEnrolledCourse = (
     }));
 
   return {
-    id: moduleId,
+    _id: moduleId,
     title: moduleTitle,
     description: moduleDescription,
     sections,

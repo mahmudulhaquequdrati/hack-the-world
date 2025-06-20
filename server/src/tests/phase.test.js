@@ -91,11 +91,11 @@ describe("Phase API Endpoints", () => {
       expect(response.body.data[1].title).toBe("Intermediate Phase");
       expect(response.body.data[2].title).toBe("Advanced Phase");
 
-      // Should have id field (MongoDB ObjectId) and no _id field
-      expect(response.body.data[0].id).toBeDefined();
-      expect(response.body.data[0]._id).toBeUndefined();
+      // Should have _id field (MongoDB ObjectId) and no __v field
+      expect(response.body.data[0]._id).toBeDefined();
+      expect(response.body.data[0].id).toBeUndefined();
       expect(response.body.data[0].__v).toBeUndefined();
-      expect(mongoose.Types.ObjectId.isValid(response.body.data[0].id)).toBe(
+      expect(mongoose.Types.ObjectId.isValid(response.body.data[0]._id)).toBe(
         true
       );
     });
@@ -107,7 +107,7 @@ describe("Phase API Endpoints", () => {
       const phase = response.body.data[0];
 
       // Check all required fields exist
-      expect(phase.id).toBeDefined();
+      expect(phase._id).toBeDefined();
       expect(phase.title).toBeDefined();
       expect(phase.description).toBeDefined();
       expect(phase.icon).toBeDefined();
@@ -117,7 +117,7 @@ describe("Phase API Endpoints", () => {
       expect(phase.updatedAt).toBeDefined();
 
       // Check data types
-      expect(typeof phase.id).toBe("string");
+      expect(typeof phase._id).toBe("string");
       expect(typeof phase.title).toBe("string");
       expect(typeof phase.description).toBe("string");
       expect(typeof phase.icon).toBe("string");
@@ -127,7 +127,7 @@ describe("Phase API Endpoints", () => {
       expect(typeof phase.updatedAt).toBe("string");
 
       // Validate ObjectId format
-      expect(mongoose.Types.ObjectId.isValid(phase.id)).toBe(true);
+      expect(mongoose.Types.ObjectId.isValid(phase._id)).toBe(true);
     });
 
     it("should handle large number of phases efficiently", async () => {
@@ -153,8 +153,8 @@ describe("Phase API Endpoints", () => {
       // Verify ordering is maintained
       for (let i = 0; i < 50; i++) {
         expect(response.body.data[i].order).toBe(i + 1);
-        expect(response.body.data[i].id).toBeDefined();
-        expect(response.body.data[i]._id).toBeUndefined();
+        expect(response.body.data[i]._id).toBeDefined();
+        expect(response.body.data[i].id).toBeUndefined();
       }
     });
   });
@@ -176,9 +176,9 @@ describe("Phase API Endpoints", () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.message).toBe("Phase retrieved successfully");
-      expect(response.body.data.id).toBe(phaseId);
+      expect(response.body.data._id).toBe(phaseId);
       expect(response.body.data.title).toBe("Beginner Phase");
-      expect(response.body.data._id).toBeUndefined();
+      expect(response.body.data.id).toBeUndefined();
       expect(response.body.data.__v).toBeUndefined();
     });
 
@@ -189,9 +189,9 @@ describe("Phase API Endpoints", () => {
 
       const phase = response.body.data;
 
-      // Verify id transformation
-      expect(phase.id).toBe(createdPhase._id.toString());
-      expect(phase._id).toBeUndefined();
+      // Verify _id transformation
+      expect(phase._id).toBe(createdPhase._id.toString());
+      expect(phase.id).toBeUndefined();
       expect(phase.__v).toBeUndefined();
 
       // Verify all other fields
@@ -245,8 +245,8 @@ describe("Phase API Endpoints", () => {
 
       responses.forEach((response) => {
         expect(response.status).toBe(200);
-        expect(response.body.data.id).toBe(phaseId);
-        expect(response.body.data._id).toBeUndefined();
+        expect(response.body.data._id).toBe(phaseId);
+        expect(response.body.data.id).toBeUndefined();
       });
     });
   });
@@ -270,16 +270,16 @@ describe("Phase API Endpoints", () => {
       expect(response.body.success).toBe(true);
       expect(response.body.message).toBe("Phase created successfully");
       expect(response.body.data.title).toBe(newPhase.title);
-      expect(response.body.data.id).toBeDefined();
-      expect(response.body.data._id).toBeUndefined();
+      expect(response.body.data._id).toBeDefined();
+      expect(response.body.data.id).toBeUndefined();
       expect(response.body.data.__v).toBeUndefined();
-      expect(mongoose.Types.ObjectId.isValid(response.body.data.id)).toBe(true);
+      expect(mongoose.Types.ObjectId.isValid(response.body.data._id)).toBe(true);
 
       // Verify phase was created in database with correct _id to id mapping
-      const createdPhase = await Phase.findById(response.body.data.id);
+      const createdPhase = await Phase.findById(response.body.data._id);
       expect(createdPhase).toBeTruthy();
       expect(createdPhase.title).toBe(newPhase.title);
-      expect(createdPhase._id.toString()).toBe(response.body.data.id);
+      expect(createdPhase._id.toString()).toBe(response.body.data._id);
     });
 
     it("should create phase with minimal valid data", async () => {
@@ -297,7 +297,7 @@ describe("Phase API Endpoints", () => {
         .send(minimalPhase)
         .expect(201);
 
-      expect(response.body.data.id).toBeDefined();
+      expect(response.body.data._id).toBeDefined();
       expect(response.body.data.title).toBe(minimalPhase.title);
       expect(response.body.data.createdAt).toBeDefined();
       expect(response.body.data.updatedAt).toBeDefined();
@@ -469,8 +469,8 @@ describe("Phase API Endpoints", () => {
       expect(response.body.data.title).toBe(updateData.title);
       expect(response.body.data.description).toBe(updateData.description);
       expect(response.body.data.color).toBe(updateData.color);
-      expect(response.body.data.id).toBe(phaseId);
-      expect(response.body.data._id).toBeUndefined();
+      expect(response.body.data._id).toBe(phaseId);
+      expect(response.body.data.id).toBeUndefined();
       expect(response.body.data.__v).toBeUndefined();
 
       // Verify update in database
@@ -506,7 +506,7 @@ describe("Phase API Endpoints", () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.id).toBe(phaseId);
+      expect(response.body.data._id).toBe(phaseId);
       // All fields should remain unchanged
       expect(response.body.data.title).toBe(originalPhase.title);
       expect(response.body.data.description).toBe(originalPhase.description);
@@ -721,7 +721,7 @@ describe("Phase API Endpoints", () => {
 
       expect(phaseJson.id).toBeDefined();
       expect(phaseJson.id).toBe(phase._id.toString());
-      expect(phaseJson._id).toBeUndefined();
+      expect(phaseJson.id).toBeUndefined();
       expect(phaseJson.__v).toBeUndefined();
     });
 
@@ -858,9 +858,9 @@ describe("Phase API Endpoints", () => {
 
       // Verify all phases have proper id transformation
       response.body.data.forEach((phase) => {
-        expect(phase.id).toBeDefined();
-        expect(phase._id).toBeUndefined();
-        expect(mongoose.Types.ObjectId.isValid(phase.id)).toBe(true);
+        expect(phase._id).toBeDefined();
+        expect(phase.id).toBeUndefined();
+        expect(mongoose.Types.ObjectId.isValid(phase._id)).toBe(true);
       });
     });
 
@@ -881,8 +881,8 @@ describe("Phase API Endpoints", () => {
         expect(response.status).toBe(200);
         expect(response.body.count).toBe(3);
         response.body.data.forEach((phase) => {
-          expect(phase.id).toBeDefined();
-          expect(phase._id).toBeUndefined();
+          expect(phase._id).toBeDefined();
+          expect(phase.id).toBeUndefined();
         });
       });
 

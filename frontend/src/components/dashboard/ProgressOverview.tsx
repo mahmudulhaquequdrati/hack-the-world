@@ -17,8 +17,8 @@ export const ProgressOverview = () => {
     data: progressData,
     isLoading,
     error,
-  } = useGetOverallProgressQuery(user?.id || "", {
-    skip: !user?.id,
+  } = useGetOverallProgressQuery(user?._id || "", {
+    skip: !user?._id,
   });
 
   if (isLoading) {

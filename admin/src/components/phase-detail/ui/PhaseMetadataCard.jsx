@@ -33,9 +33,9 @@ const PhaseMetadataCard = ({
       isColor: true
     },
     {
-      key: 'id',
+      key: '_id',
       label: 'Phase ID',
-      value: phase.id,
+      value: phase._id,
       show: showAllFields,
       isMonospace: true
     },

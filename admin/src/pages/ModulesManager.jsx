@@ -86,7 +86,7 @@ const ModulesManagerEnhanced = () => {
 
         return (
           <div
-            key={phase.id}
+            key={phase._id}
             className={`${colors.container} rounded-xl p-6 relative overflow-hidden group transition-all duration-300`}
           >
             {/* Phase container glow effect */}
@@ -121,7 +121,7 @@ const ModulesManagerEnhanced = () => {
                       onClick={() => handlePhaseSelectionToggle(phase.modules)}
                       className="text-xs px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-500 hover:to-purple-600 font-mono font-bold transition-all duration-300 shadow-lg hover:shadow-purple-400/20"
                     >
-                      {phase.modules?.length > 0 && phase.modules.every((m) => selectedModules.has(m.id))
+                      {phase.modules?.length > 0 && phase.modules.every((m) => selectedModules.has(m._id))
                         ? "◄ DESELECT PHASE"
                         : "► SELECT PHASE"}
                     </button>
@@ -134,7 +134,7 @@ const ModulesManagerEnhanced = () => {
                     .sort((a, b) => a.order - b.order)
                     .map((module) => (
                       <ModuleCard
-                        key={module.id}
+                        key={module._id}
                         module={module}
                         draggedModule={draggedModule}
                         dragOverModule={dragOverModule}

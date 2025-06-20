@@ -73,7 +73,7 @@ const CyberSecOverview = () => {
     if (enrollmentResponse?.success && enrollmentResponse?.data) {
       enrollmentResponse.data.forEach((enrollment) => {
         map.set(enrollment.moduleId, {
-          enrollmentId: enrollment.id,
+          enrollmentId: enrollment._id,
           status: enrollment.status,
           progressPercentage: enrollment.progressPercentage,
           isCompleted: enrollment.isCompleted,
@@ -94,7 +94,7 @@ const CyberSecOverview = () => {
         const phaseModules = (phase.modules || [])
           .map((module: Module) => {
             const colors = getColorsForModule(module.color);
-            const enrollmentInfo = enrollmentMap.get(module.id);
+            const enrollmentInfo = enrollmentMap.get(module._id);
 
             return {
               ...module,
@@ -123,7 +123,7 @@ const CyberSecOverview = () => {
   // Set default active phase to the first phase when data loads
   useEffect(() => {
     if (phasesData.length > 0 && !activePhase) {
-      setActivePhase(phasesData[0].id);
+      setActivePhase(phasesData[0]._id);
     }
   }, [phasesData, activePhase]);
 
@@ -169,7 +169,7 @@ const CyberSecOverview = () => {
   const handleStartPhase = (phase: Phase) => {
     const firstIncomplete = phase.modules?.find((m: Module) => !m.enrolled);
     if (firstIncomplete) {
-      navigate(getCoursePath(firstIncomplete.id));
+      navigate(getCoursePath(firstIncomplete._id));
     }
   };
 
@@ -265,8 +265,8 @@ const CyberSecOverview = () => {
 
             {phasesData.map((phase) => (
               <TabsContent
-                key={phase.id}
-                value={phase.id}
+                key={phase._id}
+                value={phase._id}
                 className="space-y-8"
               >
                 {/* Phase Header */}

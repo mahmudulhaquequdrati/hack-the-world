@@ -71,7 +71,7 @@ const ContentCard = ({
 
         {/* View Button */}
         <Link
-          to={`/content/${content.id}`}
+          to={`/content/${content._id}`}
           className="p-2 bg-green-600/20 rounded-lg text-green-400 hover:text-green-300 hover:bg-green-600/30 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
           title="View Details"
           onClick={handleViewClick}

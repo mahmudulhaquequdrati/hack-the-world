@@ -76,11 +76,11 @@ const UserProgressSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    id: false, // Disable virtual id field
     toJSON: {
       virtuals: true,
       transform: function (doc, ret) {
-        ret.id = ret._id.toString();
-        delete ret._id;
+        ret._id = ret._id.toString();
         delete ret.__v;
         return ret;
       },
@@ -88,8 +88,7 @@ const UserProgressSchema = new mongoose.Schema(
     toObject: {
       virtuals: true,
       transform: function (doc, ret) {
-        ret.id = ret._id.toString();
-        delete ret._id;
+        ret._id = ret._id.toString();
         delete ret.__v;
         return ret;
       },
@@ -306,9 +305,9 @@ UserProgressSchema.statics.getUserProgressByModule = async function (
 
   // Get all content for the module
   const moduleContent = await Content.find({ moduleId, isActive: true }).select(
-    "id"
+    "_id"
   );
-  const contentIds = moduleContent.map((content) => content.id);
+  const contentIds = moduleContent.map((content) => content._id);
 
   return this.find({
     userId,

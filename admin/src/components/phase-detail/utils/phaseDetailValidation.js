@@ -56,7 +56,7 @@ export const validateModuleData = (module) => {
   const errors = [];
 
   // Required fields
-  if (!module.id) errors.push("Module ID is required");
+  if (!module._id) errors.push("Module ID is required");
   if (!module.title) errors.push("Module title is required");
   if (!module.phaseId) errors.push("Module phase ID is required");
 
@@ -98,7 +98,7 @@ export const validateModuleData = (module) => {
 
   result.isValid = true;
   result.sanitized = {
-    id: module.id,
+    _id: module._id,
     title: module.title.trim(),
     description: module.description?.trim() || "",
     phaseId: module.phaseId,
@@ -134,7 +134,7 @@ export const validatePhaseData = (phase) => {
   const errors = [];
 
   // Required fields
-  if (!phase.id) errors.push("Phase ID is required");
+  if (!phase._id) errors.push("Phase ID is required");
   if (!phase.title) errors.push("Phase title is required");
 
   // Optional field validation
@@ -157,7 +157,7 @@ export const validatePhaseData = (phase) => {
 
   result.isValid = true;
   result.sanitized = {
-    id: phase.id,
+    _id: phase._id,
     title: phase.title.trim(),
     description: phase.description?.trim() || "",
     order: phase.order || 0,
@@ -179,7 +179,7 @@ export const sanitizePhaseData = (phase) => {
   if (!phase) return null;
 
   return {
-    id: phase.id,
+    _id: phase._id,
     title: phase.title?.trim() || "",
     description: phase.description?.trim() || "",
     order: Math.max(0, parseInt(phase.order) || 0),
@@ -199,7 +199,7 @@ export const sanitizeModulesData = (modules) => {
   if (!Array.isArray(modules)) return [];
 
   return modules.map((module) => ({
-    id: module.id,
+    _id: module._id,
     title: module.title?.trim() || "",
     description: module.description?.trim() || "",
     phaseId: module.phaseId,

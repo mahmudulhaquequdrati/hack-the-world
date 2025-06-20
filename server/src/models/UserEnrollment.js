@@ -60,11 +60,11 @@ const UserEnrollmentSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    id: false, // Disable virtual id field
     toJSON: {
       virtuals: true,
       transform: function (doc, ret) {
-        ret.id = ret._id.toString();
-        delete ret._id;
+        ret._id = ret._id.toString();
         delete ret.__v;
         return ret;
       },
@@ -72,8 +72,7 @@ const UserEnrollmentSchema = new mongoose.Schema(
     toObject: {
       virtuals: true,
       transform: function (doc, ret) {
-        ret.id = ret._id.toString();
-        delete ret._id;
+        ret._id = ret._id.toString();
         delete ret.__v;
         return ret;
       },

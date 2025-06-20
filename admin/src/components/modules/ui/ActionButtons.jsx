@@ -46,7 +46,7 @@ const ActionButtons = ({
             >
               <option value="">◆ All Phases</option>
               {phases.map((phase) => (
-                <option key={phase.id} value={phase.id}>
+                <option key={phase._id} value={phase._id}>
                   ▸ {phase.title}
                 </option>
               ))}

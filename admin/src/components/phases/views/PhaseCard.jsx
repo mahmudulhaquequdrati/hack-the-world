@@ -32,9 +32,9 @@ const PhaseCard = ({
         onDragLeave={onDragLeave}
         onDrop={(e) => onDrop(e, phase)}
         className={`relative overflow-hidden rounded-xl border-2 p-6 group transition-all duration-300 cursor-move select-none ${
-          draggedPhase?.id === phase.id
+          draggedPhase?._id === phase._id
             ? "opacity-50 scale-95 rotate-2"
-            : dragOverPhase?.id === phase.id
+            : dragOverPhase?._id === phase._id
             ? "scale-110 shadow-2xl border-yellow-400 ring-4 ring-yellow-400/30"
             : "hover:scale-105 hover:shadow-lg"
         } ${colors.border} ${colors.bg} ${colors.hoverBorder} ${colors.hoverShadow}`}
@@ -108,7 +108,7 @@ const PhaseCard = ({
           {/* Action Buttons */}
           <div className="flex space-x-2">
             <Link
-              to={`/phases/${phase.id}`}
+              to={`/phases/${phase._id}`}
               className={`flex-1 h-10 border transition-all duration-300 rounded-lg flex items-center justify-center font-mono text-sm font-bold uppercase tracking-wider ${colors.button}`}
               title="View Details"
             >
@@ -170,7 +170,7 @@ const PhaseCard = ({
       <td className="p-4">
         <div className="flex justify-center gap-2">
           <Link
-            to={`/phases/${phase.id}`}
+            to={`/phases/${phase._id}`}
             className="p-3 bg-green-400/10 border border-green-400/30 hover:bg-green-400/20 hover:border-green-400/50 transition-all duration-300 rounded-lg text-green-400 hover:text-green-300 shadow-lg hover:shadow-green-400/20"
             title="View Details"
           >
@@ -212,7 +212,7 @@ export const PhaseCardMobile = ({ phase, onEdit, onDelete }) => {
           </div>
           <div className="flex gap-2">
             <Link
-              to={`/phases/${phase.id}`}
+              to={`/phases/${phase._id}`}
               className="p-2 bg-green-400/10 border border-green-400/30 hover:bg-green-400/20 hover:border-green-400/50 transition-all duration-300 rounded-lg text-green-400"
             >
               <EyeIcon className="w-4 h-4" />

@@ -69,7 +69,7 @@ const usePhaseDetailState = (phase, modules, loading, error) => {
    * Data summary for debugging/logging
    */
   const dataSummary = useMemo(() => ({
-    phaseId: phase?.id || null,
+    phaseId: phase?._id || null,
     phaseTitle: phase?.title || null,
     moduleCount: modules.length,
     totalHours: statistics.totalEstimatedHours,

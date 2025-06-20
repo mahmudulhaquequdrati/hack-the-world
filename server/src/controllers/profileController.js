@@ -18,7 +18,7 @@ const generateToken = (userId) => {
  */
 const getProfile = asyncHandler(async (req, res, next) => {
   // User is already attached to req from the protect middleware
-  const user = await User.findById(req.user.id).select("-password");
+  const user = await User.findById(req.user._id).select("-password");
 
   if (!user) {
     return next(new ErrorResponse("User not found", 404));
@@ -42,7 +42,7 @@ const changePassword = asyncHandler(async (req, res, next) => {
   const { currentPassword, newPassword } = req.body;
 
   // Get user with password field
-  const user = await User.findById(req.user.id).select("+password");
+  const user = await User.findById(req.user._id).select("+password");
 
   if (!user) {
     return next(new ErrorResponse("User not found", 404));
@@ -80,7 +80,7 @@ const changePassword = asyncHandler(async (req, res, next) => {
 
   // Generate new JWT token (invalidates old token)
   // Token will have iat > passwordChangedAt, so it will be valid
-  const newToken = generateToken(user.id);
+  const newToken = generateToken(user._id);
 
   // Log password change activity
   console.log(
@@ -106,7 +106,7 @@ const updateBasicProfile = asyncHandler(async (req, res, next) => {
   const { firstName, lastName, displayName, bio, location, website } = req.body;
 
   // Get current user
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user._id);
 
   if (!user) {
     return next(new ErrorResponse("User not found", 404));
@@ -124,7 +124,7 @@ const updateBasicProfile = asyncHandler(async (req, res, next) => {
   await user.save();
 
   // Return updated user without password
-  const updatedUser = await User.findById(user.id).select("-password");
+  const updatedUser = await User.findById(user._id).select("-password");
 
   res.status(200).json({
     success: true,
@@ -144,7 +144,7 @@ const updateAvatar = asyncHandler(async (req, res, next) => {
   const { avatar } = req.body;
 
   // Get current user
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user._id);
 
   if (!user) {
     return next(new ErrorResponse("User not found", 404));
@@ -155,7 +155,7 @@ const updateAvatar = asyncHandler(async (req, res, next) => {
   await user.save();
 
   // Return updated user without password
-  const updatedUser = await User.findById(user.id).select("-password");
+  const updatedUser = await User.findById(user._id).select("-password");
 
   res.status(200).json({
     success: true,

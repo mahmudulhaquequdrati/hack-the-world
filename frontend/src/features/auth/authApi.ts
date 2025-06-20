@@ -4,7 +4,7 @@ import { setCredentials, updateUser } from "./authSlice";
 
 // Types for authentication API
 export interface User {
-  id: string;
+  _id: string;
   username: string;
   email: string;
   profile: {

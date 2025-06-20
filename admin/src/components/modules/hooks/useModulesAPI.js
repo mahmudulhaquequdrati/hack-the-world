@@ -122,7 +122,7 @@ const useModulesAPI = () => {
       let responseData;
 
       if (editingModule) {
-        console.log("🔄 Updating module:", editingModule.id);
+        console.log("🔄 Updating module:", editingModule._id);
         
         // Optimistic update for editing - update both arrays
         const { updatedModules, updatedModulesWithPhases } = optimisticUpdate(
@@ -130,13 +130,13 @@ const useModulesAPI = () => {
           modulesWithPhases, 
           validation.validatedData, 
           'update', 
-          editingModule.id
+          editingModule._id
         );
         
         setModules(updatedModules);
         setModulesWithPhases(updatedModulesWithPhases);
 
-        const response = await modulesAPI.update(editingModule.id, validation.validatedData);
+        const response = await modulesAPI.update(editingModule._id, validation.validatedData);
         responseData = response.data;
         console.log("✅ Module updated:", responseData);
 
@@ -146,7 +146,7 @@ const useModulesAPI = () => {
           modulesWithPhases, 
           responseData, 
           'update', 
-          editingModule.id
+          editingModule._id
         );
         
         setModules(finalModules);
@@ -210,7 +210,7 @@ const useModulesAPI = () => {
       setSaving(true);
       setError("");
 
-      console.log("🔄 Deleting module:", moduleToDelete.id);
+      console.log("🔄 Deleting module:", moduleToDelete._id);
 
       // Optimistic removal - remove from both arrays immediately
       const { updatedModules, updatedModulesWithPhases } = optimisticUpdate(
@@ -218,13 +218,13 @@ const useModulesAPI = () => {
         modulesWithPhases, 
         null, 
         'delete', 
-        moduleToDelete.id
+        moduleToDelete._id
       );
       
       setModules(updatedModules);
       setModulesWithPhases(updatedModulesWithPhases);
 
-      const response = await modulesAPI.delete(moduleToDelete.id);
+      const response = await modulesAPI.delete(moduleToDelete._id);
       console.log("✅ Module deleted:", response);
 
       const successMessage = generateSuccessMessage('delete', moduleToDelete);

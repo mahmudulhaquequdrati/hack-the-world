@@ -19,7 +19,7 @@ const enrollUser = asyncHandler(async (req, res, next) => {
   }
 
   const { moduleId } = req.body;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   // Check if module exists
   const module = await Module.findById(moduleId);
@@ -75,7 +75,7 @@ const enrollUser = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 const getUserEnrollments = asyncHandler(async (req, res, next) => {
-  const userId = req.user.id;
+  const userId = req.user._id;
   const { status, populate } = req.query;
 
   const options = {};
@@ -99,7 +99,7 @@ const getUserEnrollments = asyncHandler(async (req, res, next) => {
  */
 const getEnrollmentByModule = asyncHandler(async (req, res, next) => {
   const { moduleId } = req.params;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   const enrollment = await UserEnrollment.findByUserAndModule(
     userId,
@@ -130,7 +130,7 @@ const updateEnrollmentProgress = asyncHandler(async (req, res, next) => {
 
   const { enrollmentId } = req.params;
   const { completedSections } = req.body;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   const enrollment = await UserEnrollment.findOne({
     _id: enrollmentId,
@@ -158,7 +158,7 @@ const updateEnrollmentProgress = asyncHandler(async (req, res, next) => {
  */
 const pauseEnrollment = asyncHandler(async (req, res, next) => {
   const { enrollmentId } = req.params;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   const enrollment = await UserEnrollment.findOne({
     _id: enrollmentId,
@@ -185,7 +185,7 @@ const pauseEnrollment = asyncHandler(async (req, res, next) => {
  */
 const resumeEnrollment = asyncHandler(async (req, res, next) => {
   const { enrollmentId } = req.params;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   const enrollment = await UserEnrollment.findOne({
     _id: enrollmentId,
@@ -212,7 +212,7 @@ const resumeEnrollment = asyncHandler(async (req, res, next) => {
  */
 const completeEnrollment = asyncHandler(async (req, res, next) => {
   const { enrollmentId } = req.params;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   const enrollment = await UserEnrollment.findOne({
     _id: enrollmentId,
@@ -239,7 +239,7 @@ const completeEnrollment = asyncHandler(async (req, res, next) => {
  */
 const unenrollUser = asyncHandler(async (req, res, next) => {
   const { enrollmentId } = req.params;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   const enrollment = await UserEnrollment.findOne({
     _id: enrollmentId,
@@ -332,7 +332,7 @@ const getUserEnrollmentsByUserId = asyncHandler(async (req, res, next) => {
             enhancedProgress: progressStats
           };
         } catch (error) {
-          console.error(`Failed to get enhanced progress for enrollment ${enrollment.id}:`, error);
+          console.error(`Failed to get enhanced progress for enrollment ${enrollment._id}:`, error);
           return enrollment.toObject();
         }
       })
@@ -359,7 +359,7 @@ const getUserEnrollmentsByUserId = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 const getCurrentUserEnrollments = asyncHandler(async (req, res, next) => {
-  const userId = req.user.id;
+  const userId = req.user._id;
   const { status, populate } = req.query;
 
   // Build query options
@@ -471,7 +471,7 @@ const getModuleEnrollmentStats = asyncHandler(async (req, res, next) => {
     message: "Module enrollment statistics retrieved successfully",
     data: {
       module: {
-        id: module.id,
+        _id: module._id,
         title: module.title,
       },
       stats,
@@ -558,7 +558,7 @@ const getBatchModuleEnrollmentStats = asyncHandler(async (req, res, next) => {
 
       batchStats[moduleId] = {
         module: {
-          id: module._id,
+          _id: module._id,
           title: module.title,
         },
         stats,

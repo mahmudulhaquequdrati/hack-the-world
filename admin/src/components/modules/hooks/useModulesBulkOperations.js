@@ -235,7 +235,7 @@ const useModulesBulkOperations = (
    * @returns {Object} Suggested values for bulk form
    */
   const getSuggestedBulkValues = useCallback((selectedModules) => {
-    const selectedModuleObjects = modules.filter(m => selectedModules.has(m.id));
+    const selectedModuleObjects = modules.filter(m => selectedModules.has(m._id));
     
     if (selectedModuleObjects.length === 0) {
       return {};

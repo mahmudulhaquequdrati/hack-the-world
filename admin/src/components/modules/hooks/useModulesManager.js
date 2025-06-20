@@ -189,7 +189,7 @@ const useModulesManager = () => {
       return api.modulesWithPhases;
     }
     
-    return api.modulesWithPhases.filter(phase => phase.id === selectedPhase);
+    return api.modulesWithPhases.filter(phase => phase._id === selectedPhase);
   }, [api.modulesWithPhases, selectedPhase]);
 
   // Phase selection helper for bulk operations

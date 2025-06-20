@@ -118,12 +118,12 @@ export const useContentAPI = () => {
         console.log("🔄 Updating content:", editingId);
 
         // Optimistic update for editing
-        setContent(prevContent => optimisticUpdate(prevContent, { id: editingId, ...contentData }));
+        setContent(prevContent => optimisticUpdate(prevContent, { _id: editingId, ...contentData }));
 
         // Update hierarchical data if in hierarchical view
         if (viewMode === "hierarchical" && setHierarchicalData) {
           setHierarchicalData(prevHierarchical => 
-            updateHierarchicalData(prevHierarchical, { id: editingId, ...contentData }, 'update')
+            updateHierarchicalData(prevHierarchical, { _id: editingId, ...contentData }, 'update')
           );
         }
 
@@ -132,7 +132,7 @@ export const useContentAPI = () => {
           setGroupedContent(prevGrouped => 
             updateGroupedData(
               prevGrouped, 
-              { id: editingId, ...contentData }, 
+              { _id: editingId, ...contentData }, 
               'update',
               viewMode === "groupedByModule" ? 'module' : 'type',
               modules,
@@ -220,9 +220,9 @@ export const useContentAPI = () => {
       setSaving(true);
       setError("");
 
-      console.log("🔄 Deleting content:", contentToDelete.id);
+      console.log("🔄 Deleting content:", contentToDelete._id);
 
-      const contentToDeleteId = contentToDelete.id;
+      const contentToDeleteId = contentToDelete._id;
 
       // Optimistic removal - remove from UI immediately
       setContent(prevContent => optimisticRemove(prevContent, contentToDeleteId));
@@ -230,7 +230,7 @@ export const useContentAPI = () => {
       // Remove from hierarchical data
       if (setHierarchicalData) {
         setHierarchicalData(prevHierarchical =>
-          updateHierarchicalData(prevHierarchical, { id: contentToDeleteId, moduleId: contentToDelete.moduleId }, 'remove')
+          updateHierarchicalData(prevHierarchical, { _id: contentToDeleteId, moduleId: contentToDelete.moduleId }, 'remove')
         );
       }
 
@@ -304,7 +304,7 @@ export const useContentAPI = () => {
           ...item,
           moduleId: selectedModuleId,
         };
-        delete contentData.id;
+        delete contentData._id;
         return contentAPI.create(contentData);
       });
 
@@ -322,7 +322,7 @@ export const useContentAPI = () => {
           prevHierarchical.map(phase => ({
             ...phase,
             modules: phase.modules.map(module =>
-              module.id === selectedModuleId
+              module._id === selectedModuleId
                 ? {
                     ...module,
                     content: [...module.content, ...createdItems],

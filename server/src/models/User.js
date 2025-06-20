@@ -178,11 +178,11 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    id: false, // Disable virtual id field
     toJSON: {
       virtuals: true,
       transform: function (doc, ret) {
-        ret.id = ret._id.toString();
-        delete ret._id;
+        ret._id = ret._id.toString();
         delete ret.__v;
         delete ret.password;
         return ret;
@@ -191,8 +191,7 @@ const userSchema = new mongoose.Schema(
     toObject: {
       virtuals: true,
       transform: function (doc, ret) {
-        ret.id = ret._id.toString();
-        delete ret._id;
+        ret._id = ret._id.toString();
         delete ret.__v;
         delete ret.password;
         return ret;
@@ -263,7 +262,8 @@ userSchema.methods.updateLastActive = function () {
 
 userSchema.methods.toPublicJSON = function () {
   return {
-    id: this._id,
+    _id: this._id,
+    id: this._id, // Include id for backwards compatibility
     username: this.username,
     email: this.email,
     profile: this.profile,

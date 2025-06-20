@@ -35,7 +35,7 @@ const PhaseCompletionCTA = ({
             Complete {phase.title}
           </h3>
           <p className="text-green-300/70 mb-4">
-            {getPhaseDescription(phase.id)}
+            {getPhaseDescription(phase._id)}
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
             <Button

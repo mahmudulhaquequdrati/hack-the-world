@@ -29,7 +29,7 @@ vi.mock("react-router-dom", async () => {
 });
 
 const mockPhase = {
-  id: "test-phase-id",
+  _id: "test-phase-id",
   title: "Test Phase",
   description: "Test phase description",
   icon: "🔒",
@@ -41,7 +41,7 @@ const mockPhase = {
 
 const mockModules = [
   {
-    id: "module-1",
+    _id: "module-1",
     title: "Test Module 1",
     description: "First test module",
     order: 1,
@@ -49,7 +49,7 @@ const mockModules = [
     estimatedHours: 2,
   },
   {
-    id: "module-2",
+    _id: "module-2",
     title: "Test Module 2",
     description: "Second test module",
     order: 2,
@@ -60,13 +60,13 @@ const mockModules = [
 
 const mockContent = [
   {
-    id: "content-1",
+    _id: "content-1",
     title: "Test Content 1",
     type: "video",
     duration: 30,
   },
   {
-    id: "content-2",
+    _id: "content-2",
     title: "Test Content 2",
     type: "lab",
     duration: 60,

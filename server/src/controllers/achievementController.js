@@ -44,7 +44,7 @@ exports.getAchievementsByCategory = catchAsync(async (req, res, next) => {
  * Get user's achievement progress
  */
 exports.getUserAchievements = catchAsync(async (req, res, next) => {
-  const userId = req.user.id;
+  const userId = req.user._id;
   const { completed } = req.query;
 
   const options = {
@@ -109,7 +109,7 @@ exports.getUserAchievements = catchAsync(async (req, res, next) => {
  * Get user's achievement statistics
  */
 exports.getUserAchievementStats = catchAsync(async (req, res, next) => {
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   const [
     completedAchievements,

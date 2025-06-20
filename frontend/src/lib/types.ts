@@ -1,7 +1,7 @@
 import { LucideIcon } from "lucide-react";
 
 export interface Module {
-  id: string; // MongoDB ObjectId as string
+  _id: string; // MongoDB ObjectId as string
   title: string;
   description: string;
   icon: LucideIcon | string; // Support both string from API and LucideIcon for frontend
@@ -27,7 +27,7 @@ export interface Module {
     estimatedHours: number | string;
   };
   phase?: {
-    id: string;
+    _id: string;
     title: string;
     description: string;
     icon: string;
@@ -45,7 +45,7 @@ export interface Module {
 }
 
 export interface Phase {
-  id: string; // MongoDB ObjectId as string
+  _id: string; // MongoDB ObjectId as string
   title: string;
   description: string;
   icon: LucideIcon | string; // Support both string from API and LucideIcon for frontend
@@ -58,7 +58,7 @@ export interface Phase {
 }
 
 export interface Lesson {
-  id: string;
+  _id: string;
   contentId?: string; // Real MongoDB ID for progress tracking
   title: string;
   type: string;
@@ -99,7 +99,7 @@ export interface Instructor {
 }
 
 export interface Course {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   category: string;
@@ -128,7 +128,7 @@ export interface Course {
 
 // Enrolled Course Types
 export interface EnrolledLesson {
-  id: string;
+  _id: string;
   contentId?: string; // Real MongoDB ID for progress tracking
   title: string;
   duration: string;
@@ -151,13 +151,13 @@ export interface QuizQuestion {
 }
 
 export interface CourseSection {
-  id: string;
+  _id: string;
   title: string;
   lessons: EnrolledLesson[];
 }
 
 export interface Lab {
-  id: string;
+  _id: string;
   name: string;
   description: string;
   difficulty: string;
@@ -176,7 +176,7 @@ export interface Lab {
 }
 
 export interface Game {
-  id: string;
+  _id: string;
   name: string;
   description: string;
   difficulty: string;
@@ -212,7 +212,7 @@ export interface Playground {
 }
 
 export interface PlaygroundMode {
-  id: string;
+  _id: string;
   name: string;
   icon: LucideIcon;
   description: string;
@@ -246,7 +246,7 @@ export interface ChatMessage {
 }
 
 export interface LabStep {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   completed: boolean;
@@ -255,7 +255,7 @@ export interface LabStep {
 
 
 export interface User {
-  id: string;
+  _id: string;
   username: string;
   email: string;
   profile: {
@@ -290,7 +290,7 @@ export interface ContextualContent {
 }
 
 export interface GameChallenge {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   points: number;

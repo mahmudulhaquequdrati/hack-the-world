@@ -16,10 +16,10 @@ const PhaseNavigation = ({ phases, onPhaseChange }: PhaseNavigationProps) => {
             const PhaseIcon = getIconFromName(phase.icon);
             return (
               <TabsTrigger
-                key={phase.id}
-                value={phase.id}
+                key={phase._id}
+                value={phase._id}
                 className="data-[state=active]:bg-green-400 data-[state=active]:text-black flex items-center space-x-2 whitespace-nowrap px-3 py-2 text-sm flex-shrink-0 min-w-0"
-                onClick={() => onPhaseChange(phase.id)}
+                onClick={() => onPhaseChange(phase._id)}
               >
                 <PhaseIcon className="w-4 h-4 flex-shrink-0" />
                 <span className="hidden sm:inline">{phase.title}</span>

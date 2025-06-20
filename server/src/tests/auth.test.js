@@ -10,8 +10,8 @@ const User = require("../models/User");
 describe("🔐 Authentication Endpoints", () => {
   // Test data
   const validUserData = {
-    username: "cyberhacker2024",
-    email: "hacker@terminal-hacks.space",
+    username: "admin",
+    email: "admin@hacktheworld.dev",
     password: "SecurePass123!",
     firstName: "John",
     lastName: "Doe",
@@ -19,7 +19,7 @@ describe("🔐 Authentication Endpoints", () => {
   };
 
   const validLoginData = {
-    login: "cyberhacker2024",
+    login: "admin@hacktheworld.dev",
     password: "SecurePass123!",
   };
 

@@ -64,7 +64,7 @@ const ModulesList = ({
 
           return (
             <div
-              key={module.id}
+              key={module._id}
               className="p-6 bg-gradient-to-r from-gray-700/50 to-gray-800/50 rounded-xl border border-gray-600/30 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 group"
             >
               <div className="flex items-start justify-between">
@@ -115,7 +115,7 @@ const ModulesList = ({
                 </div>
                 <div className="flex items-center">
                   <Link
-                    to={`/modules/${module.id}`}
+                    to={`/modules/${module._id}`}
                     onClick={() => onModuleClick?.(module)}
                     className="p-2 bg-green-600/20 rounded-lg text-green-400 hover:text-green-300 hover:bg-green-600/30 transition-colors opacity-0 group-hover:opacity-100"
                     title="View module details"

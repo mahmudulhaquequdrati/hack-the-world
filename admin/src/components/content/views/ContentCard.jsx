@@ -38,7 +38,7 @@ const ContentCard = ({
 
   return (
     <div
-      key={contentItem.id}
+      key={contentItem._id}
       draggable={isDraggable}
       onDragStart={(e) => isDraggable && onDragStart?.(e, contentItem)}
       onDragEnd={(e) => isDraggable && onDragEnd?.(e)}
@@ -116,7 +116,7 @@ const ContentCard = ({
         {/* Action Buttons */}
         <div className="flex gap-2">
           <Link
-            to={`/content/${contentItem.id}`}
+            to={`/content/${contentItem._id}`}
             className="text-xs text-green-400 hover:text-green-300 transition-colors font-mono uppercase tracking-wider hover:bg-green-400/10 px-2 py-1 rounded border border-green-400/30 hover:border-green-400/50"
           >
             VIEW

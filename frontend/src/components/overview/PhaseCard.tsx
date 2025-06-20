@@ -6,7 +6,7 @@ import { useMemo } from "react";
 
 interface PhaseCardProps {
   phase: {
-    id: string;
+    _id: string;
     title: string;
     description: string;
     icon: LucideIcon | string;

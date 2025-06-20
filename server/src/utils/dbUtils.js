@@ -152,10 +152,10 @@ async function backupCollection(Model, filename) {
  * Safe insert with duplicate checking
  * @param {mongoose.Model} Model - Mongoose model
  * @param {Array} documents - Documents to insert
- * @param {string} uniqueField - Field to check for duplicates (default: 'id')
+ * @param {string} uniqueField - Field to check for duplicates (default: '_id')
  * @returns {Promise<Array>} Inserted documents
  */
-async function safeInsert(Model, documents, uniqueField = "id") {
+async function safeInsert(Model, documents, uniqueField = "_id") {
   try {
     const results = [];
 

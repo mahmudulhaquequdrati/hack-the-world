@@ -30,18 +30,18 @@ describe("Dashboard Component", () => {
     api.modulesAPI.getWithPhases.mockResolvedValue({
       data: [
         {
-          id: "1",
+          _id: "1",
           title: "Phase 1",
           modules: [
-            { id: "module1", title: "Module 1", phaseId: "1" },
-            { id: "module2", title: "Module 2", phaseId: "1" },
+            { _id: "module1", title: "Module 1", phaseId: "1" },
+            { _id: "module2", title: "Module 2", phaseId: "1" },
           ],
         },
         {
-          id: "2",
+          _id: "2",
           title: "Phase 2",
           modules: [
-            { id: "module3", title: "Module 3", phaseId: "2" },
+            { _id: "module3", title: "Module 3", phaseId: "2" },
           ],
         },
       ],
@@ -49,9 +49,9 @@ describe("Dashboard Component", () => {
 
     api.contentAPI.getAll.mockResolvedValue({
       data: [
-        { id: "content1", title: "Content 1", moduleId: "module1" },
-        { id: "content2", title: "Content 2", moduleId: "module2" },
-        { id: "content3", title: "Content 3", moduleId: "module3" },
+        { _id: "content1", title: "Content 1", moduleId: "module1" },
+        { _id: "content2", title: "Content 2", moduleId: "module2" },
+        { _id: "content3", title: "Content 3", moduleId: "module3" },
       ],
     });
   };

@@ -128,7 +128,7 @@ export const createBreadcrumbs = (phase) => {
  * @returns {boolean} True if phase data is valid
  */
 export const isPhaseDataValid = (phase) => {
-  return phase && phase.id && phase.title;
+  return phase && phase._id && phase.title;
 };
 
 /**

@@ -145,7 +145,7 @@ const PhasesManager = () => {
                 {sortPhasesByOrder(phases)
                   .map((phase) => (
                     <PhaseCard
-                      key={phase.id}
+                      key={phase._id}
                       phase={phase}
                       viewMode="grid"
                       draggedPhase={draggedPhase}
@@ -192,7 +192,7 @@ const PhasesManager = () => {
                     <tbody>
                       {phases.map((phase) => (
                         <PhaseCard
-                          key={phase.id}
+                          key={phase._id}
                           phase={phase}
                           viewMode="list"
                           onEdit={openModal}
@@ -207,7 +207,7 @@ const PhasesManager = () => {
                 <div className="lg:hidden space-y-4 p-4">
                   {phases.map((phase) => (
                     <PhaseCardMobile
-                      key={phase.id}
+                      key={phase._id}
                       phase={phase}
                       onEdit={openModal}
                       onDelete={handleDelete}

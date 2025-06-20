@@ -16,7 +16,7 @@ const { updateAchievementProgress } = require("./achievementController");
  */
 const markContentStarted = asyncHandler(async (req, res, next) => {
   const { contentId } = req.body;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   // Validate required fields
   if (!contentId) {
@@ -97,7 +97,7 @@ const markContentStarted = asyncHandler(async (req, res, next) => {
  */
 const markContentComplete = asyncHandler(async (req, res, next) => {
   const { contentId, score, maxScore } = req.body;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   // Validate required fields
   if (!contentId) {
@@ -213,7 +213,7 @@ const markContentComplete = asyncHandler(async (req, res, next) => {
  */
 const updateContentProgress = asyncHandler(async (req, res, next) => {
   const { contentId, progressPercentage } = req.body;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   // Validate required fields
   if (!contentId) {
@@ -324,7 +324,7 @@ const getUserOverallProgress = asyncHandler(async (req, res, next) => {
   }
 
   // Authorization: Users can only access their own progress, admins can access any
-  if (req.user.role !== "admin" && req.user.id !== userId) {
+  if (req.user.role !== "admin" && req.user._id !== userId) {
     return next(
       new ErrorResponse("Not authorized to access this progress", 403)
     );
@@ -366,13 +366,13 @@ const getUserOverallProgress = asyncHandler(async (req, res, next) => {
   // Get module progress summary
   const moduleProgressPromises = enrollments.map(async (enrollment) => {
     const moduleContent = await Content.find({
-      moduleId: enrollment.moduleId.id,
+      moduleId: enrollment.moduleId._id,
       isActive: true,
     });
 
     const moduleProgress = await UserProgress.find({
       userId,
-      contentId: { $in: moduleContent.map((c) => c.id) },
+      contentId: { $in: moduleContent.map((c) => c._id) },
     });
 
     const completedContent = moduleProgress.filter(
@@ -437,13 +437,13 @@ const getUserOverallProgress = asyncHandler(async (req, res, next) => {
 
   // Get content by type statistics
   const allContent = await Content.find({
-    moduleId: { $in: enrollments.map((e) => e.moduleId.id) },
+    moduleId: { $in: enrollments.map((e) => e.moduleId._id) },
     isActive: true,
   });
 
   const allProgress = await UserProgress.find({
     userId,
-    contentId: { $in: allContent.map((c) => c.id) },
+    contentId: { $in: allContent.map((c) => c._id) },
   });
 
   const contentByType = {
@@ -524,7 +524,7 @@ const getUserModuleProgress = asyncHandler(async (req, res, next) => {
   }
 
   // Authorization: Users can only access their own progress, admins can access any
-  if (req.user.role !== "admin" && req.user.id !== userId) {
+  if (req.user.role !== "admin" && req.user._id !== userId) {
     return next(
       new ErrorResponse("Not authorized to access this progress", 403)
     );
@@ -542,21 +542,21 @@ const getUserModuleProgress = asyncHandler(async (req, res, next) => {
   // Get user progress for this module
   const moduleProgress = await UserProgress.find({
     userId,
-    contentId: { $in: moduleContent.map((c) => c.id) },
+    contentId: { $in: moduleContent.map((c) => c._id) },
   }).populate("contentId", "title type section duration");
 
   // Create progress map for efficient lookup
   const progressMap = new Map();
   moduleProgress.forEach((p) => {
-    progressMap.set(p.contentId.id.toString(), p);
+    progressMap.set(p.contentId._id.toString(), p);
   });
 
   // Build content with progress data
   const contentWithProgress = moduleContent.map((content) => {
-    const progress = progressMap.get(content.id.toString());
+    const progress = progressMap.get(content._id.toString());
 
     return {
-      id: content.id,
+      _id: content._id,
       title: content.title,
       type: content.type,
       section: content.section,
@@ -606,7 +606,7 @@ const getUserModuleProgress = asyncHandler(async (req, res, next) => {
     message: "Module progress retrieved successfully",
     data: {
       module: {
-        id: module.id,
+        _id: module._id,
         title: module.title,
         description: module.description,
         difficulty: module.difficulty,
@@ -687,7 +687,7 @@ const getUserContentTypeProgress = asyncHandler(async (req, res, next) => {
   }
 
   // Authorization
-  if (req.user.role !== "admin" && req.user.id !== userId) {
+  if (req.user.role !== "admin" && req.user._id !== userId) {
     return next(
       new ErrorResponse("Not authorized to access this progress", 403)
     );
@@ -717,7 +717,7 @@ const getUserContentTypeProgress = asyncHandler(async (req, res, next) => {
     });
   }
 
-  const enrolledModuleIds = enrollments.map((e) => e.moduleId.id);
+  const enrolledModuleIds = enrollments.map((e) => e.moduleId._id);
 
   // Build content query
   let contentQuery = {
@@ -756,7 +756,7 @@ const getUserContentTypeProgress = asyncHandler(async (req, res, next) => {
     });
   }
 
-  const contentIds = content.map((c) => c.id);
+  const contentIds = content.map((c) => c._id);
 
   // Get progress for this content type
   let progressQuery = {
@@ -777,21 +777,21 @@ const getUserContentTypeProgress = asyncHandler(async (req, res, next) => {
   // Create progress map
   const progressMap = new Map();
   progress.forEach((p) => {
-    progressMap.set(p.contentId.id.toString(), p);
+    progressMap.set(p.contentId._id.toString(), p);
   });
 
   // Build content with progress
   const contentWithProgress = content.map((item) => {
-    const itemProgress = progressMap.get(item.id.toString());
+    const itemProgress = progressMap.get(item._id.toString());
 
     return {
-      id: item.id,
+      _id: item._id,
       title: item.title,
       description: item.description,
       section: item.section,
       duration: item.duration,
       module: {
-        id: item.moduleId.id,
+        _id: item.moduleId._id,
         title: item.moduleId.title,
         description: item.moduleId.description,
         difficulty: item.moduleId.difficulty,
@@ -799,7 +799,7 @@ const getUserContentTypeProgress = asyncHandler(async (req, res, next) => {
       },
       progress: itemProgress
         ? {
-            id: itemProgress.id,
+            _id: itemProgress._id,
             status: itemProgress.status,
             progressPercentage: itemProgress.progressPercentage,
             startedAt: itemProgress.startedAt,
@@ -849,7 +849,7 @@ const getUserContentTypeProgress = asyncHandler(async (req, res, next) => {
   // Group by module
   const moduleGroups = enrollments.map((enrollment) => {
     const moduleContent = filteredContent.filter(
-      (item) => item.module.id.toString() === enrollment.moduleId.id.toString()
+      (item) => item.module._id.toString() === enrollment.moduleId._id.toString()
     );
 
     return {
@@ -898,7 +898,7 @@ const getUserContentTypeProgress = asyncHandler(async (req, res, next) => {
  */
 const getContentProgress = asyncHandler(async (req, res, next) => {
   const { contentId } = req.params;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   // Validate ObjectId
   if (!mongoose.Types.ObjectId.isValid(contentId)) {
@@ -956,7 +956,7 @@ const updateModuleProgress = async (userId, moduleId) => {
   // Get user progress for this module
   const moduleProgress = await UserProgress.find({
     userId,
-    contentId: { $in: moduleContent.map((c) => c.id) },
+    contentId: { $in: moduleContent.map((c) => c._id) },
   });
 
   // Count completed content

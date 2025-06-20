@@ -46,21 +46,21 @@ const ProgressTracker = ({
     const textLessons = allLessons.filter((l) => l.type === "text");
 
     const completedVideos = videoLessons.filter((l) =>
-      completedLessons.includes(l.id)
+      completedLessons.includes(l._id)
     ).length;
     const completedLabs = labLessons.filter((l) =>
-      completedLessons.includes(l.id)
+      completedLessons.includes(l._id)
     ).length;
     const completedGames = gameLessons.filter((l) =>
-      completedLessons.includes(l.id)
+      completedLessons.includes(l._id)
     ).length;
     const completedTexts = textLessons.filter((l) =>
-      completedLessons.includes(l.id)
+      completedLessons.includes(l._id)
     ).length;
 
     // Calculate estimated time remaining
     const remainingLessons = allLessons.filter(
-      (l) => !completedLessons.includes(l.id)
+      (l) => !completedLessons.includes(l._id)
     );
     const estimatedTimeRemaining = remainingLessons.reduce((total, lesson) => {
       const duration = lesson.duration || "0:00";

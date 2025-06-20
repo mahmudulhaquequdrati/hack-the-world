@@ -16,8 +16,8 @@ const ModuleInfoCard = ({ module, phase = null, className = "" }) => {
     {
       label: "Phase",
       value: phase ? phase.title : "Not assigned",
-      isLink: Boolean(phase?.id),
-      linkTo: phase?.id ? `/phases/${phase.id}` : null,
+      isLink: Boolean(phase?._id),
+      linkTo: phase?._id ? `/phases/${phase._id}` : null,
     },
     {
       label: "Difficulty",

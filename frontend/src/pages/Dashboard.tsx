@@ -50,7 +50,7 @@ const Dashboard = () => {
     if (enrollmentsData?.success && enrollmentsData?.data) {
       enrollmentsData.data.forEach((enrollment) => {
         map.set(enrollment.moduleId, {
-          enrollmentId: enrollment.id,
+          enrollmentId: enrollment._id,
           status: enrollment.status,
           progressPercentage: enrollment.progressPercentage,
           isCompleted: enrollment.isCompleted,
@@ -67,7 +67,7 @@ const Dashboard = () => {
     if (!phasesWithModules) return [];
     return phasesWithModules.flatMap(phase => 
       (phase.modules || []).map(module => {
-        const enrollmentInfo = enrollmentMap.get(module.id);
+        const enrollmentInfo = enrollmentMap.get(module._id);
         return {
           ...module,
           // Add enhanced content statistics like in CyberSecOverview
@@ -103,11 +103,11 @@ const Dashboard = () => {
 
   const handleModuleClick = (module: Module) => {
     if (module.enrolled) {
-      navigate(getEnrollPath(module.id), {
+      navigate(getEnrollPath(module._id), {
         state: { fromDashboard: true },
       });
     } else {
-      navigate(getCoursePath(module.id), {
+      navigate(getCoursePath(module._id), {
         state: { fromDashboard: true },
       });
     }

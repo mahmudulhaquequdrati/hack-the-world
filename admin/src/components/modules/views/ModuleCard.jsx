@@ -33,9 +33,9 @@ const ModuleCard = ({
   const difficultyColors = getDifficultyColor(module.difficulty);
   const colorClasses = getModuleColorClasses(module.color);
 
-  const isSelected = selectedModules.has(module.id);
-  const isDragged = draggedModule?.id === module.id;
-  const isDraggedOver = dragOverModule?.id === module.id;
+  const isSelected = selectedModules.has(module._id);
+  const isDragged = draggedModule?._id === module._id;
+  const isDraggedOver = dragOverModule?._id === module._id;
 
   const getCardClasses = () => {
     let classes = `relative overflow-hidden rounded-xl border-2 p-6 group transition-all duration-300 cursor-move select-none ${colorClasses.border}`;
@@ -58,12 +58,12 @@ const ModuleCard = ({
       return;
     }
 
-    onToggleSelection(module.id);
+    onToggleSelection(module._id);
   };
 
   return (
     <div
-      key={module.id}
+      key={module._id}
       draggable={true}
       onDragStart={(e) => onDragStart(e, module)}
       onDragEnd={onDragEnd}
@@ -186,7 +186,7 @@ const ModuleCard = ({
         {/* Enhanced Action Buttons */}
         <div className="flex space-x-2">
           <Link
-            to={`/modules/${module.id}`}
+            to={`/modules/${module._id}`}
             className={`flex-1 h-10 border transition-all duration-300 rounded-lg flex items-center justify-center font-mono text-xs font-bold uppercase tracking-wider ${
               module.color === "green"
                 ? "bg-green-400/10 border-green-400/30 hover:bg-green-400/20 hover:border-green-400/50 text-green-400"

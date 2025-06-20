@@ -35,7 +35,7 @@ describe("Progress API Endpoints", () => {
 
     // Create test module
     testModule = await Module.create({
-      phaseId: testPhase.id,
+      phaseId: testPhase._id,
       title: "Test Module",
       description: "Test module description",
       icon: "lock",
@@ -190,7 +190,7 @@ describe("Progress API Endpoints", () => {
         .expect(200);
 
       expect(response.body.data.labs).toHaveLength(1);
-      expect(response.body.data.labs[0].module.id).toBe(
+      expect(response.body.data.labs[0].module._id).toBe(
         testModule._id.toString()
       );
     });

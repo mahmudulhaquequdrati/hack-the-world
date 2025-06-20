@@ -23,7 +23,7 @@ const mockUseUpdateProfileMutation = useUpdateProfileMutation as ReturnType<
 
 // Mock user data
 const mockUser: User = {
-  id: "user-123",
+  _id: "user-123",
   username: "testuser",
   email: "test@example.com",
   profile: {

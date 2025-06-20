@@ -82,7 +82,7 @@ describe("ResetPasswordPage Security Implementation", () => {
       message: "Password reset successful",
       data: {
         user: {
-          id: "user123",
+          _id: "user123",
           username: "testuser",
           email: "test@example.com",
         },
@@ -234,7 +234,7 @@ describe("Security Best Practices Verification", () => {
     const mockAuthResponse = {
       success: true,
       data: {
-        user: { id: "user123", username: "testuser" },
+        user: { _id: "user123", username: "testuser" },
         token: "new-token",
       },
     };

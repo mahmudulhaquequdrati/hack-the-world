@@ -60,7 +60,7 @@ export const validateModuleData = (module) => {
   const errors = [];
 
   // Required fields validation
-  if (!module.id && !module._id) {
+  if (!module._id) {
     errors.push("Module ID is required");
   }
 
@@ -137,7 +137,7 @@ export const validateContentData = (content) => {
       return;
     }
 
-    if (!item.id && !item._id) {
+    if (!item._id) {
       errors.push(`Content item at index ${index} is missing ID`);
     }
 
@@ -232,7 +232,7 @@ export const validatePhaseData = (phase) => {
 
   const errors = [];
 
-  if (!phase.id && !phase._id) {
+  if (!phase._id) {
     errors.push("Phase ID is required when phase data is provided");
   }
 
@@ -268,7 +268,7 @@ export const sanitizeModuleData = (module) => {
   if (!module) return null;
 
   return {
-    id: module.id || module._id,
+    _id: module._id,
     title: typeof module.title === "string" ? module.title.trim() : "",
     description:
       typeof module.description === "string" ? module.description.trim() : "",
@@ -308,7 +308,7 @@ export const sanitizePhaseData = (phase) => {
   if (!phase) return null;
 
   return {
-    id: phase.id || phase._id,
+    _id: phase._id,
     title: typeof phase.title === "string" ? phase.title.trim() : "",
     description:
       typeof phase.description === "string" ? phase.description.trim() : "",
@@ -329,9 +329,9 @@ export const sanitizeContentData = (content) => {
   if (!Array.isArray(content)) return [];
 
   return content
-    .filter((item) => item && (item.id || item._id) && item.title)
+    .filter((item) => item && item._id && item.title)
     .map((item) => ({
-      id: item.id || item._id,
+      _id: item._id,
       title: typeof item.title === "string" ? item.title.trim() : "",
       description:
         typeof item.description === "string" ? item.description.trim() : "",

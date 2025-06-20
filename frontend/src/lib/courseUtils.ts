@@ -361,7 +361,7 @@ const generateEnhancedLabs = (course: Course): Lab[] => {
 
   // Generate labs based on course content and existing lab data
   course.labsData.forEach((labData, index) => {
-    const labId = `${course.id}-lab-${index}`;
+    const labId = `${course._id}-lab-${index}`;
 
     // Determine category based on lab name and course category
     let category = "general";
@@ -414,26 +414,26 @@ const generateEnhancedLabs = (course: Course): Lab[] => {
     // Generate steps
     const steps = [
       {
-        id: `${labId}-step-1`,
+        _id: `${labId}-step-1`,
         title: "Environment Setup",
         description:
           "Set up the lab environment and verify all tools are working",
         completed: false,
       },
       {
-        id: `${labId}-step-2`,
+        _id: `${labId}-step-2`,
         title: "Initial Analysis",
         description: "Perform initial reconnaissance and analysis",
         completed: false,
       },
       {
-        id: `${labId}-step-3`,
+        _id: `${labId}-step-3`,
         title: "Implementation",
         description: "Execute the main lab activities",
         completed: false,
       },
       {
-        id: `${labId}-step-4`,
+        _id: `${labId}-step-4`,
         title: "Verification",
         description: "Verify results and document findings",
         completed: false,
@@ -449,7 +449,7 @@ const generateEnhancedLabs = (course: Course): Lab[] => {
     ];
 
     enhancedLabs.push({
-      id: labId,
+      _id: labId,
       name: labData.name,
       description: labData.description,
       difficulty: labData.difficulty,
@@ -474,7 +474,7 @@ const generateEnhancedGames = (course: Course): Game[] => {
   const enhancedGames: Game[] = [];
 
   course.gamesData.forEach((gameData, index) => {
-    const gameId = `${course.id}-game-${index}`;
+    const gameId = `${course._id}-game-${index}`;
 
     // Determine game type based on name and description
     let gameType:
@@ -523,7 +523,7 @@ const generateEnhancedGames = (course: Course): Game[] => {
     // Generate challenges
     const challenges: GameChallenge[] = [
       {
-        id: `${gameId}-challenge-1`,
+        _id: `${gameId}-challenge-1`,
         title: "Basic Challenge",
         description: "Complete the fundamental tasks",
         points: Math.floor(gameData.points * 0.3),
@@ -531,7 +531,7 @@ const generateEnhancedGames = (course: Course): Game[] => {
         completed: false,
       },
       {
-        id: `${gameId}-challenge-2`,
+        _id: `${gameId}-challenge-2`,
         title: "Intermediate Challenge",
         description: "Tackle more complex scenarios",
         points: Math.floor(gameData.points * 0.4),
@@ -539,7 +539,7 @@ const generateEnhancedGames = (course: Course): Game[] => {
         completed: false,
       },
       {
-        id: `${gameId}-challenge-3`,
+        _id: `${gameId}-challenge-3`,
         title: "Advanced Challenge",
         description: "Master the most difficult tasks",
         points: Math.floor(gameData.points * 0.3),
@@ -549,7 +549,7 @@ const generateEnhancedGames = (course: Course): Game[] => {
     ];
 
     enhancedGames.push({
-      id: gameId,
+      _id: gameId,
       name: gameData.name,
       description: gameData.description,
       difficulty: "Beginner",
@@ -592,7 +592,7 @@ export const convertCourseToEnrolledCourse = (
     (curriculumSection, sectionIndex) => {
       const curriculumLessons: EnrolledLesson[] = curriculumSection.topics
         .map((topic, topicIndex) => {
-          const lessonId = `${course.id}-section-${sectionIndex}-lesson-${topicIndex}`;
+          const lessonId = `${course._id}-section-${sectionIndex}-lesson-${topicIndex}`;
 
           // Determine lesson type based on topic content and position
           let lessonType: "video" | "text" | "lab" | "game" = "video";
@@ -641,15 +641,15 @@ export const convertCourseToEnrolledCourse = (
           // Generate enhanced content
           const contextualContent = generateContextualContent(topic);
           const dynamicResources = generateDynamicResources(topic, lessonType);
-          const relatedLabs = generateRelatedLabs(topic, course.id);
-          const relatedGames = generateRelatedGames(topic, course.id);
+          const relatedLabs = generateRelatedLabs(topic, course._id);
+          const relatedGames = generateRelatedGames(topic, course._id);
 
           const lesson = {
-            id: lessonId,
+            _id: lessonId,
             title: topic,
             duration,
             type: lessonType,
-            completed: isLessonCompletedByIndex(course.id, globalLessonIndex),
+            completed: isLessonCompletedByIndex(course._id, globalLessonIndex),
             description: `Learn about ${topic.toLowerCase()} in this comprehensive lesson. ${
               contextualContent.objectives[0]
             }.`,
@@ -676,13 +676,13 @@ export const convertCourseToEnrolledCourse = (
       const sectionGames: EnrolledLesson[] = course.gamesData
         .slice(sectionIndex * 2, (sectionIndex + 1) * 2) // Distribute games across sections
         .map((game, gameIndex) => {
-          const gameId = `${course.id}-section-${sectionIndex}-game-${gameIndex}`;
+          const gameId = `${course._id}-section-${sectionIndex}-game-${gameIndex}`;
           const lesson = {
-            id: gameId,
+            _id: gameId,
             title: game.name,
             duration: "20:00",
             type: "game" as const,
-            completed: isLessonCompletedByIndex(course.id, globalLessonIndex),
+            completed: isLessonCompletedByIndex(course._id, globalLessonIndex),
             description: game.description,
             contextualContent: generateContextualContent(game.name),
             dynamicResources: generateDynamicResources(game.name, "game"),
@@ -698,13 +698,13 @@ export const convertCourseToEnrolledCourse = (
       const sectionLabs: EnrolledLesson[] = course.labsData
         .slice(sectionIndex * 2, (sectionIndex + 1) * 2) // Distribute labs across sections
         .map((lab, labIndex) => {
-          const labId = `${course.id}-section-${sectionIndex}-lab-${labIndex}`;
+          const labId = `${course._id}-section-${sectionIndex}-lab-${labIndex}`;
           const lesson = {
-            id: labId,
+            _id: labId,
             title: lab.name,
             duration: lab.duration || "45:00",
             type: "lab" as const,
-            completed: isLessonCompletedByIndex(course.id, globalLessonIndex),
+            completed: isLessonCompletedByIndex(course._id, globalLessonIndex),
             description: lab.description,
             contextualContent: generateContextualContent(lab.name),
             dynamicResources: generateDynamicResources(lab.name, "lab"),
@@ -724,7 +724,7 @@ export const convertCourseToEnrolledCourse = (
       ];
 
       return {
-        id: `${course.id}-section-${sectionIndex}`,
+        _id: `${course._id}-section-${sectionIndex}`,
         title: curriculumSection.title,
         lessons: allLessons,
       };
@@ -809,7 +809,7 @@ export const getDefaultCompletedLessons = (
   course.sections.forEach((section) => {
     section.lessons.forEach((lesson) => {
       if (lesson.completed) {
-        completedLessons.push(lesson.id);
+        completedLessons.push(lesson._id);
       }
     });
   });

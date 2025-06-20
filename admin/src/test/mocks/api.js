@@ -4,7 +4,6 @@ import { vi } from "vitest";
 export const mockPhases = [
   {
     _id: "507f1f77bcf86cd799439011",
-    id: "507f1f77bcf86cd799439011",
     title: "Foundation Phase",
     description: "Basic cybersecurity concepts",
     order: 1,
@@ -12,7 +11,6 @@ export const mockPhases = [
   },
   {
     _id: "507f1f77bcf86cd799439012",
-    id: "507f1f77bcf86cd799439012",
     title: "Intermediate Phase",
     description: "Advanced cybersecurity topics",
     order: 2,
@@ -143,16 +141,16 @@ export const mockContentAPI = {
 export const mockAuthAPI = {
   login: vi.fn(() =>
     Promise.resolve({
-      data: { token: "mock-token", user: { id: "1", email: "admin@test.com" } },
+      data: { token: "mock-token", user: { _id: "1", email: "admin@test.com" } },
     })
   ),
   register: vi.fn(() =>
     Promise.resolve({
-      data: { token: "mock-token", user: { id: "1", email: "admin@test.com" } },
+      data: { token: "mock-token", user: { _id: "1", email: "admin@test.com" } },
     })
   ),
   getCurrentUser: vi.fn(() =>
-    Promise.resolve({ data: { id: "1", email: "admin@test.com" } })
+    Promise.resolve({ data: { _id: "1", email: "admin@test.com" } })
   ),
   logout: vi.fn(() => Promise.resolve({ success: true })),
 };

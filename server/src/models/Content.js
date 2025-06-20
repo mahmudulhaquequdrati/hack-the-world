@@ -123,11 +123,11 @@ const ContentSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    id: false, // Disable virtual id field
     toJSON: {
       virtuals: true,
       transform: function (doc, ret) {
-        ret.id = ret._id.toString();
-        delete ret._id;
+        ret._id = ret._id.toString();
         delete ret.__v;
         return ret;
       },
@@ -135,8 +135,7 @@ const ContentSchema = new mongoose.Schema(
     toObject: {
       virtuals: true,
       transform: function (doc, ret) {
-        ret.id = ret._id.toString();
-        delete ret._id;
+        ret._id = ret._id.toString();
         delete ret.__v;
         return ret;
       },
@@ -241,7 +240,7 @@ ContentSchema.statics.getByModuleGroupedOptimized = async function (
     .then((content) => {
       return content.map((item) => {
         return {
-          id: item._id.toString(),
+          _id: item._id.toString(),
           title: item.title,
           type: item.type,
           section: item.section,
@@ -252,7 +251,7 @@ ContentSchema.statics.getByModuleGroupedOptimized = async function (
 
   const completedLessons = await UserProgress.find({
     userId: userId,
-    contentId: { $in: content.map((item) => item.id) },
+    contentId: { $in: content.map((item) => item._id) },
     status: "completed",
   }).then((lessons) => {
     return lessons.map((lesson) => {
@@ -270,13 +269,13 @@ ContentSchema.statics.getByModuleGroupedOptimized = async function (
       sections[item.section] = [];
     }
     sections[item.section].push({
-      contentId: item.id, // Keep as contentId for API response consistency
+      contentId: item._id, // Keep as contentId for API response consistency
       contentTitle: item.title,
       contentType: item.type,
       sectionTitle: item.section,
       duration: item.duration || 15, // Default 15 minutes if not specified
       isCompleted: completedLessons.some(
-        (lesson) => lesson.contentId === item.id
+        (lesson) => lesson.contentId === item._id
       ),
     });
   });
@@ -326,9 +325,8 @@ ContentSchema.statics.getContentWithNavigation = async function (contentId) {
   // Note: When using .lean(), _id is not transformed to id, so we need to handle it manually
   const transformedContent = {
     ...currentContent,
-    id: currentContent._id.toString(),
+    _id: currentContent._id.toString(),
   };
-  delete transformedContent._id;
 
   return {
     ...transformedContent,
@@ -379,7 +377,7 @@ ContentSchema.statics.updateModuleStats = async function (moduleId) {
   allContent.forEach((content) => {
     const pluralType = content.type + "s";
     if (contentByType.hasOwnProperty(pluralType)) {
-      contentByType[pluralType].push(content.id.toString());
+      contentByType[pluralType].push(content._id.toString());
     }
     totalDuration += content.duration || 0;
   });
@@ -525,16 +523,16 @@ ContentSchema.post("deleteMany", async function (result) {
     
     for (const module of modules) {
       try {
-        await Content.updateModuleStats(module.id);
-        await UserEnrollment.updateModuleSectionCounts(module.id);
+        await Content.updateModuleStats(module._id);
+        await UserEnrollment.updateModuleSectionCounts(module._id);
         
         // Trigger progress recalculation for all enrollments
-        ProgressSyncService.syncModuleEnrollments(module.id)
+        ProgressSyncService.syncModuleEnrollments(module._id)
           .catch(error => {
-            console.error(`Failed to sync enrollments after bulk deletion for module ${module.id}:`, error);
+            console.error(`Failed to sync enrollments after bulk deletion for module ${module._id}:`, error);
           });
       } catch (error) {
-        console.error(`Error updating module ${module.id} after bulk deletion:`, error);
+        console.error(`Error updating module ${module._id} after bulk deletion:`, error);
       }
     }
   } catch (error) {

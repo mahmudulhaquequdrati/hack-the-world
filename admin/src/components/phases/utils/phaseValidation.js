@@ -102,7 +102,7 @@ export const validateOrder = (order, phases, editingPhase) => {
   // Check for duplicate orders (excluding current phase if editing)
   const duplicatePhase = phases.find(phase => 
     phase.order === order && 
-    (!editingPhase || phase.id !== editingPhase.id)
+    (!editingPhase || phase._id !== editingPhase._id)
   );
 
   if (duplicatePhase) {

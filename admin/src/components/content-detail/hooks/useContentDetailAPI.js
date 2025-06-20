@@ -78,8 +78,8 @@ const useContentDetailAPI = (contentId) => {
         contentData = contentResponse.data;
 
         // If content has module ID, fetch module and related content
-        if (contentData.module?.id || contentData.moduleId) {
-          const moduleId = contentData.module?.id || contentData.moduleId;
+        if (contentData.module?._id || contentData.moduleId) {
+          const moduleId = contentData.module?._id || contentData.moduleId;
 
           try {
             // Fetch module details

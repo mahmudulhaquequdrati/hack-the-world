@@ -36,7 +36,7 @@ export const createPhaseData = (formData, phases, editingPhase) => {
  */
 export const preparePhaseOrders = (phases) => {
   return phases.map((phase) => ({
-    id: phase.id,
+    _id: phase._id,
     order: phase.order,
   }));
 };
@@ -112,14 +112,14 @@ export const optimisticUpdate = (prevPhases, updatedPhase, operation) => {
   switch (operation) {
     case 'update':
       return prevPhases.map((phase) =>
-        phase.id === updatedPhase.id ? { ...phase, ...updatedPhase } : phase
+        phase._id === updatedPhase._id ? { ...phase, ...updatedPhase } : phase
       );
     
     case 'add':
       return [...prevPhases, updatedPhase];
     
     case 'delete':
-      return prevPhases.filter((phase) => phase.id !== updatedPhase.id);
+      return prevPhases.filter((phase) => phase._id !== updatedPhase._id);
     
     default:
       console.warn(`Unknown optimistic update operation: ${operation}`);

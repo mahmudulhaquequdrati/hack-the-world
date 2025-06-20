@@ -19,7 +19,7 @@ interface DashboardLabsTabProps {
 }
 
 interface LabItem {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   difficulty: string;
@@ -52,17 +52,17 @@ export const DashboardLabsTab = ({
     error: labsError,
   } = useGetContentTypeProgressQuery(
     {
-      userId: user?.id || "",
+      userId: user?._id || "",
       contentType: "lab",
     },
     {
-      skip: !user?.id,
+      skip: !user?._id,
     }
   );
 
   const handleStartLab = (lab: LabItem) => {
     // Navigate to dedicated lab route using the real content ID
-    navigate(`/learn/${lab.moduleId}/lab/${lab.id}`);
+    navigate(`/learn/${lab.moduleId}/lab/${lab._id}`);
   };
 
   // Transform real API data into LabItem format
@@ -77,7 +77,7 @@ export const DashboardLabsTab = ({
       const isCompleted = progress?.status === "completed";
 
       // Find the phase this module belongs to
-      const phase = phases.find((p) => p.id === module.phase) || phases[0];
+      const phase = phases.find((p) => p._id === module.phase) || phases[0];
 
       // Calculate estimated duration from content duration (convert seconds to minutes)
       const durationMinutes = labContent.duration
@@ -85,7 +85,7 @@ export const DashboardLabsTab = ({
         : 45;
 
       return {
-        id: labContent.id,
+        _id: labContent._id,
         title: labContent.title,
         description:
           labContent.description ||
@@ -98,9 +98,9 @@ export const DashboardLabsTab = ({
         moduleBgColor: "#001100", // Default dark green, could be enhanced
         completed: isCompleted,
         available: true,
-        phaseId: phase.id,
+        phaseId: phase._id,
         phaseTitle: phase.title,
-        moduleId: module.id,
+        moduleId: module._id,
         type: "Lab Environment", // Default type, could be enhanced with content metadata
         progressPercentage: progress?.progressPercentage || 0,
         score: progress?.score || undefined,
@@ -203,7 +203,7 @@ export const DashboardLabsTab = ({
           <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
             {labs.map((lab) => (
               <div
-                key={lab.id}
+                key={lab._id}
                 className="group relative bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-green-400/30 rounded-lg overflow-hidden hover:border-cyan-400/60 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-400/25"
               >
                 {/* Matrix-like pattern overlay */}

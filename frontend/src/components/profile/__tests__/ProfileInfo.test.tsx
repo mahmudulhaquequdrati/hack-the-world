@@ -5,7 +5,7 @@ import ProfileInfo from "../ProfileInfo";
 
 // Mock user data for testing
 const mockUser: User = {
-  id: "user-123",
+  _id: "user-123",
   username: "testuser",
   email: "test@example.com",
   profile: {

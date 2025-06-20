@@ -17,7 +17,7 @@ const useModuleDetailAPI = (moduleId) => {
     statistics: {
       totalContent: 0,
       totalDuration: 0,
-    }
+    },
   });
 
   /**
@@ -52,7 +52,8 @@ const useModuleDetailAPI = (moduleId) => {
 
       // Handle module and phase data
       if (moduleWithPhaseRes.status === "fulfilled") {
-        const moduleRes = moduleWithPhaseRes.value.data || moduleWithPhaseRes.value;
+        const moduleRes =
+          moduleWithPhaseRes.value.data || moduleWithPhaseRes.value;
         moduleData = moduleRes;
 
         // Extract phase data if available
@@ -87,7 +88,8 @@ const useModuleDetailAPI = (moduleId) => {
 
       // Handle content overview data
       if (moduleOverviewRes.status === "fulfilled") {
-        const overviewData = moduleOverviewRes.value.data || moduleOverviewRes.value;
+        const overviewData =
+          moduleOverviewRes.value.data || moduleOverviewRes.value;
 
         if (overviewData.contentBySections) {
           // OPTIMIZED: Preserve section structure for proper display
@@ -120,7 +122,7 @@ const useModuleDetailAPI = (moduleId) => {
               // This looks like a content array
               sections[key] = value.map((item) => ({
                 ...item,
-                id: item._id || item.id, // Normalize id field
+                _id: item._id, // Normalize id field
               }));
               contentList.push(...sections[key]);
               hasContent = true;
@@ -166,7 +168,6 @@ const useModuleDetailAPI = (moduleId) => {
         contentBySections: contentSections,
         statistics: statsData,
       });
-
     } catch (error) {
       console.error("Error fetching module data:", error);
       setError(handleApiError(error, "load module details"));
@@ -212,15 +213,16 @@ const useModuleDetailAPI = (moduleId) => {
  * @returns {Object} Statistics
  */
 const calculateContentStatistics = (content = []) => {
-  const videoCount = content.filter(c => c.type === 'video').length;
-  const labCount = content.filter(c => c.type === 'lab').length;
-  const gameCount = content.filter(c => c.type === 'game').length;
-  const documentCount = content.filter(c => c.type === 'document').length;
-  
+  const videoCount = content.filter((c) => c.type === "video").length;
+  const labCount = content.filter((c) => c.type === "lab").length;
+  const gameCount = content.filter((c) => c.type === "game").length;
+  const documentCount = content.filter((c) => c.type === "document").length;
+
   const totalDuration = content.reduce((sum, c) => sum + (c.duration || 0), 0);
-  const averageDuration = content.length > 0 
-    ? Math.round((totalDuration / content.length) * 10) / 10
-    : 0;
+  const averageDuration =
+    content.length > 0
+      ? Math.round((totalDuration / content.length) * 10) / 10
+      : 0;
 
   return {
     totalContent: content.length,
@@ -235,7 +237,7 @@ const calculateContentStatistics = (content = []) => {
       lab: labCount,
       game: gameCount,
       document: documentCount,
-    }
+    },
   };
 };
 

@@ -16,7 +16,7 @@ export const ModuleProgressCard = ({ module }: ModuleProgressCardProps) => {
   return (
     <Card
       className={`${module.bgColor} ${module.borderColor} border-2 hover:scale-[1.02] transition-all cursor-pointer`}
-      onClick={() => navigate(getEnrollPath(module.id))}
+      onClick={() => navigate(getEnrollPath(module._id))}
     >
       <CardHeader>
         <CardTitle
@@ -51,7 +51,7 @@ export const ModuleProgressCard = ({ module }: ModuleProgressCardProps) => {
             className="w-full bg-green-400 text-black hover:bg-green-300 font-mono"
             onClick={(e) => {
               e.stopPropagation();
-              navigate(getEnrollPath(module.id));
+              navigate(getEnrollPath(module._id));
             }}
           >
             <PlayCircle className="w-4 h-4 mr-2" />

@@ -129,8 +129,8 @@ const ApiDebug = () => {
                 </div>
                 <div className="max-h-20 overflow-y-auto text-xs space-y-1">
                   {phasesWithModules.map((p: Phase) => (
-                    <div key={p.id} className="text-green-400/80">
-                      {p.id}: {p.title} ({p.modules?.length || 0} modules)
+                    <div key={p._id} className="text-green-400/80">
+                      {p._id}: {p.title} ({p.modules?.length || 0} modules)
                     </div>
                   ))}
                 </div>

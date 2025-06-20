@@ -89,9 +89,9 @@ const ContentHeroSection = ({
               ))}
             </nav>
           </div>
-          {showEditButton && content.id && (
+          {showEditButton && content._id && (
             <Link 
-              to={`/content/${content.id}/edit`}
+              to={`/content/${content._id}/edit`}
               className="px-4 py-2 bg-green-600/20 border border-green-500/30 text-green-400 rounded-lg hover:bg-green-600/30 hover:text-green-300 transition-all flex items-center"
             >
               <PencilIcon className="w-4 h-4 mr-2" />

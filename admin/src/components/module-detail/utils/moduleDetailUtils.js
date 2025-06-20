@@ -20,8 +20,8 @@ export const formatModuleData = (module, phase = null) => {
     updatedAtFormatted: module.updatedAt
       ? new Date(module.updatedAt).toLocaleDateString()
       : "N/A",
-    estimatedHoursDisplay: module.estimatedHours 
-      ? `${module.estimatedHours}h estimated`
+    estimatedHoursDisplay: module.content?.estimatedHours 
+      ? `${module.content.estimatedHours}h estimated`
       : null,
   };
 };

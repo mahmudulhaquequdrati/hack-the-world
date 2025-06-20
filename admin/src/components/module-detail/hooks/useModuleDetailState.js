@@ -153,7 +153,7 @@ const useModuleDetailState = (rawData) => {
         if (formattedModule.title) score += 25;
         if (formattedModule.description) score += 25;
         if (formattedModule.difficulty) score += 15;
-        if (formattedModule.estimatedHours) score += 10;
+        if (formattedModule.content?.estimatedHours) score += 10;
         if ((sanitizedData?.content?.length || 0) > 0) score += 25;
         return score;
       })(),

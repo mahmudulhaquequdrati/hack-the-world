@@ -1,19 +1,19 @@
 import React from "react";
 import { useParams } from "react-router-dom";
+import useModuleDetailManager from "../components/module-detail/hooks/useModuleDetailManager";
+import ContentSectionsList from "../components/module-detail/ui/ContentSectionsList";
+import ModuleHeroSection from "../components/module-detail/ui/ModuleHeroSection";
+import ModuleInfoCard from "../components/module-detail/ui/ModuleInfoCard";
+import ModuleStatisticsCard from "../components/module-detail/ui/ModuleStatisticsCard";
 import Breadcrumb from "../components/shared/Breadcrumb";
 import ErrorState from "../components/shared/ErrorState";
 import LoadingState from "../components/shared/LoadingState";
 import NotFoundState from "../components/shared/NotFoundState";
 import QuickActionsBar from "../components/shared/QuickActionsBar";
-import useModuleDetailManager from "../components/module-detail/hooks/useModuleDetailManager";
-import ModuleHeroSection from "../components/module-detail/ui/ModuleHeroSection";
-import ModuleStatisticsCard from "../components/module-detail/ui/ModuleStatisticsCard";
-import ContentSectionsList from "../components/module-detail/ui/ContentSectionsList";
-import ModuleInfoCard from "../components/module-detail/ui/ModuleInfoCard";
 
 const ModuleDetailView = () => {
   const { moduleId } = useParams();
-  
+
   // Use the composite hook for all module detail functionality
   const {
     isLoading,
@@ -23,10 +23,9 @@ const ModuleDetailView = () => {
     phase,
     statistics,
     processedSections,
-    moduleStatus,
     breadcrumbs,
     actions,
-    ui
+    ui,
   } = useModuleDetailManager(moduleId);
 
   // Loading state
@@ -59,29 +58,14 @@ const ModuleDetailView = () => {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Hero Section with Navigation */}
-      <div className="relative px-6 py-8 bg-gray-900">
-        {/* Navigation */}
-        <div className="flex items-center justify-between mb-6">
-          <Breadcrumb
-            onBack={actions.goBack}
-            backLabel="Modules"
-            items={breadcrumbs}
-          />
-
-          <QuickActionsBar
-            editPath="/modules"
-            editLabel="Edit"
-            showDelete={false}
-          />
-        </div>
-      </div>
-
-      {/* Module Hero Section */}
+      {/* Module Hero Section with integrated navigation */}
       <ModuleHeroSection
         module={module}
         phase={phase}
         statistics={statistics}
+        onNavigateBack={actions.goBack}
+        breadcrumbs={breadcrumbs}
+        showEditButton={true}
       />
 
       {/* Main Content Area */}
@@ -101,16 +85,10 @@ const ModuleDetailView = () => {
             {/* Sidebar */}
             <div className="lg:col-span-2 space-y-6">
               {/* Module Info Card */}
-              <ModuleInfoCard
-                module={module}
-                phase={phase}
-                moduleStatus={moduleStatus}
-              />
+              <ModuleInfoCard module={module} phase={phase} />
 
               {/* Statistics Card */}
-              <ModuleStatisticsCard
-                statistics={statistics}
-              />
+              <ModuleStatisticsCard statistics={statistics} />
             </div>
           </div>
         </div>

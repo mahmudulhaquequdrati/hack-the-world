@@ -11,21 +11,21 @@ export const validateModuleId = (moduleId) => {
   if (!moduleId) {
     return {
       isValid: false,
-      error: "Module ID is required"
+      error: "Module ID is required",
     };
   }
 
-  if (typeof moduleId !== 'string') {
+  if (typeof moduleId !== "string") {
     return {
       isValid: false,
-      error: "Module ID must be a string"
+      error: "Module ID must be a string",
     };
   }
 
   if (moduleId.trim().length === 0) {
     return {
       isValid: false,
-      error: "Module ID cannot be empty"
+      error: "Module ID cannot be empty",
     };
   }
 
@@ -33,13 +33,13 @@ export const validateModuleId = (moduleId) => {
   if (!/^[0-9a-fA-F]{24}$/.test(moduleId)) {
     return {
       isValid: false,
-      error: "Invalid Module ID format"
+      error: "Invalid Module ID format",
     };
   }
 
   return {
     isValid: true,
-    error: null
+    error: null,
   };
 };
 
@@ -53,7 +53,7 @@ export const validateModuleData = (module) => {
     return {
       isValid: false,
       error: "Module data is required",
-      details: []
+      details: [],
     };
   }
 
@@ -64,39 +64,54 @@ export const validateModuleData = (module) => {
     errors.push("Module ID is required");
   }
 
-  if (!module.title || typeof module.title !== 'string' || module.title.trim().length === 0) {
+  if (
+    !module.title ||
+    typeof module.title !== "string" ||
+    module.title.trim().length === 0
+  ) {
     errors.push("Module title is required and must be a valid string");
   }
 
-  if (!module.description || typeof module.description !== 'string') {
+  if (!module.description || typeof module.description !== "string") {
     errors.push("Module description is required and must be a valid string");
   }
 
   // Optional field validation
-  if (module.difficulty && !['beginner', 'intermediate', 'advanced', 'expert'].includes(module.difficulty)) {
-    errors.push("Module difficulty must be one of: beginner, intermediate, advanced, expert");
+  if (
+    module.difficulty &&
+    !["beginner", "intermediate", "advanced", "expert"].includes(
+      module.difficulty.toLowerCase()
+    )
+  ) {
+    errors.push(
+      "Module difficulty must be one of: beginner, intermediate, advanced, expert"
+    );
   }
 
-  if (module.estimatedHours && (typeof module.estimatedHours !== 'number' || module.estimatedHours < 0)) {
+  if (
+    module.content?.estimatedHours &&
+    (typeof module.content.estimatedHours !== "number" ||
+      module.content.estimatedHours < 0)
+  ) {
     errors.push("Estimated hours must be a positive number");
   }
 
-  if (module.order && (typeof module.order !== 'number' || module.order < 0)) {
+  if (module.order && (typeof module.order !== "number" || module.order < 0)) {
     errors.push("Module order must be a positive number");
   }
 
-  if (module.color && typeof module.color !== 'string') {
+  if (module.color && typeof module.color !== "string") {
     errors.push("Module color must be a string");
   }
 
-  if (module.icon && typeof module.icon !== 'string') {
+  if (module.icon && typeof module.icon !== "string") {
     errors.push("Module icon must be a string");
   }
 
   return {
     isValid: errors.length === 0,
     error: errors.length > 0 ? `Module validation failed: ${errors[0]}` : null,
-    details: errors
+    details: errors,
   };
 };
 
@@ -110,7 +125,7 @@ export const validateContentData = (content) => {
     return {
       isValid: false,
       error: "Content must be an array",
-      details: []
+      details: [],
     };
   }
 
@@ -126,19 +141,26 @@ export const validateContentData = (content) => {
       errors.push(`Content item at index ${index} is missing ID`);
     }
 
-    if (!item.title || typeof item.title !== 'string') {
-      errors.push(`Content item at index ${index} is missing or has invalid title`);
+    if (!item.title || typeof item.title !== "string") {
+      errors.push(
+        `Content item at index ${index} is missing or has invalid title`
+      );
     }
 
-    if (!item.type || typeof item.type !== 'string') {
-      errors.push(`Content item at index ${index} is missing or has invalid type`);
+    if (!item.type || typeof item.type !== "string") {
+      errors.push(
+        `Content item at index ${index} is missing or has invalid type`
+      );
     }
 
-    if (item.duration && (typeof item.duration !== 'number' || item.duration < 0)) {
+    if (
+      item.duration &&
+      (typeof item.duration !== "number" || item.duration < 0)
+    ) {
       errors.push(`Content item at index ${index} has invalid duration`);
     }
 
-    if (item.order && (typeof item.order !== 'number' || item.order < 0)) {
+    if (item.order && (typeof item.order !== "number" || item.order < 0)) {
       errors.push(`Content item at index ${index} has invalid order`);
     }
   });
@@ -146,7 +168,7 @@ export const validateContentData = (content) => {
   return {
     isValid: errors.length === 0,
     error: errors.length > 0 ? `Content validation failed: ${errors[0]}` : null,
-    details: errors
+    details: errors,
   };
 };
 
@@ -156,18 +178,18 @@ export const validateContentData = (content) => {
  * @returns {Object} Validation result
  */
 export const validateContentSections = (contentBySections) => {
-  if (!contentBySections || typeof contentBySections !== 'object') {
+  if (!contentBySections || typeof contentBySections !== "object") {
     return {
       isValid: false,
       error: "Content sections must be an object",
-      details: []
+      details: [],
     };
   }
 
   const errors = [];
 
   Object.entries(contentBySections).forEach(([sectionName, sectionContent]) => {
-    if (typeof sectionName !== 'string' || sectionName.trim().length === 0) {
+    if (typeof sectionName !== "string" || sectionName.trim().length === 0) {
       errors.push(`Section name "${sectionName}" is invalid`);
       return;
     }
@@ -185,8 +207,11 @@ export const validateContentSections = (contentBySections) => {
 
   return {
     isValid: errors.length === 0,
-    error: errors.length > 0 ? `Content sections validation failed: ${errors[0]}` : null,
-    details: errors
+    error:
+      errors.length > 0
+        ? `Content sections validation failed: ${errors[0]}`
+        : null,
+    details: errors,
   };
 };
 
@@ -201,7 +226,7 @@ export const validatePhaseData = (phase) => {
     return {
       isValid: true,
       error: null,
-      details: []
+      details: [],
     };
   }
 
@@ -211,22 +236,26 @@ export const validatePhaseData = (phase) => {
     errors.push("Phase ID is required when phase data is provided");
   }
 
-  if (!phase.title || typeof phase.title !== 'string' || phase.title.trim().length === 0) {
+  if (
+    !phase.title ||
+    typeof phase.title !== "string" ||
+    phase.title.trim().length === 0
+  ) {
     errors.push("Phase title is required and must be a valid string");
   }
 
-  if (phase.description && typeof phase.description !== 'string') {
+  if (phase.description && typeof phase.description !== "string") {
     errors.push("Phase description must be a string when provided");
   }
 
-  if (phase.color && typeof phase.color !== 'string') {
+  if (phase.color && typeof phase.color !== "string") {
     errors.push("Phase color must be a string when provided");
   }
 
   return {
     isValid: errors.length === 0,
     error: errors.length > 0 ? `Phase validation failed: ${errors[0]}` : null,
-    details: errors
+    details: errors,
   };
 };
 
@@ -240,21 +269,29 @@ export const sanitizeModuleData = (module) => {
 
   return {
     id: module.id || module._id,
-    title: typeof module.title === 'string' ? module.title.trim() : '',
-    description: typeof module.description === 'string' ? module.description.trim() : '',
-    difficulty: module.difficulty && ['beginner', 'intermediate', 'advanced', 'expert'].includes(module.difficulty) 
-      ? module.difficulty 
-      : null,
-    estimatedHours: typeof module.estimatedHours === 'number' && module.estimatedHours >= 0 
-      ? module.estimatedHours 
-      : null,
-    order: typeof module.order === 'number' && module.order >= 0 
-      ? module.order 
-      : null,
-    color: typeof module.color === 'string' ? module.color.trim() : null,
-    icon: typeof module.icon === 'string' ? module.icon.trim() : null,
+    title: typeof module.title === "string" ? module.title.trim() : "",
+    description:
+      typeof module.description === "string" ? module.description.trim() : "",
+    difficulty:
+      module.difficulty &&
+      ["beginner", "intermediate", "advanced", "expert"].includes(
+        module.difficulty.toLowerCase()
+      )
+        ? module.difficulty
+        : null,
+    estimatedHours:
+      typeof module.content?.estimatedHours === "number" &&
+      module.content.estimatedHours >= 0
+        ? module.content.estimatedHours
+        : null,
+    order:
+      typeof module.order === "number" && module.order >= 0
+        ? module.order
+        : null,
+    color: typeof module.color === "string" ? module.color.trim() : null,
+    icon: typeof module.icon === "string" ? module.icon.trim() : null,
     phaseId: module.phaseId,
-    isActive: typeof module.isActive === 'boolean' ? module.isActive : true,
+    isActive: typeof module.isActive === "boolean" ? module.isActive : true,
     createdAt: module.createdAt,
     updatedAt: module.updatedAt,
     // Include phase data if available
@@ -272,12 +309,14 @@ export const sanitizePhaseData = (phase) => {
 
   return {
     id: phase.id || phase._id,
-    title: typeof phase.title === 'string' ? phase.title.trim() : '',
-    description: typeof phase.description === 'string' ? phase.description.trim() : '',
-    color: typeof phase.color === 'string' ? phase.color.trim() : null,
-    icon: typeof phase.icon === 'string' ? phase.icon.trim() : null,
-    order: typeof phase.order === 'number' && phase.order >= 0 ? phase.order : null,
-    isActive: typeof phase.isActive === 'boolean' ? phase.isActive : true,
+    title: typeof phase.title === "string" ? phase.title.trim() : "",
+    description:
+      typeof phase.description === "string" ? phase.description.trim() : "",
+    color: typeof phase.color === "string" ? phase.color.trim() : null,
+    icon: typeof phase.icon === "string" ? phase.icon.trim() : null,
+    order:
+      typeof phase.order === "number" && phase.order >= 0 ? phase.order : null,
+    isActive: typeof phase.isActive === "boolean" ? phase.isActive : true,
   };
 };
 
@@ -290,16 +329,25 @@ export const sanitizeContentData = (content) => {
   if (!Array.isArray(content)) return [];
 
   return content
-    .filter(item => item && (item.id || item._id) && item.title)
-    .map(item => ({
+    .filter((item) => item && (item.id || item._id) && item.title)
+    .map((item) => ({
       id: item.id || item._id,
-      title: typeof item.title === 'string' ? item.title.trim() : '',
-      description: typeof item.description === 'string' ? item.description.trim() : '',
-      type: typeof item.type === 'string' ? item.type.toLowerCase().trim() : 'document',
-      duration: typeof item.duration === 'number' && item.duration >= 0 ? item.duration : 0,
-      order: typeof item.order === 'number' && item.order >= 0 ? item.order : null,
-      section: typeof item.section === 'string' ? item.section.trim() : 'General',
-      isActive: typeof item.isActive === 'boolean' ? item.isActive : true,
+      title: typeof item.title === "string" ? item.title.trim() : "",
+      description:
+        typeof item.description === "string" ? item.description.trim() : "",
+      type:
+        typeof item.type === "string"
+          ? item.type.toLowerCase().trim()
+          : "document",
+      duration:
+        typeof item.duration === "number" && item.duration >= 0
+          ? item.duration
+          : 0,
+      order:
+        typeof item.order === "number" && item.order >= 0 ? item.order : null,
+      section:
+        typeof item.section === "string" ? item.section.trim() : "General",
+      isActive: typeof item.isActive === "boolean" ? item.isActive : true,
       moduleId: item.moduleId,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
@@ -315,7 +363,7 @@ export const validateAllModuleDetailData = (data) => {
   const results = {
     isValid: true,
     errors: [],
-    warnings: []
+    warnings: [],
   };
 
   // Validate module data

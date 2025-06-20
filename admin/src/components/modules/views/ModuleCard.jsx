@@ -2,7 +2,10 @@ import { EyeIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import React from "react";
 import { Link } from "react-router-dom";
 import { getIconFromName } from "../../../lib/iconUtils";
-import { getDifficultyColor, getModuleColorClasses } from "../constants/moduleConstants";
+import {
+  getDifficultyColor,
+  getModuleColorClasses,
+} from "../constants/moduleConstants";
 
 const ModuleCard = ({
   module,
@@ -36,11 +39,12 @@ const ModuleCard = ({
 
   const getCardClasses = () => {
     let classes = `relative overflow-hidden rounded-xl border-2 p-6 group transition-all duration-300 cursor-move select-none ${colorClasses.border}`;
-    
+
     if (isDragged) {
       classes += " opacity-50 scale-95 rotate-1";
     } else if (isDraggedOver) {
-      classes += " scale-110 shadow-2xl border-yellow-400 ring-4 ring-yellow-400/30";
+      classes +=
+        " scale-110 shadow-2xl border-yellow-400 ring-4 ring-yellow-400/30";
     } else {
       classes += " hover:scale-105 hover:shadow-lg";
     }
@@ -50,10 +54,10 @@ const ModuleCard = ({
 
   const handleCardClick = (e) => {
     // Don't select if clicking on action buttons
-    if (e.target.closest('button') || e.target.closest('a')) {
+    if (e.target.closest("button") || e.target.closest("a")) {
       return;
     }
-    
+
     onToggleSelection(module.id);
   };
 
@@ -71,11 +75,15 @@ const ModuleCard = ({
       className={getCardClasses()}
     >
       {/* Module card glow effect */}
-      <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${colorClasses.glow}`}></div>
+      <div
+        className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${colorClasses.glow}`}
+      ></div>
 
       {/* Status Indicators */}
       <div className="absolute top-2 left-2 flex space-x-1">
-        <div className={`w-2 h-2 rounded-full animate-pulse shadow-lg ${colorClasses.status}`}></div>
+        <div
+          className={`w-2 h-2 rounded-full animate-pulse shadow-lg ${colorClasses.status}`}
+        ></div>
         {isDraggingModule && (
           <div className="w-2 h-2 rounded-full animate-ping bg-yellow-400 shadow-lg shadow-yellow-400/50"></div>
         )}
@@ -99,30 +107,35 @@ const ModuleCard = ({
       </div>
 
       <div className="relative z-10">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start space-x-3">
-            <div className={`w-12 h-12 rounded-lg bg-gradient-to-br from-gray-800/50 to-black/50 border-2 shadow-lg flex items-center justify-center group-hover:animate-pulse ${colorClasses.icon}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div
+              className={`w-12 h-12 rounded-lg bg-gradient-to-br from-gray-800/50 to-black/50 border-2 shadow-lg flex items-center justify-center group-hover:animate-pulse ${colorClasses.icon}`}
+            >
               {(() => {
                 const IconComponent = getIconFromName(module.icon);
                 return (
-                  <IconComponent className={`w-6 h-6 ${colorClasses.statText}`} />
+                  <IconComponent
+                    className={`w-6 h-6 ${colorClasses.statText}`}
+                  />
                 );
               })()}
             </div>
-            <div className="mb-3">
-              <h4 className={`font-bold font-mono uppercase tracking-wider transition-colors line-clamp-1 ${colorClasses.text}`}>
+            <div className="">
+              <h4
+                className={`font-bold font-mono uppercase tracking-wider transition-colors line-clamp-1 ${colorClasses.text}`}
+              >
                 {module.title}
               </h4>
-              <div className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold uppercase border inline-block ${difficultyColors.text} ${difficultyColors.bg} ${difficultyColors.border}`}>
-                {module.difficulty}
-              </div>
             </div>
           </div>
 
           <div className="flex gap-2">
             {/* Module Order Badge */}
             <div className="z-10">
-              <div className={`w-8 h-8 rounded-full border-2 shadow-lg flex items-center justify-center font-mono font-bold text-sm ${colorClasses.badge}`}>
+              <div
+                className={`w-8 h-8 rounded-full border-2 shadow-lg flex items-center justify-center font-mono font-bold text-sm ${colorClasses.badge}`}
+              >
                 {module.order}
               </div>
             </div>
@@ -136,23 +149,35 @@ const ModuleCard = ({
 
         {/* Enhanced Stats Grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className={`relative p-3 rounded-lg border bg-gradient-to-br from-gray-900/80 to-black/80 border-gray-700/50 transition-all duration-300 ${colorClasses.stats}`}>
+          <div
+            className={`relative p-3 rounded-lg border bg-gradient-to-br from-gray-900/80 to-black/80 border-gray-700/50 transition-all duration-300 ${colorClasses.stats}`}
+          >
             <div className="text-center">
-              <div className={`font-mono text-sm font-bold ${colorClasses.statText}`}>
+              <div
+                className={`font-mono text-sm font-bold ${colorClasses.statText}`}
+              >
                 {contentCount}
               </div>
-              <div className={`text-xs font-mono uppercase ${colorClasses.statSubtext}`}>
+              <div
+                className={`text-xs font-mono uppercase ${colorClasses.statSubtext}`}
+              >
                 CONTENT
               </div>
             </div>
           </div>
-          <div className={`relative p-3 rounded-lg border bg-gradient-to-br from-gray-900/80 to-black/80 border-gray-700/50 transition-all duration-300 ${colorClasses.stats}`}>
+          <div
+            className={`relative p-3 rounded-lg border bg-gradient-to-br from-gray-900/80 to-black/80 border-gray-700/50 transition-all duration-300 ${colorClasses.stats}`}
+          >
             <div className="text-center">
-              <div className={`font-mono text-sm font-bold ${colorClasses.statText}`}>
-                {module.content?.videos?.length || 0}
+              <div
+                className={`font-mono text-sm font-bold ${colorClasses.statText}`}
+              >
+                {module.difficulty?.toUpperCase() || "UNSET"}
               </div>
-              <div className={`text-xs font-mono uppercase ${colorClasses.statSubtext}`}>
-                VIDEOS
+              <div
+                className={`text-xs font-mono uppercase ${colorClasses.statSubtext}`}
+              >
+                DIFFICULTY
               </div>
             </div>
           </div>

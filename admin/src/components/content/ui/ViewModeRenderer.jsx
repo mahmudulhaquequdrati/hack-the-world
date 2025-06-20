@@ -34,6 +34,36 @@ const ViewModeRenderer = ({
     return { module, phase };
   };
 
+  // Helper function to get module color classes (using existing module.color)
+  const getModuleColorClasses = (moduleColor) => {
+    const baseColor = moduleColor || 'cyan'; // fallback to cyan
+    return {
+      border: `border-${baseColor}-400/30`,
+      bgGradient: `from-${baseColor}-900/30 to-${baseColor}-800/30`,
+      iconBg: `bg-gradient-to-br from-${baseColor}-400/20 to-${baseColor}-600/20`,
+      iconBorder: `border-${baseColor}-400/50`,
+      iconText: `text-${baseColor}-400`,
+      iconShadow: `shadow-${baseColor}-400/20`,
+      titleText: `text-${baseColor}-400`,
+    };
+  };
+
+  // Helper function for difficulty badge colors (independent from module colors)
+  const getDifficultyBadgeColors = (difficulty) => {
+    switch (difficulty?.toLowerCase()) {
+      case "beginner":
+        return { text: "text-green-400", border: "border-green-400/50", bg: "bg-green-400/10" };
+      case "intermediate":
+        return { text: "text-yellow-400", border: "border-yellow-400/50", bg: "bg-yellow-400/10" };
+      case "advanced":
+        return { text: "text-red-400", border: "border-red-400/50", bg: "bg-red-400/10" };
+      case "expert":
+        return { text: "text-purple-400", border: "border-purple-400/50", bg: "bg-purple-400/10" };
+      default:
+        return { text: "text-gray-400", border: "border-gray-400/50", bg: "bg-gray-400/10" };
+    }
+  };
+
   // Helper function to toggle phase expansion
   const togglePhase = (phaseId) => {
     setExpandedPhases(prev => {
@@ -100,36 +130,61 @@ const ViewModeRenderer = ({
             {/* Modules */}
             {expandedPhases.has(phase.id) && (
               <div className="relative z-10 space-y-4 mt-6">
-                {phase.modules.map((module) => (
-                  <div key={module.id} className="ml-6">
-                    <div
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border border-cyan-400/30 rounded-xl cursor-pointer hover:border-cyan-400/50 transition-all duration-300"
-                      onClick={() => toggleModule(module.id)}
-                    >
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-400/20 to-cyan-600/20 border-2 border-cyan-400/50 rounded-lg flex items-center justify-center mr-4 shadow-lg shadow-cyan-400/20">
-                          <span className="text-lg font-bold text-cyan-400 font-mono">
-                            M
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-cyan-400 font-mono">
-                            📖 {module.title}
-                          </h3>
-                          <p className="text-sm text-gray-400 font-mono">
-                            ◆ {module.contentCount} content items
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-cyan-400 text-xl font-mono">
-                        {expandedModules.has(module.id) ? "▲" : "▼"}
-                      </div>
-                    </div>
+                {phase.modules.map((module) => {
+                  const moduleColors = getModuleColorClasses(module.color);
+                  const difficultyColors = getDifficultyBadgeColors(module.difficulty);
 
-                    {/* Content Items grouped by sections */}
-                    {expandedModules.has(module.id) &&
-                      module.content.length > 0 && (
-                        <div className="mt-4 ml-6">
+                  return (
+                    <div key={module.id} className="ml-6">
+                      {/* Enhanced Module Container with layered design like phase */}
+                      <div className="bg-gradient-to-br from-gray-800/60 to-black/60 border border-gray-600/20 rounded-lg p-4 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-gray-400/0 via-gray-400/2 to-gray-400/0 animate-pulse"></div>
+                        
+                        {/* Enhanced Module Header */}
+                        <div
+                          className={`relative z-10 flex items-center justify-between cursor-pointer p-4 bg-gradient-to-r ${moduleColors.bgGradient} rounded-lg border ${moduleColors.border} hover:border-opacity-70 transition-all duration-300`}
+                          onClick={() => toggleModule(module.id)}
+                        >
+                          <div className="flex items-center">
+                            {/* Enhanced Icon with module colors */}
+                            <div className={`w-12 h-12 ${moduleColors.iconBg} border-2 ${moduleColors.iconBorder} rounded-xl flex items-center justify-center mr-4 shadow-lg ${moduleColors.iconShadow}`}>
+                              <span className={`text-2xl font-bold ${moduleColors.iconText} font-mono`}>
+                                M
+                              </span>
+                            </div>
+                            <div>
+                              {/* Enhanced Title */}
+                              <h3 className={`text-xl font-bold ${moduleColors.titleText} font-mono uppercase tracking-wider`}>
+                                📖 {module.title}
+                              </h3>
+                              {/* Module Description */}
+                              {module.description && (
+                                <p className="text-sm text-gray-300 font-mono mb-2 max-w-md">
+                                  {module.description}
+                                </p>
+                              )}
+                              {/* Enhanced Content Count with Difficulty */}
+                              <p className="text-sm text-gray-400 font-mono flex items-center gap-2">
+                                ◆ {module.contentCount} content items • 
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono font-bold border ${difficultyColors.bg} ${difficultyColors.border} ${difficultyColors.text}`}>
+                                  {module.difficulty?.toUpperCase() || 'UNSET'}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center">
+                            {/* Expand Arrow with module colors */}
+                            <div className={`${moduleColors.titleText} text-2xl font-mono`}>
+                              {expandedModules.has(module.id) ? "▲" : "▼"}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Content Items grouped by sections */}
+                        {expandedModules.has(module.id) &&
+                          module.content.length > 0 && (
+                            <div className="mt-4 ml-6">
                           {(() => {
                             // Group content by sections
                             const contentBySection = {};
@@ -220,19 +275,21 @@ const ViewModeRenderer = ({
                               )
                             );
                           })()}
-                        </div>
-                      )}
+                            </div>
+                          )}
 
-                    {expandedModules.has(module.id) &&
-                      module.content.length === 0 && (
-                        <div className="mt-4 ml-6 text-center text-gray-500 py-8">
-                          <p className="font-mono">
-                            No content items found in this module
-                          </p>
-                        </div>
-                      )}
-                  </div>
-                ))}
+                        {expandedModules.has(module.id) &&
+                          module.content.length === 0 && (
+                            <div className="mt-4 ml-6 text-center text-gray-500 py-8">
+                              <p className="font-mono">
+                                No content items found in this module
+                              </p>
+                            </div>
+                          )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

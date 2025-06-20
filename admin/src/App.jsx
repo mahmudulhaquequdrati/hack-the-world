@@ -12,7 +12,7 @@ import ContentManager from "./pages/ContentManager";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import ModuleDetailView from "./pages/ModuleDetailView";
-import ModulesManagerEnhanced from "./pages/ModulesManagerEnhanced";
+import ModulesManager from "./pages/ModulesManager";
 import PhaseDetailView from "./pages/PhaseDetailView";
 import PhasesManager from "./pages/PhasesManager";
 import Register from "./pages/Register";
@@ -83,7 +83,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="phases" element={<PhasesManager />} />
             <Route path="phases/:phaseId" element={<PhaseDetailView />} />
-            <Route path="modules" element={<ModulesManagerEnhanced />} />
+            <Route path="modules" element={<ModulesManager />} />
             <Route path="modules/:moduleId" element={<ModuleDetailView />} />
             <Route path="content" element={<ContentManager />} />
             <Route path="content/:contentId" element={<ContentDetailView />} />

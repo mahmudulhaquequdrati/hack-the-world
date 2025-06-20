@@ -288,6 +288,150 @@ hack-the-world/
 
 ### Recent Updates (2025-06-17)\n\n#### 🎯 **Complete Overview Page Redesign - Original Frontend Pattern Implementation**\n\n**Objective**: Implemented exact replica of original CyberSecOverview page design and API patterns\n\n**Key Implementations**:\n\n- ✅ **Replaced fetch with axios** throughout the codebase using centralized API client\n- ✅ **Exact terminal-style cybersecurity theme** with black background and green accents\n- ✅ **Tab-based phase navigation** matching original interactive design\n- ✅ **Terminal tree structure** for module display with directory-style navigation\n- ✅ **Smart API optimization pattern** - single comprehensive query + enrollment mapping\n- ✅ **Authentication-aware UI** with conditional loading and enrollment features\n- ✅ **Complete enrollment functionality** with enroll/continue actions\n- ✅ **Progress tracking integration** with real-time enrollment status\n- ✅ **Fixed all linting warnings** including img elements and TypeScript types\n\n**New Components Created**:\n- `PhaseNavigation.tsx` - Tab-based phase switching with terminal aesthetic\n- `ModuleTree.tsx` - Terminal-style module listing with enrollment integration\n- `PhaseCompletionCTA.tsx` - Context-aware call-to-action sections\n- `lib/api/client.ts` - Centralized axios client with auth token handling\n\n**API Pattern Implementation**:\n```typescript\n// Single comprehensive query (matching original efficiency)\nconst response = await apiClient.get('/api/modules/with-phases');\n\n// O(1) enrollment lookup map\nconst enrollmentMap = useMemo(() => {\n  const map = new Map();\n  enrollmentResponse?.data?.forEach((enrollment) => {\n    map.set(enrollment.moduleId, enrollment);\n  });\n  return map;\n}, [enrollmentResponse]);\n\n// Smart conditional loading\nconst { data: enrollmentResponse } = useGetCurrentUserEnrollmentsQuery(\n  undefined,\n  { skip: !isAuthenticated }\n);\n```\n\n**Visual Design Achievements**:\n- **Cybersecurity Terminal Theme**: Black background, green accents, monospace fonts\n- **Interactive Module Cards**: Color-coded by module type with hover effects\n- **Progress Visualization**: Real-time progress bars with enrollment status indicators\n- **Difficulty Badges**: Color-coded difficulty levels (beginner → expert)\n- **Terminal Directory Structure**: `~/cybersec_courses/` with file tree navigation\n\n**Performance Optimizations**:\n- **Reduced API calls**: Single endpoint replaces multiple separate queries\n- **Client-side processing**: Efficient enrollment mapping for instant UI updates\n- **Authentication-aware loading**: Skip unnecessary API calls for unauthenticated users\n- **Smart caching**: Axios interceptors with automatic token management\n\n### Recent Updates (2025-06-20)
 
+#### 🎯 **Enhanced Module Design - Phase-Style Professional Layout (2025-06-20)**
+
+**Objective**: Redesigned module cards in hierarchical tree view to match the professional phase design with enhanced styling, module description, difficulty badges, and better information display.
+
+**🚀 Key Implementations:**
+
+- ✅ **Layered Container Design**: Added outer gradient container with inner header section matching phase styling architecture
+- ✅ **Enhanced Icon System**: Upgraded from 10x10 to 12x12 icons with module color theming and shadow effects
+- ✅ **Module Description Display**: Added module description below title for better context and information
+- ✅ **Difficulty Badge System**: Independent color-coded difficulty badges (Beginner=Green, Intermediate=Yellow, Advanced=Red, Expert=Purple)
+- ✅ **Module Color Preservation**: Maintained existing module color scheme while adding difficulty badge colors
+- ✅ **Enhanced Information Display**: Shows content count, duration, and difficulty in organized layout
+- ✅ **Professional Typography**: Upgraded to match phase styling with proper font weights, spacing, and hierarchy
+
+**🎨 Design Features:**
+- **Layered Visual Hierarchy**: Outer container + inner header section like phases for depth and professionalism
+- **Color Strategy**: Module colors for main theming, independent difficulty colors for badges
+- **Enhanced Information Density**: Title, description, content count, duration, and difficulty all visible
+- **Consistent Styling**: Icons, typography, and layout match phase cards for unified design language
+- **Improved Spacing**: Professional spacing and layout with proper visual hierarchy
+
+**🔧 Technical Implementation:**
+```javascript
+// Module color helper (preserves existing module color scheme)
+const getModuleColorClasses = (moduleColor) => {
+  const baseColor = moduleColor || 'cyan';
+  return {
+    border: `border-${baseColor}-400/30`,
+    bgGradient: `from-${baseColor}-900/30 to-${baseColor}-800/30`,
+    iconBg: `bg-gradient-to-br from-${baseColor}-400/20 to-${baseColor}-600/20`,
+    iconText: `text-${baseColor}-400`,
+    titleText: `text-${baseColor}-400`,
+  };
+};
+
+// Difficulty badge helper (independent color system)
+const getDifficultyBadgeColors = (difficulty) => {
+  switch (difficulty?.toLowerCase()) {
+    case "beginner": return { text: "text-green-400", border: "border-green-400/50", bg: "bg-green-400/10" };
+    case "intermediate": return { text: "text-yellow-400", border: "border-yellow-400/50", bg: "bg-yellow-400/10" };
+    case "advanced": return { text: "text-red-400", border: "border-red-400/50", bg: "bg-red-400/10" };
+    case "expert": return { text: "text-purple-400", border: "border-purple-400/50", bg: "bg-purple-400/10" };
+  }
+};
+```
+
+**📊 Layout Structure:**
+```jsx
+// Enhanced module container with layered design
+<div className="bg-gradient-to-br from-gray-800/60 to-black/60 border border-gray-600/20 rounded-lg p-4">
+  <div className="bg-gradient-to-r ${moduleColors.bgGradient} rounded-lg border ${moduleColors.border} p-4">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center">
+        <div className="w-12 h-12 enhanced-icon">M</div>
+        <div>
+          <h3 className="module-title">{module.title}</h3>
+          <p className="module-description">{module.description}</p>
+          <p className="content-info">◆ {contentCount} items • {duration}</p>
+        </div>
+      </div>
+      <div className="flex items-center space-x-3">
+        <div className="difficulty-badge">{difficulty}</div>
+        <div className="expand-arrow">▲/▼</div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+**🎯 User Experience Result:**
+- **Professional Appearance**: Module cards now match the sophisticated styling of phase cards
+- **Enhanced Information Display**: Admins can see module description, difficulty, and content count at a glance
+- **Better Visual Hierarchy**: Clear separation of information with proper typography and spacing
+- **Consistent Design Language**: Unified styling across phases and modules for cohesive admin interface
+- **Improved Content Management**: Better context and information for more efficient content administration
+- **Optimized Layout**: Difficulty badge positioned inline with content information for logical grouping
+
+#### 🎯 **Module Layout Optimization - Content & Difficulty Grouping (2025-06-20)**
+
+**Objective**: Improved module card layout by relocating difficulty badge from right side to inline with content information for better information grouping.
+
+**🚀 Key Changes:**
+- ✅ **Difficulty Badge Relocation**: Moved from right side (next to expand arrow) to content information line
+- ✅ **Cleaner Right Side**: Only expand arrow remains on the right, reducing visual clutter
+- ✅ **Logical Information Grouping**: Content count and difficulty appear together as contextually related information
+- ✅ **Improved Visual Balance**: Better distribution of elements across the module card layout
+
+**Layout Change:**
+```
+Before: [Icon] Title                    [Difficulty] [▲/▼]
+        Description
+        ◆ X content items • Duration
+
+After:  [Icon] Title                              [▲/▼]
+        Description  
+        ◆ X content items • [Difficulty Badge]
+```
+
+**🎯 Benefits:**
+- **Better Information Context**: Difficulty appears with content information where it's most relevant
+- **Reduced Visual Clutter**: Cleaner right side with only essential navigation (expand arrow)
+- **Enhanced Readability**: More logical flow of information from title → description → content details
+- **Professional Layout**: Balanced design with improved information hierarchy
+
+#### 🎯 **Module Card Stats Enhancement - VIDEOS to DIFFICULTY (2025-06-20)**
+
+**Objective**: Updated ModuleCard component in modules management page to replace "VIDEOS" stats box with "DIFFICULTY" for more relevant information display.
+
+**🚀 Key Changes:**
+- ✅ **Stats Box Replacement**: Replaced VIDEOS count with DIFFICULTY level in the 2-column stats grid
+- ✅ **Enhanced Information Value**: Difficulty is more relevant for module management than video count
+- ✅ **Consistent Styling**: Maintained existing stats box design and color scheme
+- ✅ **Data Integrity**: Uses `module.difficulty` field with proper fallback handling
+
+**Stats Grid Transformation:**
+```
+Before: [CONTENT: X] [VIDEOS: Y]
+After:  [CONTENT: X] [DIFFICULTY: LEVEL]
+```
+
+**Implementation:**
+```jsx
+// Before (VIDEOS stats box)
+<div className="font-mono text-sm font-bold">
+  {module.content?.videos?.length || 0}
+</div>
+<div className="text-xs font-mono uppercase">VIDEOS</div>
+
+// After (DIFFICULTY stats box)
+<div className="font-mono text-sm font-bold">
+  {module.difficulty?.toUpperCase() || 'UNSET'}
+</div>
+<div className="text-xs font-mono uppercase">DIFFICULTY</div>
+```
+
+**🎯 Benefits:**
+- **More Relevant Information**: Difficulty level is crucial for module management and organization
+- **Better Admin Context**: Quick visual reference for module complexity assessment
+- **Consistent Display**: Maintains same visual design and layout structure
+- **Enhanced Decision Making**: Helps admins quickly identify module difficulty distribution
+
+**📊 Files Modified:**
+- `admin/src/components/modules/views/ModuleCard.jsx` - Updated stats grid from VIDEOS to DIFFICULTY
+
 #### 🎯 **Tree View Default Expanded State - Enhanced Content Management UX (2025-06-20)**
 
 **Objective**: Changed hierarchical tree view to default all phases and modules to expanded state for better content discoverability.

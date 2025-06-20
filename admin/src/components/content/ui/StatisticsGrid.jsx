@@ -28,25 +28,25 @@ const StatisticsGrid = ({ content, contentTypes }) => {
         </div>
       </div>
 
-      {/* Published */}
+      {/* Active */}
       <div className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-blue-400/30 rounded-xl p-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-blue-400/5 to-blue-400/0 animate-pulse"></div>
         <div className="relative z-10">
           <div className="text-2xl font-bold text-blue-400 font-mono">
             {stats.published}
           </div>
-          <div className="text-sm text-gray-400 font-mono">Published</div>
+          <div className="text-sm text-gray-400 font-mono">Active</div>
         </div>
       </div>
 
-      {/* Unpublished */}
+      {/* Inactive */}
       <div className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-yellow-400/30 rounded-xl p-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/0 via-yellow-400/5 to-yellow-400/0 animate-pulse"></div>
         <div className="relative z-10">
           <div className="text-2xl font-bold text-yellow-400 font-mono">
             {stats.unpublished}
           </div>
-          <div className="text-sm text-gray-400 font-mono">Unpublished</div>
+          <div className="text-sm text-gray-400 font-mono">Inactive</div>
         </div>
       </div>
 

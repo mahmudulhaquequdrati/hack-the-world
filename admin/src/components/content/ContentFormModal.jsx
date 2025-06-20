@@ -612,7 +612,7 @@ const ContentFormModal = ({
                 </div>
               </div>
 
-              {/* Publishing Status */}
+              {/* Activation Status */}
               <div className="mt-6">
                 <div className="bg-gradient-to-r from-green-900/20 to-green-800/20 border border-green-400/30 rounded-xl p-4">
                   <label className="flex items-center space-x-3">
@@ -630,12 +630,12 @@ const ContentFormModal = ({
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
                       <span className="text-green-400 font-semibold font-mono uppercase tracking-wider">
-                        ◆ 🚀 Publish Immediately
+                        ◆ ⚡ Activate Immediately
                       </span>
                     </div>
                   </label>
                   <p className="text-green-400/60 text-xs mt-2 ml-8 font-mono">
-                    Content will be available to students immediately after creation
+                    Content will be active and available to students immediately after creation
                   </p>
                 </div>
               </div>

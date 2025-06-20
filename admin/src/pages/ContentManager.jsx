@@ -9,7 +9,7 @@ import ContentFiltersAndControls from "../components/content/ContentFiltersAndCo
 import ContentFormModal from "../components/content/ContentFormModal";
 import MultipleUploadModal from "../components/content/MultipleUploadModal";
 import ContentDeleteConfirmationModal from "../components/content/ContentDeleteConfirmationModal";
-import ActionButtonsWithFilters from "../components/content/ui/ActionButtonsWithFilters";
+import ActionButtons from "../components/content/ui/ActionButtons";
 import TerminalHeader from "../components/content/ui/TerminalHeader";
 import StatisticsGrid from "../components/content/ui/StatisticsGrid";
 import ViewModeRenderer from "../components/content/ui/ViewModeRenderer";
@@ -109,15 +109,11 @@ const ContentManager = () => {
           subtitle="./manage --learning-content --cybersec-platform --enhanced"
         />
 
-        {/* Action Buttons with Filters */}
-        <ActionButtonsWithFilters
+        {/* Action Buttons */}
+        <ActionButtons
           onAddContent={openNewContentForm}
           onBulkUpload={handleMultipleUploadStart}
           loading={loading}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          contentTypes={contentTypes}
-          modules={modules}
         />
 
         {/* Success Message */}
@@ -164,6 +160,8 @@ const ContentManager = () => {
             contentTypes={contentTypes}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            modules={modules}
+            phases={phases}
           />
         )}
 

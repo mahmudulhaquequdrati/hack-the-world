@@ -5,7 +5,9 @@ const ContentCard = ({
   contentItem, 
   contentTypes, 
   onEdit, 
-  onDelete 
+  onDelete,
+  showContext = false,
+  contextData = null
 }) => {
   const contentType = contentTypes.find((type) => type.value === contentItem.type);
 
@@ -47,9 +49,35 @@ const ContentCard = ({
         <h5 className="font-medium text-green-400 mb-1 line-clamp-2 group-hover:text-green-300 transition-colors font-mono">
           ◆ {contentItem.title}
         </h5>
-        <p className="text-xs text-gray-400 line-clamp-2 mb-3 font-mono">
+        <p className="text-xs text-gray-400 line-clamp-2 mb-2 font-mono">
           {contentItem.description}
         </p>
+
+        {/* Context Information */}
+        {showContext && contextData && (
+          <div className="mb-3 space-y-1">
+            {/* Section */}
+            {contentItem.section && (
+              <div className="text-xs text-cyan-400 font-mono">
+                📁 Section: {contentItem.section}
+              </div>
+            )}
+            
+            {/* Module */}
+            {contextData.module && (
+              <div className="text-xs text-blue-400 font-mono">
+                📖 Module: {contextData.module.title}
+              </div>
+            )}
+            
+            {/* Phase */}
+            {contextData.phase && (
+              <div className="text-xs text-purple-400 font-mono">
+                📚 Phase: {contextData.phase.title}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-2">

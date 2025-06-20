@@ -12,7 +12,16 @@ const ViewModeRenderer = ({
   contentTypes,
   onEdit,
   onDelete,
+  modules = [],
+  phases = [],
 }) => {
+  // Helper function to get context data for content item
+  const getContextData = (contentItem) => {
+    const module = modules.find(m => m.id === contentItem.moduleId);
+    const phase = module ? phases.find(p => p.id === module.phaseId) : null;
+    return { module, phase };
+  };
+
   // Render hierarchical view
   const renderHierarchicalView = () => {
     return (
@@ -97,6 +106,11 @@ const ViewModeRenderer = ({
                                 contentTypes={contentTypes}
                                 onEdit={onEdit}
                                 onDelete={onDelete}
+                                showContext={false}
+                                contextData={{
+                                  module: module,
+                                  phase: phase
+                                }}
                               />
                             ))}
                           </div>
@@ -143,6 +157,8 @@ const ViewModeRenderer = ({
                     contentTypes={contentTypes}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    showContext={true}
+                    contextData={getContextData(contentItem)}
                   />
                 ))}
               </div>

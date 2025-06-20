@@ -10,9 +10,7 @@ export const useContentFilters = () => {
     moduleId: "",
     phaseId: "",
     difficulty: "",
-    isPublished: "",
     section: "",
-    language: "",
   });
 
   // Handle filter changes
@@ -30,9 +28,7 @@ export const useContentFilters = () => {
       moduleId: "",
       phaseId: "",
       difficulty: "",
-      isPublished: "",
       section: "",
-      language: "",
     });
   }, []);
 
@@ -62,14 +58,8 @@ export const useContentFilters = () => {
       // Difficulty filter
       if (filters.difficulty && item.difficulty !== filters.difficulty) return false;
       
-      // Published status filter
-      if (filters.isPublished !== "" && String(item.isPublished) !== filters.isPublished) return false;
-      
       // Section filter (partial match)
       if (filters.section && !item.section?.toLowerCase().includes(filters.section.toLowerCase())) return false;
-      
-      // Language filter
-      if (filters.language && item.language !== filters.language) return false;
       
       return true;
     });
@@ -115,16 +105,8 @@ export const useContentFilters = () => {
       activeParts.push(`Difficulty: ${filters.difficulty}`);
     }
     
-    if (filters.isPublished !== "") {
-      activeParts.push(`Status: ${filters.isPublished === "true" ? "Published" : "Unpublished"}`);
-    }
-    
     if (filters.section) {
       activeParts.push(`Section: ${filters.section}`);
-    }
-    
-    if (filters.language) {
-      activeParts.push(`Language: ${filters.language}`);
     }
     
     return activeParts.length > 0 ? activeParts.join(" • ") : "No filters applied";
@@ -154,7 +136,6 @@ export const useContentFilters = () => {
       types: [...new Set(content.map(item => item.type).filter(Boolean))],
       difficulties: [...new Set(content.map(item => item.difficulty).filter(Boolean))],
       sections: [...new Set(content.map(item => item.section).filter(Boolean))],
-      languages: [...new Set(content.map(item => item.language).filter(Boolean))],
       modules: [...new Set(content.map(item => item.moduleId).filter(Boolean))],
     };
     
@@ -164,12 +145,6 @@ export const useContentFilters = () => {
   // Quick filter presets
   const applyQuickFilter = useCallback((preset) => {
     switch (preset) {
-      case 'published':
-        setFilters(prev => ({ ...prev, isPublished: "true" }));
-        break;
-      case 'unpublished':
-        setFilters(prev => ({ ...prev, isPublished: "false" }));
-        break;
       case 'videos':
         setFilters(prev => ({ ...prev, type: "video" }));
         break;

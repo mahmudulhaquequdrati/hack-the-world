@@ -335,6 +335,21 @@ export const enrollmentAPI = {
   },
 };
 
+// Users API
+export const usersAPI = {
+  // Get all users with pagination and filtering
+  getAll: async (params = {}) => {
+    const response = await createDedupedRequest({ url: "/users", params });
+    return response.data;
+  },
+
+  // Get single user with complete information
+  getCompleteById: async (userId) => {
+    const response = await createDedupedRequest({ url: `/users/${userId}/complete` });
+    return response.data;
+  },
+};
+
 // Auth API
 export const authAPI = {
   login: async (credentials) => {
@@ -367,5 +382,6 @@ export default {
   modules: modulesAPI,
   content: contentAPI,
   enrollment: enrollmentAPI,
+  users: usersAPI,
   auth: authAPI,
 };

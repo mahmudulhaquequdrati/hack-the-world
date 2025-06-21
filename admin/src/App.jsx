@@ -17,6 +17,8 @@ import ModulesManager from "./pages/ModulesManager";
 import PhaseDetailView from "./pages/PhaseDetailView";
 import PhasesManager from "./pages/PhasesManager";
 import Register from "./pages/Register";
+import UserDetailView from "./pages/UserDetailView";
+import UsersManager from "./pages/UsersManager";
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -89,6 +91,8 @@ function App() {
             <Route path="content" element={<ContentManager />} />
             <Route path="content/:contentId" element={<ContentDetailView />} />
             <Route path="enrollments" element={<EnrollmentManager />} />
+            <Route path="users" element={<UsersManager />} />
+            <Route path="users/:userId" element={<UserDetailView />} />
           </Route>
         </Routes>
       </Router>

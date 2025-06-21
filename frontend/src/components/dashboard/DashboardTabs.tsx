@@ -49,10 +49,10 @@ export const DashboardTabs = ({
 
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-6">
-      <TabsList className="bg-black/50 border border-green-400/30">
+      <TabsList className="bg-black/50 border border-green-400/30 w-full flex justify-start overflow-x-auto h-min hide-scrollbar">
         <TabsTrigger
           value="progress"
-          className="data-[state=active]:bg-green-400 data-[state=active]:text-black font-mono"
+          className="data-[state=active]:bg-green-400 data-[state=active]:text-black font-mono "
         >
           {">> "}my_progress
         </TabsTrigger>

@@ -74,14 +74,16 @@ export const EnhancedProgressTab = ({
   const sortedModules = [...filteredModules].sort((a, b) => {
     if (a.completed && !b.completed) return -1;
     if (!a.completed && b.completed) return 1;
-    if (a.progress !== b.progress) return b.progress - a.progress;
+    const aProgress = a.progress || 0;
+    const bProgress = b.progress || 0;
+    if (aProgress !== bProgress) return bProgress - aProgress;
     return 0;
   });
 
   return (
     <div className="space-y-8">
       {/* Enhanced Progress Section with Retro Styling */}
-      <div className="bg-black/60 border border-green-400/30 rounded-xl p-8 relative overflow-hidden">
+      <div className="bg-black/60 border border-green-400/30 rounded-xl p-4 md:p-8 relative overflow-hidden">
         {/* Retro Scanlines Effect */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="h-full w-full bg-gradient-to-b from-transparent via-green-400/20 to-transparent bg-[length:100%_4px] animate-pulse"></div>
@@ -186,7 +188,7 @@ export const EnhancedProgressTab = ({
               </span>
             </div>
 
-            <div className="bg-black/40 border border-green-400/20 rounded-xl p-6">
+            <div className="bg-black/40   md:border border-green-400/20 rounded-xl p-0 md:p-6">
               <div className="space-y-0">
                 {sortedModules.map((module, index) => {
                   const isLast = index === sortedModules.length - 1;
@@ -195,7 +197,7 @@ export const EnhancedProgressTab = ({
                   return (
                     <div key={module._id} className="relative">
                       <div className="flex items-start space-x-1">
-                        <div className="flex flex-col items-center">
+                        <div className="md:flex flex-col items-center hidden">
                           <span className="text-green-400/70 text-sm leading-none font-mono">
                             {treeChar}
                           </span>
@@ -204,7 +206,7 @@ export const EnhancedProgressTab = ({
                           )}
                         </div>
 
-                        <div className="flex-1 ml-2 mb-4">
+                        <div className="flex-1 ml-0 md:ml-2 mb-4">
                           <ModuleTimelineCard
                             module={module}
                             isLast={isLast}
@@ -224,7 +226,7 @@ export const EnhancedProgressTab = ({
                     {sortedModules.filter((m) => m.completed).length} completed,{" "}
                     {
                       sortedModules.filter(
-                        (m) => m.progress > 0 && !m.completed
+                        (m) => (m.progress || 0) > 0 && !m.completed
                       ).length
                     }{" "}
                     in progress
@@ -239,7 +241,7 @@ export const EnhancedProgressTab = ({
 
       {/* Enhanced Enroll More Courses Section with Retro Styling */}
       {availableModules.length > 0 && (
-        <div className="bg-black/60 border border-green-400/30 rounded-xl p-8 relative overflow-hidden">
+        <div className="bg-black/60 border border-green-400/30 rounded-xl px-3 py-5 md:p-8 relative overflow-hidden">
           {/* Retro Scanlines Effect */}
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <div className="h-full w-full bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent bg-[length:100%_4px] animate-pulse"></div>
@@ -253,8 +255,8 @@ export const EnhancedProgressTab = ({
             </span>
           </div>
 
-          <div className="flex items-center justify-between mb-8 relative z-10">
-            <h3 className="text-2xl font-bold text-cyan-400 font-mono uppercase tracking-wider">
+          <div className="flex items-center flex-col md:flex-row justify-between mb-8 relative z-10">
+            <h3 className="text-xl md:text-2xl font-bold text-cyan-400 font-mono uppercase tracking-wider">
               DISCOVER_NEW_COURSES
             </h3>
             <div className="bg-cyan-400/10 border border-cyan-400/30 rounded-lg px-4 py-2">
@@ -369,7 +371,7 @@ export const EnhancedProgressTab = ({
                       <div
                         className={`relative overflow-hidden rounded-lg border-2 bg-gradient-to-br from-black/95 via-gray-900/90 to-black/95 ${
                           module.borderColor || "border-cyan-400/30"
-                        } shadow-lg hover:shadow-2xl transition-all duration-300 hover:shadow-${moduleColorName}-400/20`}
+                        } shadow-lg transition-all duration-300`}
                       >
                         {/* Retro Scanlines Effect */}
                         <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -381,25 +383,12 @@ export const EnhancedProgressTab = ({
                           className={`absolute inset-0 rounded-lg bg-gradient-to-r from-${moduleColorName}-400/0 via-${moduleColorName}-400/20 to-${moduleColorName}-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
                         ></div>
 
-                        {/* Course Number Badge */}
-                        <div className="absolute top-3 right-3 z-10">
-                          <div
-                            className={`w-8 h-8 bg-${moduleColorName}-400/20 border-2 border-${moduleColorName}-400/40 rounded-full flex items-center justify-center animate-pulse`}
-                          >
-                            <span
-                              className={`text-${moduleColorName}-400 font-mono text-xs font-bold`}
-                            >
-                              {index + 1}
-                            </span>
-                          </div>
-                        </div>
-
                         {/* Card Header */}
-                        <div className="p-6 pb-4">
+                        <div className="p-4 md:p-6 pt-5 md:pt-6">
                           <div className="flex items-start space-x-4">
                             {/* Module Icon with Retro Styling */}
                             <div
-                              className={`relative w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-gray-800/50 to-black/50 border-2 ${
+                              className={`relative w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-gray-800/50 to-black/50 border-2 ${
                                 module.borderColor || "border-cyan-400/30"
                               }  shadow-${moduleColorName}-400/30 group-hover:animate-pulse`}
                             >
@@ -410,7 +399,7 @@ export const EnhancedProgressTab = ({
                                 }`}
                               ></div>
                               <ModuleIcon
-                                className={`w-8 h-8 relative z-10 ${
+                                className={`w-6 h-6 md:w-8 md:h-8 relative z-10 ${
                                   module.color || "text-cyan-400"
                                 }`}
                               />
@@ -446,7 +435,7 @@ export const EnhancedProgressTab = ({
 
                         {/* Retro Stats Grid */}
                         <div className="px-6 pb-4">
-                          <div className="grid grid-cols-4 gap-3">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {/* Duration */}
                             <div className="relative p-3 rounded-lg border bg-gradient-to-br from-gray-900/80 to-black/80 border-gray-700/50 hover:border-green-400/50 transition-all duration-300 group/stat">
                               <div className="text-center">

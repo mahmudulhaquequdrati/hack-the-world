@@ -1,14 +1,8 @@
 import { cn } from "@/lib";
 import { getIconFromName } from "@/lib/iconUtils";
 import { Module } from "@/lib/types";
-import {
-  CheckCircle,
-  Clock,
-  Play,
-  Star,
-  UserCheck,
-  Zap,
-} from "lucide-react";
+import { CheckCircle, Clock, Play, Star, UserCheck, Zap } from "lucide-react";
+import { Button } from "../ui/button";
 
 interface ModuleTimelineCardProps {
   module: Module;
@@ -58,10 +52,10 @@ export const ModuleTimelineCard = ({
       {/* Retro Module Card */}
       <div
         className={cn(
-          "relative flex-1 ml-2 mb-4 group cursor-pointer",
+          "relative flex-1 ml-0 md:ml-2 mb-4 group cursor-pointer",
           "transform transition-all duration-300 hover:scale-[1.02]"
         )}
-        onClick={() => onModuleClick(module)}
+        // onClick={() => onModuleClick(module)}
       >
         {/* Main Card Container with Retro Design */}
         <div
@@ -69,8 +63,7 @@ export const ModuleTimelineCard = ({
             "relative overflow-hidden rounded-lg border-2",
             "bg-gradient-to-br from-black/95 via-gray-900/90 to-black/95",
             module.borderColor || "border-green-400/30",
-            "shadow-lg hover:shadow-2xl transition-all duration-300",
-            `hover:shadow-${colorName}-400/20`
+            "shadow-lg hover:shadow-2xl transition-all duration-300"
           )}
         >
           {/* Retro Scanlines Effect */}
@@ -78,49 +71,13 @@ export const ModuleTimelineCard = ({
             <div className="h-full w-full bg-gradient-to-b from-transparent via-white/5 to-transparent bg-[length:100%_4px] animate-pulse"></div>
           </div>
 
-          {/* Glitch Border Animation */}
-          <div
-            className={cn(
-              "absolute inset-0 rounded-lg",
-              "bg-gradient-to-r",
-              `from-${colorName}-400/0 via-${colorName}-400/20 to-${colorName}-400/0`,
-              "opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            )}
-          ></div>
-
-          {/* Status Corner Badge */}
-          <div className="absolute top-3 right-3 z-10">
-            {isCompleted && (
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center",
-                  "bg-green-400 text-black shadow-lg shadow-green-400/50",
-                  "animate-pulse"
-                )}
-              >
-                <CheckCircle className="w-5 h-5" />
-              </div>
-            )}
-            {isEnrolled && !isCompleted && (
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center",
-                  `bg-${colorName}-400/20 border-2 border-${colorName}-400`,
-                  `text-${colorName}-400 shadow-lg shadow-${colorName}-400/30`
-                )}
-              >
-                <Play className="w-4 h-4" />
-              </div>
-            )}
-          </div>
-
           {/* Card Header */}
-          <div className="p-6 pb-4">
-            <div className="flex items-start space-x-4">
+          <div className="p-4 sm:p-6 pb-4 mt-2 md:mt-0">
+            <div className="flex items-start space-x-3 sm:space-x-4">
               {/* Module Icon with Retro Styling */}
               <div
                 className={cn(
-                  "relative w-16 h-16 rounded-xl flex items-center justify-center",
+                  "relative w-8 h-8 md:w-16 md:h-16 rounded-xl flex items-center justify-center flex-shrink-0",
                   "bg-gradient-to-br from-gray-800/50 to-black/50",
                   "border-2 shadow-lg",
                   module.borderColor || "border-green-400/30",
@@ -136,18 +93,20 @@ export const ModuleTimelineCard = ({
                   )}
                 ></div>
                 <ModuleIcon
-                  className={cn("w-8 h-8 relative z-10", module.color || "text-green-400")}
+                  className={cn(
+                    "w-5 h-5 md:w-8 md:h-8 relative z-10",
+                    module.color || "text-green-400"
+                  )}
                 />
               </div>
 
               {/* Title and Description */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-3 mb-2">
+              <div className="flex flex-col">
+                <div className="flex items-start space-x-2 sm:space-x-3 mb-2">
                   <h3
                     className={cn(
-                      "text-xl font-bold font-mono uppercase tracking-wider",
+                      "text-base sm:text-xl font-bold font-mono uppercase tracking-wider",
                       "text-white transition-colors",
-                      "truncate",
                       module.color?.includes("green")
                         ? "group-hover:text-green-400"
                         : module.color?.includes("blue")
@@ -167,8 +126,8 @@ export const ModuleTimelineCard = ({
                   {/* Retro Difficulty Badge */}
                   <div
                     className={cn(
-                      "px-3 py-1 rounded-full border-2 text-xs font-mono uppercase",
-                      "bg-black/50 backdrop-blur-sm",
+                      "px-2 sm:px-3 py-1 rounded-full border-2 text-xs font-mono uppercase flex-shrink-0",
+                      "bg-black/50 backdrop-blur-sm hidden md:block",
                       getDifficultyColor(module.difficulty),
                       "animate-pulse"
                     )}
@@ -177,7 +136,7 @@ export const ModuleTimelineCard = ({
                   </div>
                 </div>
 
-                <p className="text-gray-300 text-sm leading-relaxed font-mono line-clamp-2">
+                <p className="text-gray-300 text-xs sm:text-sm leading-relaxed font-mono line-clamp-2 sm:line-clamp-none">
                   {module.description}
                 </p>
               </div>
@@ -185,8 +144,8 @@ export const ModuleTimelineCard = ({
           </div>
 
           {/* Retro Stats Grid */}
-          <div className="px-6 pb-4">
-            <div className="grid grid-cols-4 gap-3">
+          <div className="px-4 sm:px-6 pb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
               {/* Duration */}
               <div
                 className={cn(
@@ -275,7 +234,7 @@ export const ModuleTimelineCard = ({
 
           {/* Progress Section */}
           {isEnrolled && (
-            <div className="px-6 pb-4">
+            <div className="px-4 sm:px-6 pb-4">
               <div
                 className={cn(
                   "p-4 rounded-lg border",
@@ -328,8 +287,8 @@ export const ModuleTimelineCard = ({
           )}
 
           {/* Topics Tags */}
-          <div className="px-6 pb-4">
-            <div className="flex flex-wrap gap-2">
+          <div className="px-4 sm:px-6 pb-4">
+            <div className="flex flex-wrap gap-1 sm:gap-2">
               {module.topics?.slice(0, 3).map((topic, idx) => (
                 <div
                   key={idx}
@@ -359,40 +318,50 @@ export const ModuleTimelineCard = ({
             </div>
           </div>
 
-          {/* Action Section */}
-          <div className="px-6 pb-6">
-            <div className="flex items-center space-x-3">
+          {/* Action Buttons */}
+          <div className="px-4 sm:px-6 pb-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
               {/* Main Continue Button */}
-              <button
+              <Button
+                onClick={() => onModuleClick(module)}
+                variant={"default"}
                 className={cn(
-                  "flex-1 h-12 font-mono uppercase tracking-wider text-sm font-bold",
-                  "bg-gradient-to-r from-green-600 to-green-500",
+                  "flex-1 h-10 sm:h-12 font-mono uppercase tracking-wider text-xs sm:text-sm font-bold",
                   "border-2 border-green-400",
                   "text-black",
-                  "hover:from-green-500 hover:to-green-400",
+                  "hover:bg-green-500 hover:to-green-400",
                   "transition-all duration-300",
-                  "relative overflow-hidden rounded-lg"
+                  "relative overflow-hidden rounded-lg cursor-pointer"
                 )}
               >
                 <span className="relative z-10 flex items-center justify-center space-x-2">
-                  <Play className="w-4 h-4" />
-                  <span>{isCompleted ? "REVIEW" : "CONTINUE"}</span>
+                  <Play className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>{"CONTINUE"}</span>
                 </span>
-              </button>
+              </Button>
 
-              {/* Enrolled Status Badge */}
-              <div
-                className={cn(
-                  "flex items-center space-x-2 px-4 py-3",
-                  "bg-gradient-to-r from-green-600/20 to-green-500/20",
-                  "border-2 border-green-400",
-                  "rounded-lg shadow-lg shadow-green-400/30",
-                  "font-mono text-xs font-bold uppercase tracking-wider",
-                  "text-green-400"
+              {/* Status Corner Badge */}
+              <div className=" z-10">
+                {isCompleted && (
+                  <Button
+                    variant={"outline"}
+                    className="h-10 sm:h-12 text-green-400 w-full"
+                  >
+                    <span className="relative z-10 flex items-center justify-center space-x-1">
+                      <CheckCircle className="w-3 h-3" />
+                      <span>COMPLETED</span>
+                    </span>
+                  </Button>
                 )}
-              >
-                <UserCheck className="w-4 h-4" />
-                <span>ENROLLED</span>
+                {isEnrolled && !isCompleted && (
+                  <Button
+                    variant={"outline"}
+                    className="h-10 sm:h-12 text-green-400 w-full"
+                  >
+                    <UserCheck className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span>ENROLLED</span>
+                  </Button>
+                )}
               </div>
             </div>
           </div>

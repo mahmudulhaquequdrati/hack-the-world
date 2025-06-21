@@ -81,7 +81,7 @@ const LabsTab = ({
           </p>
         </div>
 
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Show API-based labs */}
           {!overviewError && labsFromAPI.length > 0
             ? labsFromAPI.map((lab, index) => (

@@ -71,11 +71,11 @@ const EnrolledCoursePage = () => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [isAutoCompleting, setIsAutoCompleting] = useState(false);
   const [isContentRendering, setIsContentRendering] = useState(false);
-  
+
   // Track when completion was initiated to monitor related refetches
   const [completionInitiated, setCompletionInitiated] = useState(false);
-  const [minimumLoadingTimer, setMinimumLoadingTimer] = useState<NodeJS.Timeout | null>(null);
-
+  const [minimumLoadingTimer, setMinimumLoadingTimer] =
+    useState<NodeJS.Timeout | null>(null);
   // Video progress tracking
   const [hasAutoCompleted, setHasAutoCompleted] = useState(false);
 
@@ -117,7 +117,8 @@ const EnrolledCoursePage = () => {
     skip: !currentContentId,
   });
 
-  const [completeContent, { isLoading: isCompletingMutation }] = useCompleteContentMutation();
+  const [completeContent, { isLoading: isCompletingMutation }] =
+    useCompleteContentMutation();
 
   // Create flat array of content items for navigation
   const allContentItems = useMemo<ContentItemWithCompletion[]>(() => {
@@ -246,34 +247,31 @@ const EnrolledCoursePage = () => {
   useEffect(() => {
     // Don't clear loading if we're still rendering content
     if (isContentRendering) return;
-    
+
     // For completion operations: ensure loading persists long enough and all operations complete
     if ((isCompleting || isAutoCompleting) && completionInitiated) {
-      console.log('Completion tracking:', {
-        isCompletingMutation,
-        groupedContentFetching,
-        currentContentFetching,
-        minimumLoadingTimer: !!minimumLoadingTimer
-      });
-      
       // Keep loading active while:
       // 1. The mutation is still running OR
-      // 2. Related queries are fetching OR  
+      // 2. Related queries are fetching OR
       // 3. Minimum loading time hasn't elapsed
-      if (isCompletingMutation || groupedContentFetching || currentContentFetching || minimumLoadingTimer) {
+      if (
+        isCompletingMutation ||
+        groupedContentFetching ||
+        currentContentFetching ||
+        minimumLoadingTimer
+      ) {
         return;
       }
-      
+
       // All operations complete - clear completion loading
       const timeoutId = setTimeout(() => {
         setIsCompleting(false);
         setIsAutoCompleting(false);
         setCompletionInitiated(false);
-        console.log('Completion loading cleared');
       }, 100);
       return () => clearTimeout(timeoutId);
     }
-    
+
     // For navigation: wait for content to load and be ready
     if (isNavigating && !currentContentLoading && courseData) {
       const timeoutId = setTimeout(() => {
@@ -468,13 +466,13 @@ const EnrolledCoursePage = () => {
         setIsAutoCompleting(true);
         setCompletionInitiated(true);
         setHasAutoCompleted(true);
-        
+
         // Set minimum loading duration for auto-completion too
         const timer = setTimeout(() => {
           setMinimumLoadingTimer(null);
         }, 1000);
         setMinimumLoadingTimer(timer);
-        
+
         try {
           await completeContent({ contentId: currentContentId! }).unwrap();
           await refetchCurrentContent();
@@ -503,25 +501,20 @@ const EnrolledCoursePage = () => {
     if (!currentContentId || isCompleting || isContentRendering) return;
     setIsCompleting(true);
     setCompletionInitiated(true);
-    
-    console.log('Starting completion process for:', currentContentId);
-    
+
     // Set minimum loading duration (1.5 seconds) to ensure user sees the feedback
     const timer = setTimeout(() => {
       setMinimumLoadingTimer(null);
-      console.log('Minimum loading time elapsed');
     }, 1500);
     setMinimumLoadingTimer(timer);
-    
+
     try {
       // Complete content - this will trigger cache invalidation and automatic refetches
-      console.log('Calling completeContent API...');
+
       await completeContent({ contentId: currentContentId }).unwrap();
-      console.log('CompleteContent API finished, refetching current content...');
-      
+
       // Manual refetch is still needed to ensure immediate update
       await refetchCurrentContent();
-      console.log('Manual refetch completed');
     } catch (error) {
       console.error("Failed to mark lesson complete:", error);
       // On error, clear loading states immediately

@@ -71,8 +71,6 @@ const ContentSidebar = ({
     );
   }, [course.sections]);
 
-  console.log(course, "course");
-
   // Filter lessons based on search and filter
   const filteredLessons = useMemo(() => {
     return allLessons.filter((lesson) => {
@@ -233,7 +231,9 @@ const ContentSidebar = ({
                   <div className="flex items-center space-x-2 min-w-0 flex-1">
                     <Search className="w-3 h-3 text-green-400 flex-shrink-0" />
                     <span className="text-xs text-green-400 font-mono font-bold truncate">
-                      <span className="hidden sm:inline">SEARCH.AND.FILTER</span>
+                      <span className="hidden sm:inline">
+                        SEARCH.AND.FILTER
+                      </span>
                       <span className="sm:hidden">SEARCH</span>
                     </span>
                   </div>
@@ -391,8 +391,12 @@ const ContentSidebar = ({
                                     lesson.type
                                   )}`}
                                 >
-                                  <span className="hidden sm:inline">{getTypeLabel(lesson.type)}</span>
-                                  <span className="sm:hidden">{getTypeLabel(lesson.type).slice(0, 3)}</span>
+                                  <span className="hidden sm:inline">
+                                    {getTypeLabel(lesson.type)}
+                                  </span>
+                                  <span className="sm:hidden">
+                                    {getTypeLabel(lesson.type).slice(0, 3)}
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -420,7 +424,9 @@ const ContentSidebar = ({
                               {isActive && (
                                 <div className="flex items-center space-x-1 text-xs text-green-400">
                                   <Play className="w-3 h-3 flex-shrink-0" />
-                                  <span className="font-mono hidden sm:inline">ACTIVE</span>
+                                  <span className="font-mono hidden sm:inline">
+                                    ACTIVE
+                                  </span>
                                 </div>
                               )}
                             </div>

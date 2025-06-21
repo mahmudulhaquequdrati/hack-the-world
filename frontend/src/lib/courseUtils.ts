@@ -834,7 +834,7 @@ export const getContextualContentForLesson = (lesson: EnrolledLesson) => {
 // Get all resources for a lesson (dynamic + course resources)
 export const getAllResourcesForLesson = (
   lesson: EnrolledLesson,
-  courseResources: Resource[]
+  courseResources: string[]
 ) => {
   const dynamicResources = lesson.dynamicResources || [];
   return [...dynamicResources, ...courseResources];

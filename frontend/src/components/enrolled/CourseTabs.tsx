@@ -1,20 +1,10 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EnrolledCourse, EnrolledLesson } from "@/lib/types";
 import {
-  getAllResourcesForLesson,
-  getContextualContentForLesson,
-} from "@/lib/courseUtils";
-import { EnrolledCourse, EnrolledLesson, Resource } from "@/lib/types";
-import {
-  BookOpen,
   Brain,
-  Code,
-  Download,
   FileText,
   Gamepad2,
   Monitor,
-  Target,
   Terminal,
   Video,
 } from "lucide-react";
@@ -53,60 +43,14 @@ const CourseTabs = ({
     }
   };
 
-  const getCategoryIcon = (category?: string) => {
-    switch (category) {
-      case "guide":
-        return <BookOpen className="w-4 h-4 text-blue-300" />;
-      case "template":
-        return <Code className="w-4 h-4 text-green-300" />;
-      case "tool":
-        return <Terminal className="w-4 h-4 text-yellow-300" />;
-      case "exercise":
-        return <Target className="w-4 h-4 text-red-300" />;
-      case "reference":
-      default:
-        return <FileText className="w-4 h-4 text-purple-300" />;
-    }
-  };
-
-  const getCategoryColor = (category?: string) => {
-    switch (category) {
-      case "guide":
-        return "border-blue-400/40 bg-blue-400/10";
-      case "template":
-        return "border-green-400/40 bg-green-400/10";
-      case "tool":
-        return "border-yellow-400/40 bg-yellow-400/10";
-      case "exercise":
-        return "border-red-400/40 bg-red-400/10";
-      case "reference":
-      default:
-        return "border-purple-400/40 bg-purple-400/10";
-    }
-  };
-
   // Get all resources for current lesson
   const getAllResources = () => {
-    if (!currentLesson) return course.resources;
-    return getAllResourcesForLesson(currentLesson, course.resources);
-  };
-
-  // Get contextual resources (lesson-specific)
-  const getContextualResources = () => {
-    const allResources = getAllResources();
-    return allResources.filter((resource) => resource.isContextual);
-  };
-
-  // Get course resources (general)
-  const getCourseResources = () => {
-    const allResources = getAllResources();
-    return allResources.filter((resource) => !resource.isContextual);
+    return currentLesson?.resources || [];
   };
 
   const getDetailedDescription = () => {
     if (!currentLesson) return course.description;
 
-    const contextualContent = getContextualContentForLesson(currentLesson);
     const baseDescription = currentLesson.description || course.description;
     const lessonType = currentLesson.type;
 
@@ -137,9 +81,7 @@ const CourseTabs = ({
           "💻 Interactive learning module with multimedia content.";
     }
 
-    return `${baseDescription}\n\n${typeSpecificInfo}\n\nObjectives:\n${contextualContent.objectives
-      .map((obj) => `• ${obj}`)
-      .join("\n")}`;
+    return `${baseDescription}\n\n${typeSpecificInfo}`;
   };
 
   return (
@@ -179,7 +121,9 @@ const CourseTabs = ({
               value="resources"
               className="text-green-400 font-mono font-bold data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:shadow-lg transition-all duration-300 rounded-none text-xs sm:text-sm px-2 sm:px-4"
             >
-              <span className="hidden sm:inline">{`>> RESOURCES (${getAllResources().length})`}</span>
+              <span className="hidden sm:inline">{`>> RESOURCES (${
+                getAllResources().length
+              })`}</span>
               <span className="sm:hidden">{`RESOURCES`}</span>
             </TabsTrigger>
           </TabsList>
@@ -195,8 +139,12 @@ const CourseTabs = ({
                       {getLessonTypeIcon(currentLesson.type)}
                     </div>
                     <h3 className="text-cyan-400 font-bold text-sm sm:text-lg font-mono tracking-wide truncate">
-                      <span className="hidden sm:inline">CURRENT: {currentLesson.title.toUpperCase()}</span>
-                      <span className="sm:hidden">{currentLesson.title.toUpperCase()}</span>
+                      <span className="hidden sm:inline">
+                        CURRENT: {currentLesson.title.toUpperCase()}
+                      </span>
+                      <span className="sm:hidden">
+                        {currentLesson.title.toUpperCase()}
+                      </span>
                     </h3>
                   </div>
 
@@ -216,121 +164,14 @@ const CourseTabs = ({
           {/* Resources Tab */}
           <TabsContent value="resources" className="mt-4 sm:mt-6">
             <div className="space-y-4 sm:space-y-6">
-              {/* Contextual Resources */}
-              {getContextualResources().length > 0 && (
-                <div>
-                  <div className="flex items-center space-x-2 mb-3 sm:mb-4">
-                    <Target className="w-4 h-4 sm:w-5 sm:h-5 text-green-400 flex-shrink-0" />
-                    <h3 className="text-green-400 font-bold text-sm sm:text-lg font-mono truncate">
-                      <span className="hidden sm:inline">LESSON RESOURCES ({getContextualResources().length})</span>
-                      <span className="sm:hidden">RESOURCES ({getContextualResources().length})</span>
-                    </h3>
-                  </div>
-                  <div className="space-y-2 sm:space-y-3">
-                    {getContextualResources().map(
-                      (resource: Resource, index) => (
-                        <Card
-                          key={index}
-                          className={`bg-black/60 border-2 hover:border-green-400/70 transition-all duration-300 rounded-none shadow-lg hover:shadow-green-400/20 ${getCategoryColor(
-                            resource.category
-                          )}`}
-                        >
-                          <CardContent className="p-3 sm:p-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                              <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
-                                <div className="bg-black/60 border border-green-400/30 p-2 rounded-none flex-shrink-0">
-                                  {getCategoryIcon(resource.category)}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="font-bold text-green-400 text-xs sm:text-sm font-mono truncate">
-                                    {resource.name}
-                                  </div>
-                                  <div className="text-xs text-green-400/70 font-mono mt-1">
-                                    {resource.type.toUpperCase()} •{" "}
-                                    {resource.size}
-                                    {resource.category &&
-                                      ` • ${resource.category.toUpperCase()}`}
-                                  </div>
-                                  {resource.description && (
-                                    <div className="text-xs text-green-300/60 font-mono mt-1 line-clamp-2">
-                                      {resource.description}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <Button
-                                size="sm"
-                                className="bg-green-400 text-black hover:bg-green-300 font-mono font-bold rounded-none border-2 border-green-400 transition-all duration-300 w-full sm:w-auto flex-shrink-0"
-                              >
-                                <Download className="w-4 h-4 mr-2" />
-                                <span className="hidden sm:inline">DOWNLOAD</span>
-                                <span className="sm:hidden">GET</span>
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )
-                    )}
-                  </div>
+              <h1>Resources</h1>
+              {currentLesson?.resources?.map((resource) => (
+                <div key={resource}>
+                  <a href={resource} target="_blank" rel="noopener noreferrer">
+                    {resource}
+                  </a>
                 </div>
-              )}
-
-              {/* Course Resources */}
-              {getCourseResources().length > 0 && (
-                <div>
-                  <div className="flex items-center space-x-2 mb-3 sm:mb-4">
-                    <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 flex-shrink-0" />
-                    <h3 className="text-purple-400 font-bold text-sm sm:text-lg font-mono truncate">
-                      <span className="hidden sm:inline">COURSE RESOURCES ({getCourseResources().length})</span>
-                      <span className="sm:hidden">COURSE ({getCourseResources().length})</span>
-                    </h3>
-                  </div>
-                  <div className="space-y-2 sm:space-y-3">
-                    {getCourseResources().map((resource: Resource, index) => (
-                      <Card
-                        key={index}
-                        className={`bg-black/60 border-2 hover:border-purple-400/70 transition-all duration-300 rounded-none shadow-lg hover:shadow-purple-400/20 ${getCategoryColor(
-                          resource.category
-                        )}`}
-                      >
-                        <CardContent className="p-3 sm:p-4">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
-                              <div className="bg-black/60 border border-purple-400/30 p-2 rounded-none flex-shrink-0">
-                                {getCategoryIcon(resource.category)}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="font-bold text-purple-400 text-xs sm:text-sm font-mono truncate">
-                                  {resource.name}
-                                </div>
-                                <div className="text-xs text-purple-400/70 font-mono mt-1">
-                                  {resource.type.toUpperCase()} •{" "}
-                                  {resource.size}
-                                  {resource.category &&
-                                    ` • ${resource.category.toUpperCase()}`}
-                                </div>
-                                {resource.description && (
-                                  <div className="text-xs text-purple-300/60 font-mono mt-1 line-clamp-2">
-                                    {resource.description}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <Button
-                              size="sm"
-                              className="bg-purple-400 text-black hover:bg-purple-300 font-mono font-bold rounded-none border-2 border-purple-400 transition-all duration-300 w-full sm:w-auto flex-shrink-0"
-                            >
-                              <Download className="w-4 h-4 mr-2" />
-                              <span className="hidden sm:inline">DOWNLOAD</span>
-                              <span className="sm:hidden">GET</span>
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
+              ))}
             </div>
           </TabsContent>
         </Tabs>

@@ -68,7 +68,6 @@ export interface Lesson {
   content?: string;
 }
 
-
 export interface LearningOutcome {
   title: string;
   description: string;
@@ -89,7 +88,6 @@ export interface GameItem {
   points: number;
   type: string;
 }
-
 
 export interface Instructor {
   name: string;
@@ -142,6 +140,7 @@ export interface EnrolledLesson {
   relatedLabs?: string[];
   relatedGames?: string[];
   contextualContent?: ContextualContent;
+  resources?: string[];
 }
 
 export interface QuizQuestion {
@@ -203,7 +202,6 @@ export interface Resource {
   relatedTopics?: string[];
 }
 
-
 export interface Playground {
   title: string;
   description: string;
@@ -251,8 +249,6 @@ export interface LabStep {
   description: string;
   completed: boolean;
 }
-
-
 
 export interface User {
   _id: string;

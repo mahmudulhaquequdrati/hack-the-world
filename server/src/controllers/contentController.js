@@ -301,13 +301,15 @@ const createContent = asyncHandler(async (req, res, next) => {
     const highestOrderContent = await Content.findOne({
       moduleId: contentData.moduleId,
       section: contentData.section,
-      isActive: true
+      isActive: true,
     })
-    .sort({ order: -1 })
-    .select('order');
+      .sort({ order: -1 })
+      .select("order");
 
     // Assign next order number (default to 1 if no content exists)
-    contentData.order = highestOrderContent?.order ? highestOrderContent.order + 1 : 1;
+    contentData.order = highestOrderContent?.order
+      ? highestOrderContent.order + 1
+      : 1;
   }
 
   const content = await Content.create(contentData);
@@ -438,7 +440,7 @@ const getContentWithModuleAndProgress = asyncHandler(async (req, res, next) => {
 
   // Get content with module populated
   const content = await Content.findById(contentId)
-    .populate("moduleId", "_id title description icon color difficulty")
+    .populate("moduleId", "_id title description icon color difficulty ")
     .lean();
 
   if (!content) {
@@ -489,6 +491,7 @@ const getContentWithModuleAndProgress = asyncHandler(async (req, res, next) => {
       instructions: content.instructions,
       duration: content.duration,
       section: content.section,
+      resources: content.resources,
     },
     module: {
       _id: content.moduleId._id.toString(),
@@ -528,10 +531,12 @@ const getDashboardLabsAndGames = asyncHandler(async (req, res, next) => {
   try {
     // Get user's enrolled modules
     const UserEnrollment = require("../models/UserEnrollment");
-    const enrollments = await UserEnrollment.find({ 
-      userId, 
-      status: { $in: ["active", "completed"] } 
-    }).select("moduleId").lean();
+    const enrollments = await UserEnrollment.find({
+      userId,
+      status: { $in: ["active", "completed"] },
+    })
+      .select("moduleId")
+      .lean();
 
     if (enrollments.length === 0) {
       return res.status(200).json({
@@ -539,58 +544,70 @@ const getDashboardLabsAndGames = asyncHandler(async (req, res, next) => {
         message: "No enrolled modules found",
         data: {
           labs: [],
-          games: []
-        }
+          games: [],
+        },
       });
     }
 
-    const enrolledModuleIds = enrollments.map(e => e.moduleId);
+    const enrolledModuleIds = enrollments.map((e) => e.moduleId);
 
     // Get all lab and game content from enrolled modules
     const [labContent, gameContent] = await Promise.all([
       Content.find({
         moduleId: { $in: enrolledModuleIds },
         type: "lab",
-        isActive: true
-      }).populate("moduleId", "title difficulty phaseId").lean(),
-      
+        isActive: true,
+      })
+        .populate("moduleId", "title difficulty phaseId")
+        .lean(),
+
       Content.find({
         moduleId: { $in: enrolledModuleIds },
-        type: "game", 
-        isActive: true
-      }).populate("moduleId", "title difficulty phaseId").lean()
+        type: "game",
+        isActive: true,
+      })
+        .populate("moduleId", "title difficulty phaseId")
+        .lean(),
     ]);
 
     // Get all content IDs to fetch progress data
-    const allContentIds = [...labContent, ...gameContent].map(c => c._id);
+    const allContentIds = [...labContent, ...gameContent].map((c) => c._id);
 
     // Get user progress for all this content
     const UserProgress = require("../models/UserProgress");
     const progressData = await UserProgress.find({
       userId,
-      contentId: { $in: allContentIds }
+      contentId: { $in: allContentIds },
     }).lean();
 
     // Create progress map for quick lookup
     const progressMap = new Map();
-    progressData.forEach(progress => {
+    progressData.forEach((progress) => {
       progressMap.set(progress.contentId.toString(), progress);
     });
 
     // Get phase data for enriching response
     const Phase = require("../models/Phase");
-    const phaseIds = [...new Set([...labContent, ...gameContent].map(c => c.moduleId?.phaseId).filter(Boolean))];
-    const phases = await Phase.find({ _id: { $in: phaseIds } }).select("title").lean();
+    const phaseIds = [
+      ...new Set(
+        [...labContent, ...gameContent]
+          .map((c) => c.moduleId?.phaseId)
+          .filter(Boolean)
+      ),
+    ];
+    const phases = await Phase.find({ _id: { $in: phaseIds } })
+      .select("title")
+      .lean();
     const phaseMap = new Map();
-    phases.forEach(phase => {
+    phases.forEach((phase) => {
       phaseMap.set(phase._id.toString(), phase);
     });
 
     // Format lab data
-    const formattedLabs = labContent.map(lab => {
+    const formattedLabs = labContent.map((lab) => {
       const progress = progressMap.get(lab._id.toString());
       const phase = phaseMap.get(lab.moduleId?.phaseId?.toString());
-      
+
       return {
         _id: lab._id.toString(),
         title: lab.title,
@@ -610,15 +627,15 @@ const getDashboardLabsAndGames = asyncHandler(async (req, res, next) => {
         progressPercentage: progress?.progressPercentage || 0,
         score: progress?.score || null,
         maxScore: progress?.maxScore || null,
-        instructions: lab.instructions
+        instructions: lab.instructions,
       };
     });
 
     // Format game data
-    const formattedGames = gameContent.map(game => {
+    const formattedGames = gameContent.map((game) => {
       const progress = progressMap.get(game._id.toString());
       const phase = phaseMap.get(game.moduleId?.phaseId?.toString());
-      
+
       return {
         _id: game._id.toString(),
         title: game.title,
@@ -637,7 +654,7 @@ const getDashboardLabsAndGames = asyncHandler(async (req, res, next) => {
         moduleId: game.moduleId?._id?.toString(),
         progressPercentage: progress?.progressPercentage || 0,
         maxScore: progress?.maxScore || null,
-        instructions: game.instructions
+        instructions: game.instructions,
       };
     });
 
@@ -646,13 +663,14 @@ const getDashboardLabsAndGames = asyncHandler(async (req, res, next) => {
       message: "Dashboard labs and games data retrieved successfully",
       data: {
         labs: formattedLabs,
-        games: formattedGames
-      }
+        games: formattedGames,
+      },
     });
-
   } catch (error) {
     console.error("Error in getDashboardLabsAndGames:", error);
-    return next(new ErrorResponse("Failed to retrieve dashboard labs and games data", 500));
+    return next(
+      new ErrorResponse("Failed to retrieve dashboard labs and games data", 500)
+    );
   }
 });
 
@@ -671,7 +689,11 @@ const reorderContentInSection = asyncHandler(async (req, res, next) => {
   }
 
   // Validate that contentOrders is provided and is an array
-  if (!contentOrders || !Array.isArray(contentOrders) || contentOrders.length === 0) {
+  if (
+    !contentOrders ||
+    !Array.isArray(contentOrders) ||
+    contentOrders.length === 0
+  ) {
     return next(new ErrorResponse("Content orders array is required", 400));
   }
 
@@ -704,7 +726,7 @@ const reorderContentInSection = asyncHandler(async (req, res, next) => {
 
   // Use transaction to ensure atomicity and handle unique constraint conflicts
   const session = await mongoose.startSession();
-  
+
   try {
     await session.withTransaction(async () => {
       // First, set all content to temporary negative orders to avoid conflicts
@@ -731,8 +753,11 @@ const reorderContentInSection = asyncHandler(async (req, res, next) => {
     await session.endSession();
 
     // Fetch updated content for this section
-    const updatedContent = await Content.find({ moduleId, section, isActive: true })
-      .sort({ order: 1, createdAt: 1 });
+    const updatedContent = await Content.find({
+      moduleId,
+      section,
+      isActive: true,
+    }).sort({ order: 1, createdAt: 1 });
 
     res.status(200).json({
       success: true,
@@ -742,9 +767,7 @@ const reorderContentInSection = asyncHandler(async (req, res, next) => {
   } catch (error) {
     await session.endSession();
     console.error("Reorder transaction failed:", error);
-    return next(
-      new ErrorResponse("Failed to update content order", 500)
-    );
+    return next(new ErrorResponse("Failed to update content order", 500));
   }
 });
 

@@ -546,6 +546,7 @@ const EnrolledCoursePage = () => {
           videoUrl: contentData.url,
           content: contentData.instructions,
           completed: currentContentData.data.progress.status === "completed",
+          resources: contentData.resources || [],
         };
       }
     }
@@ -747,7 +748,6 @@ const EnrolledCoursePage = () => {
 
   const currentLesson = getCurrentLesson();
 
-  console.log("currentLesson", currentLesson);
   const needsPlayground =
     currentLesson?.type === "video" || currentLesson?.type === "text";
   const needsFullScreen =

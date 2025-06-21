@@ -516,6 +516,7 @@ export const apiSlice = createApi({
             instructions?: string;
             duration?: number;
             section: string;
+            resources?: Array<string>;
           };
           module: {
             _id: string;

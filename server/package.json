@@ -16,14 +16,16 @@
     "test:helpers": "jest --testPathPattern=helpers --detectOpenHandles --forceExit",
     "test:seedDataUtils": "jest --testPathPattern=seedDataUtils --detectOpenHandles --forceExit",
     "seed": "node src/utils/seed.js seed",
+    "seed:all": "node src/utils/seed.js all",
     "seed:phases": "node src/utils/seed.js phases",
     "seed:modules": "node src/utils/seed.js modules",
     "seed:content": "node src/utils/seed.js content",
+    "seed:users": "node src/utils/seed.js users",
     "seed:achievements": "node src/utils/seed.js achievements",
-    "seed:admin": "node src/utils/seed.js admin",
+    "seed:user-data": "node src/utils/seed.js user-data",
     "seed:clear": "node src/utils/seed.js clear",
     "seed:reseed": "node src/utils/seed.js reseed",
-    "seed:status": "node src/utils/seed.js status",
+    "seed:reseed-all": "node src/utils/seed.js reseed-all",
     "seed:help": "node src/utils/seed.js help"
   },
   "keywords": [

@@ -16,6 +16,11 @@ const { resetCollection, clearCollection } = require("./dbUtils");
 const Phase = require("../models/Phase");
 const Module = require("../models/Module");
 const Content = require("../models/Content");
+const User = require("../models/User");
+const Achievement = require("../models/Achievement");
+const UserAchievement = require("../models/UserAchievement");
+const UserEnrollment = require("../models/UserEnrollment");
+const UserProgress = require("../models/UserProgress");
 
 // Import existing content data
 
@@ -539,24 +544,508 @@ const CONTENT_DATA = [
   },
 ];
 
+/**
+ * Users Data - Admin and sample student accounts
+ */
+const USERS_DATA = [
+  // Admin User
+  {
+    username: "admin",
+    email: "admin@hacktheworld.dev",
+    password: "SecureAdmin123!",
+    role: "admin",
+    adminStatus: "active",
+    profile: {
+      firstName: "System",
+      lastName: "Administrator",
+      displayName: "Admin",
+      bio: "Platform administrator account",
+      location: "Global",
+    },
+    experienceLevel: "expert",
+    stats: {
+      totalPoints: 10000,
+      level: 50,
+      coursesCompleted: 0,
+      labsCompleted: 0,
+      gamesCompleted: 0,
+      achievementsEarned: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+    },
+  },
+  // Sample Student Users
+  {
+    username: "alice_cybersec",
+    email: "alice@example.com",
+    password: "SecurePassword123!",
+    role: "student",
+    profile: {
+      firstName: "Alice",
+      lastName: "Johnson",
+      displayName: "Alice Johnson",
+      bio: "Passionate about cybersecurity and ethical hacking",
+      location: "San Francisco, CA",
+    },
+    experienceLevel: "intermediate",
+    stats: {
+      totalPoints: 2500,
+      level: 12,
+      coursesCompleted: 3,
+      labsCompleted: 8,
+      gamesCompleted: 5,
+      achievementsEarned: 7,
+      currentStreak: 3,
+      longestStreak: 12,
+    },
+  },
+  {
+    username: "bob_security",
+    email: "bob@example.com",
+    password: "SecurePassword123!",
+    role: "student",
+    profile: {
+      firstName: "Bob",
+      lastName: "Smith",
+      displayName: "Bob Smith",
+      bio: "Network security enthusiast learning penetration testing",
+      location: "Austin, TX",
+    },
+    experienceLevel: "beginner",
+    stats: {
+      totalPoints: 750,
+      level: 4,
+      coursesCompleted: 1,
+      labsCompleted: 2,
+      gamesCompleted: 1,
+      achievementsEarned: 3,
+      currentStreak: 1,
+      longestStreak: 5,
+    },
+  },
+  {
+    username: "carol_hacker",
+    email: "carol@example.com",
+    password: "SecurePassword123!",
+    role: "student",
+    profile: {
+      firstName: "Carol",
+      lastName: "Davis",
+      displayName: "Carol Davis",
+      bio: "Former IT professional transitioning to cybersecurity",
+      location: "Seattle, WA",
+    },
+    experienceLevel: "advanced",
+    stats: {
+      totalPoints: 4200,
+      level: 18,
+      coursesCompleted: 6,
+      labsCompleted: 15,
+      gamesCompleted: 12,
+      achievementsEarned: 14,
+      currentStreak: 7,
+      longestStreak: 25,
+    },
+  },
+];
+
+/**
+ * Achievements Data - Platform achievements users can earn
+ */
+const ACHIEVEMENTS_DATA = [
+  // Module completion achievements
+  {
+    slug: "first-module",
+    title: "First Steps",
+    description: "Complete your first module",
+    category: "module",
+    requirements: {
+      type: "count",
+      target: 1,
+      resource: "modules_completed",
+    },
+    rewards: {
+      xp: 100,
+      badge: "🎯",
+      title: "Beginner",
+    },
+    icon: "Target",
+    difficulty: "easy",
+    order: 1,
+  },
+  {
+    slug: "module-master",
+    title: "Module Master",
+    description: "Complete 5 modules",
+    category: "module",
+    requirements: {
+      type: "count",
+      target: 5,
+      resource: "modules_completed",
+    },
+    rewards: {
+      xp: 500,
+      badge: "🏆",
+      title: "Module Master",
+    },
+    icon: "Trophy",
+    difficulty: "medium",
+    order: 2,
+  },
+  
+  // Lab completion achievements
+  {
+    slug: "first-lab",
+    title: "Hands-On Learner",
+    description: "Complete your first lab exercise",
+    category: "lab",
+    requirements: {
+      type: "count",
+      target: 1,
+      resource: "labs_completed",
+    },
+    rewards: {
+      xp: 150,
+      badge: "🔬",
+      title: "Lab Rookie",
+    },
+    icon: "Beaker",
+    difficulty: "easy",
+    order: 3,
+  },
+  {
+    slug: "lab-expert",
+    title: "Lab Expert",
+    description: "Complete 10 lab exercises",
+    category: "lab",
+    requirements: {
+      type: "count",
+      target: 10,
+      resource: "labs_completed",
+    },
+    rewards: {
+      xp: 750,
+      badge: "🧪",
+      title: "Lab Expert",
+    },
+    icon: "Flask",
+    difficulty: "medium",
+    order: 4,
+  },
+
+  // Game completion achievements
+  {
+    slug: "game-player",
+    title: "Game Player",
+    description: "Complete your first security game",
+    category: "game",
+    requirements: {
+      type: "count",
+      target: 1,
+      resource: "games_completed",
+    },
+    rewards: {
+      xp: 100,
+      badge: "🎮",
+      title: "Gamer",
+    },
+    icon: "Gamepad",
+    difficulty: "easy",
+    order: 5,
+  },
+  {
+    slug: "game-champion",
+    title: "Game Champion",
+    description: "Complete 5 security games",
+    category: "game",
+    requirements: {
+      type: "count",
+      target: 5,
+      resource: "games_completed",
+    },
+    rewards: {
+      xp: 400,
+      badge: "🏅",
+      title: "Game Champion",
+    },
+    icon: "Medal",
+    difficulty: "medium",
+    order: 6,
+  },
+
+  // XP-based achievements
+  {
+    slug: "point-collector",
+    title: "Point Collector",
+    description: "Earn 1000 experience points",
+    category: "xp",
+    requirements: {
+      type: "count",
+      target: 1000,
+      resource: "xp_earned",
+    },
+    rewards: {
+      xp: 200,
+      badge: "💎",
+      title: "Point Collector",
+    },
+    icon: "Diamond",
+    difficulty: "easy",
+    order: 7,
+  },
+  {
+    slug: "xp-master",
+    title: "XP Master",
+    description: "Earn 5000 experience points",
+    category: "xp",
+    requirements: {
+      type: "count",
+      target: 5000,
+      resource: "xp_earned",
+    },
+    rewards: {
+      xp: 1000,
+      badge: "👑",
+      title: "XP Master",
+    },
+    icon: "Crown",
+    difficulty: "hard",
+    order: 8,
+  },
+
+  // General achievements
+  {
+    slug: "enrollment-enthusiast",
+    title: "Enrollment Enthusiast",
+    description: "Enroll in 3 modules",
+    category: "general",
+    requirements: {
+      type: "count",
+      target: 3,
+      resource: "enrollments_created",
+    },
+    rewards: {
+      xp: 250,
+      badge: "📚",
+      title: "Enthusiast",
+    },
+    icon: "BookOpen",
+    difficulty: "easy",
+    order: 9,
+  },
+  {
+    slug: "dedication",
+    title: "Dedication",
+    description: "Complete your first week of learning",
+    category: "general",
+    requirements: {
+      type: "special",
+    },
+    rewards: {
+      xp: 300,
+      badge: "⭐",
+      title: "Dedicated",
+    },
+    icon: "Star",
+    difficulty: "medium",
+    order: 10,
+  },
+];
+
+// ===================================================================
+// DYNAMIC DEPENDENCY RESOLUTION HELPERS
+// ===================================================================
+
+/**
+ * Check if specific models have data seeded
+ */
+async function checkDependencies(requiredModels) {
+  const results = {};
+  
+  for (const modelName of requiredModels) {
+    let count = 0;
+    
+    switch (modelName) {
+      case 'Phase':
+        count = await Phase.countDocuments();
+        break;
+      case 'Module':
+        count = await Module.countDocuments();
+        break;
+      case 'Content':
+        count = await Content.countDocuments();
+        break;
+      case 'User':
+        count = await User.countDocuments();
+        break;
+      case 'Achievement':
+        count = await Achievement.countDocuments();
+        break;
+      default:
+        throw new Error(`Unknown model for dependency check: ${modelName}`);
+    }
+    
+    results[modelName] = count;
+  }
+  
+  return results;
+}
+
+/**
+ * Dynamically find phases and create mapping for modules
+ */
+async function getPhaseMapping() {
+  const phases = await Phase.find({}).sort({ order: 1 });
+  const phaseMap = {};
+  
+  phases.forEach((phase) => {
+    const title = phase.title.toLowerCase();
+    if (title.includes("beginner")) {
+      phaseMap["beginner"] = phase._id;
+    }
+    if (title.includes("intermediate")) {
+      phaseMap["intermediate"] = phase._id;
+    }
+    if (title.includes("advanced")) {
+      phaseMap["advanced"] = phase._id;
+    }
+  });
+  
+  return { phases, phaseMap };
+}
+
+/**
+ * Dynamically find modules and create mapping for content
+ */
+async function getModuleMapping() {
+  const modules = await Module.find({}).sort({ order: 1 });
+  const moduleMap = {};
+  
+  modules.forEach((module) => {
+    const title = module.title.toLowerCase();
+    
+    // Create mappings based on title matching
+    if (title.includes("cybersecurity fundamentals")) {
+      moduleMap["foundations"] = module._id;
+    }
+    if (title.includes("linux command line")) {
+      moduleMap["linux-basics"] = module._id;
+    }
+    if (title.includes("networking fundamentals")) {
+      moduleMap["networking-basics"] = module._id;
+    }
+    if (title.includes("introduction to web security")) {
+      moduleMap["web-security-intro"] = module._id;
+    }
+    if (title.includes("penetration testing fundamentals")) {
+      moduleMap["penetration-testing"] = module._id;
+    }
+    if (title.includes("advanced network security")) {
+      moduleMap["advanced-networking"] = module._id;
+    }
+    if (title.includes("advanced penetration testing")) {
+      moduleMap["advanced-pentest"] = module._id;
+    }
+    if (title.includes("incident response")) {
+      moduleMap["incident-response"] = module._id;
+    }
+  });
+  
+  return { modules, moduleMap };
+}
+
+/**
+ * Dynamically find users and create mapping
+ */
+async function getUserMapping() {
+  const users = await User.find({}).select('_id username role');
+  const userMap = {};
+  
+  users.forEach((user) => {
+    userMap[user.username] = user._id;
+  });
+  
+  return { users, userMap };
+}
+
+/**
+ * Dynamically find content and create mapping for user progress
+ */
+async function getContentMapping() {
+  const content = await Content.find({ isActive: true }).select('_id title moduleId');
+  const contentMap = {};
+  
+  content.forEach((item) => {
+    // Create a simplified key based on title
+    const key = item.title.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, '-')
+      .substring(0, 30);
+    contentMap[key] = item._id;
+  });
+  
+  return { content, contentMap };
+}
+
+/**
+ * Validate that required dependencies exist before seeding
+ */
+async function validateDependencies(operation, dependencies) {
+  console.log(`🔍 Validating dependencies for ${operation}...`);
+  
+  const counts = await checkDependencies(dependencies);
+  const missing = [];
+  
+  for (const [model, count] of Object.entries(counts)) {
+    if (count === 0) {
+      missing.push(model);
+    }
+  }
+  
+  if (missing.length > 0) {
+    throw new Error(
+      `❌ Missing dependencies for ${operation}: ${missing.join(', ')}. ` +
+      `Please seed these models first.`
+    );
+  }
+  
+  console.log(`✅ All dependencies satisfied for ${operation}:`, 
+    Object.entries(counts).map(([model, count]) => `${model}(${count})`).join(', ')
+  );
+  
+  return true;
+}
+
 // ===================================================================
 // SEEDING FUNCTIONS
 // ===================================================================
 
 /**
- * Clear core database collections (phases, modules, content)
+ * Clear all database collections in proper dependency order
  */
 async function clearDatabase() {
   try {
-    console.log("🗑️  CLEARING CORE DATABASE COLLECTIONS");
-    console.log("=======================================");
+    console.log("🗑️  CLEARING ALL DATABASE COLLECTIONS");
+    console.log("=====================================");
 
     // Clear in reverse dependency order to avoid foreign key issues
+    // Tier 3 (depends on everything)
+    await clearCollection(UserProgress, "user progress");
+    
+    // Tier 2 (depends on tier 1)
     await clearCollection(Content, "content items");
+    await clearCollection(UserEnrollment, "user enrollments");
+    await clearCollection(UserAchievement, "user achievements");
+    
+    // Tier 1 (depends on tier 0)
     await clearCollection(Module, "modules");
+    
+    // Tier 0 (no dependencies)
     await clearCollection(Phase, "phases");
+    await clearCollection(User, "users");
+    await clearCollection(Achievement, "achievements");
 
-    console.log("✅ Core collections cleared successfully");
+    console.log("✅ All collections cleared successfully");
   } catch (error) {
     console.error("❌ Error clearing database:", error.message);
     throw error;
@@ -589,19 +1078,14 @@ async function seedPhases() {
 }
 
 /**
- * Seed modules into database with proper phase references
+ * Seed modules into database with dynamic phase references
  */
-async function seedModules(phases = null) {
+async function seedModules() {
   try {
     console.log("🌱 Seeding modules...");
 
-    // Get phases if not provided
-    if (!phases) {
-      phases = await Phase.find({}).sort({ order: 1 });
-      if (phases.length === 0) {
-        throw new Error("No phases found. Please seed phases first.");
-      }
-    }
+    // Validate dependencies - we need phases
+    await validateDependencies("modules", ["Phase"]);
 
     // Check if modules already exist
     const existingCount = await Module.countDocuments();
@@ -612,24 +1096,33 @@ async function seedModules(phases = null) {
       return await Module.find({}).sort({ order: 1 });
     }
 
-    // Create phase mapping for ObjectId resolution
-    const phaseMap = {};
-    phases.forEach((phase) => {
-      if (phase.title.toLowerCase().includes("beginner"))
-        phaseMap["beginner"] = phase._id;
-      if (phase.title.toLowerCase().includes("intermediate"))
-        phaseMap["intermediate"] = phase._id;
-      if (phase.title.toLowerCase().includes("advanced"))
-        phaseMap["advanced"] = phase._id;
-    });
+    // Get dynamic phase mapping
+    const { phaseMap } = await getPhaseMapping();
 
-    console.log("📋 Phase mapping created:", {
+    console.log("📋 Dynamic phase mapping created:", {
       beginner: phaseMap["beginner"] ? "✅" : "❌",
       intermediate: phaseMap["intermediate"] ? "✅" : "❌",
       advanced: phaseMap["advanced"] ? "✅" : "❌",
     });
 
-    // Process module data with proper ObjectId references
+    // Validate that all required phases exist
+    const missingPhases = [];
+    const requiredPhases = ["beginner", "intermediate", "advanced"];
+    
+    for (const phaseKey of requiredPhases) {
+      if (!phaseMap[phaseKey]) {
+        missingPhases.push(phaseKey);
+      }
+    }
+
+    if (missingPhases.length > 0) {
+      throw new Error(
+        `Missing required phases: ${missingPhases.join(', ')}. ` +
+        `Please ensure phases with titles containing these keywords exist.`
+      );
+    }
+
+    // Process module data with dynamic ObjectId references
     const processedModules = MODULES_DATA.map((module) => {
       const phaseObjectId = phaseMap[module.phaseId];
       if (!phaseObjectId) {
@@ -643,7 +1136,7 @@ async function seedModules(phases = null) {
     });
 
     const modules = await resetCollection(Module, processedModules, "modules");
-    console.log(`✅ Created ${modules.length} modules`);
+    console.log(`✅ Created ${modules.length} modules with dynamic phase references`);
     return modules;
   } catch (error) {
     console.error("❌ Error seeding modules:", error.message);
@@ -652,19 +1145,14 @@ async function seedModules(phases = null) {
 }
 
 /**
- * Seed content into database with proper module references and order fields
+ * Seed content into database with dynamic module references and order fields
  */
 async function seedContent(modules = null) {
   try {
     console.log("🌱 Seeding content...");
 
-    // Get modules if not provided
-    if (!modules) {
-      modules = await Module.find({}).sort({ order: 1 });
-      if (modules.length === 0) {
-        throw new Error("No modules found. Please seed modules first.");
-      }
-    }
+    // Validate dependencies - we need modules
+    await validateDependencies("content", ["Module"]);
 
     // Check if content already exists
     const existingCount = await Content.countDocuments();
@@ -675,45 +1163,32 @@ async function seedContent(modules = null) {
       return await Content.find({}).sort({ moduleId: 1, section: 1, order: 1 });
     }
 
-    // Create module mapping for ObjectId resolution
-    const moduleMap = {};
-    modules.forEach((module) => {
-      // Map common variations based on title matching (case insensitive)
-      const title = module.title.toLowerCase();
-      if (title.includes("cybersecurity fundamentals")) {
-        moduleMap["foundations"] = module._id;
-      }
-      if (title.includes("linux command line")) {
-        moduleMap["linux-basics"] = module._id;
-      }
-      if (title.includes("networking fundamentals")) {
-        moduleMap["networking-basics"] = module._id;
-      }
-      if (title.includes("introduction to web security")) {
-        moduleMap["web-security-intro"] = module._id;
-      }
-      if (title.includes("penetration testing fundamentals")) {
-        moduleMap["penetration-testing"] = module._id;
-      }
-      if (title.includes("advanced network security")) {
-        moduleMap["advanced-networking"] = module._id;
-      }
-      if (title.includes("advanced penetration testing")) {
-        moduleMap["advanced-pentest"] = module._id;
-      }
-      if (title.includes("incident response")) {
-        moduleMap["incident-response"] = module._id;
-      }
-    });
+    // Get dynamic module mapping
+    const { moduleMap } = await getModuleMapping();
 
     console.log(
-      "📋 Module mapping created:",
+      "📋 Dynamic module mapping created:",
       Object.keys(moduleMap).map((key) => ({
         [key]: moduleMap[key] ? "✅" : "❌",
       }))
     );
 
-    // Process content data with proper ObjectId references and order fields
+    // Validate that all required modules exist
+    const requiredModules = [
+      "foundations", "linux-basics", "networking-basics", "web-security-intro",
+      "penetration-testing", "advanced-networking", "advanced-pentest", "incident-response"
+    ];
+    
+    const missingModules = requiredModules.filter(moduleKey => !moduleMap[moduleKey]);
+    
+    if (missingModules.length > 0) {
+      console.warn(
+        `⚠️  Some expected modules not found: ${missingModules.join(', ')}. ` +
+        `Content for these modules will be skipped.`
+      );
+    }
+
+    // Process content data with dynamic ObjectId references and order fields
     const processedContent = [];
     const skippedContent = [];
     const sectionOrderMap = {}; // Track order per module-section
@@ -748,7 +1223,7 @@ async function seedContent(modules = null) {
         processedContent,
         "content items"
       );
-      console.log(`✅ Created ${content.length} content items`);
+      console.log(`✅ Created ${content.length} content items with dynamic module references`);
 
       if (skippedContent.length > 0) {
         console.warn(
@@ -770,6 +1245,206 @@ async function seedContent(modules = null) {
 }
 
 /**
+ * Seed users into database (admin and student accounts)
+ */
+async function seedUsers() {
+  try {
+    console.log("🌱 Seeding users...");
+
+    // No dependencies needed for users - they can be seeded independently
+
+    // Check if users already exist
+    const existingCount = await User.countDocuments();
+    if (existingCount > 0) {
+      console.log(
+        `⚠️  Found ${existingCount} existing users. Use reseed to overwrite.`
+      );
+      return await User.find({}).sort({ createdAt: 1 });
+    }
+
+    const users = await resetCollection(User, USERS_DATA, "users");
+    console.log(`✅ Created ${users.length} users (${users.filter(u => u.role === 'admin').length} admin, ${users.filter(u => u.role === 'student').length} students)`);
+    return users;
+  } catch (error) {
+    console.error("❌ Error seeding users:", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Seed achievements into database
+ */
+async function seedAchievements() {
+  try {
+    console.log("🌱 Seeding achievements...");
+
+    // No dependencies needed for achievements - they can be seeded independently
+
+    // Check if achievements already exist
+    const existingCount = await Achievement.countDocuments();
+    if (existingCount > 0) {
+      console.log(
+        `⚠️  Found ${existingCount} existing achievements. Use reseed to overwrite.`
+      );
+      return await Achievement.find({}).sort({ category: 1, order: 1 });
+    }
+
+    const achievements = await resetCollection(Achievement, ACHIEVEMENTS_DATA, "achievements");
+    console.log(`✅ Created ${achievements.length} achievements across ${new Set(achievements.map(a => a.category)).size} categories`);
+    return achievements;
+  } catch (error) {
+    console.error("❌ Error seeding achievements:", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Seed user-related data (enrollments, progress, achievements)
+ * This requires users, modules, content, and achievements to exist
+ */
+async function seedUserData() {
+  try {
+    console.log("🌱 Seeding user data (enrollments, progress, achievements)...");
+
+    // Validate dependencies - we need users, modules, content, and achievements
+    await validateDependencies("user data", ["User", "Module", "Content", "Achievement"]);
+
+    // Get mappings for creating relationships
+    const { users } = await getUserMapping();
+    const { modules } = await getModuleMapping();
+    const { content } = await getContentMapping();
+
+    console.log(`📋 Found ${users.length} users, ${modules.length} modules, ${content.length} content items`);
+
+    // Create some sample enrollments
+    const enrollments = [];
+    const studentUsers = users.filter(u => u.role === 'student');
+
+    for (const user of studentUsers) {
+      // Each student enrolls in 1-3 random modules
+      const enrollmentCount = Math.floor(Math.random() * 3) + 1;
+      const selectedModules = modules
+        .sort(() => 0.5 - Math.random())
+        .slice(0, enrollmentCount);
+
+      for (const module of selectedModules) {
+        enrollments.push({
+          userId: user._id,
+          moduleId: module._id,
+          status: Math.random() > 0.3 ? 'active' : 'completed',
+          completedSections: Math.floor(Math.random() * 5),
+          totalSections: 5,
+          progressPercentage: Math.floor(Math.random() * 100),
+        });
+      }
+    }
+
+    // Create enrollments if any don't exist
+    const existingEnrollments = await UserEnrollment.countDocuments();
+    if (existingEnrollments === 0 && enrollments.length > 0) {
+      await resetCollection(UserEnrollment, enrollments, "user enrollments");
+      console.log(`✅ Created ${enrollments.length} user enrollments`);
+    } else {
+      console.log(`⚠️  Found ${existingEnrollments} existing enrollments. Skipping enrollment creation.`);
+    }
+
+    // Create some sample progress
+    const progressEntries = [];
+    for (const user of studentUsers) {
+      // Each student has progress on some random content
+      const progressCount = Math.floor(Math.random() * 10) + 5;
+      const selectedContent = content
+        .sort(() => 0.5 - Math.random())
+        .slice(0, progressCount);
+
+      for (const contentItem of selectedContent) {
+        const progressPercentage = Math.floor(Math.random() * 100);
+        const status = progressPercentage === 0 ? 'not-started' : 
+                      progressPercentage === 100 ? 'completed' : 'in-progress';
+
+        progressEntries.push({
+          userId: user._id,
+          contentId: contentItem._id,
+          contentType: ['video', 'lab', 'game', 'document'][Math.floor(Math.random() * 4)],
+          status,
+          progressPercentage,
+          startedAt: progressPercentage > 0 ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) : null,
+          completedAt: status === 'completed' ? new Date() : null,
+          score: status === 'completed' ? Math.floor(Math.random() * 100) + 50 : null,
+          maxScore: status === 'completed' ? 100 : null,
+        });
+      }
+    }
+
+    // Create progress if any don't exist
+    const existingProgress = await UserProgress.countDocuments();
+    if (existingProgress === 0 && progressEntries.length > 0) {
+      await resetCollection(UserProgress, progressEntries, "user progress");
+      console.log(`✅ Created ${progressEntries.length} user progress entries`);
+    } else {
+      console.log(`⚠️  Found ${existingProgress} existing progress entries. Skipping progress creation.`);
+    }
+
+    // Create some sample user achievements
+    const userAchievements = [];
+    const achievements = await Achievement.find({}).sort({ order: 1 });
+
+    for (const user of studentUsers) {
+      // Each student has progress on some achievements
+      const achievementCount = Math.floor(Math.random() * 5) + 2;
+      const selectedAchievements = achievements
+        .sort(() => 0.5 - Math.random())
+        .slice(0, achievementCount);
+
+      for (const achievement of selectedAchievements) {
+        // Skip achievements without targets (like special achievements)
+        if (!achievement.requirements.target) {
+          console.warn(`⚠️ Skipping achievement '${achievement.title}' - no target specified`);
+          continue;
+        }
+
+        const currentProgress = Math.floor(Math.random() * achievement.requirements.target);
+        const isCompleted = currentProgress >= achievement.requirements.target;
+
+        userAchievements.push({
+          userId: user._id,
+          achievementId: achievement._id,
+          progress: {
+            current: currentProgress,
+            target: achievement.requirements.target,
+          },
+          isCompleted,
+          completedAt: isCompleted ? new Date() : null,
+          earnedRewards: isCompleted ? {
+            xp: achievement.rewards.xp,
+            badge: achievement.rewards.badge,
+            title: achievement.rewards.title,
+          } : {},
+        });
+      }
+    }
+
+    // Create user achievements if any don't exist
+    const existingUserAchievements = await UserAchievement.countDocuments();
+    if (existingUserAchievements === 0 && userAchievements.length > 0) {
+      await resetCollection(UserAchievement, userAchievements, "user achievements");
+      console.log(`✅ Created ${userAchievements.length} user achievement entries`);
+    } else {
+      console.log(`⚠️  Found ${existingUserAchievements} existing user achievements. Skipping user achievement creation.`);
+    }
+
+    return {
+      enrollments: enrollments.length,
+      progress: progressEntries.length,
+      userAchievements: userAchievements.length,
+    };
+  } catch (error) {
+    console.error("❌ Error seeding user data:", error.message);
+    throw error;
+  }
+}
+
+/**
  * Seed core collections in proper dependency order (phases, modules, content)
  */
 async function seedDatabase() {
@@ -781,10 +1456,10 @@ async function seedDatabase() {
     const phases = await seedPhases();
 
     // Step 2: Seed modules (depends on phases)
-    const modules = await seedModules(phases);
+    const modules = await seedModules();
 
     // Step 3: Seed content (depends on modules)
-    const content = await seedContent(modules);
+    const content = await seedContent();
 
     console.log("\n🎉 CORE DATABASE SEEDING COMPLETED SUCCESSFULLY!");
     console.log("=================================================");
@@ -807,6 +1482,60 @@ async function seedDatabase() {
 }
 
 /**
+ * Seed all collections in proper dependency order (complete seeding)
+ */
+async function seedAll() {
+  try {
+    console.log("🌱 STARTING COMPLETE DATABASE SEEDING");
+    console.log("======================================");
+
+    // Tier 0: No dependencies
+    console.log("\n📊 TIER 0: Independent Models");
+    const phases = await seedPhases();
+    const users = await seedUsers();
+    const achievements = await seedAchievements();
+
+    // Tier 1: Depends on Tier 0
+    console.log("\n📊 TIER 1: Phase-dependent Models");
+    const modules = await seedModules();
+
+    // Tier 2: Depends on Tier 1
+    console.log("\n📊 TIER 2: Module-dependent Models");
+    const content = await seedContent();
+
+    // Tier 3: Depends on everything
+    console.log("\n📊 TIER 3: User Relationship Models");
+    const userData = await seedUserData();
+
+    console.log("\n🎉 COMPLETE DATABASE SEEDING FINISHED!");
+    console.log("=======================================");
+
+    // Show comprehensive summary
+    console.log("📊 COMPLETE SEEDING SUMMARY:");
+    console.log(`   Phases: ${phases.length}`);
+    console.log(`   Modules: ${modules.length}`);
+    console.log(`   Content: ${content.length}`);
+    console.log(`   Users: ${users.length}`);
+    console.log(`   Achievements: ${achievements.length}`);
+    console.log(`   User Enrollments: ${userData.enrollments}`);
+    console.log(`   User Progress: ${userData.progress}`);
+    console.log(`   User Achievements: ${userData.userAchievements}`);
+
+    return {
+      phases: phases.length,
+      modules: modules.length,
+      content: content.length,
+      users: users.length,
+      achievements: achievements.length,
+      ...userData,
+    };
+  } catch (error) {
+    console.error("\n❌ Complete database seeding failed:", error.message);
+    throw error;
+  }
+}
+
+/**
  * Main function to handle command line operations
  */
 async function main() {
@@ -823,30 +1552,32 @@ async function main() {
         await seedDatabase();
         break;
 
+      case "all":
+        await seedAll();
+        break;
+
       case "phases":
         await seedPhases();
         break;
 
       case "modules":
-        const phasesForModules = await Phase.find({}).sort({ order: 1 });
-        if (phasesForModules.length === 0) {
-          console.error(
-            "❌ No phases found. Please seed phases first: pnpm seed phases"
-          );
-          process.exit(1);
-        }
-        await seedModules(phasesForModules);
+        await seedModules();
         break;
 
       case "content":
-        const modulesForContent = await Module.find({}).sort({ order: 1 });
-        if (modulesForContent.length === 0) {
-          console.error(
-            "❌ No modules found. Please seed modules first: pnpm seed modules"
-          );
-          process.exit(1);
-        }
-        await seedContent(modulesForContent);
+        await seedContent();
+        break;
+
+      case "users":
+        await seedUsers();
+        break;
+
+      case "achievements":
+        await seedAchievements();
+        break;
+
+      case "user-data":
+        await seedUserData();
         break;
 
       case "clear":
@@ -860,25 +1591,43 @@ async function main() {
         await seedDatabase();
         break;
 
+      case "reseed-all":
+        console.log("🔄 RESEEDING ALL DATABASE");
+        console.log("==========================");
+        await clearDatabase();
+        await seedAll();
+        break;
+
       case "help":
       default:
-        console.log("\n🛡️  Hack The World - Core Seeding System");
-        console.log("=========================================");
+        console.log("\n🛡️  Hack The World - Dynamic Seeding System");
+        console.log("=============================================");
         console.log("\nUsage:");
         console.log("  node src/utils/seed.js [command]");
         console.log("  pnpm seed [command]");
         console.log("\nCommands:");
-        console.log("  seed     - Seed core data (phases, modules, content)");
-        console.log("  phases   - Seed phases only");
-        console.log("  modules  - Seed modules only (requires phases)");
-        console.log("  content  - Seed content only (requires modules)");
-        console.log("  clear    - Clear core data from database");
-        console.log("  reseed   - Clear and reseed core data");
-        console.log("  help     - Show this help message");
+        console.log("  seed         - Seed core data (phases, modules, content)");
+        console.log("  all          - Seed all data (core + users + achievements + user-data)");
+        console.log("  phases       - Seed phases only");
+        console.log("  modules      - Seed modules only (requires phases)");
+        console.log("  content      - Seed content only (requires modules)");
+        console.log("  users        - Seed users only (admin + students)");
+        console.log("  achievements - Seed achievements only");
+        console.log("  user-data    - Seed user relationships (requires users, modules, content, achievements)");
+        console.log("  clear        - Clear all data from database");
+        console.log("  reseed       - Clear and reseed core data");
+        console.log("  reseed-all   - Clear and reseed all data");
+        console.log("  help         - Show this help message");
+        console.log("\nDependency Tiers:");
+        console.log("  Tier 0: phases, users, achievements (no dependencies)");
+        console.log("  Tier 1: modules (requires phases)");
+        console.log("  Tier 2: content (requires modules)");
+        console.log("  Tier 3: user-data (requires users, modules, content, achievements)");
         console.log("\nExamples:");
-        console.log("  pnpm seed");
-        console.log("  pnpm seed phases");
-        console.log("  pnpm seed clear");
+        console.log("  pnpm seed           # Seed core data only");
+        console.log("  pnpm seed all       # Seed everything");
+        console.log("  pnpm seed users     # Seed users only");
+        console.log("  pnpm seed clear     # Clear all data");
         return;
     }
 
@@ -897,10 +1646,19 @@ async function main() {
 // Export functions for use in other scripts
 module.exports = {
   seedDatabase,
+  seedAll,
   clearDatabase,
   seedPhases,
   seedModules,
   seedContent,
+  seedUsers,
+  seedAchievements,
+  seedUserData,
+  validateDependencies,
+  getPhaseMapping,
+  getModuleMapping,
+  getUserMapping,
+  getContentMapping,
 };
 
 // Run main function if this file is executed directly

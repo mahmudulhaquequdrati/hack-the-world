@@ -1,11 +1,17 @@
-import { Phase } from "@/lib/types";
-import { Gamepad2, Network, Target, Trophy } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
+import { Phase } from "@/lib/types";
+import { Gamepad2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardGamesTabProps {
   phases: Phase[];
-  gamesData?: any;
+  gamesData?: {
+    success: boolean;
+    data?: {
+      content: GameItem[];
+    };
+  };
   isLoading?: boolean;
 }
 
@@ -30,7 +36,6 @@ interface GameItem {
 }
 
 export const DashboardGamesTab = ({
-  phases,
   gamesData,
   isLoading: gamesLoading = false,
 }: DashboardGamesTabProps) => {
@@ -72,12 +77,8 @@ export const DashboardGamesTab = ({
 
   // Error state
   if (gamesError) {
-    const errorMessage = 'data' in gamesError 
-      ? (gamesError.data as any)?.message || 'Unknown error occurred'
-      : 'status' in gamesError 
-      ? `HTTP Error ${gamesError.status}: ${gamesError.error || 'Network error'}`
-      : 'Failed to load games';
-    
+    const errorMessage = "Failed to load games";
+
     return (
       <div className="space-y-6">
         <div className="bg-gradient-to-r from-red-900/80 to-red-800/80 border-2 border-red-400/50 rounded-lg p-6">
@@ -135,107 +136,84 @@ export const DashboardGamesTab = ({
       ) : (
         <div className="space-y-6">
           {/* Game Grid - Show all games in a retro arcade style */}
-          <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
-            {games.map((game) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {games.map((game, index) => (
               <div
                 key={game._id}
-                className="group relative bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-cyan-400/30 rounded-lg overflow-hidden hover:border-purple-400/60 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/25"
+                className="bg-black/40 border border-green-400/30 rounded-lg overflow-hidden hover:border-green-400/60 transition-all duration-300 group"
               >
-                {/* Retro scanlines effect */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/5 to-transparent bg-[length:100%_4px] opacity-20"></div>
-
-                {/* Game Header */}
-                <div className="relative z-10 bg-gradient-to-r from-cyan-900/40 to-purple-900/40 border-b border-cyan-400/20 p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-3">
-                      {/* Game Icon */}
-                      <div className="w-10 h-10 bg-gradient-to-br from-cyan-400/20 to-purple-500/20 rounded border border-cyan-400/40 flex items-center justify-center">
-                        {game.type === "Challenge" && (
-                          <Target className="w-5 h-5 text-red-400" />
-                        )}
-                        {game.type === "Simulation" && (
-                          <Network className="w-5 h-5 text-blue-400" />
-                        )}
-                        {game.type === "Puzzle" && (
-                          <Trophy className="w-5 h-5 text-yellow-400" />
-                        )}
-                        {!["Challenge", "Simulation", "Puzzle"].includes(
-                          game.type
-                        ) && <Gamepad2 className="w-5 h-5 text-cyan-400" />}
+                {/* Header */}
+                <div className="bg-gradient-to-r from-red-400/10 to-red-400/5 border-b border-red-400/20 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 rounded-lg bg-red-400/20 border border-red-400/40 flex items-center justify-center">
+                        <Gamepad2 className="w-6 h-6 text-red-400" />
                       </div>
                       <div>
-                        <h3 className="text-cyan-400 font-mono text-sm font-bold">
+                        <div className="text-red-400 font-mono text-lg font-bold flex items-center">
+                          GAME_{(index + 1).toString().padStart(2, "0")}
+                        </div>
+                        <h4 className="text-green-400 font-semibold text-xl">
                           {game.title}
-                        </h3>
-                        <p className="text-purple-300/80 text-xs font-mono">
-                          {game.phaseTitle} • {game.moduleTitle}
-                        </p>
+                        </h4>
                       </div>
-                    </div>
-
-                    {/* Game Status */}
-                    <div className="text-right">
-                      {game.completed ? (
-                        <div className="text-green-400 text-xs font-mono font-bold">
-                          ✓ COMPLETE
-                        </div>
-                      ) : (
-                        <div className="text-cyan-400 text-xs font-mono font-bold animate-pulse">
-                          ▶ READY
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Game Info */}
-                <div className="relative z-10 p-4">
-                  <p className="text-gray-300 text-sm mb-4 line-clamp-2">
+                {/* Content */}
+                <div className="p-6">
+                  <p className="text-green-300/90 mb-6 text-base leading-relaxed">
                     {game.description}
                   </p>
 
-                  {/* Game Stats */}
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div className="bg-black/40 border border-cyan-400/20 rounded p-2">
-                      <div className="text-cyan-400 font-mono text-xs font-bold">
-                        POINTS
+                  {/* Game Preview Information */}
+                  <div className="space-y-4">
+                    {/* Game Features & Skills */}
+                    <div className="bg-red-400/5 border border-red-400/20 rounded-lg p-4">
+                      <h5 className="text-red-400 font-mono text-sm font-bold mb-3 flex items-center">
+                        <Gamepad2 className="w-4 h-4 mr-2" />
+                        GAME_FEATURES & SKILLS
+                      </h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-red-300/80">
+                        <div>• Interactive gameplay</div>
+                        <div>• Real-time scoring</div>
+                        <div>• Progress tracking</div>
+                        <div>• Skill validation</div>
+                        <div>• Competitive challenges</div>
+                        <div>• Scenario-based learning</div>
                       </div>
-                      <div className="text-white text-sm">{game.points}</div>
                     </div>
-                    <div className="bg-black/40 border border-purple-400/20 rounded p-2">
-                      <div className="text-purple-400 font-mono text-xs font-bold">
-                        TYPE
+
+                    {/* Game Details */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-orange-400/10 border border-orange-400/20 rounded-lg p-3 text-center">
+                        <div className="text-orange-400 font-mono text-xs font-bold mb-1">
+                          DIFFICULTY
+                        </div>
+                        <div className="text-orange-300 text-sm font-semibold">
+                          {game.difficulty}
+                        </div>
                       </div>
-                      <div className="text-white text-sm">{game.type}</div>
+                      <div className="bg-purple-400/10 border border-purple-400/20 rounded-lg p-3 text-center">
+                        <div className="text-purple-400 font-mono text-xs font-bold mb-1">
+                          POINTS
+                        </div>
+                        <div className="text-purple-300 text-sm font-semibold">
+                          {game.points}
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Play Game Button */}
+                    <Button
+                      onClick={() => handlePlayGame(game)}
+                      className="w-full bg-green-400 text-black hover:bg-green-300 font-mono text-sm"
+                    >
+                      <Gamepad2 className="w-4 h-4 mr-2" />
+                      PLAY_GAME
+                    </Button>
                   </div>
-
-                  {/* High Score */}
-                  {game.completed && game.score && (
-                    <div className="mb-4 p-2 bg-gradient-to-r from-yellow-400/10 to-orange-400/10 border border-yellow-400/30 rounded">
-                      <div className="flex items-center justify-between">
-                        <span className="text-yellow-400 font-mono text-xs font-bold">
-                          HIGH SCORE
-                        </span>
-                        <span className="text-yellow-300 font-mono text-sm font-bold">
-                          {game.score}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Play Button */}
-                  <button
-                    onClick={() => handlePlayGame(game)}
-                    className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white font-mono text-sm font-bold py-2 px-4 rounded border border-cyan-400/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/25"
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Gamepad2 className="w-4 h-4" />
-                      <span>
-                        {game.completed ? "PLAY AGAIN" : "START GAME"}
-                      </span>
-                    </div>
-                  </button>
                 </div>
               </div>
             ))}

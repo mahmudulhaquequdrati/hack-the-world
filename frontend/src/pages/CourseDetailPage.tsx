@@ -32,10 +32,10 @@ const CourseDetailPage = () => {
 
   // OPTIMIZED: Could use consolidated endpoint (requires backend support)
   // TODO: Replace with single consolidated call:
-  // const { data: courseDetailData, isLoading: loading, error: courseError, refetch } = 
-  //   useGetCourseDetailCompleteQuery({ 
-  //     courseId: courseId || "", 
-  //     includeOverview: activeTab !== "overview" 
+  // const { data: courseDetailData, isLoading: loading, error: courseError, refetch } =
+  //   useGetCourseDetailCompleteQuery({
+  //     courseId: courseId || "",
+  //     includeOverview: activeTab !== "overview"
   //   }, { skip: !courseId });
 
   // CURRENT: Optimized pattern - separate core data from conditional data
@@ -48,7 +48,7 @@ const CourseDetailPage = () => {
     skip: !courseId,
   });
 
-  // Check enrollment status only if user is authenticated  
+  // Check enrollment status only if user is authenticated
   const {
     data: enrollmentData,
     isLoading: isLoadingEnrollment,
@@ -188,9 +188,9 @@ const CourseDetailPage = () => {
           </div>
 
           {/* Hero Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             {/* Main Course Info */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-1">
               <CourseHero course={course} />
               <CourseFeatures
                 lessons={lessonsCount}
@@ -219,11 +219,15 @@ const CourseDetailPage = () => {
               moduleOverview={moduleOverview}
               isLoadingOverview={isLoadingOverview}
               overviewError={overviewError}
+              difficulty={course.difficulty}
+              isEnrolled={isEnrolled}
             />
             <GamesTab
               moduleOverview={moduleOverview}
               isLoadingOverview={isLoadingOverview}
               overviewError={overviewError}
+              difficulty={course.difficulty}
+              isEnrolled={isEnrolled}
             />
           </CourseTabsContainer>
 

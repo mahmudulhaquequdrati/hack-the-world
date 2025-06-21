@@ -32,25 +32,17 @@ const Dashboard = () => {
   const { user } = useAuthRTK();
 
   // OPTIMIZED: Apply CyberSecOverview efficient pattern - comprehensive query + enrollments
-  const { 
-    data: phasesWithModules, 
-    isLoading: phasesLoading 
-  } = useGetPhasesWithModulesQuery();
-  
-  const { 
-    data: enrollmentsData, 
-    isLoading: enrollmentsLoading 
-  } = useGetCurrentUserEnrollmentsQuery(undefined, { skip: !user });
-  
-  const { 
-    data: achievementsData, 
-    isLoading: achievementsLoading 
-  } = useGetUserAchievementsQuery(undefined, { skip: !user });
-  
-  const { 
-    data: streakData, 
-    isLoading: streakLoading 
-  } = useGetStreakStatusQuery(undefined, { skip: !user });
+  const { data: phasesWithModules, isLoading: phasesLoading } =
+    useGetPhasesWithModulesQuery();
+
+  const { data: enrollmentsData, isLoading: enrollmentsLoading } =
+    useGetCurrentUserEnrollmentsQuery(undefined, { skip: !user });
+
+  const { data: achievementsData, isLoading: achievementsLoading } =
+    useGetUserAchievementsQuery(undefined, { skip: !user });
+
+  const { data: streakData, isLoading: streakLoading } =
+    useGetStreakStatusQuery(undefined, { skip: !user });
 
   // TODO: Replace above 4 API calls with single consolidated endpoint:
   // const { data: dashboardData, isLoading: dashboardLoading } = useGetDashboardDataQuery(undefined, { skip: !user });
@@ -72,12 +64,12 @@ const Dashboard = () => {
     }
     return map;
   }, [enrollmentsData]);
-  
+
   // Extract all modules from phases with enhanced content statistics + enrollment info
   const allModules = React.useMemo(() => {
     if (!phasesWithModules) return [];
-    return phasesWithModules.flatMap(phase => 
-      (phase.modules || []).map(module => {
+    return phasesWithModules.flatMap((phase) =>
+      (phase.modules || []).map((module) => {
         const enrollmentInfo = enrollmentMap.get(module._id);
         return {
           ...module,
@@ -98,7 +90,10 @@ const Dashboard = () => {
 
   // Helper function to map icon names to components
   const getIconComponent = (iconName: string) => {
-    const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    const iconMap: Record<
+      string,
+      React.ComponentType<{ className?: string }>
+    > = {
       BookOpen,
       Award,
       Star,
@@ -115,45 +110,57 @@ const Dashboard = () => {
   // Process real achievements data
   const achievements = React.useMemo(() => {
     if (!achievementsData?.success || !achievementsData?.data) return [];
-    return achievementsData.data.slice(0, 6).map(achievement => ({
+    return achievementsData.data.slice(0, 6).map((achievement) => ({
       title: achievement.title,
       description: achievement.description,
       earned: achievement.userProgress?.isCompleted || false,
       icon: getIconComponent(achievement.icon),
-      category: achievement.category
+      category: achievement.category,
     }));
   }, [achievementsData]);
 
   // OPTIMIZED: Use efficient enrollment filtering instead of nested loops
   const enrolledModules: Module[] = React.useMemo(() => {
-    return allModules.filter(module => module.enrolled);
+    return allModules.filter((module) => module.enrolled);
   }, [allModules]);
 
   // Extract labs and games data from enrolled modules
   const labsData = React.useMemo(() => {
     const labs: any[] = [];
-    enrolledModules.forEach(module => {
-      if (module?.content?.labs && Array.isArray(module.content.labs) && module.content.labs.length > 0) {
+    enrolledModules.forEach((module) => {
+      if (
+        module?.content?.labs &&
+        Array.isArray(module.content.labs) &&
+        module.content.labs.length > 0
+      ) {
         // Find the phase this module belongs to
-        const modulePhase = phasesWithModules?.find(p => p._id === module.phaseId);
-        
+        const modulePhase = phasesWithModules?.find(
+          (p) => p._id === module.phaseId
+        );
+
         module.content.labs.forEach((labId: string) => {
           labs.push({
             _id: labId,
-            title: `${module.title || 'Unknown Module'} Lab`,
-            description: `Hands-on laboratory exercise in ${module.title || 'cybersecurity'}`,
-            difficulty: module.difficulty || 'Beginner',
-            duration: '45 min',
-            skills: ['Cybersecurity', 'Hands-on Practice', module.title || 'Module'],
-            moduleTitle: module.title || 'Unknown Module',
-            moduleColor: '#00ff41',
-            moduleBgColor: '#001100',
+            title: `${module.title || "Unknown Module"} Lab`,
+            description: `Hands-on laboratory exercise in ${
+              module.title || "cybersecurity"
+            }`,
+            difficulty: module.difficulty || "Beginner",
+            duration: "45 min",
+            skills: [
+              "Cybersecurity",
+              "Hands-on Practice",
+              module.title || "Module",
+            ],
+            moduleTitle: module.title || "Unknown Module",
+            moduleColor: "green",
+            moduleBgColor: "black",
             completed: module.completed || false,
             available: true,
-            phaseId: module.phaseId || '',
-            phaseTitle: modulePhase?.title || 'Unknown Phase',
+            phaseId: module.phaseId || "",
+            phaseTitle: modulePhase?.title || "Unknown Phase",
             moduleId: module._id,
-            type: 'Lab Environment',
+            type: "Lab Environment",
             progressPercentage: module.progress || 0,
           });
         });
@@ -164,26 +171,34 @@ const Dashboard = () => {
 
   const gamesData = React.useMemo(() => {
     const games: any[] = [];
-    enrolledModules.forEach(module => {
-      if (module?.content?.games && Array.isArray(module.content.games) && module.content.games.length > 0) {
+    enrolledModules.forEach((module) => {
+      if (
+        module?.content?.games &&
+        Array.isArray(module.content.games) &&
+        module.content.games.length > 0
+      ) {
         // Find the phase this module belongs to
-        const modulePhase = phasesWithModules?.find(p => p._id === module.phaseId);
-        
+        const modulePhase = phasesWithModules?.find(
+          (p) => p._id === module.phaseId
+        );
+
         module.content.games.forEach((gameId: string) => {
           games.push({
             _id: gameId,
-            title: `${module.title || 'Unknown Module'} Game`,
-            description: `Interactive cybersecurity game in ${module.title || 'cybersecurity'}`,
-            type: 'Challenge',
+            title: `${module.title || "Unknown Module"} Game`,
+            description: `Interactive cybersecurity game in ${
+              module.title || "cybersecurity"
+            }`,
+            type: "Challenge",
             points: 100,
-            difficulty: module.difficulty || 'Beginner',
-            moduleTitle: module.title || 'Unknown Module',
-            moduleColor: '#00ff41',
-            moduleBgColor: '#001100',
+            difficulty: module.difficulty || "Beginner",
+            moduleTitle: module.title || "Unknown Module",
+            moduleColor: "#00ff41",
+            moduleBgColor: "#001100",
             completed: module.completed || false,
             available: true,
-            phaseId: module.phaseId || '',
-            phaseTitle: modulePhase?.title || 'Unknown Phase',
+            phaseId: module.phaseId || "",
+            phaseTitle: modulePhase?.title || "Unknown Phase",
             moduleId: module._id,
             progressPercentage: module.progress || 0,
           });
@@ -212,8 +227,9 @@ const Dashboard = () => {
 
   // OPTIMIZED: Single loading check - prioritize core data first
   const isLoadingCoreData = phasesLoading;
-  const isLoadingUserData = enrollmentsLoading || achievementsLoading || streakLoading;
-  
+  const isLoadingUserData =
+    enrollmentsLoading || achievementsLoading || streakLoading;
+
   if (isLoadingCoreData || (user && isLoadingUserData)) {
     return (
       <div className="min-h-screen bg-black text-green-400">
@@ -231,8 +247,8 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-black text-green-400">
       <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
-        <LearningDashboard 
-          enrolledModules={enrolledModules} 
+        <LearningDashboard
+          enrolledModules={enrolledModules}
           streakData={streakData?.success ? streakData.data : undefined}
         />
 

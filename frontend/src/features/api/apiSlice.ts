@@ -438,6 +438,7 @@ export const apiSlice = createApi({
           title: string;
           description: string;
           section: string;
+          duration: string;
         }>;
       },
       string
@@ -453,6 +454,7 @@ export const apiSlice = createApi({
             title: string;
             description: string;
             section: string;
+            duration: string;
           }>;
         };
       }) => response.data,
@@ -594,7 +596,7 @@ export const apiSlice = createApi({
         data: {
           currentStreak: number;
           longestStreak: number;
-          streakStatus: 'start' | 'active' | 'at_risk' | 'broken';
+          streakStatus: "start" | "active" | "at_risk" | "broken";
           daysSinceLastActivity: number | null;
           lastActivityDate: string | null;
         };
@@ -664,7 +666,7 @@ export const apiSlice = createApi({
           streak: {
             currentStreak: number;
             longestStreak: number;
-            streakStatus: 'start' | 'active' | 'at_risk' | 'broken';
+            streakStatus: "start" | "active" | "at_risk" | "broken";
             daysSinceLastActivity: number | null;
             lastActivityDate: string | null;
           };
@@ -732,7 +734,7 @@ export const apiSlice = createApi({
       },
       { courseId: string; includeOverview?: boolean }
     >({
-      query: ({ courseId, includeOverview = false }) => 
+      query: ({ courseId, includeOverview = false }) =>
         `/course/${courseId}/complete?includeOverview=${includeOverview}`,
       providesTags: (_result, _error, { courseId }) => [
         { type: "Course", id: courseId },
@@ -747,27 +749,27 @@ export const {
   // Core optimized endpoints
   useGetPhasesWithModulesQuery,
   useGetCourseByIdQuery,
-  
+
   // Enrollment management
   useEnrollInModuleMutation,
   useGetEnrollmentByModuleQuery,
   useGetCurrentUserEnrollmentsQuery,
-  
+
   // Content management - optimized endpoints only
   useGetModuleOverviewQuery,
   useGetModuleContentGroupedOptimizedQuery,
   useGetContentWithModuleAndProgressQuery,
   useCompleteContentMutation,
-  
+
   // Progress tracking - comprehensive endpoints
   useGetOverallProgressQuery,
   useGetModuleProgressQuery,
   useGetContentTypeProgressQuery,
-  
+
   // User features
   useGetUserAchievementsQuery,
   useGetStreakStatusQuery,
-  
+
   // OPTIMIZED: Consolidated endpoints
   useGetDashboardDataQuery,
   useGetCourseDetailCompleteQuery,

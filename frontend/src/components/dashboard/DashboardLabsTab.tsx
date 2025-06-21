@@ -1,21 +1,17 @@
-import { getDifficultyColor } from "@/lib";
-import { Phase } from "@/lib/types";
-import {
-  Beaker,
-  Clock,
-  Target,
-  Zap,
-  Shield,
-  Code,
-  Network,
-  Lock,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
+import { Phase } from "@/lib/types";
+import { Beaker, Target, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardLabsTabProps {
   phases: Phase[];
-  labsData?: any;
+  labsData?: {
+    success: boolean;
+    data?: {
+      content: LabItem[];
+    };
+  };
   isLoading?: boolean;
 }
 
@@ -41,7 +37,6 @@ interface LabItem {
 }
 
 export const DashboardLabsTab = ({
-  phases,
   labsData,
   isLoading: labsLoading = false,
 }: DashboardLabsTabProps) => {
@@ -68,23 +63,6 @@ export const DashboardLabsTab = ({
 
   const labs = transformLabsData();
 
-  const getLabIcon = (type: string) => {
-    switch (type) {
-      case "Web Security":
-        return <Shield className="w-5 h-5 text-green-400" />;
-      case "Network Analysis":
-        return <Network className="w-5 h-5 text-blue-400" />;
-      case "Penetration Testing":
-        return <Target className="w-5 h-5 text-red-400" />;
-      case "Forensics":
-        return <Code className="w-5 h-5 text-purple-400" />;
-      case "Social Engineering":
-        return <Lock className="w-5 h-5 text-orange-400" />;
-      default:
-        return <Beaker className="w-5 h-5 text-cyan-400" />;
-    }
-  };
-
   // Loading state
   if (labsLoading) {
     return (
@@ -100,12 +78,8 @@ export const DashboardLabsTab = ({
 
   // Error state
   if (labsError) {
-    const errorMessage = 'data' in labsError 
-      ? (labsError.data as any)?.message || 'Unknown error occurred'
-      : 'status' in labsError 
-      ? `HTTP Error ${labsError.status}: ${labsError.error || 'Network error'}`
-      : 'Failed to load labs';
-    
+    const errorMessage = "Failed to load labs";
+
     return (
       <div className="space-y-6">
         <div className="bg-gradient-to-r from-red-900/80 to-red-800/80 border-2 border-red-400/50 rounded-lg p-6">
@@ -163,125 +137,94 @@ export const DashboardLabsTab = ({
       ) : (
         <div className="space-y-6">
           {/* Lab Grid - Show all labs in a retro lab style */}
-          <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
-            {labs.map((lab) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {labs.map((lab, index) => (
               <div
                 key={lab._id}
-                className="group relative bg-gradient-to-br from-black/80 to-gray-900/80 border-2 border-green-400/30 rounded-lg overflow-hidden hover:border-cyan-400/60 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-400/25"
+                className="bg-black/40 border border-green-400/30 rounded-lg overflow-hidden hover:border-green-400/60 transition-all duration-300 group"
               >
-                {/* Matrix-like pattern overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-green-400/3 to-transparent bg-[length:100%_8px] opacity-30"></div>
-
-                {/* Lab Header */}
-                <div className="relative z-10 bg-gradient-to-r from-green-900/40 to-cyan-900/40 border-b border-green-400/20 p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-3">
-                      {/* Lab Icon */}
-                      <div className="w-10 h-10 bg-gradient-to-br from-green-400/20 to-cyan-500/20 rounded border border-green-400/40 flex items-center justify-center">
-                        {getLabIcon(lab.type)}
+                {/* Header */}
+                <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-400/5 border-b border-yellow-400/20 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 rounded-lg bg-yellow-400/20 border border-yellow-400/40 flex items-center justify-center">
+                        <Target className="w-6 h-6 text-yellow-400" />
                       </div>
                       <div>
-                        <h3 className="text-green-400 font-mono text-sm font-bold">
+                        <div className="text-yellow-400 font-mono text-lg font-bold flex items-center">
+                          LAB_{(index + 1).toString().padStart(2, "0")}
+                        </div>
+                        <h4 className="text-green-400 font-semibold text-xl">
                           {lab.title}
-                        </h3>
-                        <p className="text-cyan-300/80 text-xs font-mono">
-                          {lab.phaseTitle} • {lab.moduleTitle}
-                        </p>
+                        </h4>
                       </div>
-                    </div>
-
-                    {/* Lab Status */}
-                    <div className="text-right">
-                      {lab.completed ? (
-                        <div className="text-green-400 text-xs font-mono font-bold">
-                          ✓ COMPLETE
-                        </div>
-                      ) : (
-                        <div className="text-cyan-400 text-xs font-mono font-bold animate-pulse">
-                          ⚡ READY
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Lab Info */}
-                <div className="relative z-10 p-4">
-                  <p className="text-gray-300 text-sm mb-4 line-clamp-2">
+                {/* Content */}
+                <div className="p-6">
+                  <p className="text-green-300/90 mb-6 text-base leading-relaxed">
                     {lab.description}
                   </p>
 
-                  {/* Lab Stats */}
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div className="bg-black/40 border border-green-400/20 rounded p-2">
-                      <div className="text-green-400 font-mono text-xs font-bold">
-                        DURATION
-                      </div>
-                      <div className="text-white text-sm flex items-center">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {lab.duration}
+                  {/* Lab Preview Information */}
+                  <div className="space-y-4">
+                    {/* Skills & Learning Objectives */}
+                    <div className="bg-green-400/5 border border-green-400/20 rounded-lg p-4">
+                      <h5 className="text-green-400 font-mono text-sm font-bold mb-3 flex items-center">
+                        <Target className="w-4 h-4 mr-2" />
+                        SKILLS_YOU'LL_LEARN
+                      </h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-green-300/80">
+                        {lab.skills && lab.skills.length > 0 ? (
+                          lab.skills
+                            .slice(0, 6)
+                            .map((skill, skillIndex) => (
+                              <div key={skillIndex}>• {skill}</div>
+                            ))
+                        ) : (
+                          <>
+                            <div>• Hands-on cybersecurity</div>
+                            <div>• Penetration testing</div>
+                            <div>• Vulnerability assessment</div>
+                            <div>• Security analysis</div>
+                            <div>• Real-world scenarios</div>
+                            <div>• Tool mastery</div>
+                          </>
+                        )}
                       </div>
                     </div>
-                    <div className="bg-black/40 border border-cyan-400/20 rounded p-2">
-                      <div className="text-cyan-400 font-mono text-xs font-bold">
-                        LEVEL
+
+                    {/* Lab Details */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-3 text-center">
+                        <div className="text-yellow-400 font-mono text-xs font-bold mb-1">
+                          DIFFICULTY
+                        </div>
+                        <div className="text-yellow-300 text-sm font-semibold">
+                          {lab.difficulty}
+                        </div>
                       </div>
-                      <div
-                        className={`text-sm ${
-                          getDifficultyColor(lab.difficulty).split(" ")[0]
-                        }`}
-                      >
-                        {lab.difficulty}
+                      <div className="bg-cyan-400/10 border border-cyan-400/20 rounded-lg p-3 text-center">
+                        <div className="text-cyan-400 font-mono text-xs font-bold mb-1">
+                          DURATION
+                        </div>
+                        <div className="text-cyan-300 text-sm font-semibold">
+                          {lab.duration}
+                        </div>
                       </div>
                     </div>
+
+                    {/* Start Lab Button */}
+                    <Button
+                      onClick={() => handleStartLab(lab)}
+                      className="w-full bg-yellow-400 text-black hover:bg-yellow-300 font-mono text-sm"
+                    >
+                      <Zap className="w-4 h-4 mr-2" />
+                      START_LAB
+                    </Button>
                   </div>
-
-                  {/* Skills Tags */}
-                  <div className="mb-4">
-                    <div className="text-green-400 font-mono text-xs font-bold mb-2">
-                      SKILLS
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {lab.skills.slice(0, 2).map((skill, skillIndex) => (
-                        <span
-                          key={skillIndex}
-                          className="px-2 py-1 bg-green-400/10 border border-green-400/30 rounded text-xs text-green-300 font-mono"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                      {lab.skills.length > 2 && (
-                        <span className="px-2 py-1 bg-cyan-400/10 border border-cyan-400/30 rounded text-xs text-cyan-300 font-mono">
-                          +{lab.skills.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Progress indicator for completed labs */}
-                  {lab.completed && (
-                    <div className="mb-4 p-2 bg-gradient-to-r from-green-400/10 to-cyan-400/10 border border-green-400/30 rounded">
-                      <div className="flex items-center justify-between">
-                        <span className="text-green-400 font-mono text-xs font-bold">
-                          EXPERIMENT COMPLETE
-                        </span>
-                        <span className="text-green-300 font-mono text-xs">
-                          ✓ Verified
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Start Lab Button */}
-                  <button
-                    onClick={() => handleStartLab(lab)}
-                    className="w-full bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 text-white font-mono text-sm font-bold py-2 px-4 rounded border border-green-400/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-400/25"
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Zap className="w-4 h-4" />
-                      <span>{lab.completed ? "REVIEW LAB" : "START LAB"}</span>
-                    </div>
-                  </button>
                 </div>
               </div>
             ))}

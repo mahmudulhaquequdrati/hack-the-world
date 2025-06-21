@@ -168,7 +168,7 @@ ContentSchema.statics.getByModule = function (moduleId) {
 ContentSchema.statics.getByModuleForOverview = async function (moduleId) {
   // Get content for each section
   const content = await this.find({ moduleId, isActive: true })
-    .select("title description type section")
+    .select("title description type section duration")
     .sort({ section: 1, order: 1, createdAt: 1 })
     .lean();
 
@@ -398,7 +398,7 @@ ContentSchema.statics.updateModuleStats = async function (moduleId) {
 // Pre-save middleware to track isActive changes
 ContentSchema.pre("save", function (next) {
   // Track if isActive status changed
-  if (this.isModified('isActive')) {
+  if (this.isModified("isActive")) {
     this._isActiveChanged = true;
     this._previousIsActive = this._original?.isActive || false;
   }
@@ -408,24 +408,28 @@ ContentSchema.pre("save", function (next) {
 ContentSchema.post("save", async function (doc) {
   if (doc.moduleId) {
     await this.constructor.updateModuleStats(doc.moduleId);
-    
+
     // Trigger enrollment section count update for new/updated content
     // Especially important when isActive status changes
     if (doc.isNew || doc._isActiveChanged) {
       try {
         const UserEnrollment = require("./UserEnrollment");
         await UserEnrollment.updateModuleSectionCounts(doc.moduleId);
-        
+
         // If isActive changed, also trigger progress recalculation for all enrollments
         if (doc._isActiveChanged) {
           const ProgressSyncService = require("../utils/progressSyncService");
-          ProgressSyncService.syncModuleEnrollments(doc.moduleId)
-            .catch(error => {
-              console.error(`Failed to sync enrollments after isActive change for module ${doc.moduleId}:`, error);
-            });
+          ProgressSyncService.syncModuleEnrollments(doc.moduleId).catch(
+            (error) => {
+              console.error(
+                `Failed to sync enrollments after isActive change for module ${doc.moduleId}:`,
+                error
+              );
+            }
+          );
         }
       } catch (error) {
-        console.error('Error updating enrollment section counts:', error);
+        console.error("Error updating enrollment section counts:", error);
       }
     }
   }
@@ -443,19 +447,24 @@ ContentSchema.post("insertMany", async function (docs) {
       if (moduleId) {
         try {
           await Content.updateModuleStats(moduleId);
-          
+
           // Update enrollment section counts for bulk inserts
           const UserEnrollment = require("./UserEnrollment");
           await UserEnrollment.updateModuleSectionCounts(moduleId);
-          
+
           // Trigger progress recalculation for affected enrollments
           const ProgressSyncService = require("../utils/progressSyncService");
-          ProgressSyncService.syncModuleEnrollments(moduleId)
-            .catch(error => {
-              console.error(`Failed to sync enrollments for bulk insert in module ${moduleId}:`, error);
-            });
+          ProgressSyncService.syncModuleEnrollments(moduleId).catch((error) => {
+            console.error(
+              `Failed to sync enrollments for bulk insert in module ${moduleId}:`,
+              error
+            );
+          });
         } catch (error) {
-          console.error(`Error updating module ${moduleId} after bulk insert:`, error);
+          console.error(
+            `Error updating module ${moduleId} after bulk insert:`,
+            error
+          );
         }
       }
     }
@@ -467,19 +476,24 @@ ContentSchema.post("remove", async function (doc) {
   if (doc.moduleId) {
     try {
       await this.constructor.updateModuleStats(doc.moduleId);
-      
+
       // Update enrollment section counts for removed content
       const UserEnrollment = require("./UserEnrollment");
       await UserEnrollment.updateModuleSectionCounts(doc.moduleId);
-      
+
       // Trigger progress recalculation for all enrollments since content was removed
       const ProgressSyncService = require("../utils/progressSyncService");
-      ProgressSyncService.syncModuleEnrollments(doc.moduleId)
-        .catch(error => {
-          console.error(`Failed to sync enrollments after content removal for module ${doc.moduleId}:`, error);
-        });
+      ProgressSyncService.syncModuleEnrollments(doc.moduleId).catch((error) => {
+        console.error(
+          `Failed to sync enrollments after content removal for module ${doc.moduleId}:`,
+          error
+        );
+      });
     } catch (error) {
-      console.error(`Error updating module ${doc.moduleId} after content removal:`, error);
+      console.error(
+        `Error updating module ${doc.moduleId} after content removal:`,
+        error
+      );
     }
   }
 });
@@ -490,19 +504,24 @@ ContentSchema.post("findOneAndDelete", async function (doc) {
     try {
       const Content = mongoose.model("Content");
       await Content.updateModuleStats(doc.moduleId);
-      
+
       // Update enrollment section counts for deleted content
       const UserEnrollment = require("./UserEnrollment");
       await UserEnrollment.updateModuleSectionCounts(doc.moduleId);
-      
+
       // Trigger progress recalculation for all enrollments since content was deleted
       const ProgressSyncService = require("../utils/progressSyncService");
-      ProgressSyncService.syncModuleEnrollments(doc.moduleId)
-        .catch(error => {
-          console.error(`Failed to sync enrollments after content deletion for module ${doc.moduleId}:`, error);
-        });
+      ProgressSyncService.syncModuleEnrollments(doc.moduleId).catch((error) => {
+        console.error(
+          `Failed to sync enrollments after content deletion for module ${doc.moduleId}:`,
+          error
+        );
+      });
     } catch (error) {
-      console.error(`Error updating module ${doc.moduleId} after content deletion:`, error);
+      console.error(
+        `Error updating module ${doc.moduleId} after content deletion:`,
+        error
+      );
     }
   }
 });
@@ -516,27 +535,34 @@ ContentSchema.post("deleteMany", async function (result) {
     const Content = mongoose.model("Content");
     const UserEnrollment = require("./UserEnrollment");
     const ProgressSyncService = require("../utils/progressSyncService");
-    
-    const modules = await Module.find({}).select('_id');
 
-    console.log(`Updating ${modules.length} modules after bulk content deletion`);
-    
+    const modules = await Module.find({}).select("_id");
+
+    console.log(
+      `Updating ${modules.length} modules after bulk content deletion`
+    );
+
     for (const module of modules) {
       try {
         await Content.updateModuleStats(module._id);
         await UserEnrollment.updateModuleSectionCounts(module._id);
-        
+
         // Trigger progress recalculation for all enrollments
-        ProgressSyncService.syncModuleEnrollments(module._id)
-          .catch(error => {
-            console.error(`Failed to sync enrollments after bulk deletion for module ${module._id}:`, error);
-          });
+        ProgressSyncService.syncModuleEnrollments(module._id).catch((error) => {
+          console.error(
+            `Failed to sync enrollments after bulk deletion for module ${module._id}:`,
+            error
+          );
+        });
       } catch (error) {
-        console.error(`Error updating module ${module._id} after bulk deletion:`, error);
+        console.error(
+          `Error updating module ${module._id} after bulk deletion:`,
+          error
+        );
       }
     }
   } catch (error) {
-    console.error('Error in deleteMany middleware:', error);
+    console.error("Error in deleteMany middleware:", error);
   }
 });
 

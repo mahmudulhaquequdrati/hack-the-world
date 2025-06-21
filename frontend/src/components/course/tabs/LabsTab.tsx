@@ -1,9 +1,7 @@
-import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { SerializedError } from "@reduxjs/toolkit";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
-import { Play, Target } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Target } from "lucide-react";
 
 interface LabsTabProps {
   moduleOverview?: {
@@ -13,10 +11,13 @@ interface LabsTabProps {
       title: string;
       description: string;
       section: string;
+      duration: string;
     }>;
   };
   isLoadingOverview?: boolean;
   overviewError?: FetchBaseQueryError | SerializedError | undefined;
+  difficulty: string;
+  isEnrolled: boolean | undefined;
 }
 
 type LabContentItem = {
@@ -25,16 +26,16 @@ type LabContentItem = {
   title: string;
   description: string;
   section: string;
+  duration: string;
 };
 
 const LabsTab = ({
   moduleOverview,
   isLoadingOverview = false,
   overviewError,
+  difficulty,
+  isEnrolled = false,
 }: LabsTabProps) => {
-  const navigate = useNavigate();
-  const { courseId } = useParams();
-
   // Extract lab items from the moduleOverview prop instead of calling API
   const labsFromAPI = moduleOverview
     ? Object.values(moduleOverview)
@@ -44,15 +45,6 @@ const LabsTab = ({
           return typedItem.type === "lab";
         })
     : [];
-
-  const handleStartLab = (labName: string) => {
-    // Convert lab name to a URL-friendly ID and navigate to dedicated lab route
-    const labId = labName
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
-    navigate(`/learn/${courseId}/lab/${labId}`);
-  };
 
   if (isLoadingOverview) {
     return (
@@ -105,14 +97,14 @@ const LabsTab = ({
                           </h4>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3">
+                      {/* <div className="flex items-center space-x-3">
                         <div className="px-3 py-1 rounded-lg border text-xs font-mono font-bold text-yellow-400 bg-yellow-400/20 border-yellow-400/30">
                           LAB
                         </div>
                         <div className="text-green-400 font-mono text-sm">
                           {lab.section}
                         </div>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 
@@ -122,14 +114,56 @@ const LabsTab = ({
                       {lab.description}
                     </p>
 
-                    {/* Start Lab Button */}
-                    <Button
-                      onClick={() => handleStartLab(lab.title)}
-                      className="w-full bg-yellow-400 text-black hover:bg-yellow-300 font-mono text-sm"
-                    >
-                      <Play className="w-4 h-4 mr-2" />
-                      START_LAB
-                    </Button>
+                    {/* Lab Preview Information */}
+                    <div className="space-y-4">
+                      {/* Skills & Learning Objectives */}
+                      <div className="bg-green-400/5 border border-green-400/20 rounded-lg p-4">
+                        <h5 className="text-green-400 font-mono text-sm font-bold mb-3 flex items-center">
+                          <Target className="w-4 h-4 mr-2" />
+                          SKILLS_YOU'LL_LEARN
+                        </h5>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-green-300/80">
+                          <div>• Hands-on cybersecurity</div>
+                          <div>• Penetration testing</div>
+                          <div>• Vulnerability assessment</div>
+                          <div>• Security analysis</div>
+                          <div>• Real-world scenarios</div>
+                          <div>• Tool mastery</div>
+                        </div>
+                      </div>
+
+                      {/* Lab Details */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-3 text-center">
+                          <div className="text-yellow-400 font-mono text-xs font-bold mb-1">
+                            DIFFICULTY
+                          </div>
+                          <div className="text-yellow-300 text-sm font-semibold">
+                            {difficulty}
+                          </div>
+                        </div>
+                        <div className="bg-cyan-400/10 border border-cyan-400/20 rounded-lg p-3 text-center">
+                          <div className="text-cyan-400 font-mono text-xs font-bold mb-1">
+                            DURATION
+                          </div>
+                          <div className="text-cyan-300 text-sm font-semibold">
+                            {lab.duration} mins
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Enrollment Prompt */}
+                      {!isEnrolled && (
+                        <div className="bg-green-400/10 border border-green-400/30 rounded-lg p-4 text-center">
+                          <p className="text-green-400 font-mono text-sm font-bold mb-1">
+                            ENROLL_TO_ACCESS
+                          </p>
+                          <p className="text-green-300/80 font-mono text-xs">
+                            Join the course to start this hands-on laboratory
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))

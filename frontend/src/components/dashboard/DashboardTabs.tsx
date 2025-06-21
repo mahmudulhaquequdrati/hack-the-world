@@ -17,7 +17,7 @@ interface DashboardTabsProps {
     description: string;
     earned: boolean;
     icon: React.ComponentType<{ className?: string }>;
-    category: 'module' | 'lab' | 'game' | 'xp' | 'general';
+    category: "module" | "lab" | "game" | "xp" | "general";
   }>;
   labsData?: any;
   gamesData?: any;
@@ -37,7 +37,8 @@ export const DashboardTabs = ({
   isLoadingData = false,
 }: DashboardTabsProps) => {
   const phases = getPhases();
-  console.log(getEnrolledModules(), "getEnrolledModules");
+
+  console.log(labsData, "labsData");
 
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-6">

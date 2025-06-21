@@ -1,9 +1,7 @@
-import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { SerializedError } from "@reduxjs/toolkit";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
-import { Gamepad2, Play } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Gamepad2 } from "lucide-react";
 
 interface GamesTabProps {
   moduleOverview?: {
@@ -13,10 +11,13 @@ interface GamesTabProps {
       title: string;
       description: string;
       section: string;
+      duration: string;
     }>;
   };
   isLoadingOverview?: boolean;
   overviewError?: FetchBaseQueryError | SerializedError | undefined;
+  difficulty: string;
+  isEnrolled: boolean | undefined;
 }
 
 type GameContentItem = {
@@ -25,16 +26,16 @@ type GameContentItem = {
   title: string;
   description: string;
   section: string;
+  duration: string;
 };
 
 const GamesTab = ({
   moduleOverview,
   isLoadingOverview = false,
   overviewError,
+  difficulty,
+  isEnrolled = false,
 }: GamesTabProps) => {
-  const navigate = useNavigate();
-  const { courseId } = useParams();
-
   // Extract game items from the moduleOverview prop instead of calling API
   const gamesFromAPI = moduleOverview
     ? Object.values(moduleOverview)
@@ -44,15 +45,6 @@ const GamesTab = ({
           return typedItem.type === "game";
         })
     : [];
-
-  const handlePlayGame = (gameName: string) => {
-    // Convert game name to a URL-friendly ID and navigate to dedicated game route
-    const gameId = gameName
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
-    navigate(`/learn/${courseId}/game/${gameId}`);
-  };
 
   if (isLoadingOverview) {
     return (
@@ -107,14 +99,6 @@ const GamesTab = ({
                           </h4>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="px-3 py-1 rounded-lg border text-xs font-mono font-bold text-red-400 bg-red-400/20 border-red-400/30">
-                          GAME
-                        </div>
-                        <div className="text-green-400 font-mono text-sm">
-                          {game.section}
-                        </div>
-                      </div>
                     </div>
                   </div>
 
@@ -124,27 +108,55 @@ const GamesTab = ({
                       {game.description}
                     </p>
 
-                    {/* Game Features */}
-                    <div className="mt-6 p-4 bg-green-400/5 border border-green-400/20 rounded-lg">
-                      <h5 className="text-green-400 font-mono text-sm font-bold mb-2 flex items-center">
-                        <Gamepad2 className="w-4 h-4 mr-2" />
-                        GAME_FEATURES
-                      </h5>
-                      <div className="grid grid-cols-2 gap-2 text-sm text-green-300/80 mb-4">
-                        <div>• Interactive gameplay</div>
-                        <div>• Real-time scoring</div>
-                        <div>• Progress tracking</div>
-                        <div>• Skill validation</div>
+                    {/* Game Preview Information */}
+                    <div className="space-y-4">
+                      {/* Game Features & Skills */}
+                      <div className="bg-red-400/5 border border-red-400/20 rounded-lg p-4">
+                        <h5 className="text-red-400 font-mono text-sm font-bold mb-3 flex items-center">
+                          <Gamepad2 className="w-4 h-4 mr-2" />
+                          GAME_FEATURES & SKILLS
+                        </h5>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-red-300/80">
+                          <div>• Interactive gameplay</div>
+                          <div>• Real-time scoring</div>
+                          <div>• Progress tracking</div>
+                          <div>• Skill validation</div>
+                          <div>• Competitive challenges</div>
+                          <div>• Scenario-based learning</div>
+                        </div>
                       </div>
 
-                      {/* Play Game Button */}
-                      <Button
-                        onClick={() => handlePlayGame(game.title)}
-                        className="w-full bg-green-400 text-black hover:bg-green-300 font-mono text-sm"
-                      >
-                        <Play className="w-4 h-4 mr-2" />
-                        PLAY_GAME
-                      </Button>
+                      {/* Game Details */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-orange-400/10 border border-orange-400/20 rounded-lg p-3 text-center">
+                          <div className="text-orange-400 font-mono text-xs font-bold mb-1">
+                            DIFFICULTY
+                          </div>
+                          <div className="text-orange-300 text-sm font-semibold">
+                            {difficulty}
+                          </div>
+                        </div>
+                        <div className="bg-purple-400/10 border border-purple-400/20 rounded-lg p-3 text-center">
+                          <div className="text-purple-400 font-mono text-xs font-bold mb-1">
+                            DURATION
+                          </div>
+                          <div className="text-purple-300 text-sm font-semibold">
+                            {game.duration} mins
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Enrollment Prompt */}
+                      {!isEnrolled && (
+                        <div className="bg-green-400/10 border border-green-400/30 rounded-lg p-4 text-center">
+                          <p className="text-green-400 font-mono text-sm font-bold mb-1">
+                            ENROLL_TO_PLAY
+                          </p>
+                          <p className="text-green-300/80 font-mono text-xs">
+                            Join the course to start this interactive game
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

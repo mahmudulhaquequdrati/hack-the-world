@@ -87,12 +87,6 @@ const EnrolledCoursePage = () => {
     },
   ]);
 
-  // ALREADY OPTIMIZED: EnrolledCoursePage uses efficient API pattern
-  // ✅ useGetModuleContentGroupedOptimizedQuery - Lightweight content structure
-  // ✅ useGetContentWithModuleAndProgressQuery - Combined content + module + progress
-  // ✅ Smart loading state management with priorities
-  // ✅ Client-side navigation for performance
-
   const {
     data: groupedContentData,
     isLoading: groupedContentLoading,

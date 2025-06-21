@@ -12,6 +12,17 @@ import {
 import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
 import { Module } from "@/lib/types";
+import {
+  Award,
+  BookOpen,
+  Gamepad2,
+  Star,
+  Target,
+  Terminal,
+  Trophy,
+  Users,
+  Zap,
+} from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -85,16 +96,102 @@ const Dashboard = () => {
     );
   }, [phasesWithModules, enrollmentMap]);
 
+  // Helper function to map icon names to components
+  const getIconComponent = (iconName: string) => {
+    const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+      BookOpen,
+      Award,
+      Star,
+      Trophy,
+      Target,
+      Zap,
+      Gamepad2,
+      Users,
+      Terminal,
+    };
+    return iconMap[iconName] || Trophy;
+  };
+
   // Process real achievements data
   const achievements = React.useMemo(() => {
     if (!achievementsData?.success || !achievementsData?.data) return [];
-    return achievementsData.data.slice(0, 6); // Show only first 6 in dashboard
+    return achievementsData.data.slice(0, 6).map(achievement => ({
+      title: achievement.title,
+      description: achievement.description,
+      earned: achievement.userProgress?.isCompleted || false,
+      icon: getIconComponent(achievement.icon),
+      category: achievement.category
+    }));
   }, [achievementsData]);
 
   // OPTIMIZED: Use efficient enrollment filtering instead of nested loops
   const enrolledModules: Module[] = React.useMemo(() => {
     return allModules.filter(module => module.enrolled);
   }, [allModules]);
+
+  // Extract labs and games data from enrolled modules
+  const labsData = React.useMemo(() => {
+    const labs: any[] = [];
+    enrolledModules.forEach(module => {
+      if (module?.content?.labs && Array.isArray(module.content.labs) && module.content.labs.length > 0) {
+        // Find the phase this module belongs to
+        const modulePhase = phasesWithModules?.find(p => p._id === module.phaseId);
+        
+        module.content.labs.forEach((labId: string) => {
+          labs.push({
+            _id: labId,
+            title: `${module.title || 'Unknown Module'} Lab`,
+            description: `Hands-on laboratory exercise in ${module.title || 'cybersecurity'}`,
+            difficulty: module.difficulty || 'Beginner',
+            duration: '45 min',
+            skills: ['Cybersecurity', 'Hands-on Practice', module.title || 'Module'],
+            moduleTitle: module.title || 'Unknown Module',
+            moduleColor: '#00ff41',
+            moduleBgColor: '#001100',
+            completed: module.completed || false,
+            available: true,
+            phaseId: module.phaseId || '',
+            phaseTitle: modulePhase?.title || 'Unknown Phase',
+            moduleId: module._id,
+            type: 'Lab Environment',
+            progressPercentage: module.progress || 0,
+          });
+        });
+      }
+    });
+    return { success: true, data: { content: labs } };
+  }, [enrolledModules, phasesWithModules]);
+
+  const gamesData = React.useMemo(() => {
+    const games: any[] = [];
+    enrolledModules.forEach(module => {
+      if (module?.content?.games && Array.isArray(module.content.games) && module.content.games.length > 0) {
+        // Find the phase this module belongs to
+        const modulePhase = phasesWithModules?.find(p => p._id === module.phaseId);
+        
+        module.content.games.forEach((gameId: string) => {
+          games.push({
+            _id: gameId,
+            title: `${module.title || 'Unknown Module'} Game`,
+            description: `Interactive cybersecurity game in ${module.title || 'cybersecurity'}`,
+            type: 'Challenge',
+            points: 100,
+            difficulty: module.difficulty || 'Beginner',
+            moduleTitle: module.title || 'Unknown Module',
+            moduleColor: '#00ff41',
+            moduleBgColor: '#001100',
+            completed: module.completed || false,
+            available: true,
+            phaseId: module.phaseId || '',
+            phaseTitle: modulePhase?.title || 'Unknown Phase',
+            moduleId: module._id,
+            progressPercentage: module.progress || 0,
+          });
+        });
+      }
+    });
+    return { success: true, data: { content: games } };
+  }, [enrolledModules, phasesWithModules]);
 
   // Helper functions for dashboard tabs
   const getAllModulesHelper = () => allModules || [];
@@ -149,6 +246,9 @@ const Dashboard = () => {
           getEnrolledModules={getEnrolledModulesHelper}
           getPhases={getPhasesHelper}
           achievements={achievements}
+          labsData={labsData}
+          gamesData={gamesData}
+          isLoadingData={phasesLoading || enrollmentsLoading}
         />
       </div>
     </div>

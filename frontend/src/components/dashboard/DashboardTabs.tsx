@@ -17,7 +17,11 @@ interface DashboardTabsProps {
     description: string;
     earned: boolean;
     icon: React.ComponentType<{ className?: string }>;
+    category: 'module' | 'lab' | 'game' | 'xp' | 'general';
   }>;
+  labsData?: any;
+  gamesData?: any;
+  isLoadingData?: boolean;
 }
 
 export const DashboardTabs = ({
@@ -28,24 +32,12 @@ export const DashboardTabs = ({
   getEnrolledModules,
   getPhases,
   achievements,
+  labsData,
+  gamesData,
+  isLoadingData = false,
 }: DashboardTabsProps) => {
   const phases = getPhases();
   console.log(getEnrolledModules(), "getEnrolledModules");
-
-  // Helper function to get modules by phase
-  const getModulesByPhase = (
-    phaseId: string,
-    enrolledOnly = false
-  ): Module[] => {
-    const modules = enrolledOnly ? getEnrolledModules() : getAllModules();
-    return modules.filter(
-      (module) =>
-        module.phaseId === phaseId ||
-        (phaseId === "beginner" && module.difficulty === "Beginner") ||
-        (phaseId === "intermediate" && module.difficulty === "Intermediate") ||
-        (phaseId === "advanced" && module.difficulty === "Advanced")
-    );
-  };
 
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-6">
@@ -87,14 +79,16 @@ export const DashboardTabs = ({
       <TabsContent value="labs" className="space-y-6">
         <DashboardLabsTab
           phases={phases}
-          getModulesByPhase={getModulesByPhase}
+          labsData={labsData}
+          isLoading={isLoadingData}
         />
       </TabsContent>
 
       <TabsContent value="games" className="space-y-6">
         <DashboardGamesTab
           phases={phases}
-          getModulesByPhase={getModulesByPhase}
+          gamesData={gamesData}
+          isLoading={isLoadingData}
         />
       </TabsContent>
 

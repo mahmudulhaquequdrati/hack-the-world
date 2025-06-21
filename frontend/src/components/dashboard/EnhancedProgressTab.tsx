@@ -326,7 +326,7 @@ export const EnhancedProgressTab = ({
             <div className="relative z-10">
               {/* Enhanced Course Grid with ModuleCard styling */}
               <div className="grid grid-cols-1  gap-6 mb-8">
-                {filteredAvailableModules.map((module, index) => {
+                {filteredAvailableModules.map((module) => {
                   const getDifficultyColor = (difficulty: string) => {
                     switch (difficulty.toLowerCase()) {
                       case "beginner":

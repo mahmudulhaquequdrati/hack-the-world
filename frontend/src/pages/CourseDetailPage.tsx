@@ -208,7 +208,6 @@ const CourseDetailPage = () => {
             enrollmentStatus={enrollmentStatus}
             onEnrollment={handleEnrollment}
             isLoadingEnrollment={isLoadingEnrollment}
-            prerequisites={course.prerequisites ? [course.prerequisites] : []}
             moduleId={courseId}
           />
 

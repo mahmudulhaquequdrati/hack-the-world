@@ -410,18 +410,17 @@ export const apiSlice = createApi({
         };
       },
       {
-        userId: string;
         contentType: "video" | "lab" | "game" | "document";
         moduleId?: string;
         status?: "not-started" | "in-progress" | "completed";
       }
     >({
-      query: ({ userId, contentType, moduleId, status }) => {
+      query: ({ contentType, moduleId, status }) => {
         const params = new URLSearchParams();
         if (moduleId) params.append("moduleId", moduleId);
         if (status) params.append("status", status);
 
-        return `/progress/content/${userId}/${contentType}?${params.toString()}`;
+        return `/progress/content/me/${contentType}?${params.toString()}`;
       },
       providesTags: (_result, _error, { contentType }) => [
         { type: "Progress", id: `content-${contentType}` },

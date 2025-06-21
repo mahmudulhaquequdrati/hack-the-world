@@ -189,7 +189,7 @@ export const transformApiModuleToCourse = (
     _id: apiModule._id,
     title: apiModule.title,
     description: apiModule.description,
-    category: apiModule.phase?.title || "Course",
+    category: (apiModule.phase && apiModule.phase.title) ? apiModule.phase.title : "Course",
     difficulty: apiModule.difficulty,
     duration: apiModule.content?.estimatedHours || 0,
     icon: getIconNameFromString(apiModule.icon),
@@ -284,7 +284,7 @@ export const transformApiModule = (
     assets: apiModule.content?.documents?.length || 0,
     enrolled: moduleProgress ? true : false,
     completed: moduleProgress?.progress === 100,
-    phaseId: apiModule.phaseId || apiModule.phase?._id,
+    phaseId: apiModule.phaseId || (apiModule.phase && apiModule.phase._id) || undefined,
     // Keep API specific fields
     content: apiModule.content,
     phase: apiModule.phase,
@@ -331,7 +331,7 @@ export const organizeModulesByPhase = (
       const phaseModules = modules
         .filter(
           (module) =>
-            module.phaseId === phase._id || module.phase?._id === phase._id
+            module.phaseId === phase._id || (module.phase && module.phase._id === phase._id)
         )
         .map((module) => transformApiModule(module, userProgress))
         .sort((a, b) => (a.order || 0) - (b.order || 0));

@@ -11,11 +11,12 @@ import {
   Lock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useGetContentTypeProgressQuery } from "@/features/api/apiSlice";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
 
 interface DashboardLabsTabProps {
   phases: Phase[];
+  labsData?: any;
+  isLoading?: boolean;
 }
 
 interface LabItem {
@@ -41,72 +42,28 @@ interface LabItem {
 
 export const DashboardLabsTab = ({
   phases,
+  labsData,
+  isLoading: labsLoading = false,
 }: DashboardLabsTabProps) => {
   const navigate = useNavigate();
   const { user } = useAuthRTK();
 
-  // Fetch real labs data from API
-  const {
-    data: labsData,
-    isLoading: labsLoading,
-    error: labsError,
-  } = useGetContentTypeProgressQuery(
-    {
-      userId: user?._id || "",
-      contentType: "lab",
-    },
-    {
-      skip: !user?._id,
-    }
-  );
+  // Use data from props instead of API call
+  const labsError = null; // No error since we're using props
 
   const handleStartLab = (lab: LabItem) => {
     // Navigate to dedicated lab route using the real content ID
     navigate(`/learn/${lab.moduleId}/lab/${lab._id}`);
   };
 
-  // Transform real API data into LabItem format
+  // Use pre-formatted data from props
   const transformLabsData = (): LabItem[] => {
     if (!labsData?.success || !labsData.data?.content) {
       return [];
     }
 
-    return labsData.data.content.map((labContent) => {
-      const module = labContent.module;
-      const progress = labContent.progress;
-      const isCompleted = progress?.status === "completed";
-
-      // Find the phase this module belongs to
-      const phase = phases.find((p) => p._id === module.phase) || phases[0];
-
-      // Calculate estimated duration from content duration (convert seconds to minutes)
-      const durationMinutes = labContent.duration
-        ? Math.ceil(labContent.duration / 60)
-        : 45;
-
-      return {
-        _id: labContent._id,
-        title: labContent.title,
-        description:
-          labContent.description ||
-          `Hands-on laboratory exercise in ${module.title}. Practice real-world cybersecurity scenarios in a controlled environment.`,
-        difficulty: module.difficulty,
-        duration: `${durationMinutes} min`,
-        skills: ["Cybersecurity", "Hands-on Practice", module.title], // Default skills, could be enhanced with content metadata
-        moduleTitle: module.title,
-        moduleColor: "#00ff41", // Default green, could be enhanced with module data
-        moduleBgColor: "#001100", // Default dark green, could be enhanced
-        completed: isCompleted,
-        available: true,
-        phaseId: phase._id,
-        phaseTitle: phase.title,
-        moduleId: module._id,
-        type: "Lab Environment", // Default type, could be enhanced with content metadata
-        progressPercentage: progress?.progressPercentage || 0,
-        score: progress?.score || undefined,
-        maxScore: progress?.maxScore || undefined,
-      };
-    });
+    // Data is already formatted in Dashboard.tsx, just return it
+    return labsData.data.content;
   };
 
   const labs = transformLabsData();
@@ -143,11 +100,17 @@ export const DashboardLabsTab = ({
 
   // Error state
   if (labsError) {
+    const errorMessage = 'data' in labsError 
+      ? (labsError.data as any)?.message || 'Unknown error occurred'
+      : 'status' in labsError 
+      ? `HTTP Error ${labsError.status}: ${labsError.error || 'Network error'}`
+      : 'Failed to load labs';
+    
     return (
       <div className="space-y-6">
         <div className="bg-gradient-to-r from-red-900/80 to-red-800/80 border-2 border-red-400/50 rounded-lg p-6">
           <div className="text-center text-red-400 font-mono">
-            Error loading labs: {labsError.toString()}
+            Error loading labs: {errorMessage}
           </div>
         </div>
       </div>

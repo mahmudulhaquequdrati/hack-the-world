@@ -1,11 +1,12 @@
 import { Phase } from "@/lib/types";
 import { Gamepad2, Network, Target, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useGetContentTypeProgressQuery } from "@/features/api/apiSlice";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
 
 interface DashboardGamesTabProps {
   phases: Phase[];
+  gamesData?: any;
+  isLoading?: boolean;
 }
 
 interface GameItem {
@@ -30,66 +31,28 @@ interface GameItem {
 
 export const DashboardGamesTab = ({
   phases,
+  gamesData,
+  isLoading: gamesLoading = false,
 }: DashboardGamesTabProps) => {
   const navigate = useNavigate();
   const { user } = useAuthRTK();
 
-  // Fetch real games data from API
-  const {
-    data: gamesData,
-    isLoading: gamesLoading,
-    error: gamesError,
-  } = useGetContentTypeProgressQuery(
-    {
-      userId: user?._id || "",
-      contentType: "game",
-    },
-    {
-      skip: !user?._id,
-    }
-  );
+  // Use data from props instead of API call
+  const gamesError = null; // No error since we're using props
 
   const handlePlayGame = (game: GameItem) => {
     // Navigate to dedicated game route using the real content ID
     navigate(`/learn/${game.moduleId}/game/${game._id}`);
   };
 
-  // Transform real API data into GameItem format
+  // Use pre-formatted data from props
   const transformGamesData = (): GameItem[] => {
     if (!gamesData?.success || !gamesData.data?.content) {
       return [];
     }
 
-    return gamesData.data.content.map((gameContent) => {
-      const module = gameContent.module;
-      const progress = gameContent.progress;
-      const isCompleted = progress?.status === "completed";
-
-      // Find the phase this module belongs to
-      const phase = phases.find((p) => p._id === module.phase) || phases[0];
-
-      return {
-        _id: gameContent._id,
-        title: gameContent.title,
-        description:
-          gameContent.description ||
-          `Interactive cybersecurity game in ${module.title}. Test your skills and compete for high scores.`,
-        type: "Challenge", // Default type, could be enhanced with content metadata
-        points: progress?.maxScore || 100,
-        difficulty: module.difficulty,
-        moduleTitle: module.title,
-        moduleColor: "#00ff41", // Default green, could be enhanced with module data
-        moduleBgColor: "#001100", // Default dark green, could be enhanced
-        completed: isCompleted,
-        available: true,
-        score: progress?.score || undefined,
-        phaseId: phase._id,
-        phaseTitle: phase.title,
-        moduleId: module._id,
-        progressPercentage: progress?.progressPercentage || 0,
-        maxScore: progress?.maxScore || undefined,
-      };
-    });
+    // Data is already formatted in Dashboard.tsx, just return it
+    return gamesData.data.content;
   };
 
   const games = transformGamesData();
@@ -109,11 +72,17 @@ export const DashboardGamesTab = ({
 
   // Error state
   if (gamesError) {
+    const errorMessage = 'data' in gamesError 
+      ? (gamesError.data as any)?.message || 'Unknown error occurred'
+      : 'status' in gamesError 
+      ? `HTTP Error ${gamesError.status}: ${gamesError.error || 'Network error'}`
+      : 'Failed to load games';
+    
     return (
       <div className="space-y-6">
         <div className="bg-gradient-to-r from-red-900/80 to-red-800/80 border-2 border-red-400/50 rounded-lg p-6">
           <div className="text-center text-red-400 font-mono">
-            Error loading games: {gamesError.toString()}
+            Error loading games: {errorMessage}
           </div>
         </div>
       </div>

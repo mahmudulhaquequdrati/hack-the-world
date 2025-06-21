@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
@@ -10,6 +10,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setCredentials({
@@ -23,13 +24,28 @@ const Login = () => {
     setError("");
     setLoading(true);
 
-    const result = await login(credentials);
+    console.log("Login attempt with:", { email: credentials.email });
 
-    if (!result.success) {
-      setError(result.error);
+    try {
+      const result = await login(credentials);
+      console.log("Login result:", result);
+
+      if (result && result.success) {
+        console.log("Login successful, navigating to dashboard");
+        // Navigate to dashboard on successful login
+        navigate("/dashboard");
+      } else {
+        console.log("Login failed:", result?.error);
+        // Ensure error is always a string for React rendering
+        const errorMessage = typeof result?.error === 'string' ? result.error : "Login failed";
+        setError(errorMessage);
+      }
+    } catch (error) {
+      console.error("Login error caught:", error);
+      setError("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -66,7 +82,7 @@ const Login = () => {
                   type="email"
                   required
                   className="input-field w-full"
-                  placeholder="admin@terminalhacks.space"
+                  placeholder="admin@hacktheworld.dev"
                   value={credentials.email}
                   onChange={handleChange}
                 />
@@ -122,11 +138,11 @@ const Login = () => {
               Default Admin Credentials:
             </p>
             <p className="text-xs text-gray-400">
-              Email: admin@terminalhacks.space
+              Email: admin@hacktheworld.dev
             </p>
-            <p className="text-xs text-gray-400">Password: SecurePass123!</p>
+            <p className="text-xs text-gray-400">Password: SecureAdmin123!</p>
             <p className="text-xs text-yellow-400 mt-2">
-              Note: Run 'pnpm seed:admin' in server directory to create admin
+              Note: Run 'npm run seed:users' in server directory to create admin
               user
             </p>
           </div>

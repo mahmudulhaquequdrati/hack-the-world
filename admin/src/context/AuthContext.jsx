@@ -50,24 +50,38 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (credentials) => {
+    console.log("AuthContext login called with:", credentials);
+    
     try {
+      console.log("Making login request to:", `${API_BASE_URL}/auth/login`);
+      
       const response = await axios.post("/auth/login", {
         login: credentials.email, // Backend accepts email or username in 'login' field
         password: credentials.password,
       });
 
+      console.log("Login response:", response.data);
+
       if (response.data.success) {
         const { user, token } = response.data.data;
 
+        console.log("User data:", user);
+
         // Check if user is admin with active status
         if (user.role !== "admin") {
-          throw new Error("Admin access required");
+          console.log("Login failed: User is not admin");
+          return {
+            success: false,
+            error: "Admin access required"
+          };
         }
 
         if (user.adminStatus !== "active") {
-          throw new Error(
-            "Admin account not activated. Please contact an administrator."
-          );
+          console.log("Login failed: Admin account not activated");
+          return {
+            success: false,
+            error: "Admin account not activated. Please contact an administrator."
+          };
         }
 
         // Store token and set headers
@@ -75,16 +89,55 @@ export const AuthProvider = ({ children }) => {
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         setUser(user);
 
+        console.log("Login successful, user set");
         return { success: true };
       } else {
         throw new Error(response.data.message || "Login failed");
       }
     } catch (error) {
-      console.log(error.response);
-      console.error("Login error:", error);
+      console.error("Login error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      let errorMessage = "Login failed";
+      
+      // Helper function to extract string from error response
+      const extractErrorMessage = (errorData) => {
+        if (typeof errorData === 'string') {
+          return errorData;
+        }
+        if (typeof errorData === 'object' && errorData?.message) {
+          return errorData.message;
+        }
+        return null;
+      };
+      
+      // Handle specific error cases
+      if (error.response?.status === 429) {
+        const retryAfter = error.response?.data?.retryAfter || "15 minutes";
+        errorMessage = `Too many login attempts. Please try again in ${retryAfter}.`;
+      } else if (error.response?.data?.error) {
+        const extracted = extractErrorMessage(error.response.data.error);
+        errorMessage = extracted || "Authentication failed";
+      } else if (error.response?.data?.message) {
+        const extracted = extractErrorMessage(error.response.data.message);
+        errorMessage = extracted || "Login failed";
+      } else if (error.response?.data) {
+        // Fallback: try to extract message from root data object
+        const extracted = extractErrorMessage(error.response.data);
+        errorMessage = extracted || "Login failed";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // Ensure errorMessage is always a string to prevent React rendering errors
+      const finalErrorMessage = typeof errorMessage === 'string' ? errorMessage : 'Login failed. Please try again.';
+      
       return {
         success: false,
-        error: error.response?.data?.message || error.message || "Login failed",
+        error: finalErrorMessage,
       };
     }
   };

@@ -6,7 +6,7 @@ const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 
 // Import configurations and utilities
-const errorHandler = require("../middleware/errorHandler");
+const { errorHandler } = require("../middleware/errorHandler");
 
 // Import routes
 const authRoutes = require("../routes/auth");

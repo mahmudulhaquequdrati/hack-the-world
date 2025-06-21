@@ -7,7 +7,7 @@ const rateLimit = require("express-rate-limit");
 
 // Import configurations and utilities
 const database = require("./src/config/database");
-const errorHandler = require("./src/middleware/errorHandler");
+const { errorHandler } = require("./src/middleware/errorHandler");
 const { specs, swaggerUi, swaggerOptions } = require("./src/config/swagger");
 
 // Import routes

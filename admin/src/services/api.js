@@ -95,7 +95,11 @@ axios.interceptors.response.use(
       console.log(error.response.data, "error");
       // Token expired or invalid
       localStorage.removeItem("adminToken");
-      window.location.href = "/login";
+      // Use navigate for SPA routing - this will be handled by the auth context
+      // Don't force page refresh here, let React Router handle it
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        console.warn('Authentication expired. Please refresh page to redirect to login.');
+      }
     }
     return Promise.reject(error);
   }

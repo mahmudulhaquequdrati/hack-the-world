@@ -212,7 +212,7 @@
  *                 type: string
  *                 example: 'invalid-email'
  */
-
+require("dotenv").config();
 const express = require("express");
 const { body } = require("express-validator");
 const rateLimit = require("express-rate-limit");
@@ -226,23 +226,36 @@ const {
 
 const router = express.Router();
 
-// Rate limiting for auth endpoints
+// Rate limiting for auth endpoints with environment-based configuration
+const isDevelopment = process.env.NODE_ENV === "development";
+const isTest = process.env.NODE_ENV === "test";
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
+  max: isDevelopment ? 1000 : 15, // Much higher limit for development (1000 vs 15)
   message: {
-    error: "Too many authentication attempts, please try again later",
+    success: false,
+    error: isDevelopment
+      ? "Rate limit reached (development mode - very high limit)"
+      : "Too many authentication attempts, please try again later",
+    retryAfter: isDevelopment ? "1 minute" : "15 minutes",
   },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Apply rate limiting to sensitive endpoints (disabled for tests)
-if (process.env.NODE_ENV !== "test") {
+// Apply rate limiting to sensitive endpoints (disabled for tests, lenient for development)
+if (!isTest) {
   router.use("/login", authLimiter);
   router.use("/register", authLimiter);
   router.use("/forgot-password", authLimiter);
   router.use("/reset-password", authLimiter);
+
+  if (isDevelopment) {
+    console.log(
+      "🚧 Development mode: Rate limiting is very lenient (1000 requests per 15min)"
+    );
+  }
 }
 
 /**

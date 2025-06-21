@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   createContentBreadcrumbs, 
   getContentQuickActions 
@@ -11,6 +11,7 @@ import {
  */
 const useContentDetailNavigation = (content, module, phase) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   /**
    * Navigation actions
@@ -71,7 +72,13 @@ const useContentDetailNavigation = (content, module, phase) => {
       if (openInNewTab) {
         window.open(url, '_blank', 'noopener,noreferrer');
       } else {
-        window.location.href = url;
+        // For external URLs, use window.location is appropriate
+        // For internal navigation, we should use navigate()
+        if (url.startsWith('http') || url.startsWith('//')) {
+          window.location.href = url;
+        } else {
+          navigate(url);
+        }
       }
     }, []),
   };
@@ -199,12 +206,11 @@ const useContentDetailNavigation = (content, module, phase) => {
      * Navigate to specific content tab
      */
     goToContentTab: useCallback((tabId) => {
-      const params = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(location.search);
       params.set('tab', tabId);
       
-      const newUrl = `${window.location.pathname}?${params.toString()}`;
-      window.history.replaceState(null, '', newUrl);
-    }, []),
+      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+    }, [navigate, location]),
   };
 
   /**
@@ -215,15 +221,15 @@ const useContentDetailNavigation = (content, module, phase) => {
      * Get current URL parameters
      */
     getUrlParams: useCallback(() => {
-      const searchParams = new URLSearchParams(window.location.search);
+      const searchParams = new URLSearchParams(location.search);
       return Object.fromEntries(searchParams.entries());
-    }, []),
+    }, [location.search]),
 
     /**
      * Update URL parameters without navigation
      */
     updateUrlParams: useCallback((params) => {
-      const searchParams = new URLSearchParams(window.location.search);
+      const searchParams = new URLSearchParams(location.search);
       
       Object.entries(params).forEach(([key, value]) => {
         if (value) {
@@ -233,17 +239,16 @@ const useContentDetailNavigation = (content, module, phase) => {
         }
       });
 
-      const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
-      window.history.replaceState(null, '', newUrl);
-    }, []),
+      navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+    }, [navigate, location]),
 
     /**
      * Get current active tab from URL
      */
     getActiveTab: useCallback(() => {
-      const searchParams = new URLSearchParams(window.location.search);
+      const searchParams = new URLSearchParams(location.search);
       return searchParams.get('tab') || 'overview';
-    }, []),
+    }, [location.search]),
   };
 
   /**

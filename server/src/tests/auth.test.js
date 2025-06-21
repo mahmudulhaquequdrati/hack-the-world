@@ -731,8 +731,8 @@ describe("🔐 Authentication Endpoints", () => {
     it("should skip rate limiting in test environment", async () => {
       const promises = [];
 
-      // Make multiple requests quickly (assuming limit is 5 per 15 minutes)
-      for (let i = 0; i < 6; i++) {
+      // Make multiple requests quickly (assuming limit is 15 per 15 minutes)
+      for (let i = 0; i < 16; i++) {
         promises.push(
           request(app).post("/api/auth/login").send(validLoginData)
         );

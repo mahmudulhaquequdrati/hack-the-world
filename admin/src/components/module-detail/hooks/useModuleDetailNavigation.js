@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   createModuleBreadcrumbs, 
   getModuleQuickActions 
@@ -11,6 +11,7 @@ import {
  */
 const useModuleDetailNavigation = (module, phase) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   /**
    * Navigation actions
@@ -178,15 +179,15 @@ const useModuleDetailNavigation = (module, phase) => {
      * Get current URL parameters
      */
     getUrlParams: useCallback(() => {
-      const searchParams = new URLSearchParams(window.location.search);
+      const searchParams = new URLSearchParams(location.search);
       return Object.fromEntries(searchParams.entries());
-    }, []),
+    }, [location.search]),
 
     /**
      * Update URL parameters without navigation
      */
     updateUrlParams: useCallback((params) => {
-      const searchParams = new URLSearchParams(window.location.search);
+      const searchParams = new URLSearchParams(location.search);
       
       Object.entries(params).forEach(([key, value]) => {
         if (value) {
@@ -196,9 +197,8 @@ const useModuleDetailNavigation = (module, phase) => {
         }
       });
 
-      const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
-      window.history.replaceState(null, '', newUrl);
-    }, []),
+      navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+    }, [navigate, location]),
   };
 
   /**

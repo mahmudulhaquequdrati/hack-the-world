@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { createBreadcrumbs, getQuickActions } from "../utils/phaseDetailUtils";
 
 /**
@@ -8,6 +8,7 @@ import { createBreadcrumbs, getQuickActions } from "../utils/phaseDetailUtils";
  */
 const usePhaseDetailNavigation = (phaseId, phase) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   /**
    * Navigation actions
@@ -77,9 +78,9 @@ const usePhaseDetailNavigation = (phaseId, phase) => {
     canNavigateBack: true,
     canEdit: true,
     hasQuickActions: quickActions.length > 0,
-    currentPath: window.location.pathname,
-    isInPhaseDetail: window.location.pathname.includes('/phases/'),
-  }), [quickActions.length]);
+    currentPath: location.pathname,
+    isInPhaseDetail: location.pathname.includes('/phases/'),
+  }), [quickActions.length, location.pathname]);
 
   /**
    * URL helpers

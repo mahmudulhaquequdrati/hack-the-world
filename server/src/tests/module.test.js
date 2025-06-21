@@ -11,7 +11,7 @@ const {
 } = require("./helpers/authHelper");
 
 // Import middleware and routes
-const errorHandler = require("../middleware/errorHandler");
+const { errorHandler } = require("../middleware/errorHandler");
 const moduleRoutes = require("../routes/modules");
 
 // Import test app with auth bypass

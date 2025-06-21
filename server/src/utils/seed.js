@@ -1246,6 +1246,7 @@ async function seedContent(modules = null) {
 
 /**
  * Seed users into database (admin and student accounts)
+ * Uses individual save() to ensure password hashing middleware runs
  */
 async function seedUsers() {
   try {
@@ -1262,7 +1263,20 @@ async function seedUsers() {
       return await User.find({}).sort({ createdAt: 1 });
     }
 
-    const users = await resetCollection(User, USERS_DATA, "users");
+    // Clear existing users first
+    await clearCollection(User, "users");
+
+    // Create users one by one to ensure password hashing middleware runs
+    const users = [];
+    console.log(`🔄 Creating ${USERS_DATA.length} users with password hashing...`);
+    
+    for (const userData of USERS_DATA) {
+      const user = new User(userData);
+      const savedUser = await user.save(); // This triggers password hashing middleware
+      users.push(savedUser);
+      console.log(`✅ Created user: ${userData.username} (${userData.role})`);
+    }
+
     console.log(`✅ Created ${users.length} users (${users.filter(u => u.role === 'admin').length} admin, ${users.filter(u => u.role === 'student').length} students)`);
     return users;
   } catch (error) {

@@ -66,7 +66,7 @@ const Login = () => {
                   type="email"
                   required
                   className="input-field w-full"
-                  placeholder="admin@hack-the-world.com"
+                  placeholder="admin@terminalhacks.space"
                   value={credentials.email}
                   onChange={handleChange}
                 />
@@ -122,7 +122,7 @@ const Login = () => {
               Default Admin Credentials:
             </p>
             <p className="text-xs text-gray-400">
-              Email: admin@hacktheworld.dev
+              Email: admin@terminalhacks.space
             </p>
             <p className="text-xs text-gray-400">Password: SecurePass123!</p>
             <p className="text-xs text-yellow-400 mt-2">

@@ -40,7 +40,10 @@ const phaseSchema = new mongoose.Schema(
       type: String,
       required: [true, "Phase color is required"],
       trim: true,
-      maxlength: [50, "Color class cannot exceed 50 characters"],
+      maxlength: [
+        50,
+        "Color class cannot exceed 50 characters and its not hex code, but green,red,blue,yellow,purple,orange,pink,brown,gray,black,white,etc.",
+      ],
     },
 
     // Display order

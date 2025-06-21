@@ -11,7 +11,7 @@ describe("🔐 Authentication Endpoints", () => {
   // Test data
   const validUserData = {
     username: "admin",
-    email: "admin@hacktheworld.dev",
+    email: "admin@terminalhacks.space",
     password: "SecurePass123!",
     firstName: "John",
     lastName: "Doe",
@@ -19,7 +19,7 @@ describe("🔐 Authentication Endpoints", () => {
   };
 
   const validLoginData = {
-    login: "admin@hacktheworld.dev",
+    login: "admin@terminalhacks.space",
     password: "SecurePass123!",
   };
 

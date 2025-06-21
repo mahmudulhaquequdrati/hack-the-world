@@ -324,7 +324,7 @@ const getUserOverallProgress = asyncHandler(async (req, res, next) => {
   }
 
   // Authorization: Users can only access their own progress, admins can access any
-  if (req.user.role !== "admin" && req.user._id !== userId) {
+  if (req.user.role !== "admin" && req.user._id.toString() !== userId) {
     return next(
       new ErrorResponse("Not authorized to access this progress", 403)
     );
@@ -524,7 +524,7 @@ const getUserModuleProgress = asyncHandler(async (req, res, next) => {
   }
 
   // Authorization: Users can only access their own progress, admins can access any
-  if (req.user.role !== "admin" && req.user._id !== userId) {
+  if (req.user.role !== "admin" && req.user._id.toString() !== userId) {
     return next(
       new ErrorResponse("Not authorized to access this progress", 403)
     );

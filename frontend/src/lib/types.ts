@@ -122,6 +122,8 @@ export interface Course {
   instructor: Instructor;
 
   learningOutcomes: LearningOutcome[];
+  labsData?: LabItem[];
+  gamesData?: GameItem[];
 }
 
 // Enrolled Course Types

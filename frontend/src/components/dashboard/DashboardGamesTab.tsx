@@ -33,6 +33,7 @@ interface GameItem {
   moduleId: string;
   progressPercentage: number;
   maxScore?: number;
+  instructions?: string;
 }
 
 export const DashboardGamesTab = ({

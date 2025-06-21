@@ -518,6 +518,145 @@ const getContentWithModuleAndProgress = asyncHandler(async (req, res, next) => {
 });
 
 /**
+ * @desc    Get dashboard labs and games data for enrolled modules
+ * @route   GET /api/content/dashboard/labs-games
+ * @access  Private
+ */
+const getDashboardLabsAndGames = asyncHandler(async (req, res, next) => {
+  const userId = req.user._id;
+
+  try {
+    // Get user's enrolled modules
+    const UserEnrollment = require("../models/UserEnrollment");
+    const enrollments = await UserEnrollment.find({ 
+      userId, 
+      status: { $in: ["active", "completed"] } 
+    }).select("moduleId").lean();
+
+    if (enrollments.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No enrolled modules found",
+        data: {
+          labs: [],
+          games: []
+        }
+      });
+    }
+
+    const enrolledModuleIds = enrollments.map(e => e.moduleId);
+
+    // Get all lab and game content from enrolled modules
+    const [labContent, gameContent] = await Promise.all([
+      Content.find({
+        moduleId: { $in: enrolledModuleIds },
+        type: "lab",
+        isActive: true
+      }).populate("moduleId", "title difficulty phaseId").lean(),
+      
+      Content.find({
+        moduleId: { $in: enrolledModuleIds },
+        type: "game", 
+        isActive: true
+      }).populate("moduleId", "title difficulty phaseId").lean()
+    ]);
+
+    // Get all content IDs to fetch progress data
+    const allContentIds = [...labContent, ...gameContent].map(c => c._id);
+
+    // Get user progress for all this content
+    const UserProgress = require("../models/UserProgress");
+    const progressData = await UserProgress.find({
+      userId,
+      contentId: { $in: allContentIds }
+    }).lean();
+
+    // Create progress map for quick lookup
+    const progressMap = new Map();
+    progressData.forEach(progress => {
+      progressMap.set(progress.contentId.toString(), progress);
+    });
+
+    // Get phase data for enriching response
+    const Phase = require("../models/Phase");
+    const phaseIds = [...new Set([...labContent, ...gameContent].map(c => c.moduleId?.phaseId).filter(Boolean))];
+    const phases = await Phase.find({ _id: { $in: phaseIds } }).select("title").lean();
+    const phaseMap = new Map();
+    phases.forEach(phase => {
+      phaseMap.set(phase._id.toString(), phase);
+    });
+
+    // Format lab data
+    const formattedLabs = labContent.map(lab => {
+      const progress = progressMap.get(lab._id.toString());
+      const phase = phaseMap.get(lab.moduleId?.phaseId?.toString());
+      
+      return {
+        _id: lab._id.toString(),
+        title: lab.title,
+        description: lab.description,
+        difficulty: lab.moduleId?.difficulty || "Beginner",
+        duration: `${lab.duration || 45} min`,
+        skills: lab.metadata?.skills || ["Cybersecurity", "Hands-on Practice"],
+        moduleTitle: lab.moduleId?.title || "Unknown Module",
+        moduleColor: "green",
+        moduleBgColor: "black",
+        completed: progress?.status === "completed" || false,
+        available: true,
+        phaseId: lab.moduleId?.phaseId?.toString() || "",
+        phaseTitle: phase?.title || "Unknown Phase",
+        moduleId: lab.moduleId?._id?.toString(),
+        type: "lab",
+        progressPercentage: progress?.progressPercentage || 0,
+        score: progress?.score || null,
+        maxScore: progress?.maxScore || null,
+        instructions: lab.instructions
+      };
+    });
+
+    // Format game data
+    const formattedGames = gameContent.map(game => {
+      const progress = progressMap.get(game._id.toString());
+      const phase = phaseMap.get(game.moduleId?.phaseId?.toString());
+      
+      return {
+        _id: game._id.toString(),
+        title: game.title,
+        description: game.description,
+        type: "game",
+        points: game.metadata?.points || 100,
+        difficulty: game.moduleId?.difficulty || "Beginner",
+        moduleTitle: game.moduleId?.title || "Unknown Module",
+        moduleColor: "#00ff41",
+        moduleBgColor: "#001100",
+        completed: progress?.status === "completed" || false,
+        available: true,
+        score: progress?.score || null,
+        phaseId: game.moduleId?.phaseId?.toString() || "",
+        phaseTitle: phase?.title || "Unknown Phase",
+        moduleId: game.moduleId?._id?.toString(),
+        progressPercentage: progress?.progressPercentage || 0,
+        maxScore: progress?.maxScore || null,
+        instructions: game.instructions
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Dashboard labs and games data retrieved successfully",
+      data: {
+        labs: formattedLabs,
+        games: formattedGames
+      }
+    });
+
+  } catch (error) {
+    console.error("Error in getDashboardLabsAndGames:", error);
+    return next(new ErrorResponse("Failed to retrieve dashboard labs and games data", 500));
+  }
+});
+
+/**
  * @desc    Reorder content within a section
  * @route   PUT /api/content/module/:moduleId/section/:section/reorder
  * @access  Private (Admin only)
@@ -625,5 +764,6 @@ module.exports = {
   getContentByModuleGroupedOptimized,
   getContentWithNavigation,
   getContentWithModuleAndProgress,
+  getDashboardLabsAndGames,
   reorderContentInSection,
 };

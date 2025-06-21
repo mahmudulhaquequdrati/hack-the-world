@@ -37,7 +37,7 @@ const ModuleTree = ({ phase, onNavigate, onEnroll }: ModuleTreeProps) => {
       <div className="flex items-center space-x-2 mb-6">
         <Terminal className="w-5 h-5 text-green-400" />
         <span className="text-green-400 font-mono text-sm">
-          ~/{phase._id}_phase/ddddddd
+          ~/{phase._id}_phase/
         </span>
       </div>
 

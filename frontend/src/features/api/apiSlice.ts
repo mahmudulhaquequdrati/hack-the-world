@@ -538,6 +538,61 @@ export const apiSlice = createApi({
 
     // NOTE: Individual content query removed - use getContentWithModuleAndProgress for comprehensive data
 
+    // Dashboard labs and games data
+    getDashboardLabsAndGames: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          labs: Array<{
+            _id: string;
+            title: string;
+            description: string;
+            difficulty: string;
+            duration: string;
+            skills?: string[];
+            moduleTitle: string;
+            moduleColor: string;
+            moduleBgColor: string;
+            completed: boolean;
+            available: boolean;
+            phaseId: string;
+            phaseTitle: string;
+            moduleId: string;
+            type: string;
+            progressPercentage: number;
+            score?: number;
+            maxScore?: number;
+            instructions?: string;
+          }>;
+          games: Array<{
+            _id: string;
+            title: string;
+            description: string;
+            type: string;
+            points: number;
+            difficulty: string;
+            moduleTitle: string;
+            moduleColor: string;
+            moduleBgColor: string;
+            completed: boolean;
+            available: boolean;
+            score?: number;
+            phaseId: string;
+            phaseTitle: string;
+            moduleId: string;
+            progressPercentage: number;
+            maxScore?: number;
+            instructions?: string;
+          }>;
+        };
+      },
+      void
+    >({
+      query: () => "/content/dashboard/labs-games",
+      providesTags: ["Progress", "Enrollment"],
+    }),
+
     // Achievement endpoints
     getUserAchievements: builder.query<
       {
@@ -759,6 +814,7 @@ export const {
   useGetModuleOverviewQuery,
   useGetModuleContentGroupedOptimizedQuery,
   useGetContentWithModuleAndProgressQuery,
+  useGetDashboardLabsAndGamesQuery,
   useCompleteContentMutation,
 
   // Progress tracking - comprehensive endpoints

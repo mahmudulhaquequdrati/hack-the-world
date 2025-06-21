@@ -15,6 +15,7 @@ const {
   getContentByModuleGroupedOptimized,
   getContentWithNavigation,
   getContentWithModuleAndProgress,
+  getDashboardLabsAndGames,
   reorderContentInSection,
 } = require("../controllers/contentController");
 const { protect, authorize } = require("../middleware/auth");
@@ -177,6 +178,133 @@ const router = express.Router();
  *           description: Additional content-specific data
  *           example: { "difficulty": "beginner", "tags": ["intro"] }
  */
+
+/**
+ * @swagger
+ * /content/dashboard/labs-games:
+ *   get:
+ *     summary: 🎮 Get dashboard labs and games data
+ *     description: |
+ *       Retrieve all labs and games from user's enrolled modules with progress information.
+ *       Perfect for dashboard displays showing available interactive content.
+ *
+ *       **🎯 Data Retrieved:**
+ *       - Lab content from enrolled modules with progress
+ *       - Game content from enrolled modules with progress  
+ *       - Module and phase information for context
+ *       - User progress including completion status and scores
+ *
+ *       **📊 Progress Integration:**
+ *       - Real completion status from UserProgress
+ *       - Progress percentages for each item
+ *       - Score tracking for assessments
+ *       - Available/locked status based on enrollment
+ *
+ *       **⚡ Performance:**
+ *       - Single API call for both labs and games
+ *       - Optimized queries with efficient joins
+ *       - Only loads data for enrolled modules
+ *     tags: [📚 Content Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard labs and games data retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Dashboard labs and games data retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     labs:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "64a1b2c3d4e5f6789012345"
+ *                           title:
+ *                             type: string
+ *                             example: "Network Security Lab"
+ *                           description:
+ *                             type: string
+ *                             example: "Hands-on lab for network security assessment"
+ *                           difficulty:
+ *                             type: string
+ *                             example: "Intermediate"
+ *                           duration:
+ *                             type: string
+ *                             example: "45 min"
+ *                           completed:
+ *                             type: boolean
+ *                             example: false
+ *                           progressPercentage:
+ *                             type: number
+ *                             example: 25
+ *                           moduleTitle:
+ *                             type: string
+ *                             example: "Cybersecurity Fundamentals"
+ *                           phaseTitle:
+ *                             type: string
+ *                             example: "Foundation Phase"
+ *                     games:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "64a1b2c3d4e5f6789012346"
+ *                           title:
+ *                             type: string
+ *                             example: "Security Awareness Game"
+ *                           description:
+ *                             type: string
+ *                             example: "Interactive game testing security knowledge"
+ *                           difficulty:
+ *                             type: string
+ *                             example: "Beginner"
+ *                           points:
+ *                             type: number
+ *                             example: 100
+ *                           completed:
+ *                             type: boolean
+ *                             example: true
+ *                           progressPercentage:
+ *                             type: number
+ *                             example: 100
+ *                           score:
+ *                             type: number
+ *                             example: 85
+ *                           moduleTitle:
+ *                             type: string
+ *                             example: "Cybersecurity Fundamentals"
+ *                           phaseTitle:
+ *                             type: string
+ *                             example: "Foundation Phase"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get("/dashboard/labs-games", protect, getDashboardLabsAndGames);
 
 /**
  * @swagger

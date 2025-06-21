@@ -8,6 +8,7 @@ import {
   useGetPhasesWithModulesQuery,
   useGetUserAchievementsQuery,
   useGetStreakStatusQuery,
+  useGetDashboardLabsAndGamesQuery,
 } from "@/features/api/apiSlice";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { getCoursePath, getEnrollPath } from "@/lib/pathUtils";
@@ -44,7 +45,10 @@ const Dashboard = () => {
   const { data: streakData, isLoading: streakLoading } =
     useGetStreakStatusQuery(undefined, { skip: !user });
 
-  // TODO: Replace above 4 API calls with single consolidated endpoint:
+  const { data: labsGamesData, isLoading: labsGamesLoading } =
+    useGetDashboardLabsAndGamesQuery(undefined, { skip: !user });
+
+  // TODO: Replace above 5 API calls with single consolidated endpoint:
   // const { data: dashboardData, isLoading: dashboardLoading } = useGetDashboardDataQuery(undefined, { skip: !user });
 
   // OPTIMIZED: Apply CyberSecOverview enrollment mapping pattern for O(1) lookups
@@ -124,89 +128,20 @@ const Dashboard = () => {
     return allModules.filter((module) => module.enrolled);
   }, [allModules]);
 
-  // Extract labs and games data from enrolled modules
+  // Use real labs and games data from API
   const labsData = React.useMemo(() => {
-    const labs: any[] = [];
-    enrolledModules.forEach((module) => {
-      if (
-        module?.content?.labs &&
-        Array.isArray(module.content.labs) &&
-        module.content.labs.length > 0
-      ) {
-        // Find the phase this module belongs to
-        const modulePhase = phasesWithModules?.find(
-          (p) => p._id === module.phaseId
-        );
-
-        module.content.labs.forEach((labId: string) => {
-          labs.push({
-            _id: labId,
-            title: `${module.title || "Unknown Module"} Lab`,
-            description: `Hands-on laboratory exercise in ${
-              module.title || "cybersecurity"
-            }`,
-            difficulty: module.difficulty || "Beginner",
-            duration: "45 min",
-            skills: [
-              "Cybersecurity",
-              "Hands-on Practice",
-              module.title || "Module",
-            ],
-            moduleTitle: module.title || "Unknown Module",
-            moduleColor: "green",
-            moduleBgColor: "black",
-            completed: module.completed || false,
-            available: true,
-            phaseId: module.phaseId || "",
-            phaseTitle: modulePhase?.title || "Unknown Phase",
-            moduleId: module._id,
-            type: "Lab Environment",
-            progressPercentage: module.progress || 0,
-          });
-        });
-      }
-    });
-    return { success: true, data: { content: labs } };
-  }, [enrolledModules, phasesWithModules]);
+    if (!labsGamesData?.success || !labsGamesData.data) {
+      return { success: false, data: { content: [] } };
+    }
+    return { success: true, data: { content: labsGamesData.data.labs } };
+  }, [labsGamesData]);
 
   const gamesData = React.useMemo(() => {
-    const games: any[] = [];
-    enrolledModules.forEach((module) => {
-      if (
-        module?.content?.games &&
-        Array.isArray(module.content.games) &&
-        module.content.games.length > 0
-      ) {
-        // Find the phase this module belongs to
-        const modulePhase = phasesWithModules?.find(
-          (p) => p._id === module.phaseId
-        );
-
-        module.content.games.forEach((gameId: string) => {
-          games.push({
-            _id: gameId,
-            title: `${module.title || "Unknown Module"} Game`,
-            description: `Interactive cybersecurity game in ${
-              module.title || "cybersecurity"
-            }`,
-            type: "Challenge",
-            points: 100,
-            difficulty: module.difficulty || "Beginner",
-            moduleTitle: module.title || "Unknown Module",
-            moduleColor: "#00ff41",
-            moduleBgColor: "#001100",
-            completed: module.completed || false,
-            available: true,
-            phaseId: module.phaseId || "",
-            phaseTitle: modulePhase?.title || "Unknown Phase",
-            moduleId: module._id,
-            progressPercentage: module.progress || 0,
-          });
-        });
-      }
-    });
-    return { success: true, data: { content: games } };
-  }, [enrolledModules, phasesWithModules]);
+    if (!labsGamesData?.success || !labsGamesData.data) {
+      return { success: false, data: { content: [] } };
+    }
+    return { success: true, data: { content: labsGamesData.data.games } };
+  }, [labsGamesData]);
 
   // Helper functions for dashboard tabs
   const getAllModulesHelper = () => allModules || [];
@@ -228,7 +163,7 @@ const Dashboard = () => {
   // OPTIMIZED: Single loading check - prioritize core data first
   const isLoadingCoreData = phasesLoading;
   const isLoadingUserData =
-    enrollmentsLoading || achievementsLoading || streakLoading;
+    enrollmentsLoading || achievementsLoading || streakLoading || labsGamesLoading;
 
   if (isLoadingCoreData || (user && isLoadingUserData)) {
     return (
@@ -264,7 +199,7 @@ const Dashboard = () => {
           achievements={achievements}
           labsData={labsData}
           gamesData={gamesData}
-          isLoadingData={phasesLoading || enrollmentsLoading}
+          isLoadingData={phasesLoading || enrollmentsLoading || labsGamesLoading}
         />
       </div>
     </div>

@@ -21,7 +21,7 @@ interface LabItem {
   description: string;
   difficulty: string;
   duration: string;
-  skills: string[];
+  skills?: string[];
   moduleTitle: string;
   moduleColor: string;
   moduleBgColor: string;
@@ -34,6 +34,7 @@ interface LabItem {
   progressPercentage: number;
   score?: number;
   maxScore?: number;
+  instructions?: string;
 }
 
 export const DashboardLabsTab = ({
@@ -217,13 +218,23 @@ export const DashboardLabsTab = ({
                     </div>
 
                     {/* Start Lab Button */}
-                    <Button
-                      onClick={() => handleStartLab(lab)}
-                      className="w-full bg-yellow-400 text-black hover:bg-yellow-300 font-mono text-sm"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      START_LAB
-                    </Button>
+                    {lab.completed ? (
+                      <Button
+                        //   onClick={() => handleStartLab(lab)}
+                        className="w-full bg-green-400 text-black hover:bg-green-300 font-mono text-sm"
+                      >
+                        <Zap className="w-4 h-4 mr-2" />
+                        COMPLETED
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => handleStartLab(lab)}
+                        className="w-full bg-yellow-400 text-black hover:bg-yellow-300 font-mono text-sm"
+                      >
+                        <Zap className="w-4 h-4 mr-2" />
+                        START_LAB
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

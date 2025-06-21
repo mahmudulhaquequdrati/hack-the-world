@@ -1,4 +1,3 @@
-import useProgressTracking from "@/hooks/useProgressTracking";
 import { Lesson } from "@/lib/types";
 import { ContentContainer } from "./ContentContainer";
 import { LoadingContent } from "./LoadingContent";
@@ -20,6 +19,8 @@ interface FullScreenContentProps {
   // T022: Loading states for navigation buttons
   isNavigatingNext?: boolean;
   isNavigatingPrev?: boolean;
+  // Loading state for completion button
+  isCompleting?: boolean;
 }
 
 export const FullScreenContent = ({
@@ -37,20 +38,9 @@ export const FullScreenContent = ({
   // T022: Loading states for navigation buttons
   isNavigatingNext,
   isNavigatingPrev,
+  isCompleting,
 }: FullScreenContentProps) => {
-  // Progress tracking (simplified for 2-API system)
-  const progressTracking = useProgressTracking();
-
-  // Get actual MongoDB content ID directly from lesson
-  const contentId = lesson.contentId || "";
-
-  // Handle manual completion with progress tracking
-  const handleMarkComplete = async () => {
-    if (contentId) {
-      await progressTracking.handleCompleteContent(contentId);
-    }
-    onMarkComplete();
-  };
+  // Progress tracking removed - using parent's completion handler for consistency
 
   const renderContent = () => {
     switch (lesson.type) {
@@ -101,7 +91,7 @@ export const FullScreenContent = ({
         isCompleted={isCompleted}
         onPrevious={onPrevious}
         onNext={onNext}
-        onMarkComplete={handleMarkComplete}
+        onMarkComplete={onMarkComplete}
         canGoBack={canGoBack !== undefined ? canGoBack : currentIndex > 0}
         canGoForward={
           canGoForward !== undefined
@@ -112,6 +102,7 @@ export const FullScreenContent = ({
         // navigationTitles={navigationTitles}
         isNavigatingNext={isNavigatingNext}
         isNavigatingPrev={isNavigatingPrev}
+        isCompleting={isCompleting}
       />
     </ContentContainer>
   );

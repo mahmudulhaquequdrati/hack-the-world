@@ -248,7 +248,15 @@ export const apiSlice = createApi({
           ...(maxScore !== undefined && { maxScore }),
         },
       }),
-      invalidatesTags: ["Progress"],
+      invalidatesTags: (_result, _error, { contentId }) => [
+        "Progress",
+        "Phase",
+        "Module",
+        "Enrollment",
+        "Course",
+        { type: "Progress", id: contentId },
+        { type: "Course", id: "ALL" },
+      ],
     }),
 
     getOverallProgress: builder.query<
@@ -486,6 +494,8 @@ export const apiSlice = createApi({
       query: (moduleId) => `/content/module/${moduleId}/grouped-optimized`,
       providesTags: (_result, _error, moduleId) => [
         { type: "Course", id: `optimized-content-${moduleId}` },
+        "Progress",
+        "Course",
       ],
     }),
 

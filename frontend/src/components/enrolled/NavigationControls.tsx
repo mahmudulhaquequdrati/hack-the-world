@@ -15,6 +15,8 @@ interface NavigationControlsProps {
   isNavigatingPrev?: boolean;
   // T026: Option to show/hide completion button to prevent duplication
   showCompletionButton?: boolean;
+  // Loading state for completion button
+  isCompleting?: boolean;
 }
 
 export const NavigationControls = ({
@@ -31,6 +33,7 @@ export const NavigationControls = ({
   isNavigatingPrev = false,
   // T026: Default to true for backward compatibility, but allow disabling
   showCompletionButton = true,
+  isCompleting = false,
 }: NavigationControlsProps) => {
   return (
     <div className="flex items-center justify-between mt-6 pt-4 border-t border-green-400/30">
@@ -59,10 +62,19 @@ export const NavigationControls = ({
         {showCompletionButton && onMarkComplete && (
           <Button
             onClick={onMarkComplete}
-            disabled={isCompleted}
+            disabled={isCompleted || isCompleting}
             className="bg-green-400 text-black hover:bg-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isCompleted ? "Completed" : "Mark as Completed"}
+            {isCompleting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Completing...
+              </>
+            ) : isCompleted ? (
+              "Completed"
+            ) : (
+              "Mark as Completed"
+            )}
           </Button>
         )}
       </div>

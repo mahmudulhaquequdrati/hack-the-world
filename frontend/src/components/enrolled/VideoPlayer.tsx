@@ -36,6 +36,8 @@ interface VideoPlayerProps {
   isNavigatingPrev?: boolean;
   // T035: Video progress tracking for auto-completion
   onVideoProgress?: (progressPercentage: number) => void;
+  // Loading state for completion button
+  isCompleting?: boolean;
 }
 
 const VideoPlayer = ({
@@ -56,6 +58,7 @@ const VideoPlayer = ({
   isNavigatingPrev,
   // T035: Video progress tracking for auto-completion
   onVideoProgress,
+  isCompleting = false,
 }: VideoPlayerProps) => {
   const playerRef = useRef<ReactPlayer>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
@@ -783,12 +786,21 @@ const VideoPlayer = ({
                       onMarkComplete(enhancedLesson._id);
                     }
                   }}
-                  className="bg-green-400 text-black hover:bg-green-300"
+                  className="bg-green-400 text-black hover:bg-green-300 disabled:opacity-50"
                   size="sm"
-                  disabled={!enhancedLesson}
+                  disabled={!enhancedLesson || isCompleting}
                 >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Mark as Completed
+                  {isCompleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Completing...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Mark as Completed
+                    </>
+                  )}
                 </Button>
               )}
             </div>

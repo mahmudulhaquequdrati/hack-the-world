@@ -3,13 +3,13 @@ const UserAchievement = require("../models/UserAchievement");
 const User = require("../models/User");
 const UserEnrollment = require("../models/UserEnrollment");
 const UserProgress = require("../models/UserProgress");
-const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/appError");
+const asyncHandler = require("../middleware/asyncHandler");
+const ErrorResponse = require("../utils/errorResponse");
 
 /**
  * Get all available achievements
  */
-exports.getAllAchievements = catchAsync(async (req, res, next) => {
+exports.getAllAchievements = asyncHandler(async (req, res, next) => {
   const achievements = await Achievement.findActive();
 
   res.status(200).json({
@@ -22,12 +22,12 @@ exports.getAllAchievements = catchAsync(async (req, res, next) => {
 /**
  * Get achievements by category
  */
-exports.getAchievementsByCategory = catchAsync(async (req, res, next) => {
+exports.getAchievementsByCategory = asyncHandler(async (req, res, next) => {
   const { category } = req.params;
   
   const validCategories = ["module", "lab", "game", "xp", "general"];
   if (!validCategories.includes(category)) {
-    return next(new AppError("Invalid achievement category", 400));
+    return next(new ErrorResponse("Invalid achievement category", 400));
   }
 
   const achievements = await Achievement.findByCategory(category);
@@ -43,7 +43,7 @@ exports.getAchievementsByCategory = catchAsync(async (req, res, next) => {
 /**
  * Get user's achievement progress
  */
-exports.getUserAchievements = catchAsync(async (req, res, next) => {
+exports.getUserAchievements = asyncHandler(async (req, res, next) => {
   const userId = req.user._id;
   const { completed } = req.query;
 
@@ -108,7 +108,7 @@ exports.getUserAchievements = catchAsync(async (req, res, next) => {
 /**
  * Get user's achievement statistics
  */
-exports.getUserAchievementStats = catchAsync(async (req, res, next) => {
+exports.getUserAchievementStats = asyncHandler(async (req, res, next) => {
   const userId = req.user._id;
 
   const [
@@ -220,10 +220,10 @@ exports.checkAchievements = async (userId) => {
 /**
  * Create default achievements (admin only)
  */
-exports.createDefaultAchievements = catchAsync(async (req, res, next) => {
+exports.createDefaultAchievements = asyncHandler(async (req, res, next) => {
   // Check if user is admin
   if (req.user.role !== 'admin') {
-    return next(new AppError('Only admins can create default achievements', 403));
+    return next(new ErrorResponse('Only admins can create default achievements', 403));
   }
 
   const defaultAchievements = [

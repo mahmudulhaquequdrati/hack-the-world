@@ -45,22 +45,19 @@ const getPhase = asyncHandler(async (req, res, next) => {
 // @route   POST /api/phases
 // @access  Private/Admin
 const createPhase = asyncHandler(async (req, res, next) => {
-  const { title, description, icon, color, order } = req.body;
+  const { title, description, icon, color } = req.body;
 
-  // Check if phase with same order already exists
-  const existingOrder = await Phase.findOne({ order });
-  if (existingOrder) {
-    return next(
-      new ErrorResponse(`Phase with order ${order} already exists`, 400)
-    );
-  }
+  // Auto-calculate order for new phase
+  const existingPhases = await Phase.find({}).sort({ order: -1 }).limit(1);
+  const maxOrder = existingPhases.length > 0 ? existingPhases[0].order : 0;
+  const newOrder = maxOrder + 1;
 
   const phase = await Phase.create({
     title,
     description,
     icon,
     color,
-    order,
+    order: newOrder,
   });
 
   res.status(201).json({
@@ -75,7 +72,7 @@ const createPhase = asyncHandler(async (req, res, next) => {
 // @access  Private/Admin
 const updatePhase = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const { title, description, icon, color, order } = req.body;
+  const { title, description, icon, color } = req.body;
 
   // Validate ObjectId format
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -88,22 +85,10 @@ const updatePhase = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Phase with ID ${id} not found`, 404));
   }
 
-  // If updating order, check if new order already exists (and it's not the current phase)
-  if (order && order !== phase.order) {
-    const existingOrder = await Phase.findOne({
-      order,
-      _id: { $ne: id },
-    });
-    if (existingOrder) {
-      return next(
-        new ErrorResponse(`Phase with order ${order} already exists`, 400)
-      );
-    }
-  }
-
+  // Update phase, preserving existing order
   phase = await Phase.findByIdAndUpdate(
     id,
-    { title, description, icon, color, order },
+    { title, description, icon, color },
     {
       new: true,
       runValidators: true,

@@ -2,7 +2,6 @@ const jwt = require("jsonwebtoken");
 const asyncHandler = require("./asyncHandler");
 const ErrorResponse = require("../utils/errorResponse");
 const User = require("../models/User");
-const APIError = require("../middleware/errorHandler");
 
 /**
  * Protect middleware - verifies JWT token and attaches user to request
@@ -116,16 +115,16 @@ const optionalAuth = asyncHandler(async (req, res, next) => {
 const requireAdmin = (req, res, next) => {
   try {
     if (!req.user) {
-      throw new APIError("Authentication required", 401);
+      throw new ErrorResponse("Authentication required", 401);
     }
 
     if (req.user.role !== "admin") {
-      throw new APIError("Admin access required", 403);
+      throw new ErrorResponse("Admin access required", 403);
     }
 
     // Skip admin status check in test environment
     if (process.env.NODE_ENV !== "test" && req.user.adminStatus !== "active") {
-      throw new APIError("Admin account not activated", 403);
+      throw new ErrorResponse("Admin account not activated", 403);
     }
 
     next();
@@ -141,13 +140,13 @@ const requireRole = (roles) => {
   return (req, res, next) => {
     try {
       if (!req.user) {
-        throw new APIError("Authentication required", 401);
+        throw new ErrorResponse("Authentication required", 401);
       }
 
       const userRoles = Array.isArray(roles) ? roles : [roles];
 
       if (!userRoles.includes(req.user.role)) {
-        throw new APIError(
+        throw new ErrorResponse(
           `Access denied. Required role(s): ${userRoles.join(", ")}`,
           403
         );
@@ -155,7 +154,7 @@ const requireRole = (roles) => {
 
       // Additional check for admin status if user is admin
       if (req.user.role === "admin" && req.user.adminStatus !== "active") {
-        throw new APIError("Admin account not activated", 403);
+        throw new ErrorResponse("Admin account not activated", 403);
       }
 
       next();

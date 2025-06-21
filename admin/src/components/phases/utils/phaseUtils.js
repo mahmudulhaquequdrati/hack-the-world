@@ -20,10 +20,8 @@ export const createPhaseData = (formData, phases, editingPhase) => {
       phases.length > 0 ? Math.max(...phases.map((p) => p.order || 0)) : 0;
     phaseData.order = maxOrder + 1;
   } else {
-    // For editing, keep the existing order or use form data if provided
-    phaseData.order = formData.order.trim()
-      ? parseInt(formData.order)
-      : editingPhase.order;
+    // For editing, keep the existing order (managed automatically by backend)
+    phaseData.order = editingPhase.order;
   }
 
   return phaseData;
@@ -85,7 +83,6 @@ export const createInitialFormData = () => ({
   description: "",
   icon: "",
   color: "green",
-  order: "",
 });
 
 /**
@@ -98,7 +95,6 @@ export const createEditFormData = (phase) => ({
   description: phase.description || "",
   icon: phase.icon || "",
   color: phase.color || "green",
-  order: phase.order?.toString() || "",
 });
 
 /**

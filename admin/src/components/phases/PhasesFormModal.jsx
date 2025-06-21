@@ -89,37 +89,37 @@ const PhasesFormModal = ({
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="icon"
-                className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider"
-              >
-                ▶ Icon *
-              </label>
-              <select
-                id="icon"
-                name="icon"
-                value={formData.icon}
-                onChange={onInputChange}
-                className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300"
-                required
-              >
-                <option value="" className="bg-gray-900 text-green-400">
-                  ◆ Select an icon
-                </option>
-                {iconOptions.map((option) => (
-                  <option
-                    key={option.value}
-                    value={option.value}
-                    className="bg-gray-900 text-green-400"
-                  >
-                    ▸ {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
+              <div className="">
+                <label
+                  htmlFor="icon"
+                  className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider"
+                >
+                  ▶ Icon *
+                </label>
+                <select
+                  id="icon"
+                  name="icon"
+                  value={formData.icon}
+                  onChange={onInputChange}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300"
+                  required
+                >
+                  <option value="" className="bg-gray-900 text-green-400">
+                    ◆ Select an icon
+                  </option>
+                  {iconOptions.map((option) => (
+                    <option
+                      key={option.value}
+                      value={option.value}
+                      className="bg-gray-900 text-green-400"
+                    >
+                      ▸ {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label
                   htmlFor="color"
@@ -149,46 +149,19 @@ const PhasesFormModal = ({
                   ))}
                 </select>
               </div>
+            </div>
 
-              {/* Order field - only show when editing */}
-              {editingPhase && (
-                <div>
-                  <label
-                    htmlFor="order"
-                    className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider"
-                  >
-                    ▶ Order *
-                  </label>
-                  <input
-                    type="number"
-                    id="order"
-                    name="order"
-                    value={formData.order}
-                    onChange={onInputChange}
-                    min="1"
-                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
-                    placeholder="1"
-                    required
-                  />
-                  <p className="text-xs text-gray-400 mt-1 font-mono">
-                    ◆ Editing existing phase order. Use drag & drop for
-                    reordering.
+            <div className="grid grid-cols-1 gap-4">
+              {/* Auto-order notice for all phases */}
+              <div className="bg-gradient-to-r from-green-900/20 to-green-800/20 border border-green-400/30 rounded-xl p-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                  <p className="text-green-400 font-mono text-sm">
+                    <span className="font-bold">◆ AUTO-ORDER:</span> Order is
+                    automatically managed by the system
                   </p>
                 </div>
-              )}
-
-              {/* Auto-order notice for new phases */}
-              {!editingPhase && (
-                <div className="bg-gradient-to-r from-green-900/20 to-green-800/20 border border-green-400/30 rounded-xl p-4">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                    <p className="text-green-400 font-mono text-sm">
-                      <span className="font-bold">◆ AUTO-ORDER:</span> Order
-                      will be automatically assigned as #{phases.length + 1}
-                    </p>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
 
             {/* Enhanced Error Message */}

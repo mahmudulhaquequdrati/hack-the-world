@@ -1,12 +1,11 @@
 const User = require("../models/User");
-const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/appError");
+const asyncHandler = require("../middleware/asyncHandler");
 
 /**
  * Get user's current streak status
  * GET /api/streak/status
  */
-const getStreakStatus = catchAsync(async (req, res) => {
+const getStreakStatus = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   
   if (!user) {
@@ -29,7 +28,7 @@ const getStreakStatus = catchAsync(async (req, res) => {
  * Update user's streak (called when user completes an activity)
  * POST /api/streak/update
  */
-const updateStreak = catchAsync(async (req, res) => {
+const updateStreak = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   
   if (!user) {
@@ -53,7 +52,7 @@ const updateStreak = catchAsync(async (req, res) => {
  * Get streak statistics for leaderboard
  * GET /api/streak/leaderboard
  */
-const getStreakLeaderboard = catchAsync(async (req, res) => {
+const getStreakLeaderboard = asyncHandler(async (req, res) => {
   const { limit = 10, type = 'current' } = req.query;
   
   const sortField = type === 'longest' ? 'stats.longestStreak' : 'stats.currentStreak';

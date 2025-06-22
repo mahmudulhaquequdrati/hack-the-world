@@ -4,6 +4,7 @@ import useContentDetailManager from "../components/content-detail/hooks/useConte
 import ContentHeroSection from "../components/content-detail/ui/ContentHeroSection";
 import ContentInfoCard from "../components/content-detail/ui/ContentInfoCard";
 import ContentResourcesList from "../components/content-detail/ui/ContentResourcesList";
+import ContentMetadataCard from "../components/content-detail/ui/ContentMetadataCard";
 import ErrorState from "../components/shared/ErrorState";
 import LoadingState from "../components/shared/LoadingState";
 import NotFoundState from "../components/shared/NotFoundState";
@@ -75,8 +76,6 @@ const ContentDetailView = () => {
               {/* Content Resources and Instructions */}
               <ContentResourcesList
                 content={content}
-                processedResources={processedResources}
-                metadataBreakdown={metadataBreakdown}
                 outcomesBreakdown={outcomesBreakdown}
               />
             </div>
@@ -85,6 +84,9 @@ const ContentDetailView = () => {
             <div className="lg:col-span-2 space-y-6">
               {/* Content Info Card */}
               <ContentInfoCard content={content} module={module} />
+              
+              {/* Content Metadata Card */}
+              <ContentMetadataCard metadataBreakdown={metadataBreakdown} />
             </div>
           </div>
         </div>

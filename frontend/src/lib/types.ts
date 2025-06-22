@@ -142,7 +142,9 @@ export interface EnrolledLesson {
   relatedLabs?: string[];
   relatedGames?: string[];
   contextualContent?: ContextualContent;
-  resources?: string[];
+  resources?: Resource[]; // Updated to use new Resource structure
+  outcomes?: ContentOutcome[]; // Add outcomes for labs and games
+  instructions?: string; // Add instructions for labs and games
 }
 
 export interface QuizQuestion {
@@ -174,6 +176,9 @@ export interface Lab {
   category: string;
   estimatedTime: string;
   skillsGained: string[];
+  outcomes?: ContentOutcome[]; // Add outcomes for labs
+  resources?: Resource[]; // Add structured resources
+  instructions?: string; // Add instructions
 }
 
 export interface Game {
@@ -191,17 +196,32 @@ export interface Game {
   category: string;
   skillsGained: string[];
   challenges: GameChallenge[];
+  outcomes?: ContentOutcome[]; // Add outcomes for games
+  resources?: Resource[]; // Add structured resources
+  instructions?: string; // Add instructions
 }
 
 export interface Resource {
   name: string;
-  type: string;
-  size: string;
-  category?: "reference" | "template" | "tool" | "guide" | "exercise";
+  type: "url" | "file" | "document" | "tool" | "reference" | "video" | "download";
+  url?: string;
   description?: string;
+  size?: string;
+  category?: "essential" | "supplementary" | "advanced";
+  icon?: string;
+  downloadable?: boolean;
+  // Legacy fields for backwards compatibility
   downloadUrl?: string;
   isContextual?: boolean;
   relatedTopics?: string[];
+}
+
+export interface ContentOutcome {
+  title: string;
+  description: string;
+  skills: string[];
+  category?: "primary" | "secondary";
+  difficulty?: "beginner" | "intermediate" | "advanced";
 }
 
 export interface Playground {

@@ -1,7 +1,17 @@
 import { TabsContent } from "@/components/ui/tabs";
+import type { ContentOutcome, Resource } from "@/lib/types";
 import { SerializedError } from "@reduxjs/toolkit";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
-import { Gamepad2 } from "lucide-react";
+import {
+  BookOpen,
+  Download,
+  ExternalLink,
+  FileText,
+  Gamepad2,
+  PenTool,
+  Trophy,
+  Video,
+} from "lucide-react";
 
 interface GamesTabProps {
   moduleOverview?: {
@@ -12,6 +22,8 @@ interface GamesTabProps {
       description: string;
       section: string;
       duration: string;
+      resources?: Resource[];
+      outcomes?: ContentOutcome[];
     }>;
   };
   isLoadingOverview?: boolean;
@@ -27,6 +39,31 @@ type GameContentItem = {
   description: string;
   section: string;
   duration: string;
+  resources?: Resource[];
+  outcomes?: ContentOutcome[];
+  instructions?: string;
+};
+
+// Helper function to get icon for resource type
+const getResourceIcon = (type: Resource["type"]) => {
+  switch (type) {
+    case "url":
+      return <ExternalLink className="w-4 h-4" />;
+    case "file":
+      return <FileText className="w-4 h-4" />;
+    case "document":
+      return <FileText className="w-4 h-4" />;
+    case "tool":
+      return <PenTool className="w-4 h-4" />;
+    case "reference":
+      return <BookOpen className="w-4 h-4" />;
+    case "video":
+      return <Video className="w-4 h-4" />;
+    case "download":
+      return <Download className="w-4 h-4" />;
+    default:
+      return <FileText className="w-4 h-4" />;
+  }
 };
 
 const GamesTab = ({
@@ -110,21 +147,93 @@ const GamesTab = ({
 
                     {/* Game Preview Information */}
                     <div className="space-y-4">
-                      {/* Game Features & Skills */}
-                      <div className="bg-red-400/5 border border-red-400/20 rounded-lg p-4">
-                        <h5 className="text-red-400 font-mono text-sm font-bold mb-3 flex items-center">
-                          <Gamepad2 className="w-4 h-4 mr-2" />
-                          GAME_FEATURES & SKILLS
-                        </h5>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-red-300/80">
-                          <div>• Interactive gameplay</div>
-                          <div>• Real-time scoring</div>
-                          <div>• Progress tracking</div>
-                          <div>• Skill validation</div>
-                          <div>• Competitive challenges</div>
-                          <div>• Scenario-based learning</div>
+                      {/* Learning Outcomes */}
+                      {game.outcomes && game.outcomes.length > 0 && (
+                        <div className="bg-purple-400/5 border border-purple-400/20 rounded-lg p-4">
+                          <h5 className="text-purple-400 font-mono text-sm font-bold mb-3 flex items-center">
+                            <Trophy className="w-4 h-4 mr-2" />
+                            ACHIEVEMENT_OUTCOMES
+                          </h5>
+                          <div className="space-y-3">
+                            {game.outcomes.map((outcome, outcomeIndex) => (
+                              <div
+                                key={outcomeIndex}
+                                className="bg-purple-400/5 border border-purple-400/10 rounded p-3"
+                              >
+                                <div className="text-purple-300 font-semibold text-sm mb-1">
+                                  🏆 {outcome.title}
+                                </div>
+                                <div className="text-purple-300/80 text-xs mb-2">
+                                  {outcome.description}
+                                </div>
+                                {outcome.skills &&
+                                  outcome.skills.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {outcome.skills.map(
+                                        (skill, skillIndex) => (
+                                          <span
+                                            key={skillIndex}
+                                            className="px-2 py-1 bg-purple-400/20 border border-purple-400/30 rounded text-xs text-purple-400 font-mono"
+                                          >
+                                            +
+                                            {skill
+                                              .toLowerCase()
+                                              .replace(/\s+/g, "_")}
+                                          </span>
+                                        )
+                                      )}
+                                    </div>
+                                  )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
+
+                      {/* Game Resources */}
+                      {game.resources && game.resources.length > 0 && (
+                        <div className="bg-red-400/5 border border-red-400/20 rounded-lg p-4">
+                          <h5 className="text-red-400 font-mono text-sm font-bold mb-3 flex items-center">
+                            <BookOpen className="w-4 h-4 mr-2" />
+                            GAME_POWER-UPS
+                          </h5>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {game.resources.map((resource, resourceIndex) => (
+                              <div
+                                key={resourceIndex}
+                                className="flex items-center space-x-2 p-2 bg-red-400/5 border border-red-400/10 rounded hover:bg-red-400/10 transition-colors duration-200"
+                              >
+                                <div className="text-red-400 flex-shrink-0">
+                                  {getResourceIcon(resource.type)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-red-300 text-sm font-medium truncate">
+                                    🎮 {resource.name}
+                                  </div>
+                                  {resource.description && (
+                                    <div className="text-red-300/60 text-xs truncate">
+                                      {resource.description}
+                                    </div>
+                                  )}
+                                </div>
+                                {resource.category && (
+                                  <div
+                                    className={`px-2 py-1 rounded text-xs font-mono ${
+                                      resource.category === "essential"
+                                        ? "bg-red-400/20 text-red-400 border border-red-400/30"
+                                        : resource.category === "advanced"
+                                        ? "bg-orange-400/20 text-orange-400 border border-orange-400/30"
+                                        : "bg-yellow-400/20 text-yellow-400 border border-yellow-400/30"
+                                    }`}
+                                  >
+                                    {resource.category.toUpperCase()}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Game Details */}
                       <div className="grid grid-cols-2 gap-3">

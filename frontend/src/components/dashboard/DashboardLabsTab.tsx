@@ -1,7 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
-import { Phase } from "@/lib/types";
-import { Beaker, Target, Zap } from "lucide-react";
+import { Phase, Resource, ContentOutcome } from "@/lib/types";
+import {
+  Beaker,
+  Target,
+  Zap,
+  ExternalLink,
+  Download,
+  FileText,
+  PenTool,
+  BookOpen,
+  Video,
+  Trophy,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface DashboardLabsTabProps {
@@ -35,7 +46,31 @@ interface LabItem {
   score?: number;
   maxScore?: number;
   instructions?: string;
+  resources?: Resource[];
+  outcomes?: ContentOutcome[];
 }
+
+// Helper function to get icon for resource type
+const getResourceIcon = (type: Resource["type"]) => {
+  switch (type) {
+    case "url":
+      return <ExternalLink className="w-3 h-3" />;
+    case "file":
+      return <FileText className="w-3 h-3" />;
+    case "document":
+      return <FileText className="w-3 h-3" />;
+    case "tool":
+      return <PenTool className="w-3 h-3" />;
+    case "reference":
+      return <BookOpen className="w-3 h-3" />;
+    case "video":
+      return <Video className="w-3 h-3" />;
+    case "download":
+      return <Download className="w-3 h-3" />;
+    default:
+      return <FileText className="w-3 h-3" />;
+  }
+};
 
 export const DashboardLabsTab = ({
   labsData,
@@ -171,31 +206,79 @@ export const DashboardLabsTab = ({
 
                   {/* Lab Preview Information */}
                   <div className="space-y-4">
-                    {/* Skills & Learning Objectives */}
-                    <div className="bg-green-400/5 border border-green-400/20 rounded-lg p-4">
-                      <h5 className="text-green-400 font-mono text-sm font-bold mb-3 flex items-center">
-                        <Target className="w-4 h-4 mr-2" />
-                        SKILLS_YOU'LL_LEARN
-                      </h5>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-green-300/80">
-                        {lab.skills && lab.skills.length > 0 ? (
-                          lab.skills
-                            .slice(0, 6)
-                            .map((skill, skillIndex) => (
-                              <div key={skillIndex}>• {skill}</div>
-                            ))
-                        ) : (
-                          <>
-                            <div>• Hands-on cybersecurity</div>
-                            <div>• Penetration testing</div>
-                            <div>• Vulnerability assessment</div>
-                            <div>• Security analysis</div>
-                            <div>• Real-world scenarios</div>
-                            <div>• Tool mastery</div>
-                          </>
-                        )}
+                    {/* Learning Outcomes or Skills */}
+                    {lab.outcomes && lab.outcomes.length > 0 && (
+                      <div className="bg-blue-400/5 border border-blue-400/20 rounded-lg p-4">
+                        <h5 className="text-blue-400 font-mono text-sm font-bold mb-3 flex items-center">
+                          <Trophy className="w-4 h-4 mr-2" />
+                          LAB_OBJECTIVES
+                        </h5>
+                        <div className="space-y-2">
+                          {lab.outcomes
+                            .slice(0, 2)
+                            .map((outcome, outcomeIndex) => (
+                              <div
+                                key={outcomeIndex}
+                                className="bg-blue-400/5 border border-blue-400/10 rounded p-2"
+                              >
+                                <div className="text-blue-300 font-medium text-xs mb-1">
+                                  🎯 {outcome.title}
+                                </div>
+                                {outcome.skills &&
+                                  outcome.skills.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {outcome.skills
+                                        .slice(0, 4)
+                                        .map((skill, skillIndex) => (
+                                          <span
+                                            key={skillIndex}
+                                            className="px-2 py-1 bg-blue-400/15 rounded text-xs text-blue-400 font-mono"
+                                          >
+                                            #
+                                            {skill
+                                              .toLowerCase()
+                                              .replace(/\s+/g, "_")}
+                                          </span>
+                                        ))}
+                                    </div>
+                                  )}
+                              </div>
+                            ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Lab Resources */}
+                    {lab.resources && lab.resources.length > 0 && (
+                      <div className="bg-green-400/5 border border-green-400/20 rounded-lg p-3">
+                        <h5 className="text-green-400 font-mono text-xs font-bold mb-2 flex items-center">
+                          <BookOpen className="w-3 h-3 mr-1" />
+                          LAB_TOOLKIT
+                        </h5>
+                        <div className="flex flex-wrap gap-1">
+                          {lab.resources
+                            .slice(0, 4)
+                            .map((resource, resourceIndex) => (
+                              <div
+                                key={resourceIndex}
+                                className="flex items-center space-x-1 px-2 py-1 bg-green-400/10 border border-green-400/20 rounded text-xs"
+                              >
+                                <div className="text-green-400">
+                                  {getResourceIcon(resource.type)}
+                                </div>
+                                <span className="text-green-300 font-mono">
+                                  {resource.name}
+                                </span>
+                              </div>
+                            ))}
+                          {lab.resources.length > 4 && (
+                            <div className="px-2 py-1 bg-green-400/5 border border-green-400/10 rounded text-xs text-green-400 font-mono">
+                              +{lab.resources.length - 4} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Lab Details */}
                     <div className="grid grid-cols-2 gap-3">

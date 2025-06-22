@@ -376,26 +376,279 @@ const ContentFormModal = ({
               </div>
             </div>
 
-            {/* Resources Input */}
-            <div className="space-y-2">
+            {/* Structured Resources Section */}
+            <div className="space-y-4">
               <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                ▶ Resources (URLs or file paths)
+                ▶ 📚 Resources
               </label>
-              <textarea
-                value={formData.resources.join("\n")}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    resources: e.target.value
-                      .split("\n")
-                      .filter((line) => line.trim() !== ""),
-                  }))
-                }
-                className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50 resize-none"
-                rows="3"
-                placeholder="Enter each resource URL or file path on a new line"
-              />
+              
+              {/* Resources List */}
+              <div className="space-y-3">
+                {formData.resources.map((resource, index) => (
+                  <div key={index} className="bg-gray-800/40 border border-green-400/20 rounded-lg p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-green-400 mb-1">Name *</label>
+                        <input
+                          type="text"
+                          value={resource.name || ""}
+                          onChange={(e) => {
+                            const newResources = [...formData.resources];
+                            newResources[index] = { ...resource, name: e.target.value };
+                            setFormData(prev => ({ ...prev, resources: newResources }));
+                          }}
+                          className="w-full px-3 py-2 bg-gray-700/50 border border-green-400/20 rounded text-green-400 text-sm"
+                          placeholder="Resource name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-green-400 mb-1">Type *</label>
+                        <select
+                          value={resource.type || "url"}
+                          onChange={(e) => {
+                            const newResources = [...formData.resources];
+                            newResources[index] = { ...resource, type: e.target.value };
+                            setFormData(prev => ({ ...prev, resources: newResources }));
+                          }}
+                          className="w-full px-3 py-2 bg-gray-700/50 border border-green-400/20 rounded text-green-400 text-sm"
+                        >
+                          <option value="url">🔗 URL</option>
+                          <option value="file">📄 File</option>
+                          <option value="document">📋 Document</option>
+                          <option value="tool">🔧 Tool</option>
+                          <option value="reference">📖 Reference</option>
+                          <option value="video">🎥 Video</option>
+                          <option value="download">⬇️ Download</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-green-400 mb-1">URL</label>
+                        <input
+                          type="url"
+                          value={resource.url || ""}
+                          onChange={(e) => {
+                            const newResources = [...formData.resources];
+                            newResources[index] = { ...resource, url: e.target.value };
+                            setFormData(prev => ({ ...prev, resources: newResources }));
+                          }}
+                          className="w-full px-3 py-2 bg-gray-700/50 border border-green-400/20 rounded text-green-400 text-sm"
+                          placeholder="https://example.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-green-400 mb-1">Category</label>
+                        <select
+                          value={resource.category || "supplementary"}
+                          onChange={(e) => {
+                            const newResources = [...formData.resources];
+                            newResources[index] = { ...resource, category: e.target.value };
+                            setFormData(prev => ({ ...prev, resources: newResources }));
+                          }}
+                          className="w-full px-3 py-2 bg-gray-700/50 border border-green-400/20 rounded text-green-400 text-sm"
+                        >
+                          <option value="essential">🔴 Essential</option>
+                          <option value="supplementary">🟡 Supplementary</option>
+                          <option value="advanced">🟠 Advanced</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-medium text-green-400 mb-1">Description</label>
+                        <input
+                          type="text"
+                          value={resource.description || ""}
+                          onChange={(e) => {
+                            const newResources = [...formData.resources];
+                            newResources[index] = { ...resource, description: e.target.value };
+                            setFormData(prev => ({ ...prev, resources: newResources }));
+                          }}
+                          className="w-full px-3 py-2 bg-gray-700/50 border border-green-400/20 rounded text-green-400 text-sm"
+                          placeholder="Brief description of the resource"
+                        />
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={resource.downloadable || false}
+                            onChange={(e) => {
+                              const newResources = [...formData.resources];
+                              newResources[index] = { ...resource, downloadable: e.target.checked };
+                              setFormData(prev => ({ ...prev, resources: newResources }));
+                            }}
+                            className="rounded bg-gray-700 border-green-400/30 text-green-400"
+                          />
+                          <span className="text-green-400 text-xs">📥 Downloadable</span>
+                        </label>
+                      </div>
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newResources = formData.resources.filter((_, i) => i !== index);
+                            setFormData(prev => ({ ...prev, resources: newResources }));
+                          }}
+                          className="px-3 py-1 bg-red-600/20 border border-red-400/30 rounded text-red-400 text-xs hover:bg-red-600/30"
+                        >
+                          🗑️ Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Add Resource Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newResource = {
+                      name: "",
+                      type: "url",
+                      url: "",
+                      description: "",
+                      category: "supplementary",
+                      downloadable: false
+                    };
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      resources: [...prev.resources, newResource] 
+                    }));
+                  }}
+                  className="w-full py-3 border-2 border-dashed border-green-400/30 rounded-lg text-green-400 hover:border-green-400/50 hover:bg-green-400/5 transition-all duration-300 font-mono text-sm"
+                >
+                  ➕ Add Resource
+                </button>
+              </div>
             </div>
+
+            {/* Outcomes Section (for labs and games) */}
+            {(formData.type === "lab" || formData.type === "game") && (
+              <div className="space-y-4">
+                <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                  ▶ 🎯 Learning Outcomes *
+                </label>
+                
+                {/* Outcomes List */}
+                <div className="space-y-3">
+                  {formData.outcomes.map((outcome, index) => (
+                    <div key={index} className="bg-blue-900/20 border border-blue-400/20 rounded-lg p-4">
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-blue-400 mb-1">Title *</label>
+                          <input
+                            type="text"
+                            value={outcome.title || ""}
+                            onChange={(e) => {
+                              const newOutcomes = [...formData.outcomes];
+                              newOutcomes[index] = { ...outcome, title: e.target.value };
+                              setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                            }}
+                            className="w-full px-3 py-2 bg-gray-700/50 border border-blue-400/20 rounded text-blue-400 text-sm"
+                            placeholder="What will students learn?"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-blue-400 mb-1">Description *</label>
+                          <textarea
+                            value={outcome.description || ""}
+                            onChange={(e) => {
+                              const newOutcomes = [...formData.outcomes];
+                              newOutcomes[index] = { ...outcome, description: e.target.value };
+                              setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                            }}
+                            className="w-full px-3 py-2 bg-gray-700/50 border border-blue-400/20 rounded text-blue-400 text-sm resize-none"
+                            rows="2"
+                            placeholder="Detailed description of the learning outcome"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-blue-400 mb-1">Skills (comma-separated)</label>
+                          <input
+                            type="text"
+                            value={outcome.skills ? outcome.skills.join(", ") : ""}
+                            onChange={(e) => {
+                              const newOutcomes = [...formData.outcomes];
+                              newOutcomes[index] = { 
+                                ...outcome, 
+                                skills: e.target.value.split(",").map(s => s.trim()).filter(Boolean)
+                              };
+                              setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                            }}
+                            className="w-full px-3 py-2 bg-gray-700/50 border border-blue-400/20 rounded text-blue-400 text-sm"
+                            placeholder="penetration testing, vulnerability assessment, etc."
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-medium text-blue-400 mb-1">Category</label>
+                            <select
+                              value={outcome.category || "primary"}
+                              onChange={(e) => {
+                                const newOutcomes = [...formData.outcomes];
+                                newOutcomes[index] = { ...outcome, category: e.target.value };
+                                setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                              }}
+                              className="w-full px-3 py-2 bg-gray-700/50 border border-blue-400/20 rounded text-blue-400 text-sm"
+                            >
+                              <option value="primary">🎯 Primary</option>
+                              <option value="secondary">📚 Secondary</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-blue-400 mb-1">Difficulty</label>
+                            <select
+                              value={outcome.difficulty || "beginner"}
+                              onChange={(e) => {
+                                const newOutcomes = [...formData.outcomes];
+                                newOutcomes[index] = { ...outcome, difficulty: e.target.value };
+                                setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                              }}
+                              className="w-full px-3 py-2 bg-gray-700/50 border border-blue-400/20 rounded text-blue-400 text-sm"
+                            >
+                              <option value="beginner">🟢 Beginner</option>
+                              <option value="intermediate">🟡 Intermediate</option>
+                              <option value="advanced">🔴 Advanced</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newOutcomes = formData.outcomes.filter((_, i) => i !== index);
+                              setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                            }}
+                            className="px-3 py-1 bg-red-600/20 border border-red-400/30 rounded text-red-400 text-xs hover:bg-red-600/30"
+                          >
+                            🗑️ Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Add Outcome Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newOutcome = {
+                        title: "",
+                        description: "",
+                        skills: [],
+                        category: "primary",
+                        difficulty: "beginner"
+                      };
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        outcomes: [...prev.outcomes, newOutcome] 
+                      }));
+                    }}
+                    className="w-full py-3 border-2 border-dashed border-blue-400/30 rounded-lg text-blue-400 hover:border-blue-400/50 hover:bg-blue-400/5 transition-all duration-300 font-mono text-sm"
+                  >
+                    🎯 Add Learning Outcome
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Enhanced Metadata Section */}
             <div className="border-t border-green-400/30 pt-6 mt-6">

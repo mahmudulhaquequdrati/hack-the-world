@@ -447,6 +447,23 @@ export const apiSlice = createApi({
           description: string;
           section: string;
           duration: string;
+          resources?: Array<{
+            name: string;
+            type: "url" | "file" | "document" | "tool" | "reference" | "video" | "download";
+            url?: string;
+            description?: string;
+            size?: string;
+            category?: "essential" | "supplementary" | "advanced";
+            icon?: string;
+            downloadable?: boolean;
+          }>;
+          outcomes?: Array<{
+            title: string;
+            description: string;
+            skills: string[];
+            category?: "primary" | "secondary";
+            difficulty?: "beginner" | "intermediate" | "advanced";
+          }>;
         }>;
       },
       string
@@ -463,6 +480,23 @@ export const apiSlice = createApi({
             description: string;
             section: string;
             duration: string;
+            resources?: Array<{
+              name: string;
+              type: "url" | "file" | "document" | "tool" | "reference" | "video" | "download";
+              url?: string;
+              description?: string;
+              size?: string;
+              category?: "essential" | "supplementary" | "advanced";
+              icon?: string;
+              downloadable?: boolean;
+            }>;
+            outcomes?: Array<{
+              title: string;
+              description: string;
+              skills: string[];
+              category?: "primary" | "secondary";
+              difficulty?: "beginner" | "intermediate" | "advanced";
+            }>;
           }>;
         };
       }) => response.data,
@@ -516,7 +550,23 @@ export const apiSlice = createApi({
             instructions?: string;
             duration?: number;
             section: string;
-            resources?: Array<string>;
+            resources?: Array<{
+              name: string;
+              type: "url" | "file" | "document" | "tool" | "reference" | "video" | "download";
+              url?: string;
+              description?: string;
+              size?: string;
+              category?: "essential" | "supplementary" | "advanced";
+              icon?: string;
+              downloadable?: boolean;
+            }>;
+            outcomes?: Array<{
+              title: string;
+              description: string;
+              skills: string[];
+              category?: "primary" | "secondary";
+              difficulty?: "beginner" | "intermediate" | "advanced";
+            }>;
           };
           module: {
             _id: string;

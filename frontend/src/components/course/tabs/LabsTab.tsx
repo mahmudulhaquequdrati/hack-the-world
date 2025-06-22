@@ -1,7 +1,16 @@
 import { TabsContent } from "@/components/ui/tabs";
+import type { ContentOutcome, Resource } from "@/lib/types";
 import { SerializedError } from "@reduxjs/toolkit";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
-import { Target } from "lucide-react";
+import {
+  BookOpen,
+  Download,
+  ExternalLink,
+  FileText,
+  PenTool,
+  Target,
+  Video,
+} from "lucide-react";
 
 interface LabsTabProps {
   moduleOverview?: {
@@ -12,6 +21,8 @@ interface LabsTabProps {
       description: string;
       section: string;
       duration: string;
+      resources?: Resource[];
+      outcomes?: ContentOutcome[];
     }>;
   };
   isLoadingOverview?: boolean;
@@ -27,6 +38,31 @@ type LabContentItem = {
   description: string;
   section: string;
   duration: string;
+  resources?: Resource[];
+  outcomes?: ContentOutcome[];
+  instructions?: string;
+};
+
+// Helper function to get icon for resource type
+const getResourceIcon = (type: Resource["type"]) => {
+  switch (type) {
+    case "url":
+      return <ExternalLink className="w-4 h-4" />;
+    case "file":
+      return <FileText className="w-4 h-4" />;
+    case "document":
+      return <FileText className="w-4 h-4" />;
+    case "tool":
+      return <PenTool className="w-4 h-4" />;
+    case "reference":
+      return <BookOpen className="w-4 h-4" />;
+    case "video":
+      return <Video className="w-4 h-4" />;
+    case "download":
+      return <Download className="w-4 h-4" />;
+    default:
+      return <FileText className="w-4 h-4" />;
+  }
 };
 
 const LabsTab = ({
@@ -116,21 +152,93 @@ const LabsTab = ({
 
                     {/* Lab Preview Information */}
                     <div className="space-y-4">
-                      {/* Skills & Learning Objectives */}
-                      <div className="bg-green-400/5 border border-green-400/20 rounded-lg p-4">
-                        <h5 className="text-green-400 font-mono text-sm font-bold mb-3 flex items-center">
-                          <Target className="w-4 h-4 mr-2" />
-                          SKILLS_YOU'LL_LEARN
-                        </h5>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-green-300/80">
-                          <div>• Hands-on cybersecurity</div>
-                          <div>• Penetration testing</div>
-                          <div>• Vulnerability assessment</div>
-                          <div>• Security analysis</div>
-                          <div>• Real-world scenarios</div>
-                          <div>• Tool mastery</div>
+                      {/* Learning Outcomes */}
+                      {lab.outcomes && lab.outcomes.length > 0 && (
+                        <div className="bg-blue-400/5 border border-blue-400/20 rounded-lg p-4">
+                          <h5 className="text-blue-400 font-mono text-sm font-bold mb-3 flex items-center">
+                            <Target className="w-4 h-4 mr-2" />
+                            LEARNING_OUTCOMES
+                          </h5>
+                          <div className="space-y-3">
+                            {lab.outcomes.map((outcome, outcomeIndex) => (
+                              <div
+                                key={outcomeIndex}
+                                className="bg-blue-400/5 border border-blue-400/10 rounded p-3"
+                              >
+                                <div className="text-blue-300 font-semibold text-sm mb-1">
+                                  {outcome.title}
+                                </div>
+                                <div className="text-blue-300/80 text-xs mb-2">
+                                  {outcome.description}
+                                </div>
+                                {outcome.skills &&
+                                  outcome.skills.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {outcome.skills.map(
+                                        (skill, skillIndex) => (
+                                          <span
+                                            key={skillIndex}
+                                            className="px-2 py-1 bg-blue-400/20 border border-blue-400/30 rounded text-xs text-blue-400 font-mono"
+                                          >
+                                            #
+                                            {skill
+                                              .toLowerCase()
+                                              .replace(/\s+/g, "_")}
+                                          </span>
+                                        )
+                                      )}
+                                    </div>
+                                  )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
+
+                      {/* Resources */}
+                      {lab.resources && lab.resources.length > 0 && (
+                        <div className="bg-green-400/5 border border-green-400/20 rounded-lg p-4">
+                          <h5 className="text-green-400 font-mono text-sm font-bold mb-3 flex items-center">
+                            <BookOpen className="w-4 h-4 mr-2" />
+                            LAB_RESOURCES
+                          </h5>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {lab.resources.map((resource, resourceIndex) => (
+                              <div
+                                key={resourceIndex}
+                                className="flex items-center space-x-2 p-2 bg-green-400/5 border border-green-400/10 rounded hover:bg-green-400/10 transition-colors duration-200"
+                              >
+                                <div className="text-green-400 flex-shrink-0">
+                                  {getResourceIcon(resource.type)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-green-300 text-sm font-medium truncate">
+                                    {resource.name}
+                                  </div>
+                                  {resource.description && (
+                                    <div className="text-green-300/60 text-xs truncate">
+                                      {resource.description}
+                                    </div>
+                                  )}
+                                </div>
+                                {resource.category && (
+                                  <div
+                                    className={`px-2 py-1 rounded text-xs font-mono ${
+                                      resource.category === "essential"
+                                        ? "bg-red-400/20 text-red-400 border border-red-400/30"
+                                        : resource.category === "advanced"
+                                        ? "bg-orange-400/20 text-orange-400 border border-orange-400/30"
+                                        : "bg-yellow-400/20 text-yellow-400 border border-yellow-400/30"
+                                    }`}
+                                  >
+                                    {resource.category.toUpperCase()}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Lab Details */}
                       <div className="grid grid-cols-2 gap-3">

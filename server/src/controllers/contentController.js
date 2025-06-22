@@ -295,6 +295,54 @@ const createContent = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("Module not found", 404));
   }
 
+  // Validate resources structure if provided
+  if (contentData.resources && Array.isArray(contentData.resources)) {
+    const invalidResources = contentData.resources.filter(
+      (resource) =>
+        !resource.name ||
+        !resource.type ||
+        !["url", "file", "document", "tool", "reference", "video", "download"].includes(
+          resource.type
+        )
+    );
+    if (invalidResources.length > 0) {
+      return next(
+        new ErrorResponse(
+          "Each resource must have a valid name and type (url, file, document, tool, reference, video, download)",
+          400
+        )
+      );
+    }
+  }
+
+  // Validate outcomes for labs and games
+  if (
+    (contentData.type === "lab" || contentData.type === "game") &&
+    (!contentData.outcomes || !Array.isArray(contentData.outcomes) || contentData.outcomes.length === 0)
+  ) {
+    return next(
+      new ErrorResponse("Labs and games must have at least one learning outcome", 400)
+    );
+  }
+
+  // Validate outcomes structure if provided
+  if (contentData.outcomes && Array.isArray(contentData.outcomes)) {
+    const invalidOutcomes = contentData.outcomes.filter(
+      (outcome) =>
+        !outcome.title ||
+        !outcome.description ||
+        !Array.isArray(outcome.skills)
+    );
+    if (invalidOutcomes.length > 0) {
+      return next(
+        new ErrorResponse(
+          "Each outcome must have a title, description, and skills array",
+          400
+        )
+      );
+    }
+  }
+
   // Auto-assign order if not provided
   if (!contentData.order && contentData.section) {
     // Find the highest order number in this module and section
@@ -349,6 +397,60 @@ const updateContent = asyncHandler(async (req, res, next) => {
     const module = await Module.findById(updateData.moduleId);
     if (!module) {
       return next(new ErrorResponse("Module not found", 404));
+    }
+  }
+
+  // Validate resources structure if provided
+  if (updateData.resources && Array.isArray(updateData.resources)) {
+    const invalidResources = updateData.resources.filter(
+      (resource) =>
+        !resource.name ||
+        !resource.type ||
+        !["url", "file", "document", "tool", "reference", "video", "download"].includes(
+          resource.type
+        )
+    );
+    if (invalidResources.length > 0) {
+      return next(
+        new ErrorResponse(
+          "Each resource must have a valid name and type (url, file, document, tool, reference, video, download)",
+          400
+        )
+      );
+    }
+  }
+
+  // Validate outcomes structure if provided
+  if (updateData.outcomes && Array.isArray(updateData.outcomes)) {
+    const invalidOutcomes = updateData.outcomes.filter(
+      (outcome) =>
+        !outcome.title ||
+        !outcome.description ||
+        !Array.isArray(outcome.skills)
+    );
+    if (invalidOutcomes.length > 0) {
+      return next(
+        new ErrorResponse(
+          "Each outcome must have a title, description, and skills array",
+          400
+        )
+      );
+    }
+  }
+
+  // If updating content type to lab or game, ensure outcomes exist
+  if (updateData.type && (updateData.type === "lab" || updateData.type === "game")) {
+    // Get current content to check existing outcomes
+    const currentContent = await Content.findById(id);
+    if (!currentContent) {
+      return next(new ErrorResponse("Content not found", 404));
+    }
+    
+    const finalOutcomes = updateData.outcomes || currentContent.outcomes;
+    if (!finalOutcomes || !Array.isArray(finalOutcomes) || finalOutcomes.length === 0) {
+      return next(
+        new ErrorResponse("Labs and games must have at least one learning outcome", 400)
+      );
     }
   }
 

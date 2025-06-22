@@ -1,7 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
-import { Phase } from "@/lib/types";
-import { Gamepad2 } from "lucide-react";
+import { ContentOutcome, Phase, Resource } from "@/lib/types";
+import {
+  BookOpen,
+  Crown,
+  Download,
+  ExternalLink,
+  FileText,
+  Gamepad2,
+  PenTool,
+  Video,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface DashboardGamesTabProps {
@@ -34,7 +43,31 @@ interface GameItem {
   progressPercentage: number;
   maxScore?: number;
   instructions?: string;
+  resources?: Resource[];
+  outcomes?: ContentOutcome[];
 }
+
+// Helper function to get icon for resource type
+const getResourceIcon = (type: Resource["type"]) => {
+  switch (type) {
+    case "url":
+      return <ExternalLink className="w-3 h-3" />;
+    case "file":
+      return <FileText className="w-3 h-3" />;
+    case "document":
+      return <FileText className="w-3 h-3" />;
+    case "tool":
+      return <PenTool className="w-3 h-3" />;
+    case "reference":
+      return <BookOpen className="w-3 h-3" />;
+    case "video":
+      return <Video className="w-3 h-3" />;
+    case "download":
+      return <Download className="w-3 h-3" />;
+    default:
+      return <FileText className="w-3 h-3" />;
+  }
+};
 
 export const DashboardGamesTab = ({
   gamesData,
@@ -170,21 +203,79 @@ export const DashboardGamesTab = ({
 
                   {/* Game Preview Information */}
                   <div className="space-y-4">
-                    {/* Game Features & Skills */}
-                    <div className="bg-red-400/5 border border-red-400/20 rounded-lg p-4">
-                      <h5 className="text-red-400 font-mono text-sm font-bold mb-3 flex items-center">
-                        <Gamepad2 className="w-4 h-4 mr-2" />
-                        GAME_FEATURES & SKILLS
-                      </h5>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-red-300/80">
-                        <div>• Interactive gameplay</div>
-                        <div>• Real-time scoring</div>
-                        <div>• Progress tracking</div>
-                        <div>• Skill validation</div>
-                        <div>• Competitive challenges</div>
-                        <div>• Scenario-based learning</div>
+                    {/* Achievement Outcomes or Generic Features */}
+                    {game.outcomes && game.outcomes.length > 0 && (
+                      <div className="bg-purple-400/5 border border-purple-400/20 rounded-lg p-4">
+                        <h5 className="text-purple-400 font-mono text-sm font-bold mb-3 flex items-center">
+                          <Crown className="w-4 h-4 mr-2" />
+                          UNLOCK_ACHIEVEMENTS
+                        </h5>
+                        <div className="space-y-2">
+                          {game.outcomes
+                            .slice(0, 2)
+                            .map((outcome, outcomeIndex) => (
+                              <div
+                                key={outcomeIndex}
+                                className="bg-purple-400/5 border border-purple-400/10 rounded p-2"
+                              >
+                                <div className="text-purple-300 font-medium text-xs mb-1">
+                                  🏆 {outcome.title}
+                                </div>
+                                {outcome.skills &&
+                                  outcome.skills.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {outcome.skills
+                                        .slice(0, 4)
+                                        .map((skill, skillIndex) => (
+                                          <span
+                                            key={skillIndex}
+                                            className="px-2 py-1 bg-purple-400/15 rounded text-xs text-purple-400 font-mono"
+                                          >
+                                            +
+                                            {skill
+                                              .toLowerCase()
+                                              .replace(/\s+/g, "_")}
+                                          </span>
+                                        ))}
+                                    </div>
+                                  )}
+                              </div>
+                            ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Game Power-ups/Resources */}
+                    {game.resources && game.resources.length > 0 && (
+                      <div className="bg-red-400/5 border border-red-400/20 rounded-lg p-3">
+                        <h5 className="text-red-400 font-mono text-xs font-bold mb-2 flex items-center">
+                          <BookOpen className="w-3 h-3 mr-1" />
+                          POWER-UPS
+                        </h5>
+                        <div className="flex flex-wrap gap-1">
+                          {game.resources
+                            .slice(0, 4)
+                            .map((resource, resourceIndex) => (
+                              <div
+                                key={resourceIndex}
+                                className="flex items-center space-x-1 px-2 py-1 bg-red-400/10 border border-red-400/20 rounded text-xs"
+                              >
+                                <div className="text-red-400">
+                                  {getResourceIcon(resource.type)}
+                                </div>
+                                <span className="text-red-300 font-mono">
+                                  🎮 {resource.name}
+                                </span>
+                              </div>
+                            ))}
+                          {game.resources.length > 4 && (
+                            <div className="px-2 py-1 bg-red-400/5 border border-red-400/10 rounded text-xs text-red-400 font-mono">
+                              +{game.resources.length - 4} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Game Details */}
                     <div className="grid grid-cols-2 gap-3">

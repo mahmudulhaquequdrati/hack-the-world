@@ -113,8 +113,59 @@ export const validateContentData = (content) => {
   }
 
   // Validate resources if present
-  if (content.resources && !Array.isArray(content.resources)) {
-    errors.push("Content resources must be an array");
+  if (content.resources) {
+    if (!Array.isArray(content.resources)) {
+      errors.push("Content resources must be an array");
+    } else {
+      content.resources.forEach((resource, index) => {
+        if (typeof resource === "string") {
+          // Legacy string format - still valid
+          return;
+        }
+        if (typeof resource !== "object" || resource === null) {
+          errors.push(`Resource at index ${index} must be an object`);
+          return;
+        }
+        if (!resource.name || typeof resource.name !== "string") {
+          errors.push(`Resource at index ${index} must have a valid name`);
+        }
+        if (!resource.type || !["url", "file", "document", "tool", "reference", "video", "download"].includes(resource.type)) {
+          errors.push(`Resource at index ${index} must have a valid type`);
+        }
+        if (resource.url && typeof resource.url !== "string") {
+          errors.push(`Resource at index ${index} URL must be a string`);
+        }
+      });
+    }
+  }
+
+  // Validate outcomes if present
+  if (content.outcomes) {
+    if (!Array.isArray(content.outcomes)) {
+      errors.push("Content outcomes must be an array");
+    } else {
+      content.outcomes.forEach((outcome, index) => {
+        if (typeof outcome !== "object" || outcome === null) {
+          errors.push(`Outcome at index ${index} must be an object`);
+          return;
+        }
+        if (!outcome.title || typeof outcome.title !== "string") {
+          errors.push(`Outcome at index ${index} must have a valid title`);
+        }
+        if (!outcome.description || typeof outcome.description !== "string") {
+          errors.push(`Outcome at index ${index} must have a valid description`);
+        }
+        if (!Array.isArray(outcome.skills)) {
+          errors.push(`Outcome at index ${index} skills must be an array`);
+        }
+      });
+    }
+  }
+
+  // Validate outcomes are required for labs and games
+  if ((content.type === "lab" || content.type === "game") && 
+      (!content.outcomes || !Array.isArray(content.outcomes) || content.outcomes.length === 0)) {
+    errors.push("Labs and games must have at least one learning outcome");
   }
 
   return {

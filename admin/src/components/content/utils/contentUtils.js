@@ -13,7 +13,8 @@ export const createContentData = (formData, sectionInputValue) => {
     ...formData,
     section: sectionInputValue || formData.section,
     // Ensure arrays are properly formatted
-    resources: ensureValidArray(formData.resources),
+    resources: ensureValidResourceArray(formData.resources),
+    outcomes: ensureValidOutcomeArray(formData.outcomes),
     tags: ensureValidArray(formData.tags),
     prerequisites: ensureValidArray(formData.prerequisites),
     learningObjectives: ensureValidArray(formData.learningObjectives),
@@ -43,6 +44,41 @@ export const createContentData = (formData, sectionInputValue) => {
 export const ensureValidArray = (value) => {
   if (!Array.isArray(value)) return [];
   return value.filter(item => item && typeof item === 'string' && item.trim());
+};
+
+/**
+ * Ensures resources is a valid array of resource objects
+ * @param {any} value - The value to check
+ * @returns {Array} - Valid resource array or empty array
+ */
+export const ensureValidResourceArray = (value) => {
+  if (!Array.isArray(value)) return [];
+  return value.filter(resource => 
+    resource && 
+    typeof resource === 'object' && 
+    resource.name && 
+    resource.type &&
+    typeof resource.name === 'string' &&
+    typeof resource.type === 'string'
+  );
+};
+
+/**
+ * Ensures outcomes is a valid array of outcome objects
+ * @param {any} value - The value to check
+ * @returns {Array} - Valid outcome array or empty array
+ */
+export const ensureValidOutcomeArray = (value) => {
+  if (!Array.isArray(value)) return [];
+  return value.filter(outcome => 
+    outcome && 
+    typeof outcome === 'object' && 
+    outcome.title && 
+    outcome.description &&
+    typeof outcome.title === 'string' &&
+    typeof outcome.description === 'string' &&
+    Array.isArray(outcome.skills)
+  );
 };
 
 /**
@@ -147,7 +183,8 @@ export const createDefaultFormData = () => ({
   url: "",
   instructions: "",
   duration: 1,
-  resources: [],
+  resources: [], // Now array of structured resource objects
+  outcomes: [], // New field for lab/game outcomes
   tags: [],
   difficulty: "beginner",
   prerequisites: [],
@@ -176,6 +213,7 @@ export const createDefaultFormData = () => ({
 export const populateFormFromContent = (contentItem) => ({
   ...contentItem,
   resources: contentItem.resources || [],
+  outcomes: contentItem.outcomes || [],
   tags: contentItem.tags || [],
   prerequisites: contentItem.prerequisites || [],
   learningObjectives: contentItem.learningObjectives || [],

@@ -87,18 +87,132 @@ const ContentSchema = new mongoose.Schema(
       default: {},
     },
 
-    // Resources array for additional learning materials
+    // Resources array for additional learning materials - structured type
     resources: {
-      type: [String],
+      type: [
+        {
+          name: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: [100, "Resource name cannot exceed 100 characters"],
+          },
+          type: {
+            type: String,
+            required: true,
+            enum: ["url", "file", "document", "tool", "reference", "video", "download"],
+            lowercase: true,
+          },
+          url: {
+            type: String,
+            trim: true,
+            validate: {
+              validator: function (v) {
+                if (!v) return true; // Optional field
+                return /^https?:\/\/.+/.test(v);
+              },
+              message: "URL must be a valid HTTP/HTTPS URL",
+            },
+          },
+          description: {
+            type: String,
+            trim: true,
+            maxlength: [500, "Resource description cannot exceed 500 characters"],
+          },
+          size: {
+            type: String,
+            trim: true,
+            maxlength: [20, "Resource size cannot exceed 20 characters"],
+          },
+          category: {
+            type: String,
+            enum: ["essential", "supplementary", "advanced"],
+            lowercase: true,
+            default: "supplementary",
+          },
+          icon: {
+            type: String,
+            trim: true,
+            maxlength: [50, "Resource icon cannot exceed 50 characters"],
+          },
+          downloadable: {
+            type: Boolean,
+            default: false,
+          },
+        },
+      ],
       default: [],
       validate: {
         validator: function (arr) {
-          // Each resource must be a valid URL or file path
+          // Each resource must have a valid name and type
           return arr.every(
-            (resource) => typeof resource === "string" && resource.length > 0
+            (resource) =>
+              resource.name &&
+              resource.name.trim().length > 0 &&
+              resource.type &&
+              ["url", "file", "document", "tool", "reference", "video", "download"].includes(
+                resource.type
+              )
           );
         },
-        message: "Each resource must be a non-empty string",
+        message: "Each resource must have a valid name and type",
+      },
+    },
+
+    // Learning outcomes for labs and games
+    outcomes: {
+      type: [
+        {
+          title: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: [150, "Outcome title cannot exceed 150 characters"],
+          },
+          description: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: [1000, "Outcome description cannot exceed 1000 characters"],
+          },
+          skills: {
+            type: [String],
+            default: [],
+            validate: {
+              validator: function (arr) {
+                return arr.every(
+                  (skill) => typeof skill === "string" && skill.trim().length > 0
+                );
+              },
+              message: "Each skill must be a non-empty string",
+            },
+          },
+          category: {
+            type: String,
+            enum: ["primary", "secondary"],
+            lowercase: true,
+            default: "primary",
+          },
+          difficulty: {
+            type: String,
+            enum: ["beginner", "intermediate", "advanced"],
+            lowercase: true,
+          },
+        },
+      ],
+      default: [],
+      required: function () {
+        return this.type === "lab" || this.type === "game";
+      },
+      validate: {
+        validator: function (arr) {
+          // Outcomes are required for labs and games, optional for others
+          if (this.type === "lab" || this.type === "game") {
+            return arr.length > 0;
+          }
+          return true;
+        },
+        message: "Labs and games must have at least one learning outcome",
       },
     },
 
@@ -166,9 +280,9 @@ ContentSchema.statics.getByModule = function (moduleId) {
 
 // Static method to get content by module and type
 ContentSchema.statics.getByModuleForOverview = async function (moduleId) {
-  // Get content for each section
+  // Get content for each section including resources and outcomes for labs/games
   const content = await this.find({ moduleId, isActive: true })
-    .select("title description type section duration")
+    .select("title description type section duration resources outcomes")
     .sort({ section: 1, order: 1, createdAt: 1 })
     .lean();
 

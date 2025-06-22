@@ -68,6 +68,91 @@ const createContentValidation = [
     .isObject()
     .withMessage("Metadata must be an object"),
 
+  // Resources validation (optional)
+  body("resources")
+    .optional()
+    .isArray()
+    .withMessage("Resources must be an array"),
+
+  body("resources.*.name")
+    .if(body("resources").exists())
+    .notEmpty()
+    .withMessage("Resource name is required")
+    .isLength({ max: 100 })
+    .withMessage("Resource name cannot exceed 100 characters"),
+
+  body("resources.*.type")
+    .if(body("resources").exists())
+    .isIn(["url", "file", "document", "tool", "reference", "video", "download"])
+    .withMessage("Resource type must be url, file, document, tool, reference, video, or download"),
+
+  body("resources.*.url")
+    .if(body("resources").exists())
+    .optional()
+    .isURL()
+    .withMessage("Resource URL must be a valid URL"),
+
+  body("resources.*.description")
+    .if(body("resources").exists())
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage("Resource description cannot exceed 500 characters"),
+
+  body("resources.*.category")
+    .if(body("resources").exists())
+    .optional()
+    .isIn(["essential", "supplementary", "advanced"])
+    .withMessage("Resource category must be essential, supplementary, or advanced"),
+
+  body("resources.*.downloadable")
+    .if(body("resources").exists())
+    .optional()
+    .isBoolean()
+    .withMessage("Resource downloadable must be a boolean"),
+
+  // Outcomes validation (required for labs and games)
+  body("outcomes")
+    .if(body("type").isIn(["lab", "game"]))
+    .isArray({ min: 1 })
+    .withMessage("Labs and games must have at least one learning outcome"),
+
+  body("outcomes")
+    .if(body("type").isIn(["video", "document"]))
+    .optional()
+    .isArray()
+    .withMessage("Outcomes must be an array"),
+
+  body("outcomes.*.title")
+    .if(body("outcomes").exists())
+    .notEmpty()
+    .withMessage("Outcome title is required")
+    .isLength({ max: 150 })
+    .withMessage("Outcome title cannot exceed 150 characters"),
+
+  body("outcomes.*.description")
+    .if(body("outcomes").exists())
+    .notEmpty()
+    .withMessage("Outcome description is required")
+    .isLength({ max: 1000 })
+    .withMessage("Outcome description cannot exceed 1000 characters"),
+
+  body("outcomes.*.skills")
+    .if(body("outcomes").exists())
+    .isArray()
+    .withMessage("Outcome skills must be an array"),
+
+  body("outcomes.*.category")
+    .if(body("outcomes").exists())
+    .optional()
+    .isIn(["primary", "secondary"])
+    .withMessage("Outcome category must be primary or secondary"),
+
+  body("outcomes.*.difficulty")
+    .if(body("outcomes").exists())
+    .optional()
+    .isIn(["beginner", "intermediate", "advanced"])
+    .withMessage("Outcome difficulty must be beginner, intermediate, or advanced"),
+
   // Active status validation (optional)
   body("isActive")
     .optional()
@@ -137,6 +222,84 @@ const updateContentValidation = [
     .optional()
     .isObject()
     .withMessage("Metadata must be an object"),
+
+  // Resources validation (optional for updates)
+  body("resources")
+    .optional()
+    .isArray()
+    .withMessage("Resources must be an array"),
+
+  body("resources.*.name")
+    .if(body("resources").exists())
+    .optional()
+    .isLength({ max: 100 })
+    .withMessage("Resource name cannot exceed 100 characters"),
+
+  body("resources.*.type")
+    .if(body("resources").exists())
+    .optional()
+    .isIn(["url", "file", "document", "tool", "reference", "video", "download"])
+    .withMessage("Resource type must be url, file, document, tool, reference, video, or download"),
+
+  body("resources.*.url")
+    .if(body("resources").exists())
+    .optional()
+    .isURL()
+    .withMessage("Resource URL must be a valid URL"),
+
+  body("resources.*.description")
+    .if(body("resources").exists())
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage("Resource description cannot exceed 500 characters"),
+
+  body("resources.*.category")
+    .if(body("resources").exists())
+    .optional()
+    .isIn(["essential", "supplementary", "advanced"])
+    .withMessage("Resource category must be essential, supplementary, or advanced"),
+
+  body("resources.*.downloadable")
+    .if(body("resources").exists())
+    .optional()
+    .isBoolean()
+    .withMessage("Resource downloadable must be a boolean"),
+
+  // Outcomes validation (optional for updates)
+  body("outcomes")
+    .optional()
+    .isArray()
+    .withMessage("Outcomes must be an array"),
+
+  body("outcomes.*.title")
+    .if(body("outcomes").exists())
+    .optional()
+    .isLength({ max: 150 })
+    .withMessage("Outcome title cannot exceed 150 characters"),
+
+  body("outcomes.*.description")
+    .if(body("outcomes").exists())
+    .optional()
+    .isLength({ max: 1000 })
+    .withMessage("Outcome description cannot exceed 1000 characters"),
+
+  body("outcomes.*.skills")
+    .if(body("outcomes").exists())
+    .optional()
+    .isArray()
+    .withMessage("Outcome skills must be an array"),
+
+  body("outcomes.*.category")
+    .if(body("outcomes").exists())
+    .optional()
+    .isIn(["primary", "secondary"])
+    .withMessage("Outcome category must be primary or secondary"),
+
+  body("outcomes.*.difficulty")
+    .if(body("outcomes").exists())
+    .optional()
+    .isIn(["beginner", "intermediate", "advanced"])
+    .withMessage("Outcome difficulty must be beginner, intermediate, or advanced"),
 
   // Active status validation (optional)
   body("isActive")

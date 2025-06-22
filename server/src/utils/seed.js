@@ -229,6 +229,29 @@ const CONTENT_DATA = [
       tags: ["introduction", "fundamentals", "overview"],
       thumbnail: "/images/cybersec-intro.jpg",
     },
+    resources: [
+      {
+        name: "NIST Cybersecurity Framework",
+        type: "document",
+        url: "https://www.nist.gov/cyberframework",
+        description: "Official NIST framework for cybersecurity risk management",
+        category: "essential"
+      },
+      {
+        name: "Cybersecurity Fundamentals Glossary",
+        type: "reference",
+        url: "https://example.com/glossary/cybersec-terms",
+        description: "Comprehensive glossary of cybersecurity terminology",
+        category: "supplementary"
+      },
+      {
+        name: "Cybersecurity Career Paths Guide",
+        type: "document",
+        url: "https://example.com/guides/career-paths",
+        description: "Overview of different cybersecurity career opportunities",
+        category: "supplementary"
+      }
+    ],
   },
   {
     moduleId: "foundations",
@@ -243,6 +266,29 @@ const CONTENT_DATA = [
       difficulty: "beginner",
       tags: ["cia-triad", "principles", "security"],
     },
+    resources: [
+      {
+        name: "CIA Triad Interactive Diagram",
+        type: "tool",
+        url: "https://example.com/tools/cia-diagram",
+        description: "Interactive visualization of CIA triad principles",
+        category: "essential"
+      },
+      {
+        name: "Real-World CIA Examples",
+        type: "document",
+        url: "https://example.com/examples/cia-cases",
+        description: "Case studies demonstrating CIA triad violations",
+        category: "supplementary"
+      },
+      {
+        name: "Security Controls Mapping Guide",
+        type: "reference",
+        url: "https://example.com/guides/security-controls",
+        description: "How security controls map to CIA principles",
+        category: "advanced"
+      }
+    ],
   },
   {
     moduleId: "foundations",
@@ -259,6 +305,73 @@ const CONTENT_DATA = [
       tools: ["password-checker", "hash-generator", "mfa-simulator"],
       objectives: ["password-creation", "strength-testing", "mfa-setup"],
     },
+    outcomes: [
+      {
+        title: "Master Password Security Fundamentals",
+        description: "Learn to create, manage, and secure strong passwords using industry best practices and understand common attack vectors",
+        skills: ["password creation", "security policies", "authentication methods", "attack prevention"],
+        category: "primary",
+        difficulty: "beginner"
+      },
+      {
+        title: "Implement Password Management Tools", 
+        description: "Hands-on experience with password managers, security auditing tools, and automated security workflows",
+        skills: ["password managers", "security tools", "automation", "security auditing"],
+        category: "secondary", 
+        difficulty: "intermediate"
+      },
+      {
+        title: "Apply Security Best Practices",
+        description: "Understand and implement organizational password policies and security standards",
+        skills: ["policy development", "compliance", "security standards", "risk assessment"],
+        category: "secondary",
+        difficulty: "intermediate"
+      }
+    ],
+    resources: [
+      {
+        name: "Password Strength Checker Tool",
+        type: "tool",
+        url: "https://example.com/tools/password-checker",
+        description: "Interactive tool to test password strength and complexity",
+        category: "essential"
+      },
+      {
+        name: "Bitwarden Password Manager",
+        type: "tool",
+        url: "https://bitwarden.com",
+        description: "Open-source password manager for secure password storage",
+        category: "essential"
+      },
+      {
+        name: "NIST Password Guidelines",
+        type: "document",
+        url: "https://pages.nist.gov/800-63-3/",
+        description: "Official NIST guidelines for digital identity and authentication",
+        category: "essential"
+      },
+      {
+        name: "Password Policy Template",
+        type: "document",
+        url: "https://example.com/templates/password-policy",
+        description: "Sample organizational password policy template",
+        category: "supplementary"
+      },
+      {
+        name: "Multi-Factor Authentication Guide",
+        type: "reference",
+        url: "https://example.com/guides/mfa-setup",
+        description: "Step-by-step guide for implementing MFA solutions",
+        category: "supplementary"
+      },
+      {
+        name: "Hash Algorithms Reference",
+        type: "reference",
+        url: "https://example.com/reference/hash-algorithms",
+        description: "Comprehensive reference of password hashing algorithms",
+        category: "advanced"
+      }
+    ],
   },
   {
     moduleId: "foundations",
@@ -275,6 +388,66 @@ const CONTENT_DATA = [
       levels: 5,
       gameType: "identification",
     },
+    outcomes: [
+      {
+        title: "Identify Phishing Attempts",
+        description: "Develop skills to recognize and analyze various types of phishing attacks and social engineering tactics",
+        skills: ["threat recognition", "email analysis", "social engineering detection", "cybersecurity awareness"],
+        category: "primary",
+        difficulty: "beginner"
+      },
+      {
+        title: "Analyze Attack Patterns",
+        description: "Learn to identify common attack patterns, suspicious indicators, and threat actor methodologies",
+        skills: ["pattern recognition", "threat analysis", "behavioral analysis", "incident response"],
+        category: "primary",
+        difficulty: "intermediate"
+      },
+      {
+        title: "Apply Defensive Strategies",
+        description: "Implement proactive defense measures and response protocols for phishing incidents",
+        skills: ["defense strategies", "incident response", "security protocols", "risk mitigation"],
+        category: "secondary",
+        difficulty: "intermediate"
+      }
+    ],
+    resources: [
+      {
+        name: "Phishing Email Simulator",
+        type: "tool",
+        url: "https://example.com/tools/phishing-simulator",
+        description: "Practice identifying phishing emails in a safe environment",
+        category: "essential"
+      },
+      {
+        name: "Anti-Phishing Working Group Database",
+        type: "reference",
+        url: "https://apwg.org",
+        description: "Latest phishing trends and threat intelligence",
+        category: "essential"
+      },
+      {
+        name: "Social Engineering Toolkit Guide",
+        type: "document",
+        url: "https://example.com/guides/social-engineering",
+        description: "Comprehensive guide to social engineering tactics",
+        category: "supplementary"
+      },
+      {
+        name: "URL Analysis Checklist",
+        type: "document",
+        url: "https://example.com/checklists/url-analysis",
+        description: "Step-by-step checklist for analyzing suspicious URLs",
+        category: "supplementary"
+      },
+      {
+        name: "Phishing Response Playbook",
+        type: "document",
+        url: "https://example.com/playbooks/phishing-response",
+        description: "Incident response procedures for phishing attacks",
+        category: "advanced"
+      }
+    ],
   },
 
   // Linux Command Line Basics (linux-basics)
@@ -290,6 +463,36 @@ const CONTENT_DATA = [
       difficulty: "beginner",
       tags: ["linux", "terminal", "navigation"],
     },
+    resources: [
+      {
+        name: "Linux Command Reference Sheet",
+        type: "reference",
+        url: "https://example.com/reference/linux-commands",
+        description: "Quick reference for essential Linux commands",
+        category: "essential"
+      },
+      {
+        name: "Terminal Emulator Setup Guide",
+        type: "document",
+        url: "https://example.com/guides/terminal-setup",
+        description: "How to set up and customize your terminal environment",
+        category: "supplementary"
+      },
+      {
+        name: "Linux File System Hierarchy",
+        type: "reference",
+        url: "https://example.com/reference/linux-filesystem",
+        description: "Understanding Linux directory structure and file hierarchy",
+        category: "supplementary"
+      },
+      {
+        name: "Shell Scripting Basics",
+        type: "document",
+        url: "https://example.com/guides/shell-scripting",
+        description: "Introduction to writing shell scripts",
+        category: "advanced"
+      }
+    ],
   },
   {
     moduleId: "linux-basics",
@@ -305,6 +508,59 @@ const CONTENT_DATA = [
       tools: ["terminal", "file-system"],
       commands: ["cd", "ls", "cp", "mv", "rm", "chmod", "find", "grep"],
     },
+    outcomes: [
+      {
+        title: "Master Linux File System Navigation",
+        description: "Efficiently navigate the Linux file system and understand directory structures, file paths, and location commands",
+        skills: ["file system navigation", "directory structures", "path resolution", "terminal proficiency"],
+        category: "primary",
+        difficulty: "beginner"
+      },
+      {
+        title: "Execute File Management Operations",
+        description: "Perform essential file operations including creation, modification, permissions, and file searches with confidence",
+        skills: ["file operations", "permission management", "file searching", "command line tools"],
+        category: "primary",
+        difficulty: "beginner"
+      }
+    ],
+    resources: [
+      {
+        name: "Linux File Operations Cheat Sheet",
+        type: "reference",
+        url: "https://example.com/reference/file-operations",
+        description: "Quick reference for file management commands",
+        category: "essential"
+      },
+      {
+        name: "File Permissions Calculator",
+        type: "tool",
+        url: "https://example.com/tools/chmod-calculator",
+        description: "Interactive tool to understand and calculate file permissions",
+        category: "essential"
+      },
+      {
+        name: "Linux Lab Practice Environment",
+        type: "tool",
+        url: "https://example.com/labs/linux-sandbox",
+        description: "Safe environment to practice Linux commands",
+        category: "essential"
+      },
+      {
+        name: "Advanced Find Command Guide",
+        type: "document",
+        url: "https://example.com/guides/find-command",
+        description: "Comprehensive guide to the find command and its options",
+        category: "supplementary"
+      },
+      {
+        name: "Regular Expressions for grep",
+        type: "reference",
+        url: "https://example.com/reference/regex-grep",
+        description: "Regular expression patterns for effective text searching",
+        category: "advanced"
+      }
+    ],
   },
   {
     moduleId: "linux-basics",
@@ -322,6 +578,52 @@ const CONTENT_DATA = [
       challenges: 10,
       gameType: "command-execution",
     },
+    outcomes: [
+      {
+        title: "Excel at Linux Command Execution",
+        description: "Demonstrate proficiency in executing Linux commands accurately and efficiently under time pressure",
+        skills: ["command execution", "terminal efficiency", "task completion", "time management"],
+        category: "primary",
+        difficulty: "beginner"
+      },
+      {
+        title: "Master Command Chaining and Redirection",
+        description: "Build expertise in advanced command techniques including pipes, redirects, and command combinations",
+        skills: ["command chaining", "pipes and redirects", "advanced syntax", "workflow optimization"],
+        category: "secondary",
+        difficulty: "intermediate"
+      }
+    ],
+    resources: [
+      {
+        name: "Linux Command Game Simulator",
+        type: "tool",
+        url: "https://example.com/games/linux-commands",
+        description: "Practice environment for command execution challenges",
+        category: "essential"
+      },
+      {
+        name: "Command Line Cheat Sheet",
+        type: "reference",
+        url: "https://example.com/reference/cli-cheatsheet",
+        description: "Quick reference for command syntax and options",
+        category: "essential"
+      },
+      {
+        name: "Pipes and Redirection Guide",
+        type: "document",
+        url: "https://example.com/guides/pipes-redirection",
+        description: "Comprehensive guide to command chaining techniques",
+        category: "supplementary"
+      },
+      {
+        name: "Hidden Files and Directories Guide",
+        type: "document",
+        url: "https://example.com/guides/hidden-files",
+        description: "Understanding and working with hidden filesystem elements",
+        category: "supplementary"
+      }
+    ],
   },
 
   // Networking Fundamentals (networking-basics)
@@ -338,6 +640,43 @@ const CONTENT_DATA = [
       difficulty: "beginner",
       tags: ["protocols", "tcp-ip", "http", "dns"],
     },
+    resources: [
+      {
+        name: "TCP/IP Protocol Stack Diagram",
+        type: "reference",
+        url: "https://example.com/diagrams/tcpip-stack",
+        description: "Visual representation of the TCP/IP protocol layers",
+        category: "essential"
+      },
+      {
+        name: "Protocol Analysis Tool",
+        type: "tool",
+        url: "https://example.com/tools/protocol-analyzer",
+        description: "Interactive tool to analyze network protocols",
+        category: "essential"
+      },
+      {
+        name: "RFC Documentation Portal",
+        type: "reference",
+        url: "https://www.rfc-editor.org",
+        description: "Official RFC documents for network protocols",
+        category: "supplementary"
+      },
+      {
+        name: "Network Troubleshooting Guide",
+        type: "document",
+        url: "https://example.com/guides/network-troubleshooting",
+        description: "Common network issues and resolution techniques",
+        category: "supplementary"
+      },
+      {
+        name: "Advanced Protocol Implementation",
+        type: "document",
+        url: "https://example.com/guides/protocol-implementation",
+        description: "Deep dive into protocol implementation details",
+        category: "advanced"
+      }
+    ],
   },
   {
     moduleId: "networking-basics",
@@ -353,6 +692,59 @@ const CONTENT_DATA = [
       tools: ["wireshark", "network-capture"],
       protocols: ["http", "https", "dns", "tcp", "udp"],
     },
+    outcomes: [
+      {
+        title: "Master Network Traffic Analysis",
+        description: "Develop proficiency in capturing, filtering, and analyzing network traffic using Wireshark to understand network communication patterns",
+        skills: ["traffic analysis", "packet inspection", "protocol analysis", "network forensics"],
+        category: "primary",
+        difficulty: "beginner"
+      },
+      {
+        title: "Identify Network Security Threats",
+        description: "Learn to detect suspicious network activity, analyze attack patterns, and understand network-based security incidents",
+        skills: ["threat detection", "anomaly analysis", "security monitoring", "incident identification"],
+        category: "secondary",
+        difficulty: "intermediate"
+      }
+    ],
+    resources: [
+      {
+        name: "Wireshark Installation Guide",
+        type: "document",
+        url: "https://www.wireshark.org/docs/",
+        description: "Official Wireshark documentation and installation instructions",
+        category: "essential"
+      },
+      {
+        name: "Wireshark Filter Reference",
+        type: "reference",
+        url: "https://example.com/reference/wireshark-filters",
+        description: "Comprehensive guide to Wireshark display and capture filters",
+        category: "essential"
+      },
+      {
+        name: "Sample PCAP Files",
+        type: "file",
+        url: "https://example.com/files/sample-pcaps",
+        description: "Collection of network capture files for practice analysis",
+        category: "essential"
+      },
+      {
+        name: "Network Protocol Analysis Worksheet",
+        type: "document",
+        url: "https://example.com/worksheets/protocol-analysis",
+        description: "Structured worksheet for documenting network analysis findings",
+        category: "supplementary"
+      },
+      {
+        name: "Advanced Wireshark Techniques",
+        type: "document",
+        url: "https://example.com/guides/advanced-wireshark",
+        description: "Advanced analysis techniques and custom protocol dissectors",
+        category: "advanced"
+      }
+    ],
   },
 
   // ===================================================================
@@ -373,6 +765,43 @@ const CONTENT_DATA = [
       difficulty: "intermediate",
       tags: ["methodology", "ethical-hacking", "pentest"],
     },
+    resources: [
+      {
+        name: "OWASP Testing Guide",
+        type: "document",
+        url: "https://owasp.org/www-project-web-security-testing-guide/",
+        description: "Comprehensive web application security testing methodology",
+        category: "essential"
+      },
+      {
+        name: "NIST SP 800-115",
+        type: "document",
+        url: "https://csrc.nist.gov/publications/detail/sp/800-115/final",
+        description: "Technical guide to information security testing and assessment",
+        category: "essential"
+      },
+      {
+        name: "Penetration Testing Execution Standard",
+        type: "reference",
+        url: "http://www.pentest-standard.org/",
+        description: "Standardized methodology for penetration testing",
+        category: "supplementary"
+      },
+      {
+        name: "Legal and Ethical Guidelines",
+        type: "document",
+        url: "https://example.com/guides/ethical-hacking-legal",
+        description: "Legal considerations and ethical guidelines for penetration testing",
+        category: "essential"
+      },
+      {
+        name: "Advanced Testing Frameworks",
+        type: "reference",
+        url: "https://example.com/reference/testing-frameworks",
+        description: "Overview of advanced penetration testing frameworks",
+        category: "advanced"
+      }
+    ],
   },
   {
     moduleId: "penetration-testing",
@@ -393,6 +822,66 @@ const CONTENT_DATA = [
         "stealth-scan",
       ],
     },
+    outcomes: [
+      {
+        title: "Master Network Reconnaissance Techniques",
+        description: "Develop expertise in systematic network discovery, host enumeration, and service identification using advanced Nmap techniques",
+        skills: ["network reconnaissance", "host discovery", "service enumeration", "stealth scanning"],
+        category: "primary",
+        difficulty: "intermediate"
+      },
+      {
+        title: "Analyze and Document Network Infrastructure",
+        description: "Learn to interpret scan results, identify potential vulnerabilities, and create comprehensive reconnaissance reports",
+        skills: ["result analysis", "vulnerability assessment", "report generation", "risk evaluation"],
+        category: "secondary",
+        difficulty: "intermediate"
+      }
+    ],
+    resources: [
+      {
+        name: "Nmap Official Documentation",
+        type: "document",
+        url: "https://nmap.org/docs.html",
+        description: "Comprehensive Nmap documentation and reference manual",
+        category: "essential"
+      },
+      {
+        name: "Nmap Cheat Sheet",
+        type: "reference",
+        url: "https://example.com/reference/nmap-cheatsheet",
+        description: "Quick reference for common Nmap commands and options",
+        category: "essential"
+      },
+      {
+        name: "Network Scanning Lab Environment",
+        type: "tool",
+        url: "https://example.com/labs/nmap-practice",
+        description: "Safe virtual environment for practicing network scanning",
+        category: "essential"
+      },
+      {
+        name: "Nmap Scripting Engine Guide",
+        type: "document",
+        url: "https://example.com/guides/nmap-scripts",
+        description: "Guide to using and creating Nmap scripts for advanced scanning",
+        category: "supplementary"
+      },
+      {
+        name: "Legal Scanning Guidelines",
+        type: "document",
+        url: "https://example.com/guides/legal-scanning",
+        description: "Legal considerations and best practices for network scanning",
+        category: "essential"
+      },
+      {
+        name: "Advanced Evasion Techniques",
+        type: "document",
+        url: "https://example.com/guides/scan-evasion",
+        description: "Advanced techniques for bypassing firewalls and detection systems",
+        category: "advanced"
+      }
+    ],
   },
   {
     moduleId: "penetration-testing",
@@ -410,6 +899,73 @@ const CONTENT_DATA = [
       vulnerabilities: ["sql-injection", "xss", "csrf", "insecure-auth"],
       gameType: "assessment-simulation",
     },
+    outcomes: [
+      {
+        title: "Master Vulnerability Identification",
+        description: "Develop expertise in systematically identifying, categorizing, and documenting security vulnerabilities across various attack vectors",
+        skills: ["vulnerability scanning", "threat identification", "security assessment", "OWASP methodology"],
+        category: "primary",
+        difficulty: "intermediate"
+      },
+      {
+        title: "Perform Comprehensive Risk Analysis",
+        description: "Learn to evaluate vulnerability impact, likelihood, and business risk to prioritize remediation efforts effectively",
+        skills: ["risk assessment", "impact analysis", "prioritization", "business context"],
+        category: "primary",
+        difficulty: "intermediate"
+      },
+      {
+        title: "Develop Remediation Strategies",
+        description: "Create actionable security recommendations and remediation plans that balance security needs with operational requirements",
+        skills: ["remediation planning", "security recommendations", "mitigation strategies", "implementation guidance"],
+        category: "secondary",
+        difficulty: "advanced"
+      }
+    ],
+    resources: [
+      {
+        name: "OWASP Top 10 Interactive Guide",
+        type: "tool",
+        url: "https://example.com/tools/owasp-top10",
+        description: "Interactive learning platform for OWASP Top 10 vulnerabilities",
+        category: "essential"
+      },
+      {
+        name: "Vulnerability Scanner Simulator",
+        type: "tool",
+        url: "https://example.com/tools/vuln-scanner",
+        description: "Virtual environment for practicing vulnerability assessment",
+        category: "essential"
+      },
+      {
+        name: "CVSS Calculator",
+        type: "tool",
+        url: "https://www.first.org/cvss/calculator/",
+        description: "Official Common Vulnerability Scoring System calculator",
+        category: "essential"
+      },
+      {
+        name: "Vulnerability Assessment Methodology",
+        type: "document",
+        url: "https://example.com/guides/vuln-assessment",
+        description: "Systematic approach to conducting vulnerability assessments",
+        category: "supplementary"
+      },
+      {
+        name: "Risk Assessment Framework",
+        type: "document",
+        url: "https://example.com/frameworks/risk-assessment",
+        description: "Framework for evaluating and prioritizing security risks",
+        category: "supplementary"
+      },
+      {
+        name: "Advanced Exploit Development",
+        type: "document",
+        url: "https://example.com/guides/exploit-development",
+        description: "Advanced techniques for developing proof-of-concept exploits",
+        category: "advanced"
+      }
+    ],
   },
 
   // Advanced Network Security (advanced-networking)
@@ -426,6 +982,29 @@ const CONTENT_DATA = [
       difficulty: "intermediate",
       tags: ["monitoring", "ids", "ips", "detection"],
     },
+    resources: [
+      {
+        name: "Snort IDS/IPS Documentation",
+        type: "document",
+        url: "https://www.snort.org/documents",
+        description: "Official Snort intrusion detection and prevention system documentation",
+        category: "essential"
+      },
+      {
+        name: "Network Security Monitoring Guide",
+        type: "document",
+        url: "https://example.com/guides/network-monitoring",
+        description: "Comprehensive guide to network security monitoring strategies",
+        category: "essential"
+      },
+      {
+        name: "IDS/IPS Comparison Matrix",
+        type: "reference",
+        url: "https://example.com/reference/ids-ips-comparison",
+        description: "Comparison of various IDS/IPS solutions and their capabilities",
+        category: "supplementary"
+      }
+    ],
   },
   {
     moduleId: "advanced-networking",
@@ -441,6 +1020,45 @@ const CONTENT_DATA = [
       tools: ["snort", "ids", "rule-engine"],
       concepts: ["signature-detection", "anomaly-detection", "alert-analysis"],
     },
+    outcomes: [
+      {
+        title: "Master Intrusion Detection Systems",
+        description: "Develop expertise in deploying, configuring, and managing network-based intrusion detection systems for comprehensive threat monitoring",
+        skills: ["IDS deployment", "rule configuration", "threat detection", "network monitoring"],
+        category: "primary",
+        difficulty: "intermediate"
+      },
+      {
+        title: "Analyze Security Alerts and Incidents",
+        description: "Learn to interpret IDS alerts, investigate security incidents, and distinguish between true positives and false alarms",
+        skills: ["alert analysis", "incident investigation", "false positive reduction", "threat intelligence"],
+        category: "secondary",
+        difficulty: "intermediate"
+      }
+    ],
+    resources: [
+      {
+        name: "Snort Rule Writing Guide",
+        type: "document",
+        url: "https://example.com/guides/snort-rules",
+        description: "Comprehensive guide to writing effective Snort detection rules",
+        category: "essential"
+      },
+      {
+        name: "IDS Lab Environment",
+        type: "tool",
+        url: "https://example.com/labs/ids-environment",
+        description: "Virtual lab environment for practicing IDS configuration",
+        category: "essential"
+      },
+      {
+        name: "Network Attack Samples",
+        type: "file",
+        url: "https://example.com/samples/network-attacks",
+        description: "Sample network attack traffic for testing IDS rules",
+        category: "supplementary"
+      }
+    ],
   },
 
   // ===================================================================
@@ -461,6 +1079,29 @@ const CONTENT_DATA = [
       difficulty: "advanced",
       tags: ["exploitation", "post-exploitation", "advanced"],
     },
+    resources: [
+      {
+        name: "Metasploit Framework Guide",
+        type: "document",
+        url: "https://example.com/guides/metasploit",
+        description: "Comprehensive guide to the Metasploit penetration testing framework",
+        category: "essential"
+      },
+      {
+        name: "Post-Exploitation Techniques",
+        type: "document",
+        url: "https://example.com/guides/post-exploitation",
+        description: "Advanced techniques for maintaining access and data exfiltration",
+        category: "essential"
+      },
+      {
+        name: "Exploit Development Resources",
+        type: "reference",
+        url: "https://example.com/reference/exploit-dev",
+        description: "Collection of resources for learning exploit development",
+        category: "advanced"
+      }
+    ],
   },
   {
     moduleId: "advanced-pentest",
@@ -482,6 +1123,45 @@ const CONTENT_DATA = [
         "privilege-escalation",
       ],
     },
+    outcomes: [
+      {
+        title: "Master Advanced Exploitation Frameworks",
+        description: "Develop expertise in using Metasploit and other advanced frameworks for comprehensive penetration testing and exploitation",
+        skills: ["Metasploit framework", "exploit execution", "payload development", "framework customization"],
+        category: "primary",
+        difficulty: "advanced"
+      },
+      {
+        title: "Execute Post-Exploitation Activities",
+        description: "Learn advanced post-exploitation techniques including persistence, privilege escalation, and data exfiltration",
+        skills: ["post-exploitation", "persistence mechanisms", "privilege escalation", "lateral movement"],
+        category: "primary",
+        difficulty: "advanced"
+      }
+    ],
+    resources: [
+      {
+        name: "Metasploit Pro Lab Environment",
+        type: "tool",
+        url: "https://example.com/labs/metasploit-pro",
+        description: "Professional lab environment for advanced Metasploit training",
+        category: "essential"
+      },
+      {
+        name: "Vulnerability Test Targets",
+        type: "tool",
+        url: "https://example.com/targets/vulnerable-systems",
+        description: "Collection of vulnerable systems for ethical exploitation practice",
+        category: "essential"
+      },
+      {
+        name: "Advanced Meterpreter Guide",
+        type: "document",
+        url: "https://example.com/guides/meterpreter-advanced",
+        description: "Advanced techniques for using Meterpreter payload",
+        category: "supplementary"
+      }
+    ],
   },
 
   // Incident Response (incident-response)
@@ -498,6 +1178,29 @@ const CONTENT_DATA = [
       difficulty: "advanced",
       tags: ["incident-response", "framework", "methodology"],
     },
+    resources: [
+      {
+        name: "NIST Incident Response Guide",
+        type: "document",
+        url: "https://csrc.nist.gov/publications/detail/sp/800-61/rev-2/final",
+        description: "NIST Special Publication 800-61 Rev. 2 - Computer Security Incident Handling Guide",
+        category: "essential"
+      },
+      {
+        name: "SANS Incident Response Process",
+        type: "document",
+        url: "https://example.com/guides/sans-ir-process",
+        description: "SANS Institute's incident response methodology and best practices",
+        category: "essential"
+      },
+      {
+        name: "Incident Response Playbooks",
+        type: "document",
+        url: "https://example.com/playbooks/incident-response",
+        description: "Collection of incident response playbooks for common scenarios",
+        category: "supplementary"
+      }
+    ],
   },
   {
     moduleId: "incident-response",
@@ -519,6 +1222,52 @@ const CONTENT_DATA = [
         "timeline-reconstruction",
       ],
     },
+    outcomes: [
+      {
+        title: "Master Digital Forensics Investigation",
+        description: "Develop expertise in conducting comprehensive digital forensics investigations using industry-standard tools and methodologies",
+        skills: ["digital forensics", "evidence collection", "forensic imaging", "artifact analysis"],
+        category: "primary",
+        difficulty: "advanced"
+      },
+      {
+        title: "Reconstruct Incident Timelines",
+        description: "Learn to analyze digital evidence, reconstruct attack timelines, and build compelling forensic cases",
+        skills: ["timeline analysis", "incident reconstruction", "evidence correlation", "forensic reporting"],
+        category: "secondary",
+        difficulty: "advanced"
+      }
+    ],
+    resources: [
+      {
+        name: "Autopsy Digital Forensics Platform",
+        type: "tool",
+        url: "https://www.autopsy.com",
+        description: "Open-source digital forensics platform for analyzing disk images",
+        category: "essential"
+      },
+      {
+        name: "Volatility Memory Analysis Framework",
+        type: "tool",
+        url: "https://www.volatilityfoundation.org",
+        description: "Advanced memory forensics framework for analyzing RAM dumps",
+        category: "essential"
+      },
+      {
+        name: "Digital Forensics Lab Images",
+        type: "file",
+        url: "https://example.com/forensics/lab-images",
+        description: "Collection of forensic disk and memory images for practice",
+        category: "essential"
+      },
+      {
+        name: "Chain of Custody Documentation",
+        type: "document",
+        url: "https://example.com/templates/chain-of-custody",
+        description: "Templates and procedures for maintaining evidence integrity",
+        category: "supplementary"
+      }
+    ],
   },
   {
     moduleId: "incident-response",
@@ -541,6 +1290,59 @@ const CONTENT_DATA = [
       scenarios: ["ransomware", "data-breach", "insider-threat", "apt-attack"],
       gameType: "incident-management",
     },
+    outcomes: [
+      {
+        title: "Lead Incident Response Operations",
+        description: "Develop leadership skills in coordinating incident response teams and managing complex cybersecurity incidents under pressure",
+        skills: ["incident command", "team coordination", "crisis management", "decision making"],
+        category: "primary",
+        difficulty: "advanced"
+      },
+      {
+        title: "Execute Incident Response Procedures",
+        description: "Master the systematic approach to incident detection, containment, eradication, recovery, and lessons learned processes",
+        skills: ["incident detection", "containment strategies", "recovery procedures", "post-incident analysis"],
+        category: "primary",
+        difficulty: "advanced"
+      },
+      {
+        title: "Minimize Business Impact",
+        description: "Learn to balance security response requirements with business continuity needs during critical security incidents",
+        skills: ["business continuity", "risk management", "stakeholder communication", "impact assessment"],
+        category: "secondary",
+        difficulty: "advanced"
+      }
+    ],
+    resources: [
+      {
+        name: "Incident Response Simulation Platform",
+        type: "tool",
+        url: "https://example.com/simulations/incident-response",
+        description: "Interactive platform for practicing incident response scenarios",
+        category: "essential"
+      },
+      {
+        name: "Incident Response Communication Templates",
+        type: "document",
+        url: "https://example.com/templates/ir-communications",
+        description: "Templates for incident response communications and notifications",
+        category: "essential"
+      },
+      {
+        name: "Tabletop Exercise Scenarios",
+        type: "document",
+        url: "https://example.com/scenarios/tabletop-exercises",
+        description: "Collection of incident response tabletop exercise scenarios",
+        category: "supplementary"
+      },
+      {
+        name: "Incident Response Metrics Dashboard",
+        type: "tool",
+        url: "https://example.com/tools/ir-metrics",
+        description: "Dashboard for tracking incident response performance metrics",
+        category: "supplementary"
+      }
+    ],
   },
 ];
 

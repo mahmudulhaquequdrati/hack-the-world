@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EnrolledCourse, EnrolledLesson } from "@/lib/types";
+import { EnrolledCourse, EnrolledLesson, Resource, ContentOutcome } from "@/lib/types";
 import {
   Brain,
   FileText,
@@ -7,6 +7,12 @@ import {
   Monitor,
   Terminal,
   Video,
+  ExternalLink,
+  Download,
+  Wrench,
+  BookOpen,
+  Trophy,
+  Target,
 } from "lucide-react";
 
 interface CourseTabsProps {
@@ -40,6 +46,28 @@ const CourseTabs = ({
         return <Gamepad2 className="w-5 h-5 text-pink-400" />;
       default:
         return <Monitor className="w-5 h-5 text-blue-400" />;
+    }
+  };
+
+  // Helper function to get icon for resource type
+  const getResourceIcon = (type: Resource["type"]) => {
+    switch (type) {
+      case "url":
+        return <ExternalLink className="w-4 h-4" />;
+      case "file":
+        return <FileText className="w-4 h-4" />;
+      case "document":
+        return <FileText className="w-4 h-4" />;
+      case "tool":
+        return <Wrench className="w-4 h-4" />;
+      case "reference":
+        return <BookOpen className="w-4 h-4" />;
+      case "video":
+        return <Video className="w-4 h-4" />;
+      case "download":
+        return <Download className="w-4 h-4" />;
+      default:
+        return <FileText className="w-4 h-4" />;
     }
   };
 
@@ -164,14 +192,120 @@ const CourseTabs = ({
           {/* Resources Tab */}
           <TabsContent value="resources" className="mt-4 sm:mt-6">
             <div className="space-y-4 sm:space-y-6">
-              <h1>Resources</h1>
-              {currentLesson?.resources?.map((resource) => (
-                <div key={resource}>
-                  <a href={resource} target="_blank" rel="noopener noreferrer">
-                    {resource}
-                  </a>
+              {/* Resources Section */}
+              {currentLesson?.resources && currentLesson.resources.length > 0 ? (
+                <div className="bg-black/60 border-2 border-green-400/40 rounded-none p-3 sm:p-5">
+                  <h3 className="text-green-400 font-mono text-sm sm:text-lg font-bold mb-4 flex items-center">
+                    <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    LESSON_RESOURCES
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    {currentLesson.resources.map((resource, index) => (
+                      <div
+                        key={index}
+                        className="bg-black/40 border border-green-400/30 rounded-none p-3 hover:border-green-400/60 transition-all duration-200"
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="text-green-400 flex-shrink-0 mt-1">
+                            {getResourceIcon(resource.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-green-300 font-semibold text-sm truncate">
+                                {resource.name}
+                              </h4>
+                              {resource.category && (
+                                <span className={`px-2 py-1 rounded text-xs font-mono flex-shrink-0 ml-2 ${
+                                  resource.category === "essential" 
+                                    ? "bg-red-400/20 text-red-400 border border-red-400/30" 
+                                    : resource.category === "advanced"
+                                    ? "bg-orange-400/20 text-orange-400 border border-orange-400/30"
+                                    : "bg-yellow-400/20 text-yellow-400 border border-yellow-400/30"
+                                }`}>
+                                  {resource.category.toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            {resource.description && (
+                              <p className="text-green-300/70 text-xs mb-2">
+                                {resource.description}
+                              </p>
+                            )}
+                            {resource.url && (
+                              <a
+                                href={resource.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-cyan-400 hover:text-cyan-300 text-xs font-mono transition-colors duration-200"
+                              >
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                ACCESS_RESOURCE
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              ) : (
+                <div className="bg-black/40 border border-green-400/30 rounded-none p-6 text-center">
+                  <BookOpen className="w-12 h-12 text-green-400/30 mx-auto mb-4" />
+                  <h4 className="text-green-400 font-mono text-lg mb-2">
+                    NO_RESOURCES_AVAILABLE
+                  </h4>
+                  <p className="text-green-300/60 font-mono text-sm">
+                    This lesson doesn't have additional resources
+                  </p>
+                </div>
+              )}
+
+              {/* Outcomes Section for Labs and Games */}
+              {currentLesson && (currentLesson.type === "lab" || currentLesson.type === "game") && currentLesson.outcomes && currentLesson.outcomes.length > 0 && (
+                <div className="bg-black/60 border-2 border-purple-400/40 rounded-none p-3 sm:p-5">
+                  <h3 className="text-purple-400 font-mono text-sm sm:text-lg font-bold mb-4 flex items-center">
+                    {currentLesson.type === "lab" ? (
+                      <>
+                        <Target className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                        LEARNING_OUTCOMES
+                      </>
+                    ) : (
+                      <>
+                        <Trophy className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                        ACHIEVEMENT_OUTCOMES
+                      </>
+                    )}
+                  </h3>
+                  <div className="space-y-3">
+                    {currentLesson.outcomes.map((outcome, index) => (
+                      <div
+                        key={index}
+                        className="bg-purple-400/5 border border-purple-400/20 rounded-none p-3"
+                      >
+                        <div className="text-purple-300 font-semibold text-sm mb-1">
+                          {currentLesson.type === "lab" ? "🎯" : "🏆"} {outcome.title}
+                        </div>
+                        <div className="text-purple-300/80 text-xs mb-2">
+                          {outcome.description}
+                        </div>
+                        {outcome.skills && outcome.skills.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {outcome.skills.map((skill, skillIndex) => (
+                              <span
+                                key={skillIndex}
+                                className="px-2 py-1 bg-purple-400/20 border border-purple-400/30 rounded text-xs text-purple-400 font-mono"
+                              >
+                                {currentLesson.type === "lab" ? "#" : "+"}
+                                {skill.toLowerCase().replace(/\s+/g, "_")}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

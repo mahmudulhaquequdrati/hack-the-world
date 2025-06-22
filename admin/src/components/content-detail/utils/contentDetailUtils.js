@@ -86,20 +86,43 @@ export const processContentResources = (content) => {
     hasResources: Boolean(content.resources && content.resources.length > 0),
     resourceCount: content.resources ? content.resources.length : 0,
     instructionsLength: content.instructions ? content.instructions.length : 0,
-    processedResources: content.resources ? content.resources.map((resource, index) => ({
-      id: index,
-      value: resource,
-      type: detectResourceType(resource),
-    })) : [],
+    processedResources: content.resources ? content.resources.map((resource, index) => {
+      // Handle both old string format and new object format
+      const isObject = typeof resource === 'object' && resource !== null;
+      
+      if (isObject) {
+        return {
+          id: index,
+          value: resource.name,
+          type: resource.type || 'text',
+          url: resource.url,
+          description: resource.description,
+          originalResource: resource,
+        };
+      } else {
+        return {
+          id: index,
+          value: resource,
+          type: detectResourceType(resource),
+          originalResource: resource,
+        };
+      }
+    }) : [],
   };
 };
 
 /**
  * Detect resource type based on content
- * @param {string} resource - Resource string
+ * @param {string|Object} resource - Resource string or object
  * @returns {string} Resource type
  */
 export const detectResourceType = (resource) => {
+  // Handle object resources
+  if (typeof resource === 'object' && resource !== null) {
+    return resource.type || 'text';
+  }
+  
+  // Handle string resources
   if (!resource || typeof resource !== 'string') return 'text';
   
   const resourceLower = resource.toLowerCase();

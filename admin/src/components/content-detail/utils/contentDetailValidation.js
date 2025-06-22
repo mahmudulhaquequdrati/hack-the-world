@@ -374,10 +374,39 @@ export const sanitizeContentData = (content) => {
       typeof content.instructions === "string"
         ? content.instructions.trim()
         : null,
-    resources: Array.isArray(content.resources) ? content.resources : [],
+    resources: Array.isArray(content.resources) 
+      ? content.resources.map(resource => {
+          // Handle both string and object resources
+          if (typeof resource === 'string') {
+            return resource.trim();
+          } else if (typeof resource === 'object' && resource !== null) {
+            return {
+              ...resource,
+              name: typeof resource.name === 'string' ? resource.name.trim() : resource.name,
+              type: typeof resource.type === 'string' ? resource.type.toLowerCase().trim() : resource.type,
+              url: typeof resource.url === 'string' ? resource.url.trim() : resource.url,
+              description: typeof resource.description === 'string' ? resource.description.trim() : resource.description,
+            };
+          }
+          return resource;
+        })
+      : [],
     metadata: content.metadata && typeof content.metadata === "object" 
       ? sanitizeContentMetadata(content.metadata) 
       : null,
+    outcomes: Array.isArray(content.outcomes) 
+      ? content.outcomes.map(outcome => {
+          if (typeof outcome === 'object' && outcome !== null) {
+            return {
+              ...outcome,
+              title: typeof outcome.title === 'string' ? outcome.title.trim() : outcome.title,
+              description: typeof outcome.description === 'string' ? outcome.description.trim() : outcome.description,
+              skills: Array.isArray(outcome.skills) ? outcome.skills : [],
+            };
+          }
+          return outcome;
+        })
+      : [],
     isActive: typeof content.isActive === "boolean" ? content.isActive : true,
     moduleId: content.moduleId,
     createdAt: content.createdAt,
@@ -585,10 +614,24 @@ export const validateContentResources = (resources) => {
   const errors = [];
 
   resources.forEach((resource, index) => {
-    if (typeof resource !== "string") {
-      errors.push(`Resource at index ${index} must be a string`);
-    } else if (resource.trim().length === 0) {
-      errors.push(`Resource at index ${index} cannot be empty`);
+    // Handle both string and object resources
+    if (typeof resource === "string") {
+      if (resource.trim().length === 0) {
+        errors.push(`Resource at index ${index} cannot be empty`);
+      }
+    } else if (typeof resource === "object" && resource !== null) {
+      // Validate resource object structure
+      if (!resource.name || typeof resource.name !== "string") {
+        errors.push(`Resource at index ${index} must have a valid name`);
+      }
+      if (!resource.type || !["url", "file", "document", "tool", "reference", "video", "download"].includes(resource.type)) {
+        errors.push(`Resource at index ${index} must have a valid type`);
+      }
+      if (resource.url && typeof resource.url !== "string") {
+        errors.push(`Resource at index ${index} URL must be a string`);
+      }
+    } else {
+      errors.push(`Resource at index ${index} must be a string or object`);
     }
   });
 

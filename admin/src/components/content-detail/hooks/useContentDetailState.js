@@ -97,6 +97,11 @@ const useContentDetailState = (rawData) => {
       hasInstructions: Boolean(formattedContent.instructions),
       hasResources: Boolean(formattedContent.resources?.length > 0),
       hasMetadata: Boolean(formattedContent.metadata),
+      hasOutcomes: Boolean(
+        (formattedContent.type === "lab" || formattedContent.type === "game") && 
+        formattedContent.outcomes && 
+        formattedContent.outcomes.length > 0
+      ),
       hasUrl: Boolean(formattedContent.url),
       isComplete: Boolean(
         formattedContent.title &&
@@ -151,6 +156,15 @@ const useContentDetailState = (rawData) => {
       });
     }
 
+    if (contentStatus.hasOutcomes) {
+      sections.push({
+        id: 'outcomes',
+        name: 'Learning Outcomes',
+        available: true,
+        icon: 'AcademicCapIcon',
+      });
+    }
+
     return sections;
   }, [contentStatus]);
 
@@ -181,6 +195,30 @@ const useContentDetailState = (rawData) => {
       ),
     };
   }, [formattedContent?.metadata]);
+
+  /**
+   * Learning outcomes breakdown for display
+   */
+  const outcomesBreakdown = useMemo(() => {
+    if (!formattedContent?.outcomes || !Array.isArray(formattedContent.outcomes) || formattedContent.outcomes.length === 0) {
+      return null;
+    }
+
+    return {
+      outcomes: formattedContent.outcomes.map(outcome => ({
+        ...outcome,
+        title: outcome.title || 'Untitled Outcome',
+        description: outcome.description || 'No description provided',
+        skills: Array.isArray(outcome.skills) ? outcome.skills : [],
+        category: outcome.category || 'primary',
+        difficulty: outcome.difficulty || null,
+      })),
+      totalOutcomes: formattedContent.outcomes.length,
+      primaryOutcomes: formattedContent.outcomes.filter(o => o.category === 'primary').length,
+      secondaryOutcomes: formattedContent.outcomes.filter(o => o.category === 'secondary').length,
+      hasAnyOutcomes: formattedContent.outcomes.length > 0,
+    };
+  }, [formattedContent?.outcomes]);
 
   /**
    * Action handlers
@@ -235,6 +273,7 @@ const useContentDetailState = (rawData) => {
     // Processed data
     processedResources,
     metadataBreakdown,
+    outcomesBreakdown,
     displaySections,
     
     // UI state

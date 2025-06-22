@@ -295,6 +295,7 @@ const useContentDetailManager = (contentId) => {
     // Processed data
     processedResources: stateHook.processedResources,
     metadataBreakdown: stateHook.metadataBreakdown,
+    outcomesBreakdown: stateHook.outcomesBreakdown,
     displaySections: stateHook.displaySections,
 
     // UI state

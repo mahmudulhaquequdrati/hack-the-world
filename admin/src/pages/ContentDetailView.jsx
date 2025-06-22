@@ -20,6 +20,7 @@ const ContentDetailView = () => {
     module,
     processedResources,
     metadataBreakdown,
+    outcomesBreakdown,
     breadcrumbs,
     actions,
     ui,
@@ -76,6 +77,7 @@ const ContentDetailView = () => {
                 content={content}
                 processedResources={processedResources}
                 metadataBreakdown={metadataBreakdown}
+                outcomesBreakdown={outcomesBreakdown}
               />
             </div>
 

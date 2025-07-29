@@ -87,6 +87,67 @@ const ContentSchema = new mongoose.Schema(
       default: {},
     },
 
+    // AI-specific fields for context-aware assistance
+    aiContent: {
+      type: String,
+      trim: true,
+      maxlength: [5000, "AI content cannot exceed 5000 characters"],
+      default: "",
+    },
+
+    aiDescription: {
+      type: String,
+      trim: true,
+      maxlength: [2000, "AI description cannot exceed 2000 characters"],
+      default: "",
+    },
+
+    // Terminal configuration (simplified)
+    terminalConfig: {
+      availableCommands: {
+        type: [String],
+        default: [
+          "ls",
+          "pwd",
+          "whoami",
+          "help",
+          "clear",
+          "cat",
+          "grep",
+          "find",
+          "ps",
+          "netstat",
+        ],
+        validate: {
+          validator: function (arr) {
+            return arr.length <= 50;
+          },
+          message: "Cannot have more than 50 available commands",
+        },
+      },
+    },
+
+    // Available tools for this content (conditional display)
+    availableTools: {
+      type: [String],
+      default: [],
+      enum: [
+        "terminal",
+        "chat",
+        "analysis",
+        "risk-calc",
+        "threat-intel",
+        "network-scanner",
+        "vulnerability-scanner",
+        "forensics-kit",
+        "malware-analyzer",
+        "social-engineer",
+        "password-cracker",
+        "web-security",
+        "crypto-tools",
+      ],
+    },
+
     // Resources array for additional learning materials - structured type
     resources: {
       type: [
@@ -100,7 +161,15 @@ const ContentSchema = new mongoose.Schema(
           type: {
             type: String,
             required: true,
-            enum: ["url", "file", "document", "tool", "reference", "video", "download"],
+            enum: [
+              "url",
+              "file",
+              "document",
+              "tool",
+              "reference",
+              "video",
+              "download",
+            ],
             lowercase: true,
           },
           url: {
@@ -117,7 +186,10 @@ const ContentSchema = new mongoose.Schema(
           description: {
             type: String,
             trim: true,
-            maxlength: [500, "Resource description cannot exceed 500 characters"],
+            maxlength: [
+              500,
+              "Resource description cannot exceed 500 characters",
+            ],
           },
           size: {
             type: String,
@@ -150,9 +222,15 @@ const ContentSchema = new mongoose.Schema(
               resource.name &&
               resource.name.trim().length > 0 &&
               resource.type &&
-              ["url", "file", "document", "tool", "reference", "video", "download"].includes(
-                resource.type
-              )
+              [
+                "url",
+                "file",
+                "document",
+                "tool",
+                "reference",
+                "video",
+                "download",
+              ].includes(resource.type)
           );
         },
         message: "Each resource must have a valid name and type",
@@ -173,7 +251,10 @@ const ContentSchema = new mongoose.Schema(
             type: String,
             required: true,
             trim: true,
-            maxlength: [1000, "Outcome description cannot exceed 1000 characters"],
+            maxlength: [
+              1000,
+              "Outcome description cannot exceed 1000 characters",
+            ],
           },
           skills: {
             type: [String],
@@ -181,7 +262,8 @@ const ContentSchema = new mongoose.Schema(
             validate: {
               validator: function (arr) {
                 return arr.every(
-                  (skill) => typeof skill === "string" && skill.trim().length > 0
+                  (skill) =>
+                    typeof skill === "string" && skill.trim().length > 0
                 );
               },
               message: "Each skill must be a non-empty string",

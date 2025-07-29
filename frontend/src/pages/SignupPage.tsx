@@ -25,7 +25,7 @@ import {
   User,
 } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -165,23 +165,13 @@ const SignupPage = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-md p-6">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          className="mb-6 text-green-400 hover:bg-green-400/10"
-          onClick={() => navigate("/")}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Button>
-
         <Card className="bg-black/90 border-green-400 terminal-window">
           <CardHeader className="text-center space-y-4">
-            <div className="flex justify-center">
+            <Link to="/" className="flex justify-center">
               <div className="p-3 rounded-full border border-green-400/50 bg-green-400/10">
                 <Terminal className="w-8 h-8 text-green-400" />
               </div>
-            </div>
+            </Link>
             <CardTitle className="text-2xl font-bold text-green-400">
               Join the Academy
             </CardTitle>
@@ -492,25 +482,23 @@ const SignupPage = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-green-400 text-black hover:bg-green-300 hacker-btn font-bold"
-                disabled={
-                  isLoading ||
-                  !formData.agreeToTerms ||
-                  formData.password !== formData.confirmPassword ||
-                  passwordStrength < 4
-                }
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-green-400 to-green-300 text-black hover:from-green-300 hover:to-green-200 font-mono font-bold py-6 relative overflow-hidden group"
               >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Creating Account...
-                  </div>
-                ) : (
-                  <>
-                    <Shield className="w-4 h-4 mr-2" />
-                    Join the Academy
-                  </>
-                )}
+                <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-all duration-300"></div>
+                <div className="relative flex items-center justify-center space-x-3">
+                  {isLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                      <span>CREATING_ACCOUNT...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Terminal className="w-5 h-5" />
+                      <span>CREATE_ACCOUNT</span>
+                    </>
+                  )}
+                </div>
               </Button>
             </form>
 

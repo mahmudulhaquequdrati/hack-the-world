@@ -449,7 +449,14 @@ export const apiSlice = createApi({
           duration: string;
           resources?: Array<{
             name: string;
-            type: "url" | "file" | "document" | "tool" | "reference" | "video" | "download";
+            type:
+              | "url"
+              | "file"
+              | "document"
+              | "tool"
+              | "reference"
+              | "video"
+              | "download";
             url?: string;
             description?: string;
             size?: string;
@@ -482,7 +489,14 @@ export const apiSlice = createApi({
             duration: string;
             resources?: Array<{
               name: string;
-              type: "url" | "file" | "document" | "tool" | "reference" | "video" | "download";
+              type:
+                | "url"
+                | "file"
+                | "document"
+                | "tool"
+                | "reference"
+                | "video"
+                | "download";
               url?: string;
               description?: string;
               size?: string;
@@ -552,7 +566,14 @@ export const apiSlice = createApi({
             section: string;
             resources?: Array<{
               name: string;
-              type: "url" | "file" | "document" | "tool" | "reference" | "video" | "download";
+              type:
+                | "url"
+                | "file"
+                | "document"
+                | "tool"
+                | "reference"
+                | "video"
+                | "download";
               url?: string;
               description?: string;
               size?: string;
@@ -567,6 +588,14 @@ export const apiSlice = createApi({
               category?: "primary" | "secondary";
               difficulty?: "beginner" | "intermediate" | "advanced";
             }>;
+            // AI-specific fields
+            aiContent?: string;
+            aiDescription?: string;
+            availableTools?: string[];
+            // Terminal configuration
+            terminalConfig?: {
+              availableCommands?: string[];
+            };
           };
           module: {
             _id: string;

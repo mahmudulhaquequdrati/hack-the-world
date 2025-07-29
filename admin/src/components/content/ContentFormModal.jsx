@@ -1,7 +1,5 @@
 import {
-  CheckCircleIcon,
   ChevronRightIcon,
-  ExclamationCircleIcon,
   EyeIcon,
   FolderIcon,
   MagnifyingGlassIcon,
@@ -98,9 +96,15 @@ const ContentFormModal = ({
                   className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
                   required
                 >
-                  <option value="" className="bg-gray-900 text-green-400">◆ Select Module</option>
+                  <option value="" className="bg-gray-900 text-green-400">
+                    ◆ Select Module
+                  </option>
                   {modules.map((module) => (
-                    <option key={module._id} value={module._id} className="bg-gray-900 text-green-400">
+                    <option
+                      key={module._id}
+                      value={module._id}
+                      className="bg-gray-900 text-green-400"
+                    >
                       ▸ {module.title}
                     </option>
                   ))}
@@ -120,7 +124,11 @@ const ContentFormModal = ({
                   required
                 >
                   {contentTypes.map((type) => (
-                    <option key={type.value} value={type.value} className="bg-gray-900 text-green-400">
+                    <option
+                      key={type.value}
+                      value={type.value}
+                      className="bg-gray-900 text-green-400"
+                    >
                       ▸ {type.icon} {type.label}
                     </option>
                   ))}
@@ -146,127 +154,129 @@ const ContentFormModal = ({
               />
             </div>
 
-          {/* Enhanced Section Input */}
-          <div className="relative">
-            <label className="flex items-center text-sm font-semibold text-cyan-400">
-              <svg
-                className="h-4 w-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-              Section*
-            </label>
-
+            {/* Enhanced Section Input */}
             <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                value={sectionInputValue}
-                onChange={onSectionInputChange}
-                onFocus={() => {
-                  console.log(
-                    "Section input focused, moduleId:",
-                    formData.moduleId,
-                    "disabled:",
-                    !formData.moduleId
-                  );
-                  onSectionInputFocus();
-                }}
-                onBlur={onSectionInputBlur}
-                className="w-full pl-10 pr-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                required
-                maxLength="100"
-                placeholder={
-                  formData.moduleId
-                    ? "🔍 Search existing sections or create new one..."
-                    : "⚠️ Select a module first to manage sections"
-                }
-                disabled={!formData.moduleId}
-              />
-              {formData.moduleId && !sectionLoading && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  {sectionInputValue && (
-                    <SparklesIcon className="h-4 w-4 text-cyan-400 animate-pulse" />
-                  )}
-                </div>
-              )}
-            </div>
+              <label className="flex items-center text-sm font-semibold text-cyan-400">
+                <svg
+                  className="h-4 w-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+                Section*
+              </label>
 
-            {/* Enhanced Dropdown */}
-            {showSectionDropdown && (
-              <div className="absolute z-10 w-full mt-2 bg-gray-800 border border-cyan-500/50 rounded-lg shadow-2xl max-h-64 overflow-auto backdrop-blur-sm">
-                {/* Dropdown Header */}
-                <div className="px-4 py-2 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-cyan-500/30 rounded-t-lg">
-                  <div className="flex items-center text-xs text-cyan-400">
-                    <FolderIcon className="h-3 w-3 mr-1" />
-                    Section Management
-                  </div>
-                </div>
-
-                {filteredSections.length > 0 ? (
-                  <>
-                    <div className="px-4 py-2 text-xs text-gray-400 bg-gray-900/50 border-b border-gray-700 flex items-center">
-                      <EyeIcon className="h-3 w-3 mr-1" />
-                      Existing sections ({filteredSections.length}) - Click to
-                      select:
-                    </div>
-                    {filteredSections.map((section, index) => (
-                      <button
-                        key={section}
-                        type="button"
-                        onClick={() => onSectionSelect(section)}
-                        className="w-full text-left px-4 py-3 text-green-400 hover:bg-gradient-to-r hover:from-gray-700 hover:to-gray-600 focus:bg-gradient-to-r focus:from-gray-700 focus:to-gray-600 focus:outline-none transition-all duration-150 border-l-2 border-transparent hover:border-cyan-400 flex items-center group"
-                      >
-                        <FolderIcon className="h-4 w-4 mr-3 text-cyan-400 group-hover:scale-110 transition-transform duration-150" />
-                        <span className="flex-1">{section}</span>
-                        <ChevronRightIcon className="h-3 w-3 text-gray-500 group-hover:text-cyan-400 transition-colors duration-150" />
-                      </button>
-                    ))}
-                  </>
-                ) : (
-                  <div className="px-4 py-4 text-sm">
-                    {sectionInputValue ? (
-                      <div className="text-center">
-                        <div className="flex items-center justify-center mb-2">
-                          <SparklesIcon className="h-5 w-5 text-cyan-400 animate-pulse mr-2" />
-                          <span className="text-cyan-400 font-medium">
-                            Create New Section
-                          </span>
-                        </div>
-                        <div className="bg-gradient-to-r from-cyan-900/20 to-green-900/20 border border-cyan-500/30 rounded-lg p-3 mb-2">
-                          <div className="font-medium text-white">
-                            "{sectionInputValue}"
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-400 flex items-center justify-center">
-                          <kbd className="px-2 py-1 bg-gray-700 rounded text-xs mr-1">
-                            Enter
-                          </kbd>
-                          <span>or click outside to create</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center text-gray-400">
-                        <FolderIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <div className="font-mono">No existing sections found</div>
-                        <div className="text-xs mt-1 font-mono">
-                          Type to create a new section
-                        </div>
-                      </div>
+              <div className="relative">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={sectionInputValue}
+                  onChange={onSectionInputChange}
+                  onFocus={() => {
+                    console.log(
+                      "Section input focused, moduleId:",
+                      formData.moduleId,
+                      "disabled:",
+                      !formData.moduleId
+                    );
+                    onSectionInputFocus();
+                  }}
+                  onBlur={onSectionInputBlur}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 bg-gray-700 text-green-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  required
+                  maxLength="100"
+                  placeholder={
+                    formData.moduleId
+                      ? "🔍 Search existing sections or create new one..."
+                      : "⚠️ Select a module first to manage sections"
+                  }
+                  disabled={!formData.moduleId}
+                />
+                {formData.moduleId && !sectionLoading && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {sectionInputValue && (
+                      <SparklesIcon className="h-4 w-4 text-cyan-400 animate-pulse" />
                     )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
+
+              {/* Enhanced Dropdown */}
+              {showSectionDropdown && (
+                <div className="absolute z-10 w-full mt-2 bg-gray-800 border border-cyan-500/50 rounded-lg shadow-2xl max-h-64 overflow-auto backdrop-blur-sm">
+                  {/* Dropdown Header */}
+                  <div className="px-4 py-2 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-cyan-500/30 rounded-t-lg">
+                    <div className="flex items-center text-xs text-cyan-400">
+                      <FolderIcon className="h-3 w-3 mr-1" />
+                      Section Management
+                    </div>
+                  </div>
+
+                  {filteredSections.length > 0 ? (
+                    <>
+                      <div className="px-4 py-2 text-xs text-gray-400 bg-gray-900/50 border-b border-gray-700 flex items-center">
+                        <EyeIcon className="h-3 w-3 mr-1" />
+                        Existing sections ({filteredSections.length}) - Click to
+                        select:
+                      </div>
+                      {filteredSections.map((section, index) => (
+                        <button
+                          key={section}
+                          type="button"
+                          onClick={() => onSectionSelect(section)}
+                          className="w-full text-left px-4 py-3 text-green-400 hover:bg-gradient-to-r hover:from-gray-700 hover:to-gray-600 focus:bg-gradient-to-r focus:from-gray-700 focus:to-gray-600 focus:outline-none transition-all duration-150 border-l-2 border-transparent hover:border-cyan-400 flex items-center group"
+                        >
+                          <FolderIcon className="h-4 w-4 mr-3 text-cyan-400 group-hover:scale-110 transition-transform duration-150" />
+                          <span className="flex-1">{section}</span>
+                          <ChevronRightIcon className="h-3 w-3 text-gray-500 group-hover:text-cyan-400 transition-colors duration-150" />
+                        </button>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="px-4 py-4 text-sm">
+                      {sectionInputValue ? (
+                        <div className="text-center">
+                          <div className="flex items-center justify-center mb-2">
+                            <SparklesIcon className="h-5 w-5 text-cyan-400 animate-pulse mr-2" />
+                            <span className="text-cyan-400 font-medium">
+                              Create New Section
+                            </span>
+                          </div>
+                          <div className="bg-gradient-to-r from-cyan-900/20 to-green-900/20 border border-cyan-500/30 rounded-lg p-3 mb-2">
+                            <div className="font-medium text-white">
+                              "{sectionInputValue}"
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-400 flex items-center justify-center">
+                            <kbd className="px-2 py-1 bg-gray-700 rounded text-xs mr-1">
+                              Enter
+                            </kbd>
+                            <span>or click outside to create</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-400">
+                          <FolderIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <div className="font-mono">
+                            No existing sections found
+                          </div>
+                          <div className="text-xs mt-1 font-mono">
+                            Type to create a new section
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Description Input */}
             <div className="space-y-2">
@@ -359,7 +369,7 @@ const ContentFormModal = ({
                 </label>
                 <input
                   type="number"
-                  value={formData.order || ''}
+                  value={formData.order || ""}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -371,7 +381,8 @@ const ContentFormModal = ({
                   placeholder="Auto-assigned if empty"
                 />
                 <p className="text-xs text-green-400/60 font-mono">
-                  ℹ️ Leave empty for auto-assignment. Use drag-and-drop for reordering.
+                  ℹ️ Leave empty for auto-assignment. Use drag-and-drop for
+                  reordering.
                 </p>
               </div>
             </div>
@@ -381,34 +392,53 @@ const ContentFormModal = ({
               <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
                 ▶ 📚 Resources
               </label>
-              
+
               {/* Resources List */}
               <div className="space-y-3">
                 {formData.resources.map((resource, index) => (
-                  <div key={index} className="bg-gray-800/40 border border-green-400/20 rounded-lg p-4">
+                  <div
+                    key={index}
+                    className="bg-gray-800/40 border border-green-400/20 rounded-lg p-4"
+                  >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-green-400 mb-1">Name *</label>
+                        <label className="block text-xs font-medium text-green-400 mb-1">
+                          Name *
+                        </label>
                         <input
                           type="text"
                           value={resource.name || ""}
                           onChange={(e) => {
                             const newResources = [...formData.resources];
-                            newResources[index] = { ...resource, name: e.target.value };
-                            setFormData(prev => ({ ...prev, resources: newResources }));
+                            newResources[index] = {
+                              ...resource,
+                              name: e.target.value,
+                            };
+                            setFormData((prev) => ({
+                              ...prev,
+                              resources: newResources,
+                            }));
                           }}
                           className="w-full px-3 py-2 bg-gray-700/50 border border-green-400/20 rounded text-green-400 text-sm"
                           placeholder="Resource name"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-green-400 mb-1">Type *</label>
+                        <label className="block text-xs font-medium text-green-400 mb-1">
+                          Type *
+                        </label>
                         <select
                           value={resource.type || "url"}
                           onChange={(e) => {
                             const newResources = [...formData.resources];
-                            newResources[index] = { ...resource, type: e.target.value };
-                            setFormData(prev => ({ ...prev, resources: newResources }));
+                            newResources[index] = {
+                              ...resource,
+                              type: e.target.value,
+                            };
+                            setFormData((prev) => ({
+                              ...prev,
+                              resources: newResources,
+                            }));
                           }}
                           className="w-full px-3 py-2 bg-gray-700/50 border border-green-400/20 rounded text-green-400 text-sm"
                         >
@@ -422,44 +452,70 @@ const ContentFormModal = ({
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-green-400 mb-1">URL</label>
+                        <label className="block text-xs font-medium text-green-400 mb-1">
+                          URL
+                        </label>
                         <input
                           type="url"
                           value={resource.url || ""}
                           onChange={(e) => {
                             const newResources = [...formData.resources];
-                            newResources[index] = { ...resource, url: e.target.value };
-                            setFormData(prev => ({ ...prev, resources: newResources }));
+                            newResources[index] = {
+                              ...resource,
+                              url: e.target.value,
+                            };
+                            setFormData((prev) => ({
+                              ...prev,
+                              resources: newResources,
+                            }));
                           }}
                           className="w-full px-3 py-2 bg-gray-700/50 border border-green-400/20 rounded text-green-400 text-sm"
                           placeholder="https://example.com"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-green-400 mb-1">Category</label>
+                        <label className="block text-xs font-medium text-green-400 mb-1">
+                          Category
+                        </label>
                         <select
                           value={resource.category || "supplementary"}
                           onChange={(e) => {
                             const newResources = [...formData.resources];
-                            newResources[index] = { ...resource, category: e.target.value };
-                            setFormData(prev => ({ ...prev, resources: newResources }));
+                            newResources[index] = {
+                              ...resource,
+                              category: e.target.value,
+                            };
+                            setFormData((prev) => ({
+                              ...prev,
+                              resources: newResources,
+                            }));
                           }}
                           className="w-full px-3 py-2 bg-gray-700/50 border border-green-400/20 rounded text-green-400 text-sm"
                         >
                           <option value="essential">🔴 Essential</option>
-                          <option value="supplementary">🟡 Supplementary</option>
+                          <option value="supplementary">
+                            🟡 Supplementary
+                          </option>
                           <option value="advanced">🟠 Advanced</option>
                         </select>
                       </div>
                       <div className="md:col-span-2">
-                        <label className="block text-xs font-medium text-green-400 mb-1">Description</label>
+                        <label className="block text-xs font-medium text-green-400 mb-1">
+                          Description
+                        </label>
                         <input
                           type="text"
                           value={resource.description || ""}
                           onChange={(e) => {
                             const newResources = [...formData.resources];
-                            newResources[index] = { ...resource, description: e.target.value };
-                            setFormData(prev => ({ ...prev, resources: newResources }));
+                            newResources[index] = {
+                              ...resource,
+                              description: e.target.value,
+                            };
+                            setFormData((prev) => ({
+                              ...prev,
+                              resources: newResources,
+                            }));
                           }}
                           className="w-full px-3 py-2 bg-gray-700/50 border border-green-400/20 rounded text-green-400 text-sm"
                           placeholder="Brief description of the resource"
@@ -472,20 +528,33 @@ const ContentFormModal = ({
                             checked={resource.downloadable || false}
                             onChange={(e) => {
                               const newResources = [...formData.resources];
-                              newResources[index] = { ...resource, downloadable: e.target.checked };
-                              setFormData(prev => ({ ...prev, resources: newResources }));
+                              newResources[index] = {
+                                ...resource,
+                                downloadable: e.target.checked,
+                              };
+                              setFormData((prev) => ({
+                                ...prev,
+                                resources: newResources,
+                              }));
                             }}
                             className="rounded bg-gray-700 border-green-400/30 text-green-400"
                           />
-                          <span className="text-green-400 text-xs">📥 Downloadable</span>
+                          <span className="text-green-400 text-xs">
+                            📥 Downloadable
+                          </span>
                         </label>
                       </div>
                       <div className="flex justify-end">
                         <button
                           type="button"
                           onClick={() => {
-                            const newResources = formData.resources.filter((_, i) => i !== index);
-                            setFormData(prev => ({ ...prev, resources: newResources }));
+                            const newResources = formData.resources.filter(
+                              (_, i) => i !== index
+                            );
+                            setFormData((prev) => ({
+                              ...prev,
+                              resources: newResources,
+                            }));
                           }}
                           className="px-3 py-1 bg-red-600/20 border border-red-400/30 rounded text-red-400 text-xs hover:bg-red-600/30"
                         >
@@ -495,7 +564,7 @@ const ContentFormModal = ({
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Add Resource Button */}
                 <button
                   type="button"
@@ -506,11 +575,11 @@ const ContentFormModal = ({
                       url: "",
                       description: "",
                       category: "supplementary",
-                      downloadable: false
+                      downloadable: false,
                     };
-                    setFormData(prev => ({ 
-                      ...prev, 
-                      resources: [...prev.resources, newResource] 
+                    setFormData((prev) => ({
+                      ...prev,
+                      resources: [...prev.resources, newResource],
                     }));
                   }}
                   className="w-full py-3 border-2 border-dashed border-green-400/30 rounded-lg text-green-400 hover:border-green-400/50 hover:bg-green-400/5 transition-all duration-300 font-mono text-sm"
@@ -526,34 +595,53 @@ const ContentFormModal = ({
                 <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
                   ▶ 🎯 Learning Outcomes *
                 </label>
-                
+
                 {/* Outcomes List */}
                 <div className="space-y-3">
                   {formData.outcomes.map((outcome, index) => (
-                    <div key={index} className="bg-blue-900/20 border border-blue-400/20 rounded-lg p-4">
+                    <div
+                      key={index}
+                      className="bg-blue-900/20 border border-blue-400/20 rounded-lg p-4"
+                    >
                       <div className="grid grid-cols-1 gap-4">
                         <div>
-                          <label className="block text-xs font-medium text-blue-400 mb-1">Title *</label>
+                          <label className="block text-xs font-medium text-blue-400 mb-1">
+                            Title *
+                          </label>
                           <input
                             type="text"
                             value={outcome.title || ""}
                             onChange={(e) => {
                               const newOutcomes = [...formData.outcomes];
-                              newOutcomes[index] = { ...outcome, title: e.target.value };
-                              setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                              newOutcomes[index] = {
+                                ...outcome,
+                                title: e.target.value,
+                              };
+                              setFormData((prev) => ({
+                                ...prev,
+                                outcomes: newOutcomes,
+                              }));
                             }}
                             className="w-full px-3 py-2 bg-gray-700/50 border border-blue-400/20 rounded text-blue-400 text-sm"
                             placeholder="What will students learn?"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-blue-400 mb-1">Description *</label>
+                          <label className="block text-xs font-medium text-blue-400 mb-1">
+                            Description *
+                          </label>
                           <textarea
                             value={outcome.description || ""}
                             onChange={(e) => {
                               const newOutcomes = [...formData.outcomes];
-                              newOutcomes[index] = { ...outcome, description: e.target.value };
-                              setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                              newOutcomes[index] = {
+                                ...outcome,
+                                description: e.target.value,
+                              };
+                              setFormData((prev) => ({
+                                ...prev,
+                                outcomes: newOutcomes,
+                              }));
                             }}
                             className="w-full px-3 py-2 bg-gray-700/50 border border-blue-400/20 rounded text-blue-400 text-sm resize-none"
                             rows="2"
@@ -561,17 +649,27 @@ const ContentFormModal = ({
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-blue-400 mb-1">Skills (comma-separated)</label>
+                          <label className="block text-xs font-medium text-blue-400 mb-1">
+                            Skills (comma-separated)
+                          </label>
                           <input
                             type="text"
-                            value={outcome.skills ? outcome.skills.join(", ") : ""}
+                            value={
+                              outcome.skills ? outcome.skills.join(", ") : ""
+                            }
                             onChange={(e) => {
                               const newOutcomes = [...formData.outcomes];
-                              newOutcomes[index] = { 
-                                ...outcome, 
-                                skills: e.target.value.split(",").map(s => s.trim()).filter(Boolean)
+                              newOutcomes[index] = {
+                                ...outcome,
+                                skills: e.target.value
+                                  .split(",")
+                                  .map((s) => s.trim())
+                                  .filter(Boolean),
                               };
-                              setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                              setFormData((prev) => ({
+                                ...prev,
+                                outcomes: newOutcomes,
+                              }));
                             }}
                             className="w-full px-3 py-2 bg-gray-700/50 border border-blue-400/20 rounded text-blue-400 text-sm"
                             placeholder="penetration testing, vulnerability assessment, etc."
@@ -579,13 +677,21 @@ const ContentFormModal = ({
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs font-medium text-blue-400 mb-1">Category</label>
+                            <label className="block text-xs font-medium text-blue-400 mb-1">
+                              Category
+                            </label>
                             <select
                               value={outcome.category || "primary"}
                               onChange={(e) => {
                                 const newOutcomes = [...formData.outcomes];
-                                newOutcomes[index] = { ...outcome, category: e.target.value };
-                                setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                                newOutcomes[index] = {
+                                  ...outcome,
+                                  category: e.target.value,
+                                };
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  outcomes: newOutcomes,
+                                }));
                               }}
                               className="w-full px-3 py-2 bg-gray-700/50 border border-blue-400/20 rounded text-blue-400 text-sm"
                             >
@@ -594,18 +700,28 @@ const ContentFormModal = ({
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-blue-400 mb-1">Difficulty</label>
+                            <label className="block text-xs font-medium text-blue-400 mb-1">
+                              Difficulty
+                            </label>
                             <select
                               value={outcome.difficulty || "beginner"}
                               onChange={(e) => {
                                 const newOutcomes = [...formData.outcomes];
-                                newOutcomes[index] = { ...outcome, difficulty: e.target.value };
-                                setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                                newOutcomes[index] = {
+                                  ...outcome,
+                                  difficulty: e.target.value,
+                                };
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  outcomes: newOutcomes,
+                                }));
                               }}
                               className="w-full px-3 py-2 bg-gray-700/50 border border-blue-400/20 rounded text-blue-400 text-sm"
                             >
                               <option value="beginner">🟢 Beginner</option>
-                              <option value="intermediate">🟡 Intermediate</option>
+                              <option value="intermediate">
+                                🟡 Intermediate
+                              </option>
                               <option value="advanced">🔴 Advanced</option>
                             </select>
                           </div>
@@ -614,8 +730,13 @@ const ContentFormModal = ({
                           <button
                             type="button"
                             onClick={() => {
-                              const newOutcomes = formData.outcomes.filter((_, i) => i !== index);
-                              setFormData(prev => ({ ...prev, outcomes: newOutcomes }));
+                              const newOutcomes = formData.outcomes.filter(
+                                (_, i) => i !== index
+                              );
+                              setFormData((prev) => ({
+                                ...prev,
+                                outcomes: newOutcomes,
+                              }));
                             }}
                             className="px-3 py-1 bg-red-600/20 border border-red-400/30 rounded text-red-400 text-xs hover:bg-red-600/30"
                           >
@@ -625,7 +746,7 @@ const ContentFormModal = ({
                       </div>
                     </div>
                   ))}
-                  
+
                   {/* Add Outcome Button */}
                   <button
                     type="button"
@@ -635,11 +756,11 @@ const ContentFormModal = ({
                         description: "",
                         skills: [],
                         category: "primary",
-                        difficulty: "beginner"
+                        difficulty: "beginner",
                       };
-                      setFormData(prev => ({ 
-                        ...prev, 
-                        outcomes: [...prev.outcomes, newOutcome] 
+                      setFormData((prev) => ({
+                        ...prev,
+                        outcomes: [...prev.outcomes, newOutcome],
                       }));
                     }}
                     className="w-full py-3 border-2 border-dashed border-blue-400/30 rounded-lg text-blue-400 hover:border-blue-400/50 hover:bg-blue-400/5 transition-all duration-300 font-mono text-sm"
@@ -650,176 +771,584 @@ const ContentFormModal = ({
               </div>
             )}
 
+            {/* AI Integration Section */}
+            <div className="border-t border-cyan-400/30 pt-6 mt-6">
+              <h3 className="text-lg font-semibold text-cyan-400 mb-4 font-mono uppercase tracking-wider">
+                🤖 ◆ AI Learning Assistant Configuration
+              </h3>
+
+              <div className="space-y-6">
+                {/* AI Content Field */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ 🧠 AI Content Knowledge
+                  </label>
+                  <textarea
+                    value={formData.aiContent || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        aiContent: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-cyan-400/30 rounded-xl text-cyan-400 font-mono focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 placeholder-cyan-400/50 resize-none"
+                    maxLength="5000"
+                    rows="4"
+                    placeholder="Provide detailed information for the AI to help students with this content. Include key concepts, common challenges, important commands, etc."
+                  />
+                  <p className="text-xs text-cyan-400/60 font-mono">
+                    ℹ️ This information helps the AI provide context-aware
+                    assistance to students
+                  </p>
+                </div>
+
+                {/* AI Description Field */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ 💬 AI Initial Response
+                  </label>
+                  <textarea
+                    value={formData.aiDescription || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        aiDescription: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-cyan-400/30 rounded-xl text-cyan-400 font-mono focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 placeholder-cyan-400/50 resize-none"
+                    maxLength="2000"
+                    rows="3"
+                    placeholder="What should the AI say when students start this lesson? This personalizes the initial greeting."
+                  />
+                  <p className="text-xs text-cyan-400/60 font-mono">
+                    ℹ️ Customize the AI's initial message when students access
+                    this content
+                  </p>
+                </div>
+
+                {/* Available Tools Selection */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ 🔧 Available Tools
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { value: "terminal", label: "Terminal", icon: "💻" },
+                      { value: "chat", label: "AI Chat", icon: "💬" },
+                      { value: "analysis", label: "Code Analysis", icon: "🔍" },
+                      {
+                        value: "risk-calc",
+                        label: "Risk Calculator",
+                        icon: "📊",
+                      },
+                      {
+                        value: "threat-intel",
+                        label: "Threat Intel",
+                        icon: "🛡️",
+                      },
+                      {
+                        value: "network-scanner",
+                        label: "Network Scanner",
+                        icon: "📡",
+                      },
+                      {
+                        value: "vulnerability-scanner",
+                        label: "Vuln Scanner",
+                        icon: "⚠️",
+                      },
+                      {
+                        value: "forensics-kit",
+                        label: "Forensics Kit",
+                        icon: "🔍",
+                      },
+                      {
+                        value: "malware-analyzer",
+                        label: "Malware Analyzer",
+                        icon: "🦠",
+                      },
+                      {
+                        value: "social-engineer",
+                        label: "Social Engineer",
+                        icon: "👥",
+                      },
+                      {
+                        value: "password-cracker",
+                        label: "Password Tools",
+                        icon: "🔐",
+                      },
+                      {
+                        value: "web-security",
+                        label: "Web Security",
+                        icon: "🌐",
+                      },
+                      {
+                        value: "crypto-tools",
+                        label: "Crypto Tools",
+                        icon: "🔒",
+                      },
+                    ].map((tool) => (
+                      <label
+                        key={tool.value}
+                        className="flex items-center space-x-2 bg-gray-800/40 border border-cyan-400/20 rounded-lg p-3 hover:bg-cyan-400/10 transition-all duration-200"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={
+                            formData.availableTools?.includes(tool.value) ||
+                            false
+                          }
+                          onChange={(e) => {
+                            const tools = formData.availableTools || [];
+                            if (e.target.checked) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                availableTools: [...tools, tool.value],
+                              }));
+                            } else {
+                              setFormData((prev) => ({
+                                ...prev,
+                                availableTools: tools.filter(
+                                  (t) => t !== tool.value
+                                ),
+                              }));
+                            }
+                          }}
+                          className="rounded bg-gray-700 border-cyan-400/30 text-cyan-400 focus:ring-cyan-400"
+                        />
+                        <span className="text-cyan-400 text-xs font-mono">
+                          {tool.icon} {tool.label}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-cyan-400/60 font-mono">
+                    ℹ️ Select tools that will be available in the AI playground
+                    for this content
+                  </p>
+                </div>
+
+                {/* Terminal Configuration */}
+                {(formData.availableTools || []).includes("terminal") && (
+                  <div className="space-y-4 border-t border-cyan-400/20 pt-4">
+                    <h4 className="text-md font-medium text-cyan-400 font-mono uppercase tracking-wider">
+                      ▶ 💻 Terminal Configuration
+                    </h4>
+
+                    {/* Welcome Message */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono">
+                        Terminal Welcome Message
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.terminalConfig?.welcomeMessage || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            terminalConfig: {
+                              ...prev.terminalConfig,
+                              welcomeMessage: e.target.value,
+                            },
+                          }))
+                        }
+                        className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-cyan-400/30 rounded-xl text-cyan-400 font-mono focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 placeholder-cyan-400/50"
+                        maxLength="200"
+                        placeholder="Welcome to AI-Enhanced Terminal"
+                      />
+                    </div>
+
+                    {/* Custom Prompt */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono">
+                        Custom Terminal Prompt
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.terminalConfig?.customPrompt || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            terminalConfig: {
+                              ...prev.terminalConfig,
+                              customPrompt: e.target.value,
+                            },
+                          }))
+                        }
+                        className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-cyan-400/30 rounded-xl text-cyan-400 font-mono focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 placeholder-cyan-400/50"
+                        maxLength="50"
+                        placeholder="student@hack-the-world:~$"
+                      />
+                    </div>
+
+                    {/* Available Commands */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono">
+                        Available Commands
+                      </label>
+                      <div className="space-y-2">
+                        {(formData.terminalConfig?.availableCommands || []).map(
+                          (cmd, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-2"
+                            >
+                              <input
+                                type="text"
+                                value={cmd}
+                                onChange={(e) => {
+                                  const newCommands = [
+                                    ...(formData.terminalConfig
+                                      ?.availableCommands || []),
+                                  ];
+                                  newCommands[index] = e.target.value;
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    terminalConfig: {
+                                      ...prev.terminalConfig,
+                                      availableCommands: newCommands,
+                                    },
+                                  }));
+                                }}
+                                className="flex-1 px-3 py-2 bg-gray-700/50 border border-cyan-400/20 rounded text-cyan-400 font-mono text-sm"
+                                placeholder="Enter command"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newCommands = (
+                                    formData.terminalConfig
+                                      ?.availableCommands || []
+                                  ).filter((_, i) => i !== index);
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    terminalConfig: {
+                                      ...prev.terminalConfig,
+                                      availableCommands: newCommands,
+                                    },
+                                  }));
+                                }}
+                                className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-mono"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newCommands = [
+                              ...(formData.terminalConfig?.availableCommands ||
+                                []),
+                              "",
+                            ];
+                            setFormData((prev) => ({
+                              ...prev,
+                              terminalConfig: {
+                                ...prev.terminalConfig,
+                                availableCommands: newCommands,
+                              },
+                            }));
+                          }}
+                          className="w-full px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm font-mono"
+                        >
+                          + Add Command
+                        </button>
+                      </div>
+                      <p className="text-xs text-cyan-400/60 font-mono">
+                        ℹ️ Commands that students can use in the terminal
+                      </p>
+                    </div>
+
+                    {/* Initial Commands */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono">
+                        Initial Commands
+                      </label>
+                      <div className="space-y-2">
+                        {(formData.terminalConfig?.initialCommands || []).map(
+                          (cmd, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-2"
+                            >
+                              <input
+                                type="text"
+                                value={cmd}
+                                onChange={(e) => {
+                                  const newCommands = [
+                                    ...(formData.terminalConfig
+                                      ?.initialCommands || []),
+                                  ];
+                                  newCommands[index] = e.target.value;
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    terminalConfig: {
+                                      ...prev.terminalConfig,
+                                      initialCommands: newCommands,
+                                    },
+                                  }));
+                                }}
+                                className="flex-1 px-3 py-2 bg-gray-700/50 border border-cyan-400/20 rounded text-cyan-400 font-mono text-sm"
+                                placeholder="Enter command"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newCommands = (
+                                    formData.terminalConfig?.initialCommands ||
+                                    []
+                                  ).filter((_, i) => i !== index);
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    terminalConfig: {
+                                      ...prev.terminalConfig,
+                                      initialCommands: newCommands,
+                                    },
+                                  }));
+                                }}
+                                className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-mono"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newCommands = [
+                              ...(formData.terminalConfig?.initialCommands ||
+                                []),
+                              "",
+                            ];
+                            setFormData((prev) => ({
+                              ...prev,
+                              terminalConfig: {
+                                ...prev.terminalConfig,
+                                initialCommands: newCommands,
+                              },
+                            }));
+                          }}
+                          className="w-full px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm font-mono"
+                        >
+                          + Add Initial Command
+                        </button>
+                      </div>
+                      <p className="text-xs text-cyan-400/60 font-mono">
+                        ℹ️ Commands to run automatically when terminal starts
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Enhanced Metadata Section */}
             <div className="border-t border-green-400/30 pt-6 mt-6">
               <h3 className="text-lg font-semibold text-green-400 mb-4 font-mono uppercase tracking-wider">
                 ◆ 📊 Advanced Metadata
               </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Tags */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                  ▶ 🏷️ Tags (comma-separated)
-                </label>
-                <input
-                  type="text"
-                  value={formData.tags.join(", ")}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      tags: e.target.value
-                        .split(",")
-                        .map((tag) => tag.trim())
-                        .filter(Boolean),
-                    }))
-                  }
-                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
-                  placeholder="cybersecurity, network, basics"
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Tags */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ 🏷️ Tags (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.tags.join(", ")}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        tags: e.target.value
+                          .split(",")
+                          .map((tag) => tag.trim())
+                          .filter(Boolean),
+                      }))
+                    }
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
+                    placeholder="cybersecurity, network, basics"
+                  />
+                </div>
 
-              {/* Difficulty */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                  ▶ 📈 Difficulty Level
-                </label>
-                <select
-                  value={formData.difficulty}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      difficulty: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300"
-                >
-                  <option value="beginner" className="bg-gray-900 text-green-400">▸ 🟢 Beginner</option>
-                  <option value="intermediate" className="bg-gray-900 text-green-400">▸ 🟡 Intermediate</option>
-                  <option value="advanced" className="bg-gray-900 text-green-400">▸ 🟠 Advanced</option>
-                  <option value="expert" className="bg-gray-900 text-green-400">▸ 🔴 Expert</option>
-                </select>
-              </div>
+                {/* Difficulty */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ 📈 Difficulty Level
+                  </label>
+                  <select
+                    value={formData.difficulty}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        difficulty: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300"
+                  >
+                    <option
+                      value="beginner"
+                      className="bg-gray-900 text-green-400"
+                    >
+                      ▸ 🟢 Beginner
+                    </option>
+                    <option
+                      value="intermediate"
+                      className="bg-gray-900 text-green-400"
+                    >
+                      ▸ 🟡 Intermediate
+                    </option>
+                    <option
+                      value="advanced"
+                      className="bg-gray-900 text-green-400"
+                    >
+                      ▸ 🟠 Advanced
+                    </option>
+                    <option
+                      value="expert"
+                      className="bg-gray-900 text-green-400"
+                    >
+                      ▸ 🔴 Expert
+                    </option>
+                  </select>
+                </div>
 
-              {/* Learning Objectives */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                  ▶ 🎯 Learning Objectives
-                </label>
-                <textarea
-                  value={formData.learningObjectives.join("\n")}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      learningObjectives: e.target.value
-                        .split("\n")
-                        .filter(Boolean),
-                    }))
-                  }
-                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50 resize-none"
-                  rows="3"
-                  placeholder="Enter each learning objective on a new line"
-                />
-              </div>
+                {/* Learning Objectives */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ 🎯 Learning Objectives
+                  </label>
+                  <textarea
+                    value={formData.learningObjectives.join("\n")}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        learningObjectives: e.target.value
+                          .split("\n")
+                          .filter(Boolean),
+                      }))
+                    }
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50 resize-none"
+                    rows="3"
+                    placeholder="Enter each learning objective on a new line"
+                  />
+                </div>
 
-              {/* Technical Requirements */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                  ▶ 💻 Technical Requirements
-                </label>
-                <textarea
-                  value={formData.technicalRequirements.join("\n")}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      technicalRequirements: e.target.value
-                        .split("\n")
-                        .filter(Boolean),
-                    }))
-                  }
-                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50 resize-none"
-                  rows="3"
-                  placeholder="Virtual machine, Kali Linux, etc."
-                />
-              </div>
+                {/* Technical Requirements */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ 💻 Technical Requirements
+                  </label>
+                  <textarea
+                    value={formData.technicalRequirements.join("\n")}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        technicalRequirements: e.target.value
+                          .split("\n")
+                          .filter(Boolean),
+                      }))
+                    }
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50 resize-none"
+                    rows="3"
+                    placeholder="Virtual machine, Kali Linux, etc."
+                  />
+                </div>
 
-              {/* Author & Version */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                  ▶ 👤 Author
-                </label>
-                <input
-                  type="text"
-                  value={formData.author}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, author: e.target.value }))
-                  }
-                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
-                  placeholder="Content author name"
-                />
-              </div>
+                {/* Author & Version */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ 👤 Author
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.author}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        author: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
+                    placeholder="Content author name"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                  ▶ 🔢 Version
-                </label>
-                <input
-                  type="text"
-                  value={formData.version}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      version: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
-                  placeholder="1.0"
-                />
-              </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ 🔢 Version
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.version}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        version: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
+                    placeholder="1.0"
+                  />
+                </div>
 
-              {/* Language */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                  ▶ 🌐 Language
-                </label>
-                <select
-                  value={formData.language}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      language: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300"
-                >
-                  <option value="en" className="bg-gray-900 text-green-400">▸ 🇺🇸 English</option>
-                  <option value="es" className="bg-gray-900 text-green-400">▸ 🇪🇸 Spanish</option>
-                  <option value="fr" className="bg-gray-900 text-green-400">▸ 🇫🇷 French</option>
-                  <option value="de" className="bg-gray-900 text-green-400">▸ 🇩🇪 German</option>
-                  <option value="zh" className="bg-gray-900 text-green-400">▸ 🇨🇳 Chinese</option>
-                  <option value="ja" className="bg-gray-900 text-green-400">▸ 🇯🇵 Japanese</option>
-                </select>
-              </div>
+                {/* Language */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ 🌐 Language
+                  </label>
+                  <select
+                    value={formData.language}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        language: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300"
+                  >
+                    <option value="en" className="bg-gray-900 text-green-400">
+                      ▸ 🇺🇸 English
+                    </option>
+                    <option value="es" className="bg-gray-900 text-green-400">
+                      ▸ 🇪🇸 Spanish
+                    </option>
+                    <option value="fr" className="bg-gray-900 text-green-400">
+                      ▸ 🇫🇷 French
+                    </option>
+                    <option value="de" className="bg-gray-900 text-green-400">
+                      ▸ 🇩🇪 German
+                    </option>
+                    <option value="zh" className="bg-gray-900 text-green-400">
+                      ▸ 🇨🇳 Chinese
+                    </option>
+                    <option value="ja" className="bg-gray-900 text-green-400">
+                      ▸ 🇯🇵 Japanese
+                    </option>
+                  </select>
+                </div>
 
-              {/* Thumbnail URL */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                  ▶ 🖼️ Thumbnail URL
-                </label>
-                <input
-                  type="url"
-                  value={formData.thumbnailUrl}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      thumbnailUrl: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
-                  placeholder="https://example.com/thumbnail.jpg"
-                />
+                {/* Thumbnail URL */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
+                    ▶ 🖼️ Thumbnail URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.thumbnailUrl}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        thumbnailUrl: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-green-400/30 rounded-xl text-green-400 font-mono focus:ring-2 focus:ring-green-400/50 focus:border-green-400/50 transition-all duration-300 placeholder-green-400/50"
+                    placeholder="https://example.com/thumbnail.jpg"
+                  />
+                </div>
               </div>
-            </div>
 
               {/* Accessibility Features */}
               <div className="mt-6">
@@ -912,7 +1441,8 @@ const ContentFormModal = ({
                     </div>
                   </label>
                   <p className="text-green-400/60 text-xs mt-2 ml-8 font-mono">
-                    Content will be active and available to students immediately after creation
+                    Content will be active and available to students immediately
+                    after creation
                   </p>
                 </div>
               </div>

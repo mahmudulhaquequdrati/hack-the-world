@@ -29,10 +29,29 @@ export const createContentData = (formData, sectionInputValue) => {
     duration: Number(formData.duration) || 1,
     estimatedTime: Number(formData.estimatedTime) || 1,
     // Set proper defaults
-    version: formData.version || '1.0',
-    language: formData.language || 'en',
-    difficulty: formData.difficulty || 'beginner',
+    version: formData.version || "1.0",
+    language: formData.language || "en",
+    difficulty: formData.difficulty || "beginner",
     isActive: Boolean(formData.isActive),
+    // AI-specific fields
+    aiContent: formData.aiContent?.trim() || "",
+    aiDescription: formData.aiDescription?.trim() || "",
+    availableTools: ensureValidArray(formData.availableTools),
+    // Terminal configuration
+    terminalConfig: formData.terminalConfig || {
+      availableCommands: [
+        "ls",
+        "pwd",
+        "whoami",
+        "help",
+        "clear",
+        "cat",
+        "grep",
+        "find",
+        "ps",
+        "netstat",
+      ],
+    },
   };
 };
 
@@ -43,7 +62,9 @@ export const createContentData = (formData, sectionInputValue) => {
  */
 export const ensureValidArray = (value) => {
   if (!Array.isArray(value)) return [];
-  return value.filter(item => item && typeof item === 'string' && item.trim());
+  return value.filter(
+    (item) => item && typeof item === "string" && item.trim()
+  );
 };
 
 /**
@@ -53,13 +74,14 @@ export const ensureValidArray = (value) => {
  */
 export const ensureValidResourceArray = (value) => {
   if (!Array.isArray(value)) return [];
-  return value.filter(resource => 
-    resource && 
-    typeof resource === 'object' && 
-    resource.name && 
-    resource.type &&
-    typeof resource.name === 'string' &&
-    typeof resource.type === 'string'
+  return value.filter(
+    (resource) =>
+      resource &&
+      typeof resource === "object" &&
+      resource.name &&
+      resource.type &&
+      typeof resource.name === "string" &&
+      typeof resource.type === "string"
   );
 };
 
@@ -70,14 +92,15 @@ export const ensureValidResourceArray = (value) => {
  */
 export const ensureValidOutcomeArray = (value) => {
   if (!Array.isArray(value)) return [];
-  return value.filter(outcome => 
-    outcome && 
-    typeof outcome === 'object' && 
-    outcome.title && 
-    outcome.description &&
-    typeof outcome.title === 'string' &&
-    typeof outcome.description === 'string' &&
-    Array.isArray(outcome.skills)
+  return value.filter(
+    (outcome) =>
+      outcome &&
+      typeof outcome === "object" &&
+      outcome.title &&
+      outcome.description &&
+      typeof outcome.title === "string" &&
+      typeof outcome.description === "string" &&
+      Array.isArray(outcome.skills)
   );
 };
 
@@ -87,35 +110,35 @@ export const ensureValidOutcomeArray = (value) => {
  * @param {string} operation - The operation that failed (e.g., 'create', 'update', 'delete')
  * @returns {string} - User-friendly error message
  */
-export const handleApiError = (error, operation = 'save') => {
+export const handleApiError = (error, operation = "save") => {
   console.error(`❌ Error during ${operation}:`, error);
-  
+
   if (error.response) {
     // Server responded with error status
     const status = error.response.status;
     const message = error.response.data?.message || error.response.data?.error;
-    
+
     switch (status) {
       case 400:
         return message || `Invalid data provided for ${operation}`;
       case 401:
-        return 'Authentication required. Please log in again.';
+        return "Authentication required. Please log in again.";
       case 403:
         return `You don't have permission to ${operation} content`;
       case 404:
         return `Content not found. It may have been deleted.`;
       case 409:
-        return `Conflict: ${message || 'Content already exists'}`;
+        return `Conflict: ${message || "Content already exists"}`;
       case 422:
-        return `Validation error: ${message || 'Please check your input'}`;
+        return `Validation error: ${message || "Please check your input"}`;
       case 500:
-        return 'Server error. Please try again later.';
+        return "Server error. Please try again later.";
       default:
         return message || `Failed to ${operation} content`;
     }
   } else if (error.request) {
     // Network error
-    return 'Network error. Please check your connection and try again.';
+    return "Network error. Please check your connection and try again.";
   } else {
     // Other error
     return error.message || `Failed to ${operation} content`;
@@ -129,7 +152,7 @@ export const handleApiError = (error, operation = 'save') => {
  * @returns {Array} - Updated content array
  */
 export const optimisticUpdate = (contentArray, updatedContent) => {
-  return contentArray.map(item =>
+  return contentArray.map((item) =>
     item._id === updatedContent._id ? { ...item, ...updatedContent } : item
   );
 };
@@ -151,7 +174,7 @@ export const optimisticAdd = (contentArray, newContent) => {
  * @returns {Array} - Updated content array
  */
 export const optimisticRemove = (contentArray, contentId) => {
-  return contentArray.filter(item => item._id !== contentId);
+  return contentArray.filter((item) => item._id !== contentId);
 };
 
 /**
@@ -162,12 +185,15 @@ export const optimisticRemove = (contentArray, contentId) => {
  */
 export const generateSuccessMessage = (operation, count = 1) => {
   const operationMap = {
-    create: count > 1 ? `Successfully created ${count} content items` : 'Content created successfully!',
-    update: 'Content updated successfully!',
-    delete: 'Content deleted successfully!',
+    create:
+      count > 1
+        ? `Successfully created ${count} content items`
+        : "Content created successfully!",
+    update: "Content updated successfully!",
+    delete: "Content deleted successfully!",
   };
-  
-  return operationMap[operation] || 'Operation completed successfully!';
+
+  return operationMap[operation] || "Operation completed successfully!";
 };
 
 /**
@@ -203,6 +229,25 @@ export const createDefaultFormData = () => ({
   lastUpdated: "",
   isActive: false,
   thumbnailUrl: "",
+  // AI-specific fields
+  aiContent: "",
+  aiDescription: "",
+  availableTools: ["terminal", "chat", "analysis"], // Default tools
+  // Terminal configuration
+  terminalConfig: {
+    availableCommands: [
+      "ls",
+      "pwd",
+      "whoami",
+      "help",
+      "clear",
+      "cat",
+      "grep",
+      "find",
+      "ps",
+      "netstat",
+    ],
+  },
 });
 
 /**
@@ -218,6 +263,29 @@ export const populateFormFromContent = (contentItem) => ({
   prerequisites: contentItem.prerequisites || [],
   learningObjectives: contentItem.learningObjectives || [],
   technicalRequirements: contentItem.technicalRequirements || [],
+  // AI-specific fields
+  aiContent: contentItem.aiContent || "",
+  aiDescription: contentItem.aiDescription || "",
+  availableTools: contentItem.availableTools || [
+    "terminal",
+    "chat",
+    "analysis",
+  ],
+  // Terminal configuration
+  terminalConfig: contentItem.terminalConfig || {
+    availableCommands: [
+      "ls",
+      "pwd",
+      "whoami",
+      "help",
+      "clear",
+      "cat",
+      "grep",
+      "find",
+      "ps",
+      "netstat",
+    ],
+  },
   accessibility: contentItem.accessibility || {
     hasSubtitles: false,
     hasTranscript: false,
@@ -232,101 +300,122 @@ export const populateFormFromContent = (contentItem) => ({
  * @param {string} operation - Operation type ('add', 'update', 'remove')
  * @returns {Array} - Updated hierarchical data
  */
-export const updateHierarchicalData = (hierarchicalData, contentData, operation) => {
-  return hierarchicalData.map(phase => ({
+export const updateHierarchicalData = (
+  hierarchicalData,
+  contentData,
+  operation
+) => {
+  return hierarchicalData.map((phase) => ({
     ...phase,
-    modules: phase.modules.map(module => {
+    modules: phase.modules.map((module) => {
       if (module._id === contentData.moduleId) {
         switch (operation) {
-          case 'add':
+          case "add":
             return {
               ...module,
               content: [...module.content, contentData],
-              contentCount: module.content.length + 1
+              contentCount: module.content.length + 1,
             };
-          case 'update':
+          case "update":
             return {
               ...module,
-              content: module.content.map(item =>
-                item._id === contentData._id ? { ...item, ...contentData } : item
-              )
+              content: module.content.map((item) =>
+                item._id === contentData._id
+                  ? { ...item, ...contentData }
+                  : item
+              ),
             };
-          case 'remove':
+          case "remove":
             return {
               ...module,
-              content: module.content.filter(item => item._id !== contentData._id),
-              contentCount: Math.max(0, module.contentCount - 1)
+              content: module.content.filter(
+                (item) => item._id !== contentData._id
+              ),
+              contentCount: Math.max(0, module.contentCount - 1),
             };
           default:
             return module;
         }
       }
       return module;
-    })
+    }),
   }));
 };
 
 /**
  * Updates grouped data with new/updated content
  * @param {Object} groupedData - Current grouped data
- * @param {Object} contentData - Content data to update  
+ * @param {Object} contentData - Content data to update
  * @param {string} operation - Operation type ('add', 'update', 'remove')
  * @param {string} groupBy - Group by type ('module' or 'type')
  * @param {Array} modules - Modules array for grouping
  * @param {Array} contentTypes - Content types array for grouping
  * @returns {Object} - Updated grouped data
  */
-export const updateGroupedData = (groupedData, contentData, operation, groupBy, modules = [], contentTypes = []) => {
+export const updateGroupedData = (
+  groupedData,
+  contentData,
+  operation,
+  groupBy,
+  modules = [],
+  contentTypes = []
+) => {
   const newGroupedData = { ...groupedData };
-  
-  if (groupBy === 'module') {
-    const module = modules.find(m => m._id === contentData.moduleId);
-    const groupKey = module?.title || 'Unknown Module';
-    
+
+  if (groupBy === "module") {
+    const module = modules.find((m) => m._id === contentData.moduleId);
+    const groupKey = module?.title || "Unknown Module";
+
     switch (operation) {
-      case 'add':
+      case "add":
         if (!newGroupedData[groupKey]) {
           newGroupedData[groupKey] = [];
         }
         newGroupedData[groupKey] = [...newGroupedData[groupKey], contentData];
         break;
-      case 'update':
-        Object.keys(newGroupedData).forEach(key => {
-          newGroupedData[key] = newGroupedData[key].map(item =>
+      case "update":
+        Object.keys(newGroupedData).forEach((key) => {
+          newGroupedData[key] = newGroupedData[key].map((item) =>
             item._id === contentData._id ? { ...item, ...contentData } : item
           );
         });
         break;
-      case 'remove':
-        Object.keys(newGroupedData).forEach(key => {
-          newGroupedData[key] = newGroupedData[key].filter(item => item._id !== contentData._id);
+      case "remove":
+        Object.keys(newGroupedData).forEach((key) => {
+          newGroupedData[key] = newGroupedData[key].filter(
+            (item) => item._id !== contentData._id
+          );
           if (newGroupedData[key].length === 0) {
             delete newGroupedData[key];
           }
         });
         break;
     }
-  } else if (groupBy === 'type') {
-    const contentType = contentTypes.find(ct => ct.value === contentData.type);
-    const groupKey = contentType?.label || 'Unknown Type';
-    
+  } else if (groupBy === "type") {
+    const contentType = contentTypes.find(
+      (ct) => ct.value === contentData.type
+    );
+    const groupKey = contentType?.label || "Unknown Type";
+
     switch (operation) {
-      case 'add':
+      case "add":
         if (!newGroupedData[groupKey]) {
           newGroupedData[groupKey] = [];
         }
         newGroupedData[groupKey] = [...newGroupedData[groupKey], contentData];
         break;
-      case 'update':
-        Object.keys(newGroupedData).forEach(key => {
-          newGroupedData[key] = newGroupedData[key].map(item =>
+      case "update":
+        Object.keys(newGroupedData).forEach((key) => {
+          newGroupedData[key] = newGroupedData[key].map((item) =>
             item._id === contentData._id ? { ...item, ...contentData } : item
           );
         });
         break;
-      case 'remove':
-        Object.keys(newGroupedData).forEach(key => {
-          newGroupedData[key] = newGroupedData[key].filter(item => item._id !== contentData._id);
+      case "remove":
+        Object.keys(newGroupedData).forEach((key) => {
+          newGroupedData[key] = newGroupedData[key].filter(
+            (item) => item._id !== contentData._id
+          );
           if (newGroupedData[key].length === 0) {
             delete newGroupedData[key];
           }
@@ -334,7 +423,7 @@ export const updateGroupedData = (groupedData, contentData, operation, groupBy, 
         break;
     }
   }
-  
+
   return newGroupedData;
 };
 
@@ -364,7 +453,7 @@ export const debounce = (func, wait) => {
  */
 export const filterSections = (sections, inputValue) => {
   if (!inputValue) return sections;
-  return sections.filter(section =>
+  return sections.filter((section) =>
     section.toLowerCase().includes(inputValue.toLowerCase())
   );
 };
@@ -376,12 +465,14 @@ export const filterSections = (sections, inputValue) => {
  * @returns {Object} - Content type configuration
  */
 export const getContentTypeConfig = (type, contentTypes) => {
-  return contentTypes.find(ct => ct.value === type) || {
-    value: type,
-    label: type.charAt(0).toUpperCase() + type.slice(1),
-    icon: "📄",
-    color: "bg-gray-500"
-  };
+  return (
+    contentTypes.find((ct) => ct.value === type) || {
+      value: type,
+      label: type.charAt(0).toUpperCase() + type.slice(1),
+      icon: "📄",
+      color: "bg-gray-500",
+    }
+  );
 };
 
 /**
@@ -390,19 +481,19 @@ export const getContentTypeConfig = (type, contentTypes) => {
  * @returns {string} - Formatted duration string
  */
 export const formatDuration = (duration) => {
-  if (!duration || duration < 1) return '1 min';
-  
+  if (!duration || duration < 1) return "1 min";
+
   if (duration < 60) {
     return `${duration} min`;
   }
-  
+
   const hours = Math.floor(duration / 60);
   const minutes = duration % 60;
-  
+
   if (minutes === 0) {
     return `${hours}h`;
   }
-  
+
   return `${hours}h ${minutes}m`;
 };
 
@@ -418,27 +509,27 @@ export const calculateContentStats = (content, contentTypes) => {
     byType: {},
     totalDuration: 0,
     published: 0,
-    unpublished: 0
+    unpublished: 0,
   };
-  
-  contentTypes.forEach(type => {
+
+  contentTypes.forEach((type) => {
     stats.byType[type.value] = 0;
   });
-  
-  content.forEach(item => {
+
+  content.forEach((item) => {
     if (stats.byType.hasOwnProperty(item.type)) {
       stats.byType[item.type]++;
     }
-    
+
     stats.totalDuration += item.duration || 0;
-    
+
     if (item.isActive) {
       stats.published++;
     } else {
       stats.unpublished++;
     }
   });
-  
+
   return stats;
 };
 
@@ -449,13 +540,13 @@ export const calculateContentStats = (content, contentTypes) => {
  * @param {string} direction - Sort direction ('asc' or 'desc')
  * @returns {Array} - Sorted array
  */
-export const sortBy = (array, field, direction = 'asc') => {
+export const sortBy = (array, field, direction = "asc") => {
   return [...array].sort((a, b) => {
     const aVal = a[field];
     const bVal = b[field];
-    
-    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+
+    if (aVal < bVal) return direction === "asc" ? -1 : 1;
+    if (aVal > bVal) return direction === "asc" ? 1 : -1;
     return 0;
   });
 };
@@ -484,14 +575,14 @@ export const createUploadItemTemplate = () => ({
  */
 export const sanitizeInput = (value, type) => {
   switch (type) {
-    case 'string':
-      return typeof value === 'string' ? value.trim() : '';
-    case 'number':
+    case "string":
+      return typeof value === "string" ? value.trim() : "";
+    case "number":
       const num = Number(value);
       return isNaN(num) ? 0 : Math.max(0, num);
-    case 'boolean':
+    case "boolean":
       return Boolean(value);
-    case 'array':
+    case "array":
       return Array.isArray(value) ? value : [];
     default:
       return value;

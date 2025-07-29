@@ -1,5 +1,4 @@
 import {
-  AIPlayground,
   ContentSidebar,
   CourseHeader,
   CourseTabs,
@@ -11,6 +10,7 @@ import {
   SplitView,
   VideoPlayer,
 } from "@/components/enrolled";
+import SimpleTerminalPlayground from "@/components/enrolled/SimpleTerminalPlayground";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import {
   useCompleteContentMutation,
@@ -18,7 +18,6 @@ import {
   useGetModuleContentGroupedOptimizedQuery,
 } from "@/features/api/apiSlice";
 import { EnrolledCourse } from "@/lib/types";
-import { Brain, Calculator, Target, Terminal } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
@@ -61,7 +60,7 @@ const EnrolledCoursePage = () => {
   const [isResizing, setIsResizing] = useState(false);
   const [videoMaximized, setVideoMaximized] = useState(false);
   const [playgroundMaximized, setPlaygroundMaximized] = useState(false);
-  const [playgroundMode, setPlaygroundMode] = useState("chat");
+  // Playground mode is now handled internally by EnhancedAIPlayground
   const [activeLab, setActiveLab] = useState<string | null>(null);
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -79,13 +78,7 @@ const EnrolledCoursePage = () => {
   // Video progress tracking
   const [hasAutoCompleted, setHasAutoCompleted] = useState(false);
 
-  // Video and playground states
-  const [terminalHistory, setTerminalHistory] = useState([
-    {
-      type: "output",
-      content: "Welcome to AI-Enhanced Cybersecurity Terminal",
-    },
-  ]);
+  // Terminal history is now handled internally by EnhancedAIPlayground
 
   const {
     data: groupedContentData,
@@ -630,73 +623,24 @@ const EnrolledCoursePage = () => {
     setIsPlaying((prev) => !prev);
   }, []);
 
-  // Handle terminal command
-  const handleTerminalCommand = useCallback((command: string) => {
-    setTerminalHistory((prev) => [
-      ...prev,
-      { type: "command", content: `user@terminal:~$ ${command}` },
-    ]);
+  // Terminal command handling is now done by EnhancedAIPlayground
 
-    setTimeout(() => {
-      let response = "";
-      const cmd = command.toLowerCase();
+  // Get available tools for current content
+  const getAvailableTools = useCallback(() => {
+    const contentData = currentContentData?.data;
 
-      if (cmd.includes("help")) {
-        response =
-          "Available commands: nmap, wireshark, metasploit, john, hashcat";
-      } else if (cmd.includes("nmap")) {
-        response = "Starting Nmap scan...\nHost is up (0.001s latency)";
-      } else {
-        response = `Command '${command}' executed in simulated environment.`;
-      }
-
-      setTerminalHistory((prev) => [
-        ...prev,
-        { type: "output", content: response },
-      ]);
-    }, 1000);
-  }, []);
-
-  // Get playground modes based on content
-  const getPlaygroundModes = useCallback(() => {
-    const currentLesson = getCurrentLesson();
-    const lessonTitle = currentLesson?.title?.toLowerCase() || "";
-
-    const modes = [
-      {
-        _id: "terminal",
-        name: "Terminal",
-        icon: Terminal,
-        description: "AI-enhanced terminal for cybersecurity commands",
-      },
-      {
-        _id: "chat",
-        name: "AI Assistant",
-        icon: Brain,
-        description: "Chat with AI learning assistant",
-      },
-    ];
-
-    if (lessonTitle.includes("threat")) {
-      modes.push({
-        _id: "threat-intel",
-        name: "Threat Intel",
-        icon: Target,
-        description: "Threat intelligence analysis",
-      });
+    // Only use availableTools from content if explicitly configured
+    if (
+      contentData?.content?.availableTools &&
+      Array.isArray(contentData.content.availableTools)
+    ) {
+      return contentData.content.availableTools;
     }
 
-    if (lessonTitle.includes("cia") || lessonTitle.includes("triad")) {
-      modes.push({
-        _id: "risk-calc",
-        name: "Risk Calculator",
-        icon: Calculator,
-        description: "Risk assessment tools",
-      });
-    }
-
-    return modes;
-  }, [getCurrentLesson]);
+    // If no availableTools field exists, don't show any playground
+    // Admin must explicitly configure tools for each content
+    return [];
+  }, [currentContentData]);
 
   // This check is now handled by the hierarchical loading states above
 
@@ -748,8 +692,15 @@ const EnrolledCoursePage = () => {
 
   const currentLesson = getCurrentLesson();
 
-  const needsPlayground =
-    currentLesson?.type === "video" || currentLesson?.type === "text";
+  // Check if content has any tools configured, otherwise don't show playground
+  const hasToolsAvailable = () => {
+    const availableTools = getAvailableTools();
+
+    // Only show playground if tools are explicitly configured
+    return availableTools.length > 0;
+  };
+
+  const needsPlayground = hasToolsAvailable();
   const needsFullScreen =
     currentLesson?.type === "text" ||
     currentLesson?.type === "lab" ||
@@ -863,31 +814,41 @@ const EnrolledCoursePage = () => {
                 />
               }
               rightPane={
-                <AIPlayground
-                  playgroundModes={getPlaygroundModes()}
-                  activeMode={playgroundMode}
-                  terminalHistory={terminalHistory}
-                  chatMessages={[
-                    {
-                      role: "ai",
-                      content: "Hello! I'm your AI learning assistant.",
-                    },
-                  ]}
-                  analysisResult=""
-                  isAnalyzing={false}
+                <SimpleTerminalPlayground
+                  contentId={getCurrentLesson()?.contentId}
+                  moduleId={courseId}
+                  availableTools={getAvailableTools()}
+                  terminalConfig={
+                    currentContentData?.data?.content?.terminalConfig
+                  }
                   isMaximized={playgroundMaximized}
-                  onModeChange={setPlaygroundMode}
-                  onTerminalCommand={handleTerminalCommand}
-                  onChatMessage={(msg) => {
-                    console.log("Chat message:", msg);
-                  }}
-                  onAnalysis={(input) => {
-                    console.log("Analysis input:", input);
-                  }}
                   onMaximize={handlePlaygroundMaximize}
                   onRestore={handlePlaygroundRestore}
                 />
               }
+            />
+          ) : currentLesson ? (
+            // Show video-only when no tools are configured
+            <VideoPlayer
+              key={`video-only-${currentContentId}-${currentContentIndex}`}
+              lesson={currentLesson}
+              isPlaying={isPlaying}
+              currentVideo={currentContentIndex}
+              totalLessons={course.totalLessons}
+              isCompleted={
+                currentContentData?.data.progress.status === "completed"
+              }
+              onPlayPause={handleVideoPlayPause}
+              onPrevious={prevLesson}
+              onNext={nextLesson}
+              onMarkComplete={markLessonComplete}
+              onMaximize={handleVideoMaximize}
+              onRestore={handleVideoRestore}
+              onVideoProgress={handleVideoProgress}
+              isNavigatingNext={isNavigating}
+              isNavigatingPrev={isNavigating}
+              isMaximized={false}
+              isCompleting={isCompleting}
             />
           ) : (
             <div className="text-center text-green-400 font-mono p-4 sm:p-8">

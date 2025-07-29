@@ -301,9 +301,15 @@ const createContent = asyncHandler(async (req, res, next) => {
       (resource) =>
         !resource.name ||
         !resource.type ||
-        !["url", "file", "document", "tool", "reference", "video", "download"].includes(
-          resource.type
-        )
+        ![
+          "url",
+          "file",
+          "document",
+          "tool",
+          "reference",
+          "video",
+          "download",
+        ].includes(resource.type)
     );
     if (invalidResources.length > 0) {
       return next(
@@ -318,10 +324,15 @@ const createContent = asyncHandler(async (req, res, next) => {
   // Validate outcomes for labs and games
   if (
     (contentData.type === "lab" || contentData.type === "game") &&
-    (!contentData.outcomes || !Array.isArray(contentData.outcomes) || contentData.outcomes.length === 0)
+    (!contentData.outcomes ||
+      !Array.isArray(contentData.outcomes) ||
+      contentData.outcomes.length === 0)
   ) {
     return next(
-      new ErrorResponse("Labs and games must have at least one learning outcome", 400)
+      new ErrorResponse(
+        "Labs and games must have at least one learning outcome",
+        400
+      )
     );
   }
 
@@ -329,9 +340,7 @@ const createContent = asyncHandler(async (req, res, next) => {
   if (contentData.outcomes && Array.isArray(contentData.outcomes)) {
     const invalidOutcomes = contentData.outcomes.filter(
       (outcome) =>
-        !outcome.title ||
-        !outcome.description ||
-        !Array.isArray(outcome.skills)
+        !outcome.title || !outcome.description || !Array.isArray(outcome.skills)
     );
     if (invalidOutcomes.length > 0) {
       return next(
@@ -406,9 +415,15 @@ const updateContent = asyncHandler(async (req, res, next) => {
       (resource) =>
         !resource.name ||
         !resource.type ||
-        !["url", "file", "document", "tool", "reference", "video", "download"].includes(
-          resource.type
-        )
+        ![
+          "url",
+          "file",
+          "document",
+          "tool",
+          "reference",
+          "video",
+          "download",
+        ].includes(resource.type)
     );
     if (invalidResources.length > 0) {
       return next(
@@ -424,9 +439,7 @@ const updateContent = asyncHandler(async (req, res, next) => {
   if (updateData.outcomes && Array.isArray(updateData.outcomes)) {
     const invalidOutcomes = updateData.outcomes.filter(
       (outcome) =>
-        !outcome.title ||
-        !outcome.description ||
-        !Array.isArray(outcome.skills)
+        !outcome.title || !outcome.description || !Array.isArray(outcome.skills)
     );
     if (invalidOutcomes.length > 0) {
       return next(
@@ -439,17 +452,27 @@ const updateContent = asyncHandler(async (req, res, next) => {
   }
 
   // If updating content type to lab or game, ensure outcomes exist
-  if (updateData.type && (updateData.type === "lab" || updateData.type === "game")) {
+  if (
+    updateData.type &&
+    (updateData.type === "lab" || updateData.type === "game")
+  ) {
     // Get current content to check existing outcomes
     const currentContent = await Content.findById(id);
     if (!currentContent) {
       return next(new ErrorResponse("Content not found", 404));
     }
-    
+
     const finalOutcomes = updateData.outcomes || currentContent.outcomes;
-    if (!finalOutcomes || !Array.isArray(finalOutcomes) || finalOutcomes.length === 0) {
+    if (
+      !finalOutcomes ||
+      !Array.isArray(finalOutcomes) ||
+      finalOutcomes.length === 0
+    ) {
       return next(
-        new ErrorResponse("Labs and games must have at least one learning outcome", 400)
+        new ErrorResponse(
+          "Labs and games must have at least one learning outcome",
+          400
+        )
       );
     }
   }
@@ -594,6 +617,11 @@ const getContentWithModuleAndProgress = asyncHandler(async (req, res, next) => {
       duration: content.duration,
       section: content.section,
       resources: content.resources,
+      // AI-specific fields
+      aiContent: content.aiContent,
+      aiDescription: content.aiDescription,
+      availableTools: content.availableTools,
+      terminalConfig: content.terminalConfig,
     },
     module: {
       _id: content.moduleId._id.toString(),

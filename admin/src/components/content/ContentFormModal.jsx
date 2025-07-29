@@ -195,7 +195,7 @@ const ContentFormModal = ({
                   placeholder={
                     formData.moduleId
                       ? "🔍 Search existing sections or create new one..."
-                      : "⚠️ Select a module first to manage sections"
+                      : "⚠ Select a module first to manage sections"
                   }
                   disabled={!formData.moduleId}
                 />
@@ -381,7 +381,7 @@ const ContentFormModal = ({
                   placeholder="Auto-assigned if empty"
                 />
                 <p className="text-xs text-green-400/60 font-mono">
-                  ℹ️ Leave empty for auto-assignment. Use drag-and-drop for
+                  ℹ Leave empty for auto-assignment. Use drag-and-drop for
                   reordering.
                 </p>
               </div>
@@ -448,7 +448,7 @@ const ContentFormModal = ({
                           <option value="tool">🔧 Tool</option>
                           <option value="reference">📖 Reference</option>
                           <option value="video">🎥 Video</option>
-                          <option value="download">⬇️ Download</option>
+                          <option value="download">⬇ Download</option>
                         </select>
                       </div>
                       <div>
@@ -558,7 +558,7 @@ const ContentFormModal = ({
                           }}
                           className="px-3 py-1 bg-red-600/20 border border-red-400/30 rounded text-red-400 text-xs hover:bg-red-600/30"
                         >
-                          🗑️ Remove
+                          🗑 Remove
                         </button>
                       </div>
                     </div>
@@ -740,7 +740,7 @@ const ContentFormModal = ({
                             }}
                             className="px-3 py-1 bg-red-600/20 border border-red-400/30 rounded text-red-400 text-xs hover:bg-red-600/30"
                           >
-                            🗑️ Remove
+                            🗑 Remove
                           </button>
                         </div>
                       </div>
@@ -797,7 +797,7 @@ const ContentFormModal = ({
                     placeholder="Provide detailed information for the AI to help students with this content. Include key concepts, common challenges, important commands, etc."
                   />
                   <p className="text-xs text-cyan-400/60 font-mono">
-                    ℹ️ This information helps the AI provide context-aware
+                    ℹ This information helps the AI provide context-aware
                     assistance to students
                   </p>
                 </div>
@@ -821,7 +821,7 @@ const ContentFormModal = ({
                     placeholder="What should the AI say when students start this lesson? This personalizes the initial greeting."
                   />
                   <p className="text-xs text-cyan-400/60 font-mono">
-                    ℹ️ Customize the AI's initial message when students access
+                    ℹ Customize the AI's initial message when students access
                     this content
                   </p>
                 </div>
@@ -844,7 +844,7 @@ const ContentFormModal = ({
                       {
                         value: "threat-intel",
                         label: "Threat Intel",
-                        icon: "🛡️",
+                        icon: "🛡",
                       },
                       {
                         value: "network-scanner",
@@ -854,7 +854,7 @@ const ContentFormModal = ({
                       {
                         value: "vulnerability-scanner",
                         label: "Vuln Scanner",
-                        icon: "⚠️",
+                        icon: "⚠",
                       },
                       {
                         value: "forensics-kit",
@@ -922,7 +922,7 @@ const ContentFormModal = ({
                     ))}
                   </div>
                   <p className="text-xs text-cyan-400/60 font-mono">
-                    ℹ️ Select tools that will be available in the AI playground
+                    ℹ Select tools that will be available in the AI playground
                     for this content
                   </p>
                 </div>
@@ -933,52 +933,6 @@ const ContentFormModal = ({
                     <h4 className="text-md font-medium text-cyan-400 font-mono uppercase tracking-wider">
                       ▶ 💻 Terminal Configuration
                     </h4>
-
-                    {/* Welcome Message */}
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono">
-                        Terminal Welcome Message
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.terminalConfig?.welcomeMessage || ""}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            terminalConfig: {
-                              ...prev.terminalConfig,
-                              welcomeMessage: e.target.value,
-                            },
-                          }))
-                        }
-                        className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-cyan-400/30 rounded-xl text-cyan-400 font-mono focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 placeholder-cyan-400/50"
-                        maxLength="200"
-                        placeholder="Welcome to AI-Enhanced Terminal"
-                      />
-                    </div>
-
-                    {/* Custom Prompt */}
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono">
-                        Custom Terminal Prompt
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.terminalConfig?.customPrompt || ""}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            terminalConfig: {
-                              ...prev.terminalConfig,
-                              customPrompt: e.target.value,
-                            },
-                          }))
-                        }
-                        className="w-full px-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-cyan-400/30 rounded-xl text-cyan-400 font-mono focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 placeholder-cyan-400/50"
-                        maxLength="50"
-                        placeholder="student@hack-the-world:~$"
-                      />
-                    </div>
 
                     {/* Available Commands */}
                     <div className="space-y-2">
@@ -1056,87 +1010,7 @@ const ContentFormModal = ({
                         </button>
                       </div>
                       <p className="text-xs text-cyan-400/60 font-mono">
-                        ℹ️ Commands that students can use in the terminal
-                      </p>
-                    </div>
-
-                    {/* Initial Commands */}
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono">
-                        Initial Commands
-                      </label>
-                      <div className="space-y-2">
-                        {(formData.terminalConfig?.initialCommands || []).map(
-                          (cmd, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-2"
-                            >
-                              <input
-                                type="text"
-                                value={cmd}
-                                onChange={(e) => {
-                                  const newCommands = [
-                                    ...(formData.terminalConfig
-                                      ?.initialCommands || []),
-                                  ];
-                                  newCommands[index] = e.target.value;
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    terminalConfig: {
-                                      ...prev.terminalConfig,
-                                      initialCommands: newCommands,
-                                    },
-                                  }));
-                                }}
-                                className="flex-1 px-3 py-2 bg-gray-700/50 border border-cyan-400/20 rounded text-cyan-400 font-mono text-sm"
-                                placeholder="Enter command"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newCommands = (
-                                    formData.terminalConfig?.initialCommands ||
-                                    []
-                                  ).filter((_, i) => i !== index);
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    terminalConfig: {
-                                      ...prev.terminalConfig,
-                                      initialCommands: newCommands,
-                                    },
-                                  }));
-                                }}
-                                className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-mono"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          )
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newCommands = [
-                              ...(formData.terminalConfig?.initialCommands ||
-                                []),
-                              "",
-                            ];
-                            setFormData((prev) => ({
-                              ...prev,
-                              terminalConfig: {
-                                ...prev.terminalConfig,
-                                initialCommands: newCommands,
-                              },
-                            }));
-                          }}
-                          className="w-full px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm font-mono"
-                        >
-                          + Add Initial Command
-                        </button>
-                      </div>
-                      <p className="text-xs text-cyan-400/60 font-mono">
-                        ℹ️ Commands to run automatically when terminal starts
+                        ℹ Commands that students can use in the terminal
                       </p>
                     </div>
                   </div>
@@ -1154,7 +1028,7 @@ const ContentFormModal = ({
                 {/* Tags */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                    ▶ 🏷️ Tags (comma-separated)
+                    ▶ 🏷 Tags (comma-separated)
                   </label>
                   <input
                     type="text"
@@ -1333,7 +1207,7 @@ const ContentFormModal = ({
                 {/* Thumbnail URL */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-green-400 mb-2 font-mono uppercase tracking-wider">
-                    ▶ 🖼️ Thumbnail URL
+                    ▶ 🖼 Thumbnail URL
                   </label>
                   <input
                     type="url"

@@ -34,18 +34,12 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-interface TerminalConfig {
-  welcomeMessage?: string;
-  customPrompt?: string;
-  availableCommands?: string[];
-  initialCommands?: string[];
-}
+// Terminal config type (simplified to match server model) - REMOVED since not used
 
 interface EnhancedAIPlaygroundProps {
   contentId?: string;
   moduleId?: string;
   availableTools?: string[];
-  terminalConfig?: TerminalConfig;
   isMaximized?: boolean;
   onMaximize: () => void;
   onRestore?: () => void;
@@ -72,7 +66,6 @@ const EnhancedAIPlayground = ({
   contentId,
   moduleId,
   availableTools = ["terminal", "chat", "analysis"],
-  terminalConfig,
   isMaximized = false,
   onMaximize,
   onRestore,
@@ -95,6 +88,9 @@ const EnhancedAIPlayground = ({
   const chatRef = useRef<HTMLDivElement>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const xtermRef = useRef<XTerm | null>(null);
+  const fitAddonRef = useRef<FitAddon | null>(null);
 
   // API hooks
   const [startChatSession] = useStartChatSessionMutation();
@@ -139,12 +135,6 @@ const EnhancedAIPlayground = ({
 
       terminal.open(terminalRef.current);
 
-      // Initialize welcome message and prompt data
-      const welcomeMsg =
-        terminalConfig?.welcomeMessage || "Welcome to AI-Enhanced Terminal";
-      const customPrompt =
-        terminalConfig?.customPrompt || "student@hack-the-world:~$";
-
       // Wait for terminal to be properly rendered before fitting, focusing, and writing content
       setTimeout(() => {
         if (terminalRef.current && fitAddon) {
@@ -156,8 +146,8 @@ const EnhancedAIPlayground = ({
             "\x1b[1;32m╔══════════════════════════════════════════════════════════════════════════════╗\x1b[0m"
           );
           terminal.writeln(
-            `\x1b[1;32m║${welcomeMsg
-              .padStart((80 + welcomeMsg.length) / 2)
+            `\x1b[1;32m║${"Welcome to AI-Enhanced Terminal"
+              .padStart((80 + "Welcome to AI-Enhanced Terminal".length) / 2)
               .padEnd(78)}║\x1b[0m`
           );
           terminal.writeln(
@@ -176,37 +166,15 @@ const EnhancedAIPlayground = ({
       // Setup input handling and initial prompt after terminal is ready
       setTimeout(() => {
         if (terminalRef.current && terminal) {
-          const prompt = `\x1b[1;32m${customPrompt}\x1b[0m `;
+          const prompt = `\x1b[1;32mstudent@hack-the-world:~$\x1b[0m `;
 
-          // Run initial commands if configured
-          if (terminalConfig?.initialCommands?.length) {
-            let delay = 0;
-            terminalConfig.initialCommands.forEach((cmd, index) => {
-              setTimeout(() => {
-                terminal.writeln(`\x1b[1;32m${customPrompt}\x1b[0m ${cmd}`);
-                setTimeout(() => {
-                  terminal.writeln(`Executed: ${cmd}`);
-                  if (index === terminalConfig.initialCommands!.length - 1) {
-                    terminal.writeln("");
-                  }
-                }, 300);
-              }, delay);
-              delay += 800;
-            });
-
-            // Show prompt after initial commands
-            setTimeout(() => {
-              terminal.write(prompt);
-            }, delay + 500);
-          } else {
-            // Show prompt immediately if no initial commands
-            terminal.write(prompt);
-          }
+          // Show prompt immediately (no initial commands)
+          terminal.write(prompt);
         }
       }, 250);
 
       let currentLine = "";
-      const promptForInput = `\x1b[1;32m${customPrompt}\x1b[0m `;
+      const promptForInput = `\x1b[1;32mstudent@hack-the-world:~$\x1b[0m `;
 
       terminal.onData(async (data) => {
         const char = data;
@@ -264,13 +232,13 @@ const EnhancedAIPlayground = ({
       }).unwrap();
 
       // Display command output
-      terminal.writeln(`\x1b[1;37m${result.data.output}\x1b[0m`);
+      terminal.writeln(\x1b[1;37m${result.data.output}\x1b[0m);
 
       // Display AI explanation if available
       if (result.data.aiExplanation) {
         terminal.writeln("");
         terminal.writeln("\x1b[1;36m💡 AI Explanation:\x1b[0m");
-        terminal.writeln(`\x1b[0;36m${result.data.aiExplanation}\x1b[0m`);
+        terminal.writeln(\x1b[0;36m${result.data.aiExplanation}\x1b[0m);
       }
 
       // Display suggestions if available
@@ -278,13 +246,13 @@ const EnhancedAIPlayground = ({
         terminal.writeln("");
         terminal.writeln("\x1b[1;33m💡 Suggested commands:\x1b[0m");
         result.data.suggestions.forEach((suggestion) => {
-          terminal.writeln(`\x1b[0;33m  • ${suggestion}\x1b[0m`);
+          terminal.writeln(\x1b[0;33m  • ${suggestion}\x1b[0m);
         });
       }
 
       terminal.writeln("");
     } catch {
-      terminal.writeln(`\x1b[1;31mError: Command execution failed\x1b[0m`);
+      terminal.writeln(\x1b[1;31mError: Command execution failed\x1b[0m);
       terminal.writeln("");
     }
 
@@ -378,7 +346,7 @@ const EnhancedAIPlayground = ({
     setIsAnalyzing(true);
     try {
       const result = await sendChatMessage({
-        message: `Please analyze this code/command: ${analysisInput}`,
+        message: Please analyze this code/command: ${analysisInput},
         sessionId: currentSession?.sessionId,
         contentId: contentId || undefined,
         moduleId: moduleId || undefined,
@@ -390,7 +358,7 @@ const EnhancedAIPlayground = ({
         ...prev,
         {
           role: "user",
-          content: `Analyze: ${analysisInput}`,
+          content: Analyze: ${analysisInput},
           timestamp: new Date().toISOString(),
         },
         {
@@ -578,8 +546,7 @@ const EnhancedAIPlayground = ({
                   {/* Current Input Line */}
                   <div className="flex items-center">
                     <span className="text-green-400">
-                      {terminalConfig?.customPrompt ||
-                        "student@hack-the-world:~$"}{" "}
+                      "student@hack-the-world:~$"{" "}
                     </span>
                     <input
                       ref={inputRef}

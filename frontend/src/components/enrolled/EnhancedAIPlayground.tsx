@@ -87,7 +87,6 @@ const EnhancedAIPlayground = ({
   // Refs
   const chatRef = useRef<HTMLDivElement>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
@@ -224,51 +223,47 @@ const EnhancedAIPlayground = ({
   }, []);
 
   // Handle terminal command execution
-  const handleTerminalCommand = async (command: string, terminal: XTerm) => {
-    try {
-      const result = await executeTerminalCommand({
-        command,
-        contentId: contentId || undefined,
-      }).unwrap();
+  const handleTerminalCommand = useCallback(
+    async (command: string, terminal: XTerm) => {
+      try {
+        const result = await executeTerminalCommand({
+          command,
+          contentId: contentId || undefined,
+        }).unwrap();
 
-      // Display command output
-      terminal.writeln(\x1b[1;37m${result.data.output}\x1b[0m);
+        // Display command output
+        terminal.writeln(`\x1b[1;37m${result.data.output}\x1b[0m`);
 
-      // Display AI explanation if available
-      if (result.data.aiExplanation) {
+        // Display AI explanation if available
+        if (result.data.aiExplanation) {
+          terminal.writeln("");
+          terminal.writeln("\x1b[1;36m💡 AI Explanation:\x1b[0m");
+          terminal.writeln(`\x1b[0;36m${result.data.aiExplanation}\x1b[0m`);
+        }
+
+        // Display suggestions if available
+        if (result.data.suggestions && result.data.suggestions.length > 0) {
+          terminal.writeln("");
+          terminal.writeln("\x1b[1;33m💡 Suggested commands:\x1b[0m");
+          result.data.suggestions.forEach((suggestion) => {
+            terminal.writeln(`\x1b[0;33m  • ${suggestion}\x1b[0m`);
+          });
+        }
+
         terminal.writeln("");
-        terminal.writeln("\x1b[1;36m💡 AI Explanation:\x1b[0m");
-        terminal.writeln(\x1b[0;36m${result.data.aiExplanation}\x1b[0m);
+      } catch {
+        terminal.writeln(`\x1b[1;31mError: Command execution failed\x1b[0m`);
+        terminal.writeln("");
       }
 
-      // Display suggestions if available
-      if (result.data.suggestions && result.data.suggestions.length > 0) {
-        terminal.writeln("");
-        terminal.writeln("\x1b[1;33m💡 Suggested commands:\x1b[0m");
-        result.data.suggestions.forEach((suggestion) => {
-          terminal.writeln(\x1b[0;33m  • ${suggestion}\x1b[0m);
-        });
-      }
+      // Show prompt for next command
+      const prompt = "\x1b[1;32mstudent@hack-the-world:\x1b[1;34m~\x1b[0m$ ";
+      terminal.write(prompt);
+    },
+    [executeTerminalCommand, contentId]
+  );
 
-      terminal.writeln("");
-    } catch {
-      terminal.writeln(\x1b[1;31mError: Command execution failed\x1b[0m);
-      terminal.writeln("");
-    }
-
-    // Show prompt for next command
-    const prompt = "\x1b[1;32mstudent@hack-the-world:\x1b[1;34m~\x1b[0m$ ";
-    terminal.write(prompt);
-  };
-
-  // Initialize chat session when component mounts or content changes
-  useEffect(() => {
-    if (contentId || moduleId) {
-      initializeChatSession();
-    }
-  }, [contentId, moduleId]);
-
-  const initializeChatSession = async () => {
+  const initializeChatSession = useCallback(async () => {
     try {
       const result = await startChatSession({
         contentId: contentId || undefined,
@@ -287,7 +282,14 @@ const EnhancedAIPlayground = ({
     } catch {
       console.error("Failed to start chat session");
     }
-  };
+  }, [startChatSession, contentId, moduleId]);
+
+  // Initialize chat session when component mounts or content changes
+  useEffect(() => {
+    if (contentId || moduleId) {
+      initializeChatSession();
+    }
+  }, [contentId, moduleId, initializeChatSession]);
 
   // Handle chat message submission
   const handleChatSubmit = async () => {
@@ -346,7 +348,7 @@ const EnhancedAIPlayground = ({
     setIsAnalyzing(true);
     try {
       const result = await sendChatMessage({
-        message: Please analyze this code/command: ${analysisInput},
+        message: `Please analyze this code/command: ${analysisInput}`,
         sessionId: currentSession?.sessionId,
         contentId: contentId || undefined,
         moduleId: moduleId || undefined,
@@ -358,7 +360,7 @@ const EnhancedAIPlayground = ({
         ...prev,
         {
           role: "user",
-          content: Analyze: ${analysisInput},
+          content: `Analyze: ${analysisInput}`,
           timestamp: new Date().toISOString(),
         },
         {
@@ -530,41 +532,9 @@ const EnhancedAIPlayground = ({
                 </div>
               </div>
 
-              {/* Simple Terminal Implementation */}
-              <div
-                className="flex-1 p-4 overflow-y-auto font-mono text-sm text-green-400 cursor-text"
-                onClick={focusTerminal}
-              >
-                {/* Terminal Output */}
-                <div className="space-y-1">
-                  {terminalLines.map((line, index) => (
-                    <div key={index} className="whitespace-pre-wrap">
-                      {line}
-                    </div>
-                  ))}
-
-                  {/* Current Input Line */}
-                  <div className="flex items-center">
-                    <span className="text-green-400">
-                      "student@hack-the-world:~$"{" "}
-                    </span>
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={currentInput}
-                      onChange={(e) => setCurrentInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && currentInput.trim()) {
-                          handleTerminalInput(currentInput.trim());
-                        }
-                      }}
-                      className="flex-1 bg-transparent border-none outline-none text-green-400 font-mono"
-                      placeholder="Type a command..."
-                      autoFocus
-                    />
-                    <span className="text-green-400 animate-pulse">█</span>
-                  </div>
-                </div>
+              {/* XTerm Terminal */}
+              <div className="flex-1">
+                <div ref={terminalRef} className="h-full w-full" />
               </div>
             </div>
           </TabsContent>

@@ -2,6 +2,8 @@ import {
   EnhancedProgressTab,
   LearningDashboard,
   ProgressOverview,
+  ProgressWordDisplay,
+  EnhancedDiscoverSection,
 } from "@/components/dashboard";
 import {
   useGetCurrentUserEnrollmentsQuery,
@@ -113,19 +115,28 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-black text-green-400">
-      <div className="max-w-7xl mx-auto py-10 space-y-6 px-4">
-        <LearningDashboard
-          enrolledModules={enrolledModules}
-          streakData={streakData?.success ? streakData.data : undefined}
-        />
+      <div className="max-w-7xl mx-auto py-10 space-y-8 px-4">
+        {/* Hero Section with Word Progress */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <LearningDashboard
+              enrolledModules={enrolledModules}
+              streakData={streakData?.success ? streakData.data : undefined}
+            />
+          </div>
+          <div className="lg:col-span-1">
+            <ProgressWordDisplay modules={enrolledModules} />
+          </div>
+        </div>
 
+        {/* Progress Overview */}
         <ProgressOverview />
 
         {/* My Enrolled Courses Section */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-green-400 font-mono">
-              {">> "}My Enrolled Courses
+              {">> "}My Learning Progress
             </h2>
           </div>
 
@@ -133,6 +144,20 @@ const Dashboard = () => {
             enrolledModules={enrolledModules}
             onModuleClick={handleModuleClick}
             getAllModules={getAllModulesHelper}
+          />
+        </div>
+
+        {/* Discover New Courses Section */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-cyan-400 font-mono">
+              {">> "}Explore New Courses
+            </h2>
+          </div>
+
+          <EnhancedDiscoverSection
+            availableModules={allModules.filter(m => !m.enrolled)}
+            onModuleClick={handleModuleClick}
           />
         </div>
       </div>

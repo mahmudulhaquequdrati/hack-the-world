@@ -5,13 +5,16 @@ import ScrollToTop from "@/components/common/ScrollToTop";
 import Layout from "@/components/layout/Layout";
 import { Toaster } from "@/components/ui/sonner";
 import AboutPage from "@/pages/AboutPage";
+import AchievementsPage from "@/pages/AchievementsPage";
 import CourseDetailPage from "@/pages/CourseDetailPage";
 import CyberSecOverview from "@/pages/CyberSecOverview";
 import Dashboard from "@/pages/Dashboard";
 import EnrolledCoursePage from "@/pages/EnrolledCoursePage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import GamePage from "@/pages/GamePage";
+import GamesPage from "@/pages/GamesPage";
 import LabPage from "@/pages/LabPage";
+import LabsPage from "@/pages/LabsPage";
 import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -21,6 +24,7 @@ import ProfilePage from "@/pages/ProfilePage";
 import SettingsPage from "@/pages/SettingsPage";
 import SignupPage from "@/pages/SignupPage";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 function App() {
@@ -140,6 +144,36 @@ function App() {
                 <Layout>
                   <ProtectedRoute>
                     <SettingsPage />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+            <Route
+              path="/labs"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <LabsPage />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+            <Route
+              path="/games"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <GamesPage />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+            <Route
+              path="/achievements"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <AchievementsPage />
                   </ProtectedRoute>
                 </Layout>
               }

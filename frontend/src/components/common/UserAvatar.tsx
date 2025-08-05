@@ -8,7 +8,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuthRTK } from "@/hooks/useAuthRTK";
 import { getInitials } from "@/lib";
-import { Award, LogOut, Settings, Shield, Terminal, User } from "lucide-react";
+import {
+  Award,
+  FlaskConical,
+  Gamepad2,
+  LogOut,
+  Settings,
+  Shield,
+  Terminal,
+  Trophy,
+  User,
+} from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -156,6 +166,41 @@ const UserAvatar = () => {
         >
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator className="bg-green-400/30" />
+
+        <DropdownMenuItem
+          className="text-blue-400 hover:bg-blue-400/10 cursor-pointer"
+          onClick={() => {
+            navigate("/labs");
+            setIsOpen(false);
+          }}
+        >
+          <FlaskConical className="mr-2 h-4 w-4" />
+          <span>My Labs</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          className="text-purple-400 hover:bg-purple-400/10 cursor-pointer"
+          onClick={() => {
+            navigate("/games");
+            setIsOpen(false);
+          }}
+        >
+          <Gamepad2 className="mr-2 h-4 w-4" />
+          <span>My Games</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          className="text-yellow-400 hover:bg-yellow-400/10 cursor-pointer"
+          onClick={() => {
+            navigate("/achievements");
+            setIsOpen(false);
+          }}
+        >
+          <Trophy className="mr-2 h-4 w-4" />
+          <span>Achievements</span>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator className="bg-green-400/30" />

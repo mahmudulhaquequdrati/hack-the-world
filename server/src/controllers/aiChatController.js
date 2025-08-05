@@ -84,7 +84,7 @@ const startChatSession = asyncHandler(async (req, res) => {
       success: true,
       message: "AI chat session started",
       data: {
-        sessionId: `${userId}-${Date.now()}`,
+        sessionId: ${userId}-${Date.now()},
         context,
         initialResponse,
         availableCommands: getAvailableCommands(
@@ -151,7 +151,7 @@ const sendChatMessage = asyncHandler(async (req, res) => {
           hasAiDescription: !!content.aiDescription,
         });
       } else {
-        console.log("⚠️ Content not found for ID:", contentId);
+        console.log("⚠ Content not found for ID:", contentId);
       }
     }
 
@@ -312,27 +312,42 @@ async function generateAIResponse(message, context) {
   try {
     console.log("🤖 AI Context:", JSON.stringify(context, null, 2));
 
-    // Build context-aware prompt
+    // Build context-aware prompt with natural formatting instructions
     let systemPrompt = `You are an expert cybersecurity instructor and AI assistant. You help students learn cybersecurity concepts through interactive chat and terminal commands.
 
-Key guidelines:
-- Provide clear, educational explanations
-- Use practical examples and real-world scenarios
-- Encourage hands-on learning with terminal commands
-- Be concise but thorough
-- Always prioritize security best practices`;
+RESPONSE STYLE - Write naturally like ChatGPT or Claude:
+- Use *bold* sparingly for truly important terms
+- Write in conversational, clear paragraphs
+- Use code blocks for commands:
+  \\\`bash
+  command examples here
+  \\\`
+- Use simple bullet points (-) only when listing is helpful
+- Only use special emoji sections for critical information:
+  * 💡 For important tips
+  * ⚠ For security warnings
+  * ✅ For confirmations
+- Keep responses natural and conversational, not overly formatted
+- Focus on being helpful and educational rather than visually complex
+
+Key principles:
+- Write like you're having a natural conversation with a student
+- Explain concepts clearly without excessive formatting
+- Use practical examples that students can understand
+- Prioritize clarity over visual complexity
+- Be encouraging and supportive in your tone`;
 
     // Add module context if available
     if (context.module) {
-      systemPrompt += `\n\nCurrent module: ${context.module.title}`;
+      systemPrompt += \n\nCurrent module: ${context.module.title};
       if (context.module.description) {
-        systemPrompt += `\nModule description: ${context.module.description}`;
+        systemPrompt += \nModule description: ${context.module.description};
       }
     }
 
     // Add content context with emphasis on aiContent
     if (context.content) {
-      systemPrompt += `\n\nCurrent lesson: ${context.content.title}`;
+      systemPrompt += \n\nCurrent lesson: ${context.content.title};
 
       // Prioritize aiContent as the primary knowledge source
       if (context.content.aiContent && context.content.aiContent.trim()) {
@@ -340,8 +355,8 @@ Key guidelines:
 ${context.content.aiContent}`;
         console.log("✅ Using AI Content as primary knowledge source");
       } else if (context.content.description) {
-        systemPrompt += `\nLesson description: ${context.content.description}`;
-        console.log("⚠️ Using fallback description, no AI Content provided");
+        systemPrompt += \nLesson description: ${context.content.description};
+        console.log("⚠ Using fallback description, no AI Content provided");
       }
 
       // Add AI description if available (for additional context)
@@ -349,18 +364,18 @@ ${context.content.aiContent}`;
         context.content.aiDescription &&
         context.content.aiDescription.trim()
       ) {
-        systemPrompt += `\n\nAdditional context: ${context.content.aiDescription}`;
+        systemPrompt += \n\nAdditional context: ${context.content.aiDescription};
       }
 
       // Add content type context
-      systemPrompt += `\nContent type: ${context.content.type}`;
+      systemPrompt += \nContent type: ${context.content.type};
 
       // Add available tools context
       if (
         context.content.availableTools &&
         context.content.availableTools.length > 0
       ) {
-        systemPrompt += `\nAvailable learning tools: ${context.content.availableTools.join(", ")}`;
+        systemPrompt += \nAvailable learning tools: ${context.content.availableTools.join(", ")};
       }
     }
 
@@ -379,12 +394,12 @@ ${context.content.aiContent}`;
             { role: "system", content: systemPrompt },
             { role: "user", content: message },
           ],
-          max_tokens: 500,
+          max_tokens: 800, // Increased for better formatted responses
           temperature: 0.7,
         },
         {
           headers: {
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+            Authorization: Bearer ${process.env.OPENAI_API_KEY},
             "Content-Type": "application/json",
           },
         }
@@ -405,12 +420,12 @@ ${context.content.aiContent}`;
             { role: "system", content: systemPrompt },
             { role: "user", content: message },
           ],
-          max_tokens: 500,
+          max_tokens: 800, // Increased for better formatted responses
           temperature: 0.7,
         },
         {
           headers: {
-            Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+            Authorization: Bearer ${process.env.DEEPSEEK_API_KEY},
             "Content-Type": "application/json",
           },
         }
@@ -420,24 +435,50 @@ ${context.content.aiContent}`;
       return response.data.choices[0].message.content;
     }
 
-    // Fallback to local response if no API keys
-    console.log("⚠️ No API keys configured, using fallback response");
-    return `I'd be happy to help you with "${message}"! However, real AI features require API keys to be configured. Please set up OpenAI or DeepSeek API keys in your environment variables.
-
-For now, I can provide some general guidance: This appears to be a cybersecurity question. ${context.content ? `You're currently studying "${context.content.title}".` : ""}
-
-To enable full AI capabilities:
-1. Get an API key from OpenAI (platform.openai.com) or DeepSeek (platform.deepseek.com)
-2. Add it to your server/.env file as OPENAI_API_KEY=your-key-here
-3. Restart the server
-
-Try using the terminal for hands-on practice in the meantime!`;
+    // Enhanced fallback response with proper formatting
+    console.log("⚠ No API keys configured, using formatted fallback response");
+    return formatFallbackResponse(message, context);
   } catch (error) {
     console.error("AI API Error:", error.response?.data || error.message);
 
-    // Fallback response
-    return `I understand you're asking about "${message}". While I'm having trouble connecting to the AI service right now, I can tell you this is an important cybersecurity topic. Try checking the terminal commands or explore the course materials for more information.`;
+    // Enhanced fallback response
+    return formatErrorResponse(message, context);
   }
+}
+
+// Helper function for formatted fallback responses
+function formatFallbackResponse(message, context) {
+  const contextInfo = context.content ? context.content.title : "cybersecurity";
+
+  return `I'd be happy to help you with "${message}"!
+
+I'm here to assist with cybersecurity questions and concepts. ${context.content ? Since you're studying "${context.content.title}", I can help explain related topics. : ""}
+
+Here are some ways I can help:
+- Explain cybersecurity concepts in simple terms
+- Help you understand terminal commands
+- Guide you through security practices
+- Answer questions about the course material
+
+💡 *Tip*: You can also use the terminal tab to practice commands hands-on!
+
+What specific aspect would you like me to explain further?`;
+}
+
+// Helper function for formatted error responses
+function formatErrorResponse(message, context) {
+  return `I understand you're asking about "${message}".
+
+I'm having trouble connecting to the AI service right now, but I can still help you learn!
+
+Here's what you can do:
+- Use the terminal tab for hands-on practice with cybersecurity commands
+- Review the course materials for detailed information
+- Try asking again in a moment - the connection might improve
+
+${context.content ? Since you're studying "${context.content.title}", you might find relevant information in the lesson materials. : ""}
+
+The terminal and course content are always available for learning! What would you like to explore?`;
 }
 
 async function processTerminalCommand(command, context) {
@@ -476,27 +517,110 @@ Common options:
   -h, --help     Show this help message
   -v, --verbose  Verbose output`;
   } else {
-    return `Command '${command}' executed. Output would appear here in a real environment.`;
+    return Command '${command}' executed. Output would appear here in a real environment.;
   }
 }
 
 function explainCommand(command, context) {
   const cmd = command.trim().toLowerCase().split(" ")[0];
 
-  const explanations = {
-    ls: "Lists files and directories in the current location. Essential for navigation and file discovery.",
-    pwd: "Prints the current working directory path. Helps you understand where you are in the file system.",
-    nmap: "Network mapper - scans for open ports and services. Critical tool for network reconnaissance.",
-    cat: "Displays file contents. Useful for reading configuration files, logs, and text files.",
-    grep: "Searches for patterns in files. Essential for log analysis and finding specific information.",
-    chmod:
-      "Changes file permissions. Important for understanding and modifying security settings.",
-    sudo: "Executes commands with elevated privileges. Critical for system administration tasks.",
+  // Enhanced explanations with formatting
+  const formattedExplanations = {
+    ls: `## 📁 \ls\ Command Explanation
+
+The \ls\ command *lists directory contents*.
+
+*Common options:*
+- \ls -l\ - Long format with details
+- \ls -a\ - Show hidden files
+- \ls -la\ - Long format + hidden files
+
+💡 *Cybersecurity tip:* Always check file permissions with \ls -l\ to identify potential security issues!`,
+
+    nmap: `## 🔍 \nmap\ Command Explanation
+
+*Network Mapper* - Essential tool for network discovery and security auditing.
+
+*What it does:*
+- Discovers hosts and services on a network
+- Identifies open ports and running services
+- Detects operating systems and versions
+
+⚠ *Security Note:* Only scan networks you own or have permission to test!
+
+*Common usage:*
+\\\`bash
+nmap -sS target.com    # SYN scan (stealth)
+nmap -sV target.com    # Version detection
+nmap -O target.com     # OS detection
+\\\``,
+
+    pwd: `## 📍 \pwd\ Command Explanation
+
+*Print Working Directory* - Shows your current location in the filesystem.
+
+💡 *Why it matters:* Knowing your current directory is crucial for:
+- Understanding file paths
+- Avoiding accidental operations in wrong locations
+- Security auditing and forensics`,
+
+    whoami: `## 👤 \whoami\ Command Explanation
+
+Shows the *current user account*.
+
+*Security relevance:*
+- Verify privilege level before operations
+- Check if running as root/admin
+- Important for privilege escalation testing
+
+✅ *Best practice:* Always verify user context before executing commands!`,
+
+    cat: `## 📄 \cat\ Command Explanation
+
+*Concatenate and display* file contents.
+
+*Security uses:*
+- Reading configuration files
+- Examining log files
+- Viewing scripts and code
+
+*Common options:*
+\\\`bash
+cat filename          # Display entire file
+cat -n filename       # Show line numbers
+cat file1 file2       # Concatenate multiple files
+\\\``,
+
+    grep: `## 🔍 \grep\ Command Explanation
+
+*Global Regular Expression Print* - Search for patterns in files.
+
+*Essential for:*
+- Log analysis and forensics
+- Finding specific configurations
+- Incident investigation
+
+*Examples:*
+\\\`bash
+grep "error" logfile       # Find errors
+grep -i "password" *       # Case-insensitive search
+grep -r "config" /path/    # Recursive search
+\\\``,
   };
 
+  // Return formatted explanation or default
   return (
-    explanations[cmd] ||
-    `The command '${cmd}' is used in cybersecurity for various purposes. It's part of the standard toolkit for security professionals.`
+    formattedExplanations[cmd] ||
+    ## 🔧 Command: \${command}\`
+
+This command is part of your cybersecurity toolkit.
+
+💡 *General tips:*
+- Use \man ${cmd}\ for detailed manual
+- Try \${cmd} --help\ for quick help
+- Practice in safe environments first
+
+${context.content ? 📚 **Related to:** ${context.content.title} : ""}`
   );
 }
 

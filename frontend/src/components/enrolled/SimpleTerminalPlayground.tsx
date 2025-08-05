@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { AIChatService } from "@/services/aiChatService";
+import AIResponseFormatter from "./AIResponseFormatter";
 import {
   AlertTriangle,
   Brain,
@@ -66,6 +67,7 @@ const SimpleTerminalPlayground = ({
   const [chatMessages, setChatMessages] = useState<
     Array<{ role: "user" | "ai"; content: string; timestamp: string }>
   >([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Simple terminal state
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
@@ -186,10 +188,11 @@ const SimpleTerminalPlayground = ({
 
   // Handle chat
   const handleChatSubmit = async () => {
-    if (!chatInput.trim()) return;
+    if (!chatInput.trim() || isLoading) return;
 
     const userMessage = chatInput.trim();
     setChatInput("");
+    setIsLoading(true);
 
     // Add user message
     setChatMessages((prev) => [
@@ -288,6 +291,8 @@ const SimpleTerminalPlayground = ({
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -427,36 +432,88 @@ const SimpleTerminalPlayground = ({
 
               <div
                 ref={chatRef}
-                className="flex-1 p-2 overflow-y-auto hide-scrollbar space-y-2 min-h-0"
+                className="flex-1 p-2 overflow-y-auto hide-scrollbar space-y-3 min-h-0"
               >
                 {chatMessages.map((message, index) => (
                   <div
                     key={index}
-                    className={`p-2 rounded text-xs ${
-                      message.role === "user"
-                        ? "bg-green-400/20 ml-6"
-                        : "bg-gray-800/50 mr-6"
-                    }`}
+                    className={`${message.role === "user" ? "ml-4" : "mr-4"}`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span
-                        className={`text-xs font-mono ${
-                          message.role === "user"
-                            ? "text-green-300"
-                            : "text-blue-300"
-                        }`}
-                      >
-                        {message.role === "user" ? "You" : "AI Assistant"}
-                      </span>
-                      <span className="text-xs text-gray-400 font-mono">
-                        {message.timestamp}
-                      </span>
-                    </div>
-                    <p className="text-green-400 font-mono text-xs">
-                      {message.content}
-                    </p>
+                    {message.role === "user" ? (
+                      // User message (existing simple format)
+                      <div className="bg-green-400/20 p-3 rounded-lg border border-green-400/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-mono text-green-300">
+                            You
+                          </span>
+                          <span className="text-xs text-gray-400 font-mono">
+                            {message.timestamp}
+                          </span>
+                        </div>
+                        <p className="text-green-400 font-mono text-xs leading-relaxed">
+                          {message.content}
+                        </p>
+                      </div>
+                    ) : (
+                      // AI message with enhanced formatter
+                      <div className="bg-gray-900/60 p-3 rounded-lg border border-blue-400/20">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                            <span className="text-xs font-mono text-blue-300">
+                              AI Assistant
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-400 font-mono">
+                            {message.timestamp}
+                          </span>
+                        </div>
+                        <AIResponseFormatter
+                          content={message.content}
+                          isTyping={
+                            index === chatMessages.length - 1 &&
+                            message.content.length > 0
+                          }
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
+
+                {/* Loading state */}
+                {isLoading && (
+                  <div className="mr-4">
+                    <div className="bg-gray-900/60 p-3 rounded-lg border border-blue-400/20">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                          <span className="text-xs font-mono text-blue-300">
+                            AI Assistant
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-400 font-mono">
+                          {new Date().toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex space-x-1">
+                          <div className="w-1 h-1 bg-blue-400/60 rounded-full animate-bounce"></div>
+                          <div
+                            className="w-1 h-1 bg-blue-400/60 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-1 h-1 bg-blue-400/60 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-blue-300/70 font-mono">
+                          Thinking...
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="p-2 border-t border-green-400/30 flex-shrink-0">
@@ -466,19 +523,24 @@ const SimpleTerminalPlayground = ({
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && chatInput.trim()) {
+                      if (e.key === "Enter" && chatInput.trim() && !isLoading) {
                         handleChatSubmit();
                       }
                     }}
-                    placeholder="Ask me anything about cybersecurity..."
-                    className="flex-1 px-2 py-1.5 bg-gray-800/50 border border-green-400/30 rounded text-green-400 font-mono text-xs focus:ring-1 focus:ring-green-400/50 focus:border-green-400/50 transition-all"
+                    placeholder={
+                      isLoading
+                        ? "AI is thinking..."
+                        : "Ask me anything about cybersecurity..."
+                    }
+                    disabled={isLoading}
+                    className="flex-1 px-2 py-1.5 bg-gray-800/50 border border-green-400/30 rounded text-green-400 font-mono text-xs focus:ring-1 focus:ring-green-400/50 focus:border-green-400/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <Button
                     onClick={handleChatSubmit}
-                    disabled={!chatInput.trim()}
-                    className="bg-green-600 hover:bg-green-700 text-white font-mono text-xs px-3 py-1.5"
+                    disabled={!chatInput.trim() || isLoading}
+                    className="bg-green-600 hover:bg-green-700 text-white font-mono text-xs px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Send
+                    {isLoading ? "..." : "Send"}
                   </Button>
                 </div>
               </div>

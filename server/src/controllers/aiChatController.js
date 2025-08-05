@@ -84,7 +84,7 @@ const startChatSession = asyncHandler(async (req, res) => {
       success: true,
       message: "AI chat session started",
       data: {
-        sessionId: ${userId}-${Date.now()},
+        sessionId: `${userId}-${Date.now()}`,
         context,
         initialResponse,
         availableCommands: getAvailableCommands(
@@ -151,7 +151,7 @@ const sendChatMessage = asyncHandler(async (req, res) => {
           hasAiDescription: !!content.aiDescription,
         });
       } else {
-        console.log("⚠ Content not found for ID:", contentId);
+        console.log("⚠️ Content not found for ID:", contentId);
       }
     }
 
@@ -316,16 +316,16 @@ async function generateAIResponse(message, context) {
     let systemPrompt = `You are an expert cybersecurity instructor and AI assistant. You help students learn cybersecurity concepts through interactive chat and terminal commands.
 
 RESPONSE STYLE - Write naturally like ChatGPT or Claude:
-- Use *bold* sparingly for truly important terms
+- Use **bold** sparingly for truly important terms
 - Write in conversational, clear paragraphs
 - Use code blocks for commands:
-  \\\`bash
+  \`\`\`bash
   command examples here
-  \\\`
+  \`\`\`
 - Use simple bullet points (-) only when listing is helpful
 - Only use special emoji sections for critical information:
   * 💡 For important tips
-  * ⚠ For security warnings
+  * ⚠️ For security warnings
   * ✅ For confirmations
 - Keep responses natural and conversational, not overly formatted
 - Focus on being helpful and educational rather than visually complex
@@ -339,15 +339,15 @@ Key principles:
 
     // Add module context if available
     if (context.module) {
-      systemPrompt += \n\nCurrent module: ${context.module.title};
+      systemPrompt += `\n\nCurrent module: ${context.module.title}`;
       if (context.module.description) {
-        systemPrompt += \nModule description: ${context.module.description};
+        systemPrompt += `\nModule description: ${context.module.description}`;
       }
     }
 
     // Add content context with emphasis on aiContent
     if (context.content) {
-      systemPrompt += \n\nCurrent lesson: ${context.content.title};
+      systemPrompt += `\n\nCurrent lesson: ${context.content.title}`;
 
       // Prioritize aiContent as the primary knowledge source
       if (context.content.aiContent && context.content.aiContent.trim()) {
@@ -355,8 +355,8 @@ Key principles:
 ${context.content.aiContent}`;
         console.log("✅ Using AI Content as primary knowledge source");
       } else if (context.content.description) {
-        systemPrompt += \nLesson description: ${context.content.description};
-        console.log("⚠ Using fallback description, no AI Content provided");
+        systemPrompt += `\nLesson description: ${context.content.description}`;
+        console.log("⚠️ Using fallback description, no AI Content provided");
       }
 
       // Add AI description if available (for additional context)
@@ -364,18 +364,18 @@ ${context.content.aiContent}`;
         context.content.aiDescription &&
         context.content.aiDescription.trim()
       ) {
-        systemPrompt += \n\nAdditional context: ${context.content.aiDescription};
+        systemPrompt += `\n\nAdditional context: ${context.content.aiDescription}`;
       }
 
       // Add content type context
-      systemPrompt += \nContent type: ${context.content.type};
+      systemPrompt += `\nContent type: ${context.content.type}`;
 
       // Add available tools context
       if (
         context.content.availableTools &&
         context.content.availableTools.length > 0
       ) {
-        systemPrompt += \nAvailable learning tools: ${context.content.availableTools.join(", ")};
+        systemPrompt += `\nAvailable learning tools: ${context.content.availableTools.join(", ")}`;
       }
     }
 
@@ -399,7 +399,7 @@ ${context.content.aiContent}`;
         },
         {
           headers: {
-            Authorization: Bearer ${process.env.OPENAI_API_KEY},
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
             "Content-Type": "application/json",
           },
         }
@@ -425,7 +425,7 @@ ${context.content.aiContent}`;
         },
         {
           headers: {
-            Authorization: Bearer ${process.env.DEEPSEEK_API_KEY},
+            Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
             "Content-Type": "application/json",
           },
         }
@@ -436,7 +436,7 @@ ${context.content.aiContent}`;
     }
 
     // Enhanced fallback response with proper formatting
-    console.log("⚠ No API keys configured, using formatted fallback response");
+    console.log("⚠️ No API keys configured, using formatted fallback response");
     return formatFallbackResponse(message, context);
   } catch (error) {
     console.error("AI API Error:", error.response?.data || error.message);
@@ -452,7 +452,7 @@ function formatFallbackResponse(message, context) {
 
   return `I'd be happy to help you with "${message}"!
 
-I'm here to assist with cybersecurity questions and concepts. ${context.content ? Since you're studying "${context.content.title}", I can help explain related topics. : ""}
+I'm here to assist with cybersecurity questions and concepts. ${context.content ? `Since you're studying "${context.content.title}", I can help explain related topics.` : ""}
 
 Here are some ways I can help:
 - Explain cybersecurity concepts in simple terms
@@ -460,7 +460,7 @@ Here are some ways I can help:
 - Guide you through security practices
 - Answer questions about the course material
 
-💡 *Tip*: You can also use the terminal tab to practice commands hands-on!
+💡 **Tip**: You can also use the terminal tab to practice commands hands-on!
 
 What specific aspect would you like me to explain further?`;
 }
@@ -476,7 +476,7 @@ Here's what you can do:
 - Review the course materials for detailed information
 - Try asking again in a moment - the connection might improve
 
-${context.content ? Since you're studying "${context.content.title}", you might find relevant information in the lesson materials. : ""}
+${context.content ? `Since you're studying "${context.content.title}", you might find relevant information in the lesson materials.` : ""}
 
 The terminal and course content are always available for learning! What would you like to explore?`;
 }
@@ -517,7 +517,7 @@ Common options:
   -h, --help     Show this help message
   -v, --verbose  Verbose output`;
   } else {
-    return Command '${command}' executed. Output would appear here in a real environment.;
+    return `Command '${command}' executed. Output would appear here in a real environment.`;
   }
 }
 
@@ -526,101 +526,101 @@ function explainCommand(command, context) {
 
   // Enhanced explanations with formatting
   const formattedExplanations = {
-    ls: `## 📁 \ls\ Command Explanation
+    ls: `## 📁 \`ls\` Command Explanation
 
-The \ls\ command *lists directory contents*.
+The \`ls\` command **lists directory contents**.
 
-*Common options:*
-- \ls -l\ - Long format with details
-- \ls -a\ - Show hidden files
-- \ls -la\ - Long format + hidden files
+**Common options:**
+- \`ls -l\` - Long format with details
+- \`ls -a\` - Show hidden files
+- \`ls -la\` - Long format + hidden files
 
-💡 *Cybersecurity tip:* Always check file permissions with \ls -l\ to identify potential security issues!`,
+💡 **Cybersecurity tip:** Always check file permissions with \`ls -l\` to identify potential security issues!`,
 
-    nmap: `## 🔍 \nmap\ Command Explanation
+    nmap: `## 🔍 \`nmap\` Command Explanation
 
-*Network Mapper* - Essential tool for network discovery and security auditing.
+**Network Mapper** - Essential tool for network discovery and security auditing.
 
-*What it does:*
+**What it does:**
 - Discovers hosts and services on a network
 - Identifies open ports and running services
 - Detects operating systems and versions
 
-⚠ *Security Note:* Only scan networks you own or have permission to test!
+⚠️ **Security Note:** Only scan networks you own or have permission to test!
 
-*Common usage:*
-\\\`bash
+**Common usage:**
+\`\`\`bash
 nmap -sS target.com    # SYN scan (stealth)
 nmap -sV target.com    # Version detection
 nmap -O target.com     # OS detection
-\\\``,
+\`\`\``,
 
-    pwd: `## 📍 \pwd\ Command Explanation
+    pwd: `## 📍 \`pwd\` Command Explanation
 
-*Print Working Directory* - Shows your current location in the filesystem.
+**Print Working Directory** - Shows your current location in the filesystem.
 
-💡 *Why it matters:* Knowing your current directory is crucial for:
+💡 **Why it matters:** Knowing your current directory is crucial for:
 - Understanding file paths
 - Avoiding accidental operations in wrong locations
 - Security auditing and forensics`,
 
-    whoami: `## 👤 \whoami\ Command Explanation
+    whoami: `## 👤 \`whoami\` Command Explanation
 
-Shows the *current user account*.
+Shows the **current user account**.
 
-*Security relevance:*
+**Security relevance:**
 - Verify privilege level before operations
 - Check if running as root/admin
 - Important for privilege escalation testing
 
-✅ *Best practice:* Always verify user context before executing commands!`,
+✅ **Best practice:** Always verify user context before executing commands!`,
 
-    cat: `## 📄 \cat\ Command Explanation
+    cat: `## 📄 \`cat\` Command Explanation
 
-*Concatenate and display* file contents.
+**Concatenate and display** file contents.
 
-*Security uses:*
+**Security uses:**
 - Reading configuration files
 - Examining log files
 - Viewing scripts and code
 
-*Common options:*
-\\\`bash
+**Common options:**
+\`\`\`bash
 cat filename          # Display entire file
 cat -n filename       # Show line numbers
 cat file1 file2       # Concatenate multiple files
-\\\``,
+\`\`\``,
 
-    grep: `## 🔍 \grep\ Command Explanation
+    grep: `## 🔍 \`grep\` Command Explanation
 
-*Global Regular Expression Print* - Search for patterns in files.
+**Global Regular Expression Print** - Search for patterns in files.
 
-*Essential for:*
+**Essential for:**
 - Log analysis and forensics
 - Finding specific configurations
 - Incident investigation
 
-*Examples:*
-\\\`bash
+**Examples:**
+\`\`\`bash
 grep "error" logfile       # Find errors
 grep -i "password" *       # Case-insensitive search
 grep -r "config" /path/    # Recursive search
-\\\``,
+\`\`\``,
   };
 
   // Return formatted explanation or default
   return (
     formattedExplanations[cmd] ||
-    ## 🔧 Command: \${command}\`
+    `## 🔧 Command: \`${command}\`
 
 This command is part of your cybersecurity toolkit.
 
-💡 *General tips:*
-- Use \man ${cmd}\ for detailed manual
-- Try \${cmd} --help\ for quick help
+💡 **General tips:**
+- Use \`man ${cmd}\` for detailed manual
+- Try \`${cmd} --help\` for quick help
 - Practice in safe environments first
 
-${context.content ? 📚 **Related to:** ${context.content.title} : ""}`
+${context.content ? `📚 **Related to:** ${context.content.title}` : ""}`
   );
 }
 

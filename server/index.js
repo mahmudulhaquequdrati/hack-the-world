@@ -22,6 +22,7 @@ const achievementRoutes = require("./src/routes/achievementRoutes");
 const streakRoutes = require("./src/routes/streak");
 const userRoutes = require("./src/routes/users");
 const aiChatRoutes = require("./src/routes/aiChatRoutes");
+const terminalRoutes = require("./src/routes/terminalRoutes");
 
 /**
  * Terminal Hacks - Terminal Hacks Learning Platform API
@@ -135,6 +136,7 @@ app.use("/api/achievements", achievementRoutes);
 app.use("/api/streak", streakRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/ai-chat", aiChatRoutes);
+app.use("/api/terminal", terminalRoutes);
 
 // Swagger API Documentation
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(specs, swaggerOptions));
@@ -156,6 +158,7 @@ app.get("/api", (req, res) => {
       achievements: "/api/achievements",
       streak: "/api/streak",
       users: "/api/users",
+      terminal: "/api/terminal",
     },
   });
 });

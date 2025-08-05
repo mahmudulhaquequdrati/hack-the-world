@@ -102,7 +102,7 @@ const ContentSchema = new mongoose.Schema(
       default: "",
     },
 
-    // Terminal configuration (simplified)
+    // Terminal configuration (enhanced with command-response mapping)
     terminalConfig: {
       availableCommands: {
         type: [String],
@@ -124,6 +124,35 @@ const ContentSchema = new mongoose.Schema(
           },
           message: "Cannot have more than 50 available commands",
         },
+      },
+      // Command responses mapping - allows admin control over command outputs
+      commandResponses: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {
+          ls: "drwxr-xr-x 2 student student 4096 Dec 20 10:30 Documents\ndrwxr-xr-x 2 student student 4096 Dec 20 10:30 Downloads\n-rw-r--r-- 1 student student  156 Dec 20 10:30 README.txt",
+          pwd: "/home/student",
+          whoami: "student",
+          help: "Available commands: ls, pwd, whoami, help, clear, cat, grep, find, ps, netstat\nType any command for more information!",
+          clear: "CLEAR_TERMINAL",
+          cat: "Usage: cat <filename>",
+          grep: "Usage: grep <pattern> <file>",
+          find: "Usage: find <path> -name <filename>",
+          ps: "PID TTY          TIME CMD\n1234 pts/0    00:00:01 bash\n5678 pts/0    00:00:00 ps",
+          netstat:
+            "Active Internet connections\nProto Recv-Q Send-Q Local Address           Foreign Address         State",
+        },
+        validate: {
+          validator: function (obj) {
+            if (!obj || typeof obj !== "object") return true;
+            return Object.keys(obj).length <= 100; // Max 100 commands
+          },
+          message: "Cannot have more than 100 command responses",
+        },
+      },
+      // Enable/disable terminal for this content
+      enableTerminal: {
+        type: Boolean,
+        default: true,
       },
     },
 

@@ -39,6 +39,7 @@ export const createContentData = (formData, sectionInputValue) => {
     availableTools: ensureValidArray(formData.availableTools),
     // Terminal configuration
     terminalConfig: formData.terminalConfig || {
+      enableTerminal: true,
       availableCommands: [
         "ls",
         "pwd",
@@ -51,6 +52,19 @@ export const createContentData = (formData, sectionInputValue) => {
         "ps",
         "netstat",
       ],
+      commandResponses: {
+        ls: "drwxr-xr-x 2 student student 4096 Dec 20 10:30 Documents\ndrwxr-xr-x 2 student student 4096 Dec 20 10:30 Downloads\n-rw-r--r-- 1 student student  156 Dec 20 10:30 README.txt",
+        pwd: "/home/student",
+        whoami: "student",
+        help: "🔧 Available Commands:\n  • ls\n  • pwd\n  • whoami\n  • help\n  • clear\n  • cat\n  • grep\n  • find\n  • ps\n  • netstat\n\n💡 Type any command above to execute it!\n🚀 This terminal is configured specifically for this content.",
+        clear: "CLEAR_TERMINAL",
+        cat: "Usage: cat <filename>",
+        grep: "Usage: grep <pattern> <file>",
+        find: "Usage: find <path> -name <filename>",
+        ps: "PID TTY          TIME CMD\n1234 pts/0    00:00:01 bash\n5678 pts/0    00:00:00 ps",
+        netstat:
+          "Active Internet connections\nProto Recv-Q Send-Q Local Address           Foreign Address         State",
+      },
     },
   };
 };
@@ -235,6 +249,7 @@ export const createDefaultFormData = () => ({
   availableTools: ["terminal", "chat", "analysis"], // Default tools
   // Terminal configuration
   terminalConfig: {
+    enableTerminal: true,
     availableCommands: [
       "ls",
       "pwd",
@@ -247,6 +262,19 @@ export const createDefaultFormData = () => ({
       "ps",
       "netstat",
     ],
+    commandResponses: {
+      ls: "drwxr-xr-x 2 student student 4096 Dec 20 10:30 Documents\ndrwxr-xr-x 2 student student 4096 Dec 20 10:30 Downloads\n-rw-r--r-- 1 student student  156 Dec 20 10:30 README.txt",
+      pwd: "/home/student",
+      whoami: "student",
+      help: "🔧 Available Commands:\n  • ls\n  • pwd\n  • whoami\n  • help\n  • clear\n  • cat\n  • grep\n  • find\n  • ps\n  • netstat\n\n💡 Type any command above to execute it!\n🚀 This terminal is configured specifically for this content.",
+      clear: "CLEAR_TERMINAL",
+      cat: "Usage: cat <filename>",
+      grep: "Usage: grep <pattern> <file>",
+      find: "Usage: find <path> -name <filename>",
+      ps: "PID TTY          TIME CMD\n1234 pts/0    00:00:01 bash\n5678 pts/0    00:00:00 ps",
+      netstat:
+        "Active Internet connections\nProto Recv-Q Send-Q Local Address           Foreign Address         State",
+    },
   },
 });
 
@@ -273,6 +301,7 @@ export const populateFormFromContent = (contentItem) => ({
   ],
   // Terminal configuration
   terminalConfig: contentItem.terminalConfig || {
+    enableTerminal: true,
     availableCommands: [
       "ls",
       "pwd",
@@ -285,6 +314,19 @@ export const populateFormFromContent = (contentItem) => ({
       "ps",
       "netstat",
     ],
+    commandResponses: {
+      ls: "drwxr-xr-x 2 student student 4096 Dec 20 10:30 Documents\ndrwxr-xr-x 2 student student 4096 Dec 20 10:30 Downloads\n-rw-r--r-- 1 student student  156 Dec 20 10:30 README.txt",
+      pwd: "/home/student",
+      whoami: "student",
+      help: "🔧 Available Commands:\n  • ls\n  • pwd\n  • whoami\n  • help\n  • clear\n  • cat\n  • grep\n  • find\n  • ps\n  • netstat\n\n💡 Type any command above to execute it!\n🚀 This terminal is configured specifically for this content.",
+      clear: "CLEAR_TERMINAL",
+      cat: "Usage: cat <filename>",
+      grep: "Usage: grep <pattern> <file>",
+      find: "Usage: find <path> -name <filename>",
+      ps: "PID TTY          TIME CMD\n1234 pts/0    00:00:01 bash\n5678 pts/0    00:00:00 ps",
+      netstat:
+        "Active Internet connections\nProto Recv-Q Send-Q Local Address           Foreign Address         State",
+    },
   },
   accessibility: contentItem.accessibility || {
     hasSubtitles: false,

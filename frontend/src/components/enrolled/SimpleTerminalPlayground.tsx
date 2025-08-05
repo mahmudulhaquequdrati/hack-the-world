@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { selectCurrentToken } from "@/features/auth/authSlice";
 import { AIChatService } from "@/services/aiChatService";
-import AIResponseFormatter from "./AIResponseFormatter";
+import {
+  executeTerminalCommand,
+  getTerminalConfig,
+} from "@/services/terminalService";
 import {
   AlertTriangle,
   Brain,
@@ -20,17 +24,14 @@ import {
   Users,
   Wifi,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-
-interface TerminalConfig {
-  availableCommands?: string[];
-}
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import AIResponseFormatter from "./AIResponseFormatter";
 
 interface SimpleTerminalPlaygroundProps {
   contentId?: string;
   moduleId?: string;
   availableTools?: string[];
-  terminalConfig?: TerminalConfig;
   isMaximized?: boolean;
   onMaximize: () => void;
   onRestore?: () => void;
@@ -56,11 +57,13 @@ const iconMap = {
 const SimpleTerminalPlayground = ({
   contentId,
   availableTools = ["terminal", "chat", "analysis"],
-  terminalConfig,
   isMaximized = false,
   onMaximize,
   onRestore,
 }: SimpleTerminalPlaygroundProps) => {
+  // Auth token
+  const token = useSelector(selectCurrentToken);
+
   // State management
   const [activeMode, setActiveMode] = useState("terminal");
   const [chatInput, setChatInput] = useState("");
@@ -72,6 +75,7 @@ const SimpleTerminalPlayground = ({
   // Simple terminal state
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [currentInput, setCurrentInput] = useState("");
+  const [terminalEnabled, setTerminalEnabled] = useState(false);
 
   // Refs
   const chatRef = useRef<HTMLDivElement>(null);
@@ -86,6 +90,109 @@ const SimpleTerminalPlayground = ({
   const playgroundModes = AIChatService.getAvailableToolsForContent(
     contentId || "",
     availableTools
+  );
+
+  const handleTerminalInput = useCallback(
+    async (command: string) => {
+      const prompt = "$";
+
+      // Add command to terminal
+      setTerminalLines((prev) => [...prev, `${prompt} ${command}`]);
+
+      // Check if terminal is enabled and we have the required data
+      if (!terminalEnabled || !contentId || !token) {
+        setTerminalLines((prev) => [
+          ...prev,
+          "Terminal is not enabled for this content.",
+          "",
+        ]);
+        setCurrentInput("");
+        return;
+      }
+
+      try {
+        // Execute command via API
+        const response = await executeTerminalCommand(
+          contentId,
+          command.trim(),
+          token
+        );
+
+        if (response.success && response.data) {
+          // Handle special clear command
+          if (response.data.shouldClear) {
+            setTerminalLines([]);
+            setCurrentInput("");
+            return;
+          }
+
+          // Add response to terminal
+          const responseText = response.data.response || "";
+          setTerminalLines((prev) => [...prev, responseText, ""]);
+        } else {
+          // Handle API error - provide fallback response for common commands
+          const errorMessage = response.error || "Failed to execute command";
+          console.warn("Terminal API error:", errorMessage);
+
+          // Provide fallback responses for basic commands when server is unavailable
+          const fallbackResponses: Record<string, string> = {
+            ls: "drwxr-xr-x 2 student student 4096 Dec 20 10:30 Documents\ndrwxr-xr-x 2 student student 4096 Dec 20 10:30 Downloads\n-rw-r--r-- 1 student student  156 Dec 20 10:30 README.txt",
+            pwd: "/home/student",
+            whoami: "student",
+            help: "🔧 Available Commands (Offline Mode):\n  • ls\n  • pwd\n  • whoami\n  • help\n  • clear\n\n⚠️ Limited commands available - server connection required for full functionality.",
+          };
+
+          const fallbackResponse =
+            fallbackResponses[command.toLowerCase().trim()];
+          if (fallbackResponse) {
+            setTerminalLines((prev) => [
+              ...prev,
+              fallbackResponse,
+              `Command '${command}' executed. Using fallback response due to connection issues.`,
+              "",
+            ]);
+          } else {
+            setTerminalLines((prev) => [
+              ...prev,
+              `Error: ${errorMessage}`,
+              `Command '${command}' not available in offline mode.`,
+              "",
+            ]);
+          }
+        }
+      } catch (error) {
+        console.error("Terminal command error:", error);
+
+        // Provide basic fallback for network errors
+        const fallbackResponses: Record<string, string> = {
+          ls: "drwxr-xr-x 2 student student 4096 Dec 20 10:30 Documents\ndrwxr-xr-x 2 student student 4096 Dec 20 10:30 Downloads\n-rw-r--r-- 1 student student  156 Dec 20 10:30 README.txt",
+          pwd: "/home/student",
+          whoami: "student",
+          help: "🔧 Available Commands (Offline Mode):\n  • ls\n  • pwd\n  • whoami\n  • help\n  • clear\n\n⚠️ Limited commands available - server connection required for full functionality.",
+        };
+
+        const fallbackResponse =
+          fallbackResponses[command.toLowerCase().trim()];
+        if (fallbackResponse) {
+          setTerminalLines((prev) => [
+            ...prev,
+            fallbackResponse,
+            `Command '${command}' executed. Using fallback response due to connection issues.`,
+            "",
+          ]);
+        } else {
+          setTerminalLines((prev) => [
+            ...prev,
+            `Network error: Unable to execute command '${command}'`,
+            "Please check your connection and try again.",
+            "",
+          ]);
+        }
+      }
+
+      setCurrentInput("");
+    },
+    [terminalEnabled, contentId, token]
   );
 
   // Ensure activeMode is valid for current tools
@@ -103,83 +210,47 @@ const SimpleTerminalPlayground = ({
     setTerminalLines([]);
   }, []);
 
-  // Handle terminal input
-  const handleTerminalInput = async (command: string) => {
-    const prompt = "$";
-
-    // Add command to terminal
-    setTerminalLines((prev) => [...prev, `${prompt} ${command}`]);
-
-    // Get available commands from config or use defaults
-    const availableCommands = terminalConfig?.availableCommands || [
-      "ls",
-      "pwd",
-      "whoami",
-      "help",
-      "clear",
-      "cat",
-      "grep",
-      "find",
-      "ps",
-      "netstat",
-    ];
-
-    // Simulate command execution
-    try {
-      let response = "";
-
-      switch (command.toLowerCase().trim()) {
-        case "help":
-          response = `Available commands: ${availableCommands.join(
-            ", "
-          )}\nType any command for AI assistance!`;
-          break;
-        case "ls":
-          response =
-            "drwxr-xr-x 2 student student 4096 Dec 20 10:30 Documents\ndrwxr-xr-x 2 student student 4096 Dec 20 10:30 Downloads\n-rw-r--r-- 1 student student  156 Dec 20 10:30 README.txt";
-          break;
-        case "pwd":
-          response = "/home/student";
-          break;
-        case "whoami":
-          response = "student";
-          break;
-        case "clear":
-          setTerminalLines([]);
-          setCurrentInput("");
-          return;
-        case "cat":
-          response = "Usage: cat <filename>";
-          break;
-        case "grep":
-          response = "Usage: grep <pattern> <file>";
-          break;
-        case "find":
-          response = "Usage: find <path> -name <filename>";
-          break;
-        case "ps":
-          response =
-            "PID TTY          TIME CMD\n1234 pts/0    00:00:01 bash\n5678 pts/0    00:00:00 ps";
-          break;
-        case "netstat":
-          response =
-            "Active Internet connections\nProto Recv-Q Send-Q Local Address           Foreign Address         State";
-          break;
-        default:
-          if (availableCommands.includes(command.toLowerCase().trim())) {
-            response = `AI: The command '${command}' is available. This is a simulated terminal for learning cybersecurity concepts.`;
-          } else {
-            response = `Command '${command}' not found. Type 'help' for available commands.`;
-          }
+  // Fetch terminal configuration from server
+  useEffect(() => {
+    const fetchTerminalConfig = async () => {
+      if (!contentId || !token) {
+        setTerminalEnabled(false);
+        return;
       }
 
-      setTerminalLines((prev) => [...prev, response, ""]);
-    } catch (error) {
-      setTerminalLines((prev) => [...prev, `Error: ${error}`, ""]);
-    }
+      try {
+        const response = await getTerminalConfig(contentId, token);
+        if (response.success && response.data) {
+          const isEnabled =
+            response.data.terminalConfig.enableTerminal || false;
+          setTerminalEnabled(isEnabled);
+        } else {
+          console.warn("Failed to fetch terminal config:", response.error);
+          setTerminalEnabled(false);
+        }
+      } catch (error) {
+        console.error("Error fetching terminal config:", error);
+        setTerminalEnabled(false);
+      }
+    };
 
-    setCurrentInput("");
-  };
+    fetchTerminalConfig();
+  }, [contentId, token]);
+
+  // Initialize terminal with welcome message when enabled
+  useEffect(() => {
+    if (terminalEnabled && contentId && token) {
+      setTimeout(() => {
+        setTerminalLines((prev) => [
+          ...prev,
+          "🚀 Terminal initialized! Type 'help' to see available commands.",
+          "",
+        ]);
+      }, 500);
+    }
+  }, [terminalEnabled, contentId, token]);
+
+  // Handle terminal input
 
   // Focus terminal when clicked
   const focusTerminal = () => {
@@ -390,6 +461,19 @@ const SimpleTerminalPlayground = ({
               >
                 {/* Terminal Output */}
                 <div className="space-y-1">
+                  {!terminalEnabled && contentId && (
+                    <div className="text-yellow-400 bg-yellow-400/10 p-2 rounded border border-yellow-400/30">
+                      <div className="flex items-center mb-1">
+                        <AlertTriangle className="w-4 h-4 mr-2" />
+                        Terminal Disabled
+                      </div>
+                      <div className="text-xs">
+                        Terminal is not enabled for this content. Contact your
+                        instructor for access.
+                      </div>
+                    </div>
+                  )}
+
                   {terminalLines.map((line, index) => (
                     <div key={index} className="whitespace-pre-wrap">
                       {line}
@@ -397,24 +481,28 @@ const SimpleTerminalPlayground = ({
                   ))}
 
                   {/* Current Input Line */}
-                  <div className="flex items-center">
-                    <span className="text-green-400">$ </span>
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={currentInput}
-                      onChange={(e) => setCurrentInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && currentInput.trim()) {
-                          handleTerminalInput(currentInput.trim());
-                        }
-                      }}
-                      className="flex-1 bg-transparent border-none outline-none text-green-400 font-mono text-xs"
-                      placeholder="Type a command..."
-                      autoFocus
-                    />
-                    <span className="text-green-400 animate-pulse">█</span>
-                  </div>
+                  {terminalEnabled && (
+                    <div className="flex items-center">
+                      <span className="text-green-400 mr-2">$ </span>
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={currentInput}
+                        onChange={(e) => setCurrentInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && currentInput.trim()) {
+                            handleTerminalInput(currentInput.trim());
+                          }
+                        }}
+                        className="flex-1 bg-transparent border-none outline-none text-green-400 font-mono text-xs pl-1"
+                        placeholder="Type a command..."
+                        autoFocus
+                      />
+                      <span className="text-green-400 animate-pulse ml-1">
+                        █
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

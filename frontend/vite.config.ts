@@ -12,10 +12,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  server: {
-    host: true,
-    port: 5173,
-  },
+
   define: {
     // Suppress WASI experimental warnings
     "process.env.NODE_NO_WARNINGS": "1",

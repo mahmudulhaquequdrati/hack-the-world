@@ -929,89 +929,195 @@ const ContentFormModal = ({
 
                 {/* Terminal Configuration */}
                 {(formData.availableTools || []).includes("terminal") && (
-                  <div className="space-y-4 border-t border-cyan-400/20 pt-4">
+                  <div className="space-y-6 border-t border-cyan-400/20 pt-4">
                     <h4 className="text-md font-medium text-cyan-400 font-mono uppercase tracking-wider">
                       ▶ 💻 Terminal Configuration
                     </h4>
 
-                    {/* Available Commands */}
+                    {/* Enable Terminal Toggle */}
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono">
-                        Available Commands
-                      </label>
-                      <div className="space-y-2">
-                        {(formData.terminalConfig?.availableCommands || []).map(
-                          (cmd, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-2"
-                            >
-                              <input
-                                type="text"
-                                value={cmd}
-                                onChange={(e) => {
-                                  const newCommands = [
-                                    ...(formData.terminalConfig
-                                      ?.availableCommands || []),
-                                  ];
-                                  newCommands[index] = e.target.value;
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    terminalConfig: {
-                                      ...prev.terminalConfig,
-                                      availableCommands: newCommands,
-                                    },
-                                  }));
-                                }}
-                                className="flex-1 px-3 py-2 bg-gray-700/50 border border-cyan-400/20 rounded text-cyan-400 font-mono text-sm"
-                                placeholder="Enter command"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newCommands = (
-                                    formData.terminalConfig
-                                      ?.availableCommands || []
-                                  ).filter((_, i) => i !== index);
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    terminalConfig: {
-                                      ...prev.terminalConfig,
-                                      availableCommands: newCommands,
-                                    },
-                                  }));
-                                }}
-                                className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-mono"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          )
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newCommands = [
-                              ...(formData.terminalConfig?.availableCommands ||
-                                []),
-                              "",
-                            ];
+                      <label className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={
+                            formData.terminalConfig?.enableTerminal !== false
+                          }
+                          onChange={(e) => {
                             setFormData((prev) => ({
                               ...prev,
                               terminalConfig: {
                                 ...prev.terminalConfig,
-                                availableCommands: newCommands,
+                                enableTerminal: e.target.checked,
                               },
                             }));
                           }}
-                          className="w-full px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm font-mono"
-                        >
-                          + Add Command
-                        </button>
-                      </div>
-                      <p className="text-xs text-cyan-400/60 font-mono">
-                        ℹ Commands that students can use in the terminal
+                          className="rounded bg-gray-700 border-cyan-400/30 text-cyan-400 focus:ring-cyan-400"
+                        />
+                        <span className="text-cyan-400 font-mono text-sm">
+                          🚀 Enable Terminal for this content
+                        </span>
+                      </label>
+                      <p className="text-xs text-cyan-400/60 font-mono ml-6">
+                        ℹ When enabled, students can interact with the terminal
+                        for this content
                       </p>
+                    </div>
+
+                    {/* Terminal Configuration (always show when terminal tool is selected) */}
+                    <div
+                      className={
+                        formData.terminalConfig?.enableTerminal === false
+                          ? "opacity-50 pointer-events-none"
+                          : ""
+                      }
+                    >
+                      {/* Show a helpful message when disabled */}
+                      {formData.terminalConfig?.enableTerminal === false && (
+                        <div className="text-yellow-400 bg-yellow-400/10 p-2 rounded border border-yellow-400/30 mb-4">
+                          <div className="text-xs">
+                            ⚠️ Terminal is disabled. Enable it above to
+                            configure commands and responses.
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-6">
+                        {/* Available Commands */}
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono">
+                            📋 Available Commands
+                          </label>
+                          <div className="space-y-2">
+                            {(
+                              formData.terminalConfig?.availableCommands || []
+                            ).map((cmd, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center gap-2"
+                              >
+                                <input
+                                  type="text"
+                                  value={cmd}
+                                  onChange={(e) => {
+                                    const newCommands = [
+                                      ...(formData.terminalConfig
+                                        ?.availableCommands || []),
+                                    ];
+                                    newCommands[index] = e.target.value;
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      terminalConfig: {
+                                        ...prev.terminalConfig,
+                                        availableCommands: newCommands,
+                                      },
+                                    }));
+                                  }}
+                                  className="flex-1 px-3 py-2 bg-gray-700/50 border border-cyan-400/20 rounded text-cyan-400 font-mono text-sm"
+                                  placeholder="Enter command"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newCommands = (
+                                      formData.terminalConfig
+                                        ?.availableCommands || []
+                                    ).filter((_, i) => i !== index);
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      terminalConfig: {
+                                        ...prev.terminalConfig,
+                                        availableCommands: newCommands,
+                                      },
+                                    }));
+                                  }}
+                                  className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-mono"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newCommands = [
+                                  ...(formData.terminalConfig
+                                    ?.availableCommands || []),
+                                  "",
+                                ];
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  terminalConfig: {
+                                    ...prev.terminalConfig,
+                                    availableCommands: newCommands,
+                                  },
+                                }));
+                              }}
+                              className="w-full px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm font-mono"
+                            >
+                              + Add Command
+                            </button>
+                          </div>
+                          <p className="text-xs text-cyan-400/60 font-mono">
+                            ℹ Commands that students can use in the terminal
+                          </p>
+                        </div>
+
+                        {/* Command Responses */}
+                        <div className="space-y-4">
+                          <label className="block text-sm font-medium text-cyan-400 mb-2 font-mono">
+                            💬 Command Responses
+                          </label>
+                          <div className="space-y-4 max-h-80 overflow-y-auto">
+                            {(
+                              formData.terminalConfig?.availableCommands || []
+                            ).map(
+                              (cmd, index) =>
+                                cmd && (
+                                  <div
+                                    key={index}
+                                    className="bg-gray-800/30 border border-cyan-400/20 rounded-lg p-4"
+                                  >
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-cyan-400 font-mono text-sm font-bold">
+                                        $ {cmd}
+                                      </span>
+                                    </div>
+                                    <textarea
+                                      value={
+                                        formData.terminalConfig
+                                          ?.commandResponses?.[cmd] || ""
+                                      }
+                                      onChange={(e) => {
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          terminalConfig: {
+                                            ...prev.terminalConfig,
+                                            commandResponses: {
+                                              ...prev.terminalConfig
+                                                ?.commandResponses,
+                                              [cmd]: e.target.value,
+                                            },
+                                          },
+                                        }));
+                                      }}
+                                      className="w-full px-3 py-2 bg-gray-700/50 border border-cyan-400/20 rounded text-cyan-400 font-mono text-sm resize-none"
+                                      rows="3"
+                                      placeholder={`Enter response for '${cmd}' command...`}
+                                    />
+                                    <p className="text-xs text-cyan-400/60 font-mono mt-1">
+                                      💡 Use "CLEAR_TERMINAL" as response to
+                                      clear the terminal
+                                    </p>
+                                  </div>
+                                )
+                            )}
+                          </div>
+                          <p className="text-xs text-cyan-400/60 font-mono">
+                            ℹ Configure what each command should output when
+                            students run them
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

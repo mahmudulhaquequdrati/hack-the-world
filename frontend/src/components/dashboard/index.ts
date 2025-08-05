@@ -11,6 +11,10 @@ export { ProgressOverview } from "./ProgressOverview";
 export { ProgressTab } from "./ProgressTab";
 export { StatsGrid } from "./StatsGrid";
 
+// Enhanced components
+export { WordProgressVisualizer, ProgressWordDisplay } from "./WordProgressVisualizer";
+export { EnhancedDiscoverSection } from "./EnhancedDiscoverSection";
+
 // Reusable dashboard sub-components
 export { AvailableCourseCard } from "./AvailableCourseCard";
 export { EmptyState } from "./EmptyState";
